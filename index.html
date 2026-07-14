@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LOF Simulations</title>
+<link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-row">
+    <div class="logo-wrap">
+      <img src="assets/logo.png" alt="LOF" class="logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';" />
+      <span class="logo-fallback">LOF</span>
+    </div>
+    <div>
+      <h1>LOF Simulations</h1>
+      <p class="subtitle">Explore interactive simulations across Robotics, Aerospace, and Space &amp; Astronomy.</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="category-grid" class="category-grid"></div>
+</main>
+
+<footer>LOF Simulations Gallery</footer>
+
+<script src="data/projects.js"></script>
+<script>
+  const grid = document.getElementById("category-grid");
+
+  CATEGORIES.forEach((cat) => {
+    const projects = PROJECTS.filter((p) => p.category === cat.id);
+    const liveCount = projects.filter((p) => p.status === "live").length;
+
+    const card = document.createElement("a");
+    card.className = "category-card";
+    card.style.setProperty("--accent", cat.accent);
+    card.href = `categories/${cat.id}.html`;
+    card.innerHTML = `
+      <div class="category-icon">${cat.icon}</div>
+      <h2>${cat.title}</h2>
+      <p>${cat.description}</p>
+      <div class="stats">
+        <span class="stat-pill live">${liveCount} live</span>
+        <span class="stat-pill">${projects.length} projects</span>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Thermal Trail Scanner · Heat-Seeker Rover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fff6ef; --panel:#ffffff; --panel2:#fff9f4;
+    --line:#f2ddcd; --txt:#3a2b25; --mut:#8a6f60; --dim:#b39a8a;
+    --accent:#ff7a3d; --accent2:#ffb02e; --cool:#5aa9e6; --ember:#e0455e;
+    --warn:#f7a23b; --danger:#ff5470; --ok:#54c48a;
+    --shadow:0 12px 34px rgba(160,110,80,.16);
+    --r:20px; --head:"Orbitron",sans-serif; --body:"Rajdhani",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:var(--body); font-size:15.5px; font-weight:500; color:var(--txt);
+    background:
+      radial-gradient(900px 500px at 8% -5%,#fff0e2 0,transparent 60%),
+      radial-gradient(900px 600px at 100% 0%,#ffe9e9 0,transparent 55%),
+      linear-gradient(180deg,#fff8f2,#fdeee4);
+    min-height:100vh; padding:22px clamp(12px,3vw,40px) 40px;
+  }
+  h1,h3,.badge,.action .big,.title p,.chip{font-family:var(--head)}
+  header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+  .logo{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:28px;
+    background:linear-gradient(145deg,#fff,#ffeede);border:1px solid var(--line);box-shadow:var(--shadow)}
+  .title h1{margin:0;font-size:21px;font-weight:800;letter-spacing:1px;color:#4a2f22}
+  .title p{margin:4px 0 0;font-size:11px;font-weight:500;letter-spacing:.5px;color:var(--mut)}
+
+  .grid{display:grid;grid-template-columns:300px 1fr 300px;gap:18px;align-items:start}
+  @media (max-width:1180px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:20px}
+  .card h3{margin:0 0 4px;font-size:15px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#4a2f22}
+  .card .sub{font-size:14px;color:var(--mut);margin:0 0 14px;line-height:1.5}
+
+  .ctrl{margin:18px 0}
+  .ctrl .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+  .ctrl label{font-size:14.5px;font-weight:600;color:var(--txt)}
+  .ctrl .val{font-family:var(--head);font-size:12.5px;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;width:100%;height:10px;border-radius:10px;outline:none;
+    background:linear-gradient(90deg,var(--accent2),var(--accent)) no-repeat;background-size:var(--fill,50%) 100%;
+    box-shadow:inset 0 0 0 2px var(--line);cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;
+    background:#fff;border:4px solid var(--accent);box-shadow:0 3px 8px rgba(0,0,0,.18);cursor:grab}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:4px solid var(--accent);cursor:grab}
+  .hint{font-size:12.5px;color:var(--dim);margin-top:6px;line-height:1.4}
+
+  .toggle{display:flex;gap:10px;margin-top:6px}
+  .toggle button{flex:1;cursor:pointer;border:2px solid var(--line);background:#fff;color:var(--mut);
+    padding:11px 8px;border-radius:14px;font-size:13px;font-weight:600;transition:.15s;font-family:var(--body)}
+  .toggle button.on{color:#fff;border-color:transparent;background:linear-gradient(145deg,var(--accent2),var(--accent));box-shadow:0 8px 18px rgba(255,122,61,.32)}
+
+  canvas{width:100%;height:auto;display:block;border-radius:16px;background:#0d1024;cursor:crosshair;touch-action:none}
+  .stage-foot{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;justify-content:center}
+  .btn{cursor:pointer;border:2px solid var(--line);background:#fff;color:var(--txt);padding:11px 17px;
+    border-radius:14px;font-size:13.5px;font-weight:600;transition:.15s;font-family:var(--body);display:flex;gap:8px;align-items:center}
+  .btn:hover{transform:translateY(-2px);border-color:#f0c6a4}
+  .btn.hot{background:linear-gradient(145deg,#ffe0c2,#ffc48a);border-color:#f5b478}
+  .btn.cold{background:linear-gradient(145deg,#dceafc,#c3daf6);border-color:#b3cdee}
+
+  /* --- heat bars: intensity is shown by glow + length, never by a number --- */
+  .hrow{margin:14px 0}
+  .hrow .lab{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .hrow .dir{font-size:14px;font-weight:600;color:var(--mut);display:flex;align-items:center;gap:7px}
+  .hrow .word{font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--dim)}
+  .hbar{height:20px;border-radius:11px;background:#f6ece3;border:2px solid var(--line);position:relative;overflow:hidden;transition:box-shadow .25s}
+  .hbar .fill{position:absolute;inset:0 auto 0 0;width:0;border-radius:9px;transition:width .2s,background .25s}
+  .hrow.win .hbar{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,122,61,.18)}
+  .hrow.win .dir{color:var(--accent);font-weight:700}
+  .hrow.scanning .hbar{border-color:var(--accent2)}
+
+  .meter{height:16px;border-radius:10px;background:#f6ece3;position:relative;overflow:hidden;margin:8px 0 4px;border:2px solid var(--line)}
+  .meter .fill{position:absolute;inset:0 auto 0 0;border-radius:10px;transition:width .12s,background .25s}
+  .meter .thr{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--warn);border-radius:3px}
+  .meterlabels{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);margin-top:4px}
+
+  .reading{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:2px dashed var(--line)}
+  .reading:last-child{border-bottom:none}
+  .reading .k{font-size:13.5px;color:var(--mut)}
+  .reading .v{font-family:var(--head);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+
+  .badge{display:flex;align-items:center;gap:9px;padding:12px;border-radius:16px;font-size:14.5px;font-weight:700;letter-spacing:.5px;justify-content:center;margin-top:10px;transition:.2s}
+  .b-clear{background:#e5f8ee;color:#2f9e69;border:2px solid #b8ecce}
+  .b-block{background:#ffe9ec;color:#e0455e;border:2px solid #ffc4ce}
+
+  .action{margin-top:14px;padding:16px;border-radius:16px;background:linear-gradient(145deg,#fff4ea,#ffeae0);border:2px solid var(--line);text-align:center}
+  .action .lab{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--dim);font-weight:600}
+  .action .big{font-size:17px;font-weight:700;margin-top:6px;letter-spacing:.3px;color:#4a2f22}
+
+  .chip{display:inline-block;padding:5px 11px;border-radius:9px;font-size:10.5px;font-weight:700;letter-spacing:.6px;
+    background:#fff1e4;color:var(--accent);border:1px solid var(--line);margin-top:2px}
+  .sect{margin-top:20px;padding-top:16px;border-top:2px dashed var(--line)}
+  footer{margin-top:26px;text-align:center;font-size:12.5px;color:var(--dim);line-height:1.7}
+</style>
+</head>
+<body>
+  <header class="top">
+    <div class="logo">🔥</div>
+    <div class="title">
+      <h1>THERMAL TRAIL SCANNER</h1>
+      <p>HEAT-SEEKER ROVER · FLAME &amp; ULTRASONIC SENSORS · LOF ROBOTICS</p>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="card">
+      <h3>Mission Controls</h3>
+      <p class="sub">Change the world, then watch how the rover's decisions change. Drag the flame on the map. Click any empty square to build a wall.</p>
+      <div id="controls"></div>
+    </section>
+
+    <section class="card">
+      <canvas id="stage" width="800" height="500"></canvas>
+      <div class="stage-foot" id="foot"></div>
+    </section>
+
+    <section class="card">
+      <h3>What the Rover Feels</h3>
+      <p class="sub">The flame sensor reads heat only where it points. Longer, brighter bar = stronger heat signature.</p>
+
+      <div class="hrow" id="h_left">
+        <div class="lab"><span class="dir">↰ Left</span><span class="word">—</span></div>
+        <div class="hbar"><div class="fill"></div></div>
+      </div>
+      <div class="hrow" id="h_front">
+        <div class="lab"><span class="dir">↑ Forward</span><span class="word">—</span></div>
+        <div class="hbar"><div class="fill"></div></div>
+      </div>
+      <div class="hrow" id="h_right">
+        <div class="lab"><span class="dir">↱ Right</span><span class="word">—</span></div>
+        <div class="hbar"><div class="fill"></div></div>
+      </div>
+
+      <div class="sect">
+        <div class="reading"><span class="k">Ultrasonic distance</span><span class="v" id="distV">— cm</span></div>
+        <div class="meter"><div class="fill" id="distFill"></div><div class="thr" id="distThr"></div></div>
+        <div class="meterlabels"><span>0 cm</span><span>detection range</span><span id="distMax">160 cm</span></div>
+        <div class="badge b-clear" id="badge"><span id="badgeText">Path Clear</span></div>
+      </div>
+
+      <div class="action">
+        <div class="lab">Rover is…</div>
+        <div class="big" id="actText">Starting up</div>
+        <div class="chip" id="stateChip">BOOT</div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    The rover cannot see the flame — it can only <b>feel heat where its sensor points</b>. So it stops, scans left / forward / right, compares the three glows, and drives toward the strongest one.<br>
+    Heat fades with distance, and <b>walls cast thermal shadows</b> — block the flame and watch the rover confidently choose the wrong way. 🔥🤖
+  </footer>
+
+<script>
+(() => {
+"use strict";
+
+const cv=document.getElementById('stage'), g=cv.getContext('2d');
+const W=cv.width, H=cv.height;
+const DEG=Math.PI/180;
+const CELL=40;                 // wall grid size
+const PX_PER_CM=2.2;           // map pixels to the "cm" the ultrasonic reports
+const PROBE=64;                // how far ahead of the rover the flame sensor samples
+const DRIVE_STEP=80;           // pixels travelled per scan cycle
+const FALLOFF=55000;           // inverse-square constant: heat halves at ~235px
+
+/* ---------- TUNABLES (the student's knobs) ---------- */
+const P={
+  intensity:88,    // how fierce the flame is
+  threshold:78,    // heat level that triggers stop-and-hold
+  sens:100,        // flame sensor gain, %
+  range:55,        // ultrasonic detection range, cm
+  speed:68,        // rover speed, px/s
+  spread:45,       // how far left/right the head swings, degrees
+  order:'LFR'      // scan direction: left-first or right-first
+};
+
+/* ---------- WORLD ---------- */
+const src={x:648,y:150};
+let walls=[{x:320,y:280,w:CELL,h:CELL},{x:360,y:280,w:CELL,h:CELL},{x:480,y:80,w:CELL,h:CELL}];
+const START={x:88,y:H/2,a:0};
+const rover={x:START.x,y:START.y,a:START.a,head:0,pulse:0};
+
+/* ---------- FSM ---------- */
+let state='scan', st=0;                       // st = seconds spent in current state
+let scanIdx=0, scanPhase='aim', dwell=0;
+let reads={left:null,front:null,right:null};  // captured this cycle
+let live=null;                                // the direction currently being sampled
+let winner=null, winHeat=0;
+let dist=999, blocked=false, holdTimer=0, turnTarget=0, driven=0, reversed=0, lockAfterTurn=false;
+
+const OFF=()=>({left:-P.spread*DEG, front:0, right:P.spread*DEG});
+const orderList=()=>P.order==='LFR'?['left','front','right']:['right','front','left'];
+
+/* ---------- HEAT MODEL ---------- */
+// Walls block heat, not just movement — this is what makes thermal shadows appear.
+function insideWall(x,y,pad){
+  pad=pad||0;
+  for(const w of walls){
+    if(x>w.x-pad && x<w.x+w.w+pad && y>w.y-pad && y<w.y+w.h+pad) return true;
+  }
+  return false;
+}
+// A shadow dims heat but never erases it — leave a usable gradient inside it,
+// or the rover mills around in a flat dead zone with nothing to climb.
+function occlusion(x,y){
+  const steps=14, dx=(src.x-x)/steps, dy=(src.y-y)/steps;
+  let hit=0;
+  for(let i=1;i<steps;i++) if(insideWall(x+dx*i,y+dy*i)) hit++;
+  return Math.max(0.18, Math.pow(0.80,hit));
+}
+// Ground truth for BOTH the heatmap you see and the readings the rover gets.
+function heatAt(x,y){
+  if(insideWall(x,y)) return 0;
+  const dx=x-src.x, dy=y-src.y, d2=dx*dx+dy*dy;
+  const h=P.intensity*(FALLOFF/(FALLOFF+d2));
+  return h<0.2?0:h*occlusion(x,y);
+}
+// What the flame sensor actually reports when aimed along `ang`.
+function senseAt(ang){
+  const px=rover.x+Math.cos(ang)*PROBE, py=rover.y+Math.sin(ang)*PROBE;
+  return Math.max(0,Math.min(100, heatAt(px,py)*P.sens/100));
+}
+// Heat at the rover itself. Probes decide *which way* to go; this decides
+// *when to stop* — otherwise the rover halts a whole probe-length short.
+function bodyHeat(){
+  return Math.max(0,Math.min(100, heatAt(rover.x,rover.y)*P.sens/100));
+}
+
+/* ---------- THERMAL RAMP ---------- */
+const STOPS=[[0,12,16,40],[14,42,42,110],[32,108,45,143],[50,198,47,90],[68,242,98,42],[84,255,176,46],[100,255,243,196]];
+function ramp(h){
+  h=Math.max(0,Math.min(100,h));
+  for(let i=0;i<STOPS.length-1;i++){
+    const a=STOPS[i], b=STOPS[i+1];
+    if(h<=b[0]){
+      const t=(h-a[0])/(b[0]-a[0]||1);
+      return [a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t, a[3]+(b[3]-a[3])*t];
+    }
+  }
+  return [255,243,196];
+}
+const rgb=h=>{const c=ramp(h);return `rgb(${c[0]|0},${c[1]|0},${c[2]|0})`};
+function heatWord(h){
+  if(h<10) return 'COLD'; if(h<28) return 'COOL'; if(h<48) return 'WARM';
+  if(h<68) return 'HOT';  if(h<86) return 'VERY HOT'; return 'BLAZING';
+}
+
+/* ---------- HEATMAP (low-res offscreen, scaled up for a smooth glow) ---------- */
+const HC=16, hw=Math.ceil(W/HC), hh=Math.ceil(H/HC);
+const hm=document.createElement('canvas'); hm.width=hw; hm.height=hh;
+const hg=hm.getContext('2d');
+let hmDirty=true;
+function rebuildHeatmap(){
+  const img=hg.createImageData(hw,hh), d=img.data;
+  for(let j=0;j<hh;j++) for(let i=0;i<hw;i++){
+    const h=heatAt(i*HC+HC/2, j*HC+HC/2), c=ramp(h), k=(j*hw+i)*4;
+    d[k]=c[0]; d[k+1]=c[1]; d[k+2]=c[2];
+    d[k+3]=255*Math.pow(h/100,1.25);   // curve keeps the cool end from washing out
+  }
+  hg.putImageData(img,0,0);
+  hmDirty=false;
+}
+
+/* ---------- ULTRASONIC ---------- */
+// March a ray forward until it meets a wall or the arena edge.
+function ping(x,y,ang,maxPx){
+  const cx=Math.cos(ang), cy=Math.sin(ang);
+  for(let d=6;d<maxPx;d+=3){
+    const px=x+cx*d, py=y+cy*d;
+    if(px<4||px>W-4||py<4||py>H-4) return d;
+    if(insideWall(px,py)) return d;
+  }
+  return maxPx;
+}
+const rangePx=()=>P.range*PX_PER_CM;
+
+/* ---------- HELPERS ---------- */
+const norm=a=>{while(a>Math.PI)a-=2*Math.PI; while(a<-Math.PI)a+=2*Math.PI; return a;};
+function rotateToward(target,dt){
+  const err=norm(target-rover.a), rate=(1.5+P.speed/48);
+  if(Math.abs(err)<0.03){rover.a=target;return true;}
+  rover.a=norm(rover.a+Math.sign(err)*Math.min(Math.abs(err),rate*dt));
+  return false;
+}
+function headToward(target,dt){
+  const err=norm(target-rover.head);
+  if(Math.abs(err)<0.04){rover.head=target;return true;}
+  rover.head=norm(rover.head+Math.sign(err)*Math.min(Math.abs(err),3.6*dt));
+  return false;
+}
+function canMove(x,y){ return x>18&&x<W-18&&y>18&&y<H-18&&!insideWall(x,y,15); }
+
+/* ---------- STATE MACHINE ---------- */
+function setState(s){ state=s; st=0; }
+
+function update(dt){
+  st+=dt; rover.pulse+=dt;
+  dist=ping(rover.x,rover.y,rover.a,360)/PX_PER_CM;
+  blocked = dist<P.range;
+
+  if(state==='scan'){
+    const dirs=orderList(), dir=dirs[scanIdx], off=OFF()[dir];
+    live=dir;
+    if(scanPhase==='aim'){
+      if(headToward(off,dt)){ scanPhase='dwell'; dwell=0; }
+    }else{
+      dwell+=dt;
+      reads[dir]=senseAt(rover.a+off);          // sample while the head is parked
+      if(dwell>0.36){
+        scanIdx++; scanPhase='aim';
+        if(scanIdx>=3){ scanIdx=0; live=null; setState('decide'); }
+      }
+    }
+  }
+
+  else if(state==='decide'){
+    headToward(0,dt);
+    winner=null; winHeat=-1;
+    for(const k of ['left','front','right']) if(reads[k]>winHeat){winHeat=reads[k];winner=k;}
+    if(st>0.45){
+      // Always face the winner first — a lock is only meaningful once the rover
+      // points at what it locked onto.
+      lockAfterTurn = bodyHeat()>=P.threshold;
+      turnTarget=norm(rover.a+OFF()[winner]);
+      setState('turn');
+    }
+  }
+
+  else if(state==='turn'){
+    headToward(0,dt);
+    if(rotateToward(turnTarget,dt)){
+      if(lockAfterTurn){ lockAfterTurn=false; holdTimer=0; setState('hold'); }
+      else { driven=0; setState('drive'); }
+    }
+  }
+
+  else if(state==='drive'){
+    if(blocked){ setState('warn'); return; }
+    if(bodyHeat()>=P.threshold){ holdTimer=0; setState('hold'); return; }
+    const nx=rover.x+Math.cos(rover.a)*P.speed*dt, ny=rover.y+Math.sin(rover.a)*P.speed*dt;
+    if(!canMove(nx,ny)){ setState('warn'); return; }
+    rover.x=nx; rover.y=ny; driven+=P.speed*dt;
+    if(driven>=DRIVE_STEP){ reads={left:null,front:null,right:null}; winner=null; setState('scan'); }
+  }
+
+  else if(state==='warn'){                       // obstacle warning animation
+    if(st>0.7){ reversed=0; setState('reverse'); }
+  }
+
+  else if(state==='reverse'){
+    const nx=rover.x-Math.cos(rover.a)*P.speed*0.75*dt, ny=rover.y-Math.sin(rover.a)*P.speed*0.75*dt;
+    if(canMove(nx,ny)){ rover.x=nx; rover.y=ny; reversed+=P.speed*0.75*dt; }
+    else reversed=99;
+    if(reversed>=52||st>1.6){
+      // turn toward whichever flank has more room; break ties with heat
+      const L=ping(rover.x,rover.y,rover.a-90*DEG,360), R=ping(rover.x,rover.y,rover.a+90*DEG,360);
+      let side = Math.abs(L-R)<20 ? (senseAt(rover.a-90*DEG)>=senseAt(rover.a+90*DEG)?-1:1) : (L>R?-1:1);
+      turnTarget=norm(rover.a+side*80*DEG);
+      setState('turnAway');
+    }
+  }
+
+  else if(state==='turnAway'){
+    if(rotateToward(turnTarget,dt)){ reads={left:null,front:null,right:null}; winner=null; setState('scan'); }
+  }
+
+  else if(state==='hold'){                       // stop-and-hold: heat lock
+    headToward(0,dt);
+    const now=bodyHeat();
+    if(now < P.threshold*0.85){                  // hysteresis, so it doesn't flicker
+      holdTimer+=dt;
+      if(holdTimer>0.5){ reads={left:null,front:null,right:null}; winner=null; setState('scan'); }
+    } else holdTimer=0;
+  }
+}
+
+/* ---------- DRAWING ---------- */
+function drawArena(){
+  g.fillStyle='#0d1024'; g.fillRect(0,0,W,H);
+  g.strokeStyle='rgba(255,255,255,.045)'; g.lineWidth=1;
+  for(let x=CELL;x<W;x+=CELL){g.beginPath();g.moveTo(x,0);g.lineTo(x,H);g.stroke();}
+  for(let y=CELL;y<H;y+=CELL){g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();}
+
+  if(hmDirty) rebuildHeatmap();
+  g.imageSmoothingEnabled=true;
+  g.drawImage(hm,0,0,W,H);
+}
+function drawWalls(){
+  for(const w of walls){
+    g.fillStyle='#20263f'; g.strokeStyle='#3d4569'; g.lineWidth=2;
+    g.beginPath(); g.roundRect(w.x+2,w.y+2,w.w-4,w.h-4,6); g.fill(); g.stroke();
+    g.strokeStyle='rgba(255,255,255,.06)';
+    g.beginPath(); g.moveTo(w.x+7,w.y+7); g.lineTo(w.x+w.w-7,w.y+w.h-7); g.stroke();
+  }
+}
+function drawFlame(){
+  const p=0.5+0.5*Math.sin(rover.pulse*4);
+  const R=26+p*6;
+  const gr=g.createRadialGradient(src.x,src.y,2,src.x,src.y,R*2.6);
+  gr.addColorStop(0,'rgba(255,245,205,.95)'); gr.addColorStop(.35,'rgba(255,160,50,.55)');
+  gr.addColorStop(1,'rgba(255,90,30,0)');
+  g.fillStyle=gr; g.beginPath(); g.arc(src.x,src.y,R*2.6,0,7); g.fill();
+  g.font='30px serif'; g.textAlign='center'; g.textBaseline='middle';
+  g.fillText('🔥',src.x,src.y+1);
+  g.strokeStyle='rgba(255,255,255,.28)'; g.setLineDash([4,5]); g.lineWidth=1.5;
+  g.beginPath(); g.arc(src.x,src.y,32,0,7); g.stroke(); g.setLineDash([]);
+}
+// One scan cone, tinted by the heat that direction returned.
+function cone(ang,heat,isLive,isWin){
+  const half=(P.spread*0.62)*DEG, R=PROBE+24;
+  const c=ramp(heat==null?0:heat);
+  g.save(); g.translate(rover.x,rover.y);
+  g.beginPath(); g.moveTo(0,0); g.arc(0,0,R,ang-half,ang+half); g.closePath();
+  const gr=g.createRadialGradient(0,0,6,0,0,R);
+  const a=heat==null?0.06:0.10+heat/100*0.55;
+  gr.addColorStop(0,`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${a})`);
+  gr.addColorStop(1,`rgba(${c[0]|0},${c[1]|0},${c[2]|0},0)`);
+  g.fillStyle=gr; g.fill();
+  g.strokeStyle = isWin?'rgba(255,180,80,.9)' : isLive?'rgba(255,255,255,.55)' : 'rgba(255,255,255,.14)';
+  g.lineWidth = isWin?2.5:1.2; g.stroke();
+  if(heat!=null){                                  // probe dot glows with the reading
+    const px=Math.cos(ang)*PROBE, py=Math.sin(ang)*PROBE;
+    g.fillStyle=rgb(heat); g.beginPath(); g.arc(px,py,isWin?6:4,0,7); g.fill();
+  }
+  g.restore();
+}
+function drawCones(){
+  const o=OFF();
+  for(const k of ['left','front','right'])
+    cone(rover.a+o[k], live===k?senseAt(rover.a+o[k]):reads[k], live===k, winner===k&&state!=='scan');
+}
+function drawPing(){
+  if(state!=='drive'&&state!=='warn'&&state!=='reverse') return;
+  const d=Math.min(dist*PX_PER_CM, rangePx());
+  g.save(); g.translate(rover.x,rover.y); g.rotate(rover.a);
+  g.strokeStyle=blocked?'rgba(255,84,112,.85)':'rgba(90,200,255,.35)';
+  g.lineWidth=2; g.setLineDash([6,6]);
+  g.beginPath(); g.moveTo(16,0); g.lineTo(d,0); g.stroke(); g.setLineDash([]);
+  g.strokeStyle=blocked?'rgba(255,84,112,.5)':'rgba(90,200,255,.2)';
+  g.beginPath(); g.arc(0,0,rangePx(),-24*DEG,24*DEG); g.stroke();
+  g.restore();
+}
+function drawWarn(){
+  if(state!=='warn'&&state!=='reverse') return;
+  const p=0.5+0.5*Math.sin(rover.pulse*14);
+  g.strokeStyle=`rgba(255,84,112,${.35+p*.5})`; g.lineWidth=3+p*2;
+  g.beginPath(); g.arc(rover.x,rover.y,30+p*10,0,7); g.stroke();
+  g.font='bold 22px '+'"Orbitron",sans-serif'; g.textAlign='center'; g.textBaseline='middle';
+  g.fillStyle=`rgba(255,120,140,${.6+p*.4})`; g.fillText('!',rover.x,rover.y-46);
+}
+function drawLock(){
+  if(state!=='hold') return;
+  const p=(rover.pulse*0.8)%1;
+  g.strokeStyle=`rgba(255,196,90,${.75*(1-p)})`; g.lineWidth=3;
+  g.beginPath(); g.arc(rover.x,rover.y,26+p*40,0,7); g.stroke();
+  g.font='700 12px "Orbitron",sans-serif'; g.textAlign='center';
+  g.fillStyle='rgba(255,214,140,.95)'; g.fillText('HEAT LOCK',rover.x,rover.y-42);
+}
+function drawRover(){
+  g.save(); g.translate(rover.x,rover.y); g.rotate(rover.a);
+  // wheels
+  g.fillStyle='#161b30';
+  for(const [wx,wy] of [[-9,-15],[9,-15],[-9,15],[9,15]]){
+    g.beginPath(); g.roundRect(wx-6,wy-5,12,10,3); g.fill();
+  }
+  // chassis
+  const bg=g.createLinearGradient(-18,0,20,0); bg.addColorStop(0,'#3b4468'); bg.addColorStop(1,'#59648f');
+  g.fillStyle=bg; g.strokeStyle='#8b96c4'; g.lineWidth=2;
+  g.beginPath(); g.roundRect(-18,-14,38,28,8); g.fill(); g.stroke();
+  // ultrasonic "eyes"
+  g.fillStyle=blocked?'#ff5470':'#7fd4ff';
+  g.beginPath(); g.arc(15,-6,3.4,0,7); g.fill();
+  g.beginPath(); g.arc(15,6,3.4,0,7); g.fill();
+  // rotating sensor head with the flame lens
+  g.rotate(rover.head);
+  g.fillStyle='#2a3050'; g.strokeStyle='#9aa5d0'; g.lineWidth=1.6;
+  g.beginPath(); g.roundRect(-5,-7,20,14,5); g.fill(); g.stroke();
+  const lens = live? senseAt(rover.a+OFF()[live]) : (winner?reads[winner]:0);
+  g.fillStyle=rgb(lens||0); g.shadowColor=rgb(lens||0); g.shadowBlur=10;
+  g.beginPath(); g.arc(11,0,4.2,0,7); g.fill(); g.shadowBlur=0;
+  g.restore();
+}
+function draw(){
+  drawArena(); drawWalls(); drawFlame();
+  drawCones(); drawPing(); drawWarn(); drawRover(); drawLock();
+}
+
+/* ---------- PANEL ---------- */
+const ACT={
+  scan:()=>`Scanning ${live==='front'?'forward':live} …`,
+  decide:()=>'Comparing the three heat signals',
+  turn:()=>`Turning toward the strongest heat`,
+  drive:()=>'Driving up the heat trail',
+  warn:()=>'Obstacle ahead! Backing off',
+  reverse:()=>'Reversing away from the wall',
+  turnAway:()=>'Steering around the obstacle',
+  hold:()=>'Heat source found — holding position'
+};
+const els={
+  left:document.getElementById('h_left'), front:document.getElementById('h_front'), right:document.getElementById('h_right'),
+  distV:document.getElementById('distV'), distFill:document.getElementById('distFill'), distThr:document.getElementById('distThr'),
+  badge:document.getElementById('badge'), badgeText:document.getElementById('badgeText'),
+  act:document.getElementById('actText'), chip:document.getElementById('stateChip')
+};
+function panel(){
+  const o=OFF();
+  for(const k of ['left','front','right']){
+    const el=els[k];
+    const h = live===k ? senseAt(rover.a+o[k]) : reads[k];
+    const fill=el.querySelector('.fill'), word=el.querySelector('.word');
+    if(h==null){ fill.style.width='0%'; word.textContent='—'; word.style.color='var(--dim)'; }
+    else{
+      fill.style.width=Math.max(3,h)+'%';
+      fill.style.background=`linear-gradient(90deg,${rgb(Math.max(6,h*0.45))},${rgb(h)})`;
+      word.textContent=heatWord(h); word.style.color=rgb(Math.max(30,h));
+    }
+    el.classList.toggle('win', winner===k && state!=='scan');
+    el.classList.toggle('scanning', live===k);
+  }
+  const shown=Math.min(dist,160);
+  els.distV.textContent=Math.round(shown)+' cm';
+  els.distFill.style.width=(100-Math.min(100,shown/160*100))+'%';
+  els.distFill.style.background=blocked?'linear-gradient(90deg,#ffb02e,#ff5470)':'linear-gradient(90deg,#7fd4ff,#5aa9e6)';
+  els.distThr.style.left=(100-Math.min(100,P.range/160*100))+'%';
+  els.badge.className='badge '+(blocked?'b-block':'b-clear');
+  els.badgeText.textContent=blocked?'⚠ Obstacle Detected':'✓ Path Clear';
+  els.act.textContent=(ACT[state]||(()=>'…'))();
+  els.chip.textContent=state.toUpperCase();
+}
+
+/* ---------- CONTROLS ---------- */
+const DEFS=[
+  ['intensity','Heat Intensity',10,100,1,v=>v+' %','How fierce the flame burns'],
+  ['threshold','Heat Threshold',20,90,1,v=>v+' %','Cross this and the rover stops and holds. Set it above the flame intensity and it will never stop.'],
+  ['sens','Flame Sensitivity',40,180,5,v=>v+' %','Sensor gain — how strongly it feels heat'],
+  ['range','Ultrasonic Range',20,120,5,v=>v+' cm','How far ahead it looks for obstacles'],
+  ['speed','Rover Speed',20,110,2,v=>v+' px/s','How fast it drives between scans'],
+  ['spread','Scan Spread',20,75,1,v=>v+'°','How far left and right the head swings']
+];
+const controlsEl=document.getElementById('controls');
+function buildControls(){
+  DEFS.forEach(([key,label,min,max,step,fmt,hint])=>{
+    const w=document.createElement('div'); w.className='ctrl';
+    w.innerHTML=`<div class="row"><label>${label}</label><span class="val" id="v_${key}">${fmt(P[key])}</span></div>
+      <input type="range" min="${min}" max="${max}" step="${step}" value="${P[key]}" id="r_${key}">
+      <div class="hint">${hint}</div>`;
+    controlsEl.appendChild(w);
+    const inp=w.querySelector('input');
+    const fill=()=>inp.style.setProperty('--fill',((inp.value-min)/(max-min)*100)+'%'); fill();
+    inp.addEventListener('input',()=>{
+      P[key]=parseFloat(inp.value);
+      document.getElementById('v_'+key).textContent=fmt(P[key]);
+      fill();
+      if(key==='intensity') hmDirty=true;          // heatmap depends on the flame only
+    });
+  });
+  const w=document.createElement('div'); w.className='ctrl';
+  w.innerHTML=`<div class="row"><label>Scan Direction</label></div>
+    <div class="toggle"><button id="oLFR" class="on">↰ Left first</button><button id="oRFL">Right first ↱</button></div>
+    <div class="hint">Which way the sensor head sweeps first. The comparison is the same — only the order changes.</div>`;
+  controlsEl.appendChild(w);
+  document.getElementById('oLFR').onclick=()=>setOrder('LFR');
+  document.getElementById('oRFL').onclick=()=>setOrder('RFL');
+}
+function setOrder(o){
+  P.order=o;
+  document.getElementById('oLFR').className=o==='LFR'?'on':'';
+  document.getElementById('oRFL').className=o==='RFL'?'on':'';
+}
+document.getElementById('foot').innerHTML=
+  `<button class="btn hot" id="fRand">🔥 Move Flame</button>
+   <button class="btn cold" id="fClear">🧱 Clear Walls</button>
+   <button class="btn" id="fReset">↺ Reset Rover</button>`;
+document.getElementById('fRand').onclick=()=>{
+  // Bounded retries: a fully walled-in arena must not spin here forever.
+  for(let i=0;i<40;i++){
+    const x=260+Math.random()*(W-320), y=60+Math.random()*(H-140);
+    if(!insideWall(x,y,20)||i===39){ src.x=x; src.y=y; break; }
+  }
+  hmDirty=true;
+};
+document.getElementById('fClear').onclick=()=>{ walls=[]; hmDirty=true; };
+document.getElementById('fReset').onclick=reset;
+function reset(){
+  rover.x=START.x; rover.y=START.y; rover.a=START.a; rover.head=0;
+  reads={left:null,front:null,right:null}; winner=null; live=null;
+  scanIdx=0; scanPhase='aim'; lockAfterTurn=false; setState('scan');
+}
+
+/* ---------- MOUSE: drag the flame, click to build walls ---------- */
+let dragging=false;
+const pos=e=>{const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*(W/r.width), y:(e.clientY-r.top)*(H/r.height)};};
+cv.addEventListener('pointerdown',e=>{
+  const p=pos(e);
+  if(Math.hypot(p.x-src.x,p.y-src.y)<34){ dragging=true; cv.setPointerCapture(e.pointerId); return; }
+  const gx=Math.floor(p.x/CELL)*CELL, gy=Math.floor(p.y/CELL)*CELL;
+  if(Math.hypot(gx+CELL/2-rover.x, gy+CELL/2-rover.y)<44) return;   // never trap the rover
+  if(Math.hypot(gx+CELL/2-src.x, gy+CELL/2-src.y)<30) return;       // never bury the flame
+  const i=walls.findIndex(w=>w.x===gx&&w.y===gy);
+  if(i>=0) walls.splice(i,1); else walls.push({x:gx,y:gy,w:CELL,h:CELL});
+  hmDirty=true;
+});
+cv.addEventListener('pointermove',e=>{
+  if(!dragging) return;
+  const p=pos(e);
+  src.x=Math.max(20,Math.min(W-20,p.x)); src.y=Math.max(20,Math.min(H-20,p.y));
+  hmDirty=true;
+});
+cv.addEventListener('pointerup',()=>dragging=false);
+
+/* ---------- LOOP ---------- */
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  update(dt); draw(); panel();
+  requestAnimationFrame(frame);
+}
+buildControls(); reset(); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

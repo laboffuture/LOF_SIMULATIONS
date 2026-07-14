@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alien Waypoint Decoder — Simulation</title>
+<style>
+  :root {
+    --bg: #eef2f8;
+    --panel: #ffffff;
+    --panel-2: #f1f5fb;
+    --border: #d6deea;
+    --accent: #0d9488;
+    --accent-2: #7c3aed;
+    --text: #1e293b;
+    --muted: #64748b;
+    --danger: #dc2626;
+    --ok: #16a34a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: radial-gradient(1200px 600px at 70% -10%, #dbe6f5 0%, var(--bg) 55%);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 8px;
+    flex: 0 0 auto;
+  }
+  header h1 {
+    font-size: 19px;
+    letter-spacing: 0.5px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  header p { color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr) 300px;
+    gap: 12px;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .col-left, .col-right {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+    overflow: auto;
+  }
+  @media (max-width: 900px) {
+    body { overflow: auto; height: auto; }
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  .stage {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  canvas {
+    display: block;
+    height: min(74vh, 560px);
+    width: auto;
+    aspect-ratio: 1 / 1;
+    max-width: 100%;
+    margin: 0 auto;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    cursor: crosshair;
+    touch-action: none;
+    box-shadow: inset 0 1px 6px rgba(0,0,0,0.05);
+  }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+    align-items: center;
+  }
+  button {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.primary { background: linear-gradient(90deg, #0d9488, #7c3aed); border: none; color: #fff; font-weight: 600; }
+  button.primary:hover { filter: brightness(1.1); color: #fff; }
+  button.active { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 11px 13px;
+  }
+  .card h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 8px; }
+
+  .palette { display: flex; flex-direction: column; gap: 6px; }
+  .swatch {
+    display: flex; align-items: center; gap: 11px;
+    padding: 8px 11px; border-radius: 9px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--panel-2);
+    transition: 0.15s;
+  }
+  .swatch:hover { border-color: var(--accent); background: #fff; }
+  .swatch.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; background: #fff; }
+  .swatch .chip { width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.18); }
+  .swatch .nm { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; }
+  .swatch .cmd {
+    font-size: 10px; letter-spacing: 0.4px; text-transform: uppercase; font-weight: 600;
+    color: var(--accent); background: rgba(13,148,136,0.10);
+    padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+  }
+  .palette-labels { margin-bottom: 10px; }
+
+  .dirpad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-areas: ".  up  ." "left . right" ".  down .";
+    gap: 6px;
+    max-width: 180px;
+  }
+  .dir { font-size: 15px; padding: 8px 0; }
+  .dir[data-dir="0"] { grid-area: up; }
+  .dir[data-dir="3"] { grid-area: left; }
+  .dir[data-dir="1"] { grid-area: right; }
+  .dir[data-dir="2"] { grid-area: down; }
+  .dir.active { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+
+  .control { margin-bottom: 9px; }
+  .control label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .control label b { color: var(--text); }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+
+  .rgbchip { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: middle; margin-right: 6px; border: 1px solid var(--border); }
+  .decision { font-size: 14px; font-weight: 700; padding: 8px 10px; border-radius: 8px; text-align: center; margin-top: 10px; background: var(--panel-2); }
+
+  /* ---- Light-intensity meter ---- */
+  .tilepreview { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .rgbchip.big { width: 40px; height: 40px; border-radius: 9px; margin: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+  .tilepreview .tname { font-size: 14px; font-weight: 600; }
+  .tilepreview .tsub { font-size: 10px; color: var(--muted); }
+  .imeter { display: flex; flex-direction: column; gap: 9px; }
+  .bar label { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; }
+  .bar label .lbl { color: var(--muted); font-weight: 600; }
+  .bar label b { font-family: 'Consolas', monospace; color: var(--text); }
+  .track { height: 13px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
+  .fill { height: 100%; width: 0%; border-radius: 7px 0 0 7px; transition: width 0.12s linear; }
+  .fill.r { background: linear-gradient(90deg,#f0a0a0,#e23b3b); }
+  .fill.g { background: linear-gradient(90deg,#a0e0b8,#1eb866); }
+  .fill.b { background: linear-gradient(90deg,#a8bef0,#3b6fe2); }
+  .fill.lux { background: linear-gradient(90deg,#3a3a3a,#111 10%,#f4d03f,#ffffff); }
+
+  .hint { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .legend { font-size: 11px; color: var(--muted); }
+  .legend div { padding: 2px 0; }
+  .toggle-row { display: flex; gap: 8px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<header>
+  <h1>👽 Alien Waypoint Decoder</h1>
+  <p>Colour-coded tiles are secret movement commands. The TCS34725 sensor reads each tile's RGB and decides the rover's next move.</p>
+</header>
+
+<div class="layout">
+  <!-- LEFT: live light intensity + controls -->
+  <div class="col-left">
+    <div class="card">
+      <h3>Light Intensity (TCS34725)</h3>
+      <div class="tilepreview">
+        <span class="rgbchip big" id="rTile2" style="background:#f8fafc"></span>
+        <div>
+          <div class="tname" id="rTileName">No tile</div>
+          <div class="tsub" id="rDir">Facing DOWN</div>
+        </div>
+      </div>
+      <div class="imeter">
+        <div class="bar"><label><span class="lbl">🔴 Red</span><b id="rR">0</b></label><div class="track"><div class="fill r" id="barR"></div></div></div>
+        <div class="bar"><label><span class="lbl">🟢 Green</span><b id="rG">0</b></label><div class="track"><div class="fill g" id="barG"></div></div></div>
+        <div class="bar"><label><span class="lbl">🔵 Blue</span><b id="rB">0</b></label><div class="track"><div class="fill b" id="barB"></div></div></div>
+        <div class="bar"><label><span class="lbl">☀️ Overall (lux)</span><b id="rLux">0</b></label><div class="track"><div class="fill lux" id="barL"></div></div></div>
+      </div>
+      <div class="decision" id="decision">IDLE</div>
+    </div>
+
+    <div class="card">
+      <h3>Controls</h3>
+      <div class="control">
+        <label>Rover Speed <b><span id="vSpeed">4</span> steps/s</b></label>
+        <input type="range" id="speed" min="1" max="12" value="4">
+      </div>
+      <div class="control">
+        <label>Colour Brightness <b><span id="vBright">100</span>%</b></label>
+        <input type="range" id="bright" min="30" max="100" value="100">
+      </div>
+      <div class="control">
+        <label>Sensor Sensitivity <b><span id="vSens">40</span></b></label>
+        <input type="range" id="sens" min="5" max="90" value="40">
+      </div>
+      <div class="control">
+        <label>Grid Size <b><span id="vGrid">10</span> × <span id="vGrid2">10</span></b></label>
+        <input type="range" id="gridsize" min="6" max="16" value="10">
+      </div>
+      <div class="toggle-row">
+        <button id="btnFront">💥 Front Bumper Hit</button>
+        <button id="btnBack">💥 Back Bumper Hit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER: simulation stage -->
+  <div class="stage">
+    <div class="toolbar">
+      <button id="btnRun" class="primary">▶ Run</button>
+      <button id="btnStep">⏭ Step</button>
+      <button id="btnReset">↺ Reset Rover</button>
+      <button id="btnClear">🧹 Clear Tiles</button>
+      <button id="btnWall" data-mode="wall">🧱 Wall Tool</button>
+      <button id="btnErase" data-mode="erase">Erase Tool</button>
+    </div>
+    <canvas id="grid" width="640" height="640"></canvas>
+    <p class="hint" style="margin-top:6px; text-align:center">
+      Click / drag tiles to paint the selected colour · 🤖 Place Rover, then ▶ Run.
+    </p>
+  </div>
+
+  <!-- RIGHT: palette + rover direction -->
+  <div class="col-right">
+    <div class="card">
+      <h3>Waypoint Colours</h3>
+      <p class="hint palette-labels">Select a colour, then paint tiles. Each colour is a command.</p>
+      <div class="palette" id="palette"></div>
+      <div style="margin-top:12px" class="toggle-row">
+        <button id="btnRover" data-mode="rover">🤖 Place Rover</button>
+      </div>
+
+      <h3 style="margin-top:16px">Rover Direction</h3>
+      <p class="hint" style="margin-bottom:8px">Set which way the rover faces. (You can also use the arrow keys.)</p>
+      <div class="dirpad">
+        <button class="dir" data-dir="0" title="Face up">▲</button>
+        <button class="dir" data-dir="3" title="Face left">◀</button>
+        <button class="dir" data-dir="1" title="Face right">▶</button>
+        <button class="dir" data-dir="2" title="Face down">▼</button>
+      </div>
+      <div class="toggle-row" style="margin-top:8px">
+        <button id="rotL">⟲ Rotate Left</button>
+        <button id="rotR">Rotate Right ⟳</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('grid');
+  const ctx = canvas.getContext('2d');
+
+  // ---- Waypoint colour definitions (command tiles) ----
+  const COLORS = [
+    { name: 'Red',    rgb: [220, 40, 40],   cmd: 'forward'  },
+    { name: 'Yellow', rgb: [230, 210, 40],  cmd: 'backward' },
+    { name: 'Green',  rgb: [40, 200, 90],   cmd: 'left'     },
+    { name: 'Cyan',   rgb: [40, 190, 210],  cmd: 'left'     },
+    { name: 'White',  rgb: [225, 225, 225], cmd: 'right'    },
+    { name: 'Gray',   rgb: [130, 130, 130], cmd: 'right'    },
+    { name: 'Black',  rgb: [18, 18, 26],    cmd: 'stop'     },
+    { name: 'Blue',   rgb: [60, 90, 230],   cmd: 'stop'     },
+  ];
+  const WALL = 'WALL';
+  const EMPTY = null;
+
+  let N = 10;                 // grid dimension
+  let cell = canvas.width / N;
+  let tiles = [];            // 2D array of color-index | WALL | EMPTY
+  let selColor = 0;
+  let paintMode = 'color';   // color | wall | erase | rover
+  let rover = { x: 0, y: 0, dir: 0 }; // dir: 0=up,1=right,2=down,3=left
+  const DIRS = [[0,-1],[1,0],[0,1],[-1,0]];
+  const DIR_NAME = ['UP','RIGHT','DOWN','LEFT'];
+
+  let running = false, acc = 0, lastT = 0;
+  let speed = 4, brightness = 1.0, sensitivity = 40;
+
+  function initTiles() {
+    tiles = Array.from({length: N}, () => Array(N).fill(EMPTY));
+  }
+
+  function resizeGrid(n) {
+    N = n; cell = canvas.width / N; initTiles();
+    rover = { x: 0, y: 0, dir: 2 }; // start facing down
+    draw();
+  }
+
+  // ---- Build palette UI ----
+  const paletteEl = document.getElementById('palette');
+  COLORS.forEach((c, i) => {
+    const s = document.createElement('div');
+    s.className = 'swatch' + (i === 0 ? ' sel' : '');
+    s.title = `${c.name} → ${c.cmd}`;
+    s.innerHTML = `<span class="chip" style="background:rgb(${c.rgb.join(',')})"></span>` +
+                  `<span class="nm">${c.name}</span>` +
+                  `<span class="cmd">${c.cmd}</span>`;
+    s.onclick = () => {
+      selColor = i; paintMode = 'color';
+      document.querySelectorAll('.swatch').forEach(e => e.classList.remove('sel'));
+      s.classList.add('sel');
+      clearToolActive();
+    };
+    paletteEl.appendChild(s);
+  });
+
+  function clearToolActive() {
+    ['btnWall','btnErase','btnRover'].forEach(id => document.getElementById(id).classList.remove('active'));
+  }
+
+  // ---- Drawing ----
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let y = 0; y < N; y++) {
+      for (let x = 0; x < N; x++) {
+        const t = tiles[y][x];
+        if (t === WALL) {
+          ctx.fillStyle = '#8a97ad';
+          ctx.fillRect(x*cell, y*cell, cell, cell);
+          // brick lines
+          ctx.strokeStyle = '#5d6b85'; ctx.lineWidth = 1;
+          ctx.strokeRect(x*cell+3, y*cell+3, cell-6, cell-6);
+        } else if (t !== EMPTY) {
+          const [r,g,b] = applyBright(COLORS[t].rgb);
+          ctx.fillStyle = `rgb(${r},${g},${b})`;
+          ctx.fillRect(x*cell, y*cell, cell, cell);
+        }
+        // grid lines
+        ctx.strokeStyle = 'rgba(30,50,90,0.14)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x*cell, y*cell, cell, cell);
+      }
+    }
+    drawRover();
+  }
+
+  function applyBright([r,g,b]) {
+    return [r,g,b].map(v => Math.round(v * brightness));
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y,   x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x,   y+h, r);
+    ctx.arcTo(x,   y+h, x,   y,   r);
+    ctx.arcTo(x,   y,   x+w, y,   r);
+    ctx.closePath();
+  }
+
+  function drawRover() {
+    const cx = rover.x*cell + cell/2;
+    const cy = rover.y*cell + cell/2;
+    const s = cell;                 // scale
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rover.dir * Math.PI/2);  // "up" = forward direction
+
+    // soft shadow under rover
+    ctx.fillStyle = 'rgba(20,30,50,0.18)';
+    ctx.beginPath();
+    ctx.ellipse(0, s*0.06, s*0.42, s*0.34, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // --- wheels (6-wheel rocker-bogie look) ---
+    const wheelW = s*0.14, wheelH = s*0.22;
+    ctx.fillStyle = '#2b3648';
+    [-1, 1].forEach(side => {
+      [-0.26, 0, 0.26].forEach(fy => {
+        roundRect(side*s*0.34 - wheelW/2, fy*s - wheelH/2, wheelW, wheelH, wheelW*0.35);
+        ctx.fill();
+      });
+    });
+    // wheel hubs
+    ctx.fillStyle = '#8a96ab';
+    [-1, 1].forEach(side => {
+      [-0.26, 0, 0.26].forEach(fy => {
+        ctx.beginPath();
+        ctx.arc(side*s*0.34, fy*s, wheelW*0.22, 0, Math.PI*2);
+        ctx.fill();
+      });
+    });
+
+    // --- chassis (body) ---
+    const bw = s*0.5, bh = s*0.62;
+    const grad = ctx.createLinearGradient(0, -bh/2, 0, bh/2);
+    grad.addColorStop(0, '#f5d76e');   // gold body top
+    grad.addColorStop(1, '#e0b437');   // gold body bottom
+    ctx.fillStyle = grad;
+    ctx.strokeStyle = '#a8801f';
+    ctx.lineWidth = Math.max(1, s*0.02);
+    roundRect(-bw/2, -bh/2, bw, bh, s*0.1);
+    ctx.fill(); ctx.stroke();
+
+    // --- solar panel top plate ---
+    ctx.fillStyle = '#1f3a6b';
+    roundRect(-bw*0.36, -bh*0.32, bw*0.72, bh*0.5, s*0.05);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(120,170,255,0.6)';
+    ctx.lineWidth = 1;
+    for (let i = 1; i < 3; i++) {
+      const gx = -bw*0.36 + (bw*0.72) * i/3;
+      ctx.beginPath(); ctx.moveTo(gx, -bh*0.32); ctx.lineTo(gx, bh*0.18); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(-bw*0.36, -bh*0.07); ctx.lineTo(bw*0.36, -bh*0.07); ctx.stroke();
+
+    // --- camera / sensor mast (front) ---
+    ctx.fillStyle = '#3b4658';
+    roundRect(-s*0.05, -bh*0.5, s*0.1, s*0.14, s*0.02);
+    ctx.fill();
+    // TCS34725 colour sensor "eye" at the very front
+    ctx.fillStyle = '#111827';
+    ctx.beginPath(); ctx.arc(0, -bh*0.5, s*0.09, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#7c3aed';
+    ctx.beginPath(); ctx.arc(0, -bh*0.5, s*0.05, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(-s*0.015, -bh*0.5 - s*0.015, s*0.017, 0, Math.PI*2); ctx.fill();
+
+    // --- front bumper bar (limit switch) ---
+    ctx.strokeStyle = '#c0392b';
+    ctx.lineWidth = Math.max(1.5, s*0.035);
+    ctx.beginPath();
+    ctx.moveTo(-bw*0.42, -bh*0.5);
+    ctx.lineTo(bw*0.42, -bh*0.5);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // ---- Sensor: read tile under rover ----
+  function readSensor() {
+    const t = tiles[rover.y][rover.x];
+    if (t === EMPTY || t === WALL) return { rgb: [0,0,0], tileName: t === WALL ? 'Wall' : 'Empty' };
+    const rgb = applyBright(COLORS[t].rgb);
+    return { rgb, tileName: COLORS[t].name };
+  }
+
+  // ---- Decision logic (the "alien code") ----
+  function decide(rgb) {
+    const [r,g,b] = rgb;
+    const max = Math.max(r,g,b);
+    const min = Math.min(r,g,b);
+    // No clear waypoint -> stop
+    if (max < sensitivity) return { action: 'stop', why: 'No clear waypoint (too dark)' };
+    // All values similar -> turn right
+    if (max - min < sensitivity*0.45) return { action: 'right', why: 'All RGB values similar' };
+    // Red strongest -> forward
+    if (r > g && r > b) {
+      // Yellow = red & green both high, blue low -> backward
+      if (g > b + sensitivity*0.6 && Math.abs(r-g) < sensitivity) return { action: 'backward', why: 'Yellow detected (R+G high, B low)' };
+      return { action: 'forward', why: 'Red is strongest' };
+    }
+    // Green + Blue high -> turn left
+    if (g > r && b > sensitivity*0.6) return { action: 'left', why: 'Green + Blue are high' };
+    if (g > r && g > b) return { action: 'left', why: 'Green dominant' };
+    // Blue strongest but not with green -> stop (invalid zone)
+    if (b > r && b > g) return { action: 'stop', why: 'Invalid colour zone (blue)' };
+    return { action: 'right', why: 'Default' };
+  }
+
+  // ---- Apply an action to the rover ----
+  function canEnter(x, y) {
+    return x >= 0 && y >= 0 && x < N && y < N && tiles[y][x] !== WALL;
+  }
+
+  function stepForward(sign) {
+    const [dx, dy] = DIRS[rover.dir];
+    const nx = rover.x + dx*sign, ny = rover.y + dy*sign;
+    // Off the grid -> ERROR (can't move that way)
+    if (nx < 0 || ny < 0 || nx >= N || ny >= N) {
+      const moveDir = sign > 0 ? DIR_NAME[rover.dir] : DIR_NAME[(rover.dir + 2) % 4];
+      showError(`Can't move ${moveDir} — edge of alien base`);
+      return false;
+    }
+    // Wall ahead -> bumper (limit switch) auto-reverse
+    if (tiles[ny][nx] === WALL) {
+      triggerBumper(sign > 0 ? 'front' : 'back', true);
+      return false;
+    }
+    rover.x = nx; rover.y = ny;
+    return true;
+  }
+
+  function applyAction(action) {
+    switch(action) {
+      case 'forward':  stepForward(1); break;
+      case 'backward': stepForward(-1); break;
+      // Turn to the new heading, then advance one tile in that direction
+      case 'left':     rover.dir = (rover.dir + 3) % 4; stepForward(1); break;
+      case 'right':    rover.dir = (rover.dir + 1) % 4; stepForward(1); break;
+      case 'stop':     running = false; setRun(); break;
+    }
+  }
+
+  // ---- Error banner (rover physically cannot move that way) ----
+  function showError(msg) {
+    flash('#dc2626', '⚠ ' + msg);
+    const dec = document.getElementById('decision');
+    dec.textContent = '⚠ ' + msg;
+    dec.style.color = 'var(--danger)';
+    dec.style.background = 'rgba(220,38,38,0.10)';
+    running = false; setRun();   // halt so the error is clearly visible
+  }
+
+  // ---- Bumper (limit switch) ----
+  function triggerBumper(which, auto) {
+    if (which === 'front') { stepForward(-1); flash('#f87171', 'FRONT bumper → backing up'); }
+    else                   { stepForward(1);  flash('#fbbf24', 'BACK bumper → moving forward'); }
+    if (!auto) draw();
+  }
+
+  let flashMsg = '', flashColor = '', flashUntil = 0;
+  function flash(color, msg) { flashMsg = msg; flashColor = color; flashUntil = performance.now() + 1200; }
+
+  // ---- One simulation tick ----
+  function tick() {
+    const s = readSensor();
+    const d = decide(s.rgb);
+    updateReadout(s, d);
+    applyAction(d.action);
+    draw();
+  }
+
+  function updateReadout(s, d) {
+    const [r,g,b] = s.rgb;
+    const pct = v => Math.round(v / 255 * 100) + '%';
+    document.getElementById('rR').textContent = r;
+    document.getElementById('rG').textContent = g;
+    document.getElementById('rB').textContent = b;
+    document.getElementById('barR').style.width = pct(r);
+    document.getElementById('barG').style.width = pct(g);
+    document.getElementById('barB').style.width = pct(b);
+    const lux = Math.round((r + g + b) / 3);
+    document.getElementById('rLux').textContent = lux;
+    document.getElementById('barL').style.width = pct(lux);
+    document.getElementById('rTile2').style.background = `rgb(${r},${g},${b})`;
+    document.getElementById('rTileName').textContent = s.tileName;
+    document.getElementById('rDir').textContent = 'Facing ' + DIR_NAME[rover.dir];
+    const labels = { forward:'▲ FORWARD', backward:'▼ BACKWARD', left:'◀ TURN LEFT', right:'TURN RIGHT ▶', stop:'■ STOP' };
+    const dec = document.getElementById('decision');
+    dec.textContent = (labels[d.action] || d.action) + '  ·  ' + DIR_NAME[rover.dir];
+    dec.style.color = d.action === 'stop' ? 'var(--danger)' : 'var(--accent)';
+    dec.style.background = 'var(--panel-2)';
+    dec.title = d.why;
+  }
+
+  // ---- Main loop ----
+  function loop(t) {
+    if (!lastT) lastT = t;
+    const dt = (t - lastT) / 1000; lastT = t;
+    if (running) {
+      acc += dt;
+      const interval = 1 / speed;
+      while (acc >= interval) { tick(); acc -= interval; if (!running) break; }
+    }
+    // event feedback: coloured border ring + message banner (does NOT recolour tiles)
+    if (performance.now() < flashUntil) {
+      ctx.strokeStyle = flashColor;
+      ctx.lineWidth = 8;
+      ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+
+      ctx.font = 'bold 16px Segoe UI';
+      const tw = ctx.measureText(flashMsg).width;
+      const bw = tw + 30, bh = 32;
+      const bx = canvas.width/2 - bw/2, by = canvas.height - 46;
+      ctx.fillStyle = 'rgba(15,23,42,0.9)';
+      roundRect(bx, by, bw, bh, 9); ctx.fill();
+      ctx.fillStyle = flashColor;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillText(flashMsg, bx + 15, by + bh/2 + 1);
+      ctx.textBaseline = 'alphabetic';
+    }
+    requestAnimationFrame(loop);
+  }
+
+  // ---- Painting on canvas ----
+  let painting = false;
+  function cellAt(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+    const px = (e.clientX - rect.left) * scaleX;
+    const py = (e.clientY - rect.top) * scaleY;
+    return { x: Math.floor(px/cell), y: Math.floor(py/cell) };
+  }
+  function paintAt(e) {
+    const { x, y } = cellAt(e);
+    if (x < 0 || y < 0 || x >= N || y >= N) return;
+    if (paintMode === 'rover') { rover.x = x; rover.y = y; }
+    else if (paintMode === 'wall') tiles[y][x] = WALL;
+    else if (paintMode === 'erase') tiles[y][x] = EMPTY;
+    else tiles[y][x] = selColor;
+    draw();
+    refreshReadout();
+  }
+  canvas.addEventListener('pointerdown', e => { painting = true; paintAt(e); });
+  canvas.addEventListener('pointermove', e => { if (painting) paintAt(e); });
+  window.addEventListener('pointerup', () => painting = false);
+
+  // ---- Buttons ----
+  function setRun() {
+    document.getElementById('btnRun').textContent = running ? '⏸ Pause' : '▶ Run';
+    document.getElementById('btnRun').classList.toggle('active', running);
+  }
+  document.getElementById('btnRun').onclick = () => { running = !running; if(running){lastT=0;acc=0;} setRun(); };
+  document.getElementById('btnStep').onclick = () => { running = false; setRun(); tick(); };
+  document.getElementById('btnReset').onclick = () => {
+    rover = { x:0, y:0, dir:2 }; running = false; setRun();
+    document.querySelectorAll('.dir').forEach(b => b.classList.toggle('active', +b.dataset.dir === rover.dir));
+    draw();
+    zeroReadout();
+  };
+
+  // Reset the light-intensity panel to zero (no reading taken yet)
+  function zeroReadout() {
+    ['rR','rG','rB','rLux'].forEach(id => document.getElementById(id).textContent = '0');
+    ['barR','barG','barB','barL'].forEach(id => document.getElementById(id).style.width = '0%');
+    document.getElementById('rTile2').style.background = '#f8fafc';
+    document.getElementById('rTileName').textContent = 'No reading';
+    document.getElementById('rDir').textContent = 'Facing ' + DIR_NAME[rover.dir];
+    const dec = document.getElementById('decision');
+    dec.textContent = 'IDLE';
+    dec.style.color = 'var(--muted)';
+    dec.style.background = 'var(--panel-2)';
+  }
+  document.getElementById('btnClear').onclick = () => { initTiles(); draw(); };
+  document.getElementById('btnFront').onclick = () => triggerBumper('front', false);
+  document.getElementById('btnBack').onclick  = () => triggerBumper('back', false);
+
+  function toolBtn(id, mode) {
+    const b = document.getElementById(id);
+    b.onclick = () => {
+      paintMode = (paintMode === mode) ? 'color' : mode;
+      clearToolActive();
+      if (paintMode === mode) b.classList.add('active');
+      if (paintMode !== 'color') document.querySelectorAll('.swatch').forEach(e => e.classList.remove('sel'));
+    };
+  }
+  toolBtn('btnWall','wall'); toolBtn('btnErase','erase'); toolBtn('btnRover','rover');
+
+  // ---- Rover direction controls ----
+  function setDir(dir) {
+    rover.dir = ((dir % 4) + 4) % 4;
+    document.querySelectorAll('.dir').forEach(b => b.classList.toggle('active', +b.dataset.dir === rover.dir));
+    draw();
+    refreshReadout();
+  }
+
+  // Update the light-intensity panel to the tile currently under the rover (no movement)
+  function refreshReadout() {
+    const s = readSensor();
+    updateReadout(s, decide(s.rgb));
+  }
+  document.querySelectorAll('.dir').forEach(b => b.onclick = () => setDir(+b.dataset.dir));
+  document.getElementById('rotL').onclick = () => setDir(rover.dir + 3);
+  document.getElementById('rotR').onclick = () => setDir(rover.dir + 1);
+  window.addEventListener('keydown', e => {
+    const map = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 };
+    if (e.key in map) { e.preventDefault(); setDir(map[e.key]); }
+  });
+
+  // ---- Sliders ----
+  const bind = (id, valId, fn) => {
+    const el = document.getElementById(id);
+    el.oninput = () => { fn(+el.value); document.getElementById(valId).textContent = el.value; };
+  };
+  bind('speed','vSpeed', v => speed = v);
+  bind('bright','vBright', v => { brightness = v/100; draw(); });
+  bind('sens','vSens', v => sensitivity = v);
+  document.getElementById('gridsize').oninput = e => {
+    const v = +e.target.value;
+    document.getElementById('vGrid').textContent = v;
+    document.getElementById('vGrid2').textContent = v;
+    resizeGrid(v);
+  };
+
+  // ---- Demo layout ----
+  function demo() {
+    initTiles();
+    // a little path of commands
+    const set = (x,y,c) => { if(x<N&&y<N) tiles[y][x]=c; };
+    set(0,0,0); set(0,1,0); set(0,2,0);           // red -> forward down column
+    set(0,3,2);                                    // green -> turn left
+    set(3,3,4); set(4,3,4);                        // white -> turn right
+    set(6,6,1);                                    // yellow -> backward
+    // border walls
+    for (let i=0;i<N;i++){ tiles[N-1][i]=WALL; tiles[i][N-1]=WALL; }
+    rover = { x:0, y:0, dir:2 };
+    draw();
+  }
+
+  resizeGrid(10);
+  demo();
+  setDir(rover.dir);
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
