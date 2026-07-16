@@ -190,7 +190,8 @@ const src={x:648,y:150};
 let walls=[{x:320,y:280,w:CELL,h:CELL},{x:360,y:280,w:CELL,h:CELL},{x:480,y:80,w:CELL,h:CELL}];
 const START={x:88,y:H/2,a:0};
 const rover={x:START.x,y:START.y,a:START.a,head:0,pulse:0,roll:0};
-const ROVER_R=19;              // cylinder radius — also sets how fast it visually spins per pixel driven
+const ROVER_R=11;              // cylinder radius (like a paint roller/vacuum brush drum) — sets roll speed per pixel driven
+const ROVER_LEN=38;            // cylinder length, side-to-side (perpendicular to travel)
 
 /* ---------- FSM ---------- */
 let state='scan', st=0;                       // st = seconds spent in current state
@@ -469,42 +470,57 @@ function drawLock(){
   g.font='700 12px "Orbitron",sans-serif'; g.textAlign='center';
   g.fillStyle='rgba(255,214,140,.95)'; g.fillText('HEAT LOCK',rover.x,rover.y-42);
 }
+// Capsule silhouette for a cylinder lying on its side: round end-caps face
+// sideways (perpendicular to travel), straight sides run front-to-back.
+function roverCapsulePath(){
+  const Rc=ROVER_R, half=ROVER_LEN/2;
+  g.beginPath();
+  g.moveTo(-Rc,-half+Rc);
+  g.arc(0,-half+Rc,Rc,Math.PI,0);      // "left" end cap (top in local space)
+  g.lineTo(Rc,half-Rc);
+  g.arc(0,half-Rc,Rc,0,Math.PI);       // "right" end cap (bottom in local space)
+  g.closePath();
+}
 function drawRover(){
   g.save(); g.translate(rover.x,rover.y); g.rotate(rover.a);
-  // subtle ground shadow so the cylinder reads as a solid body, not a flat disc
+  const Rc=ROVER_R, half=ROVER_LEN/2;
+
+  // subtle ground shadow so the cylinder reads as a solid body lying on the ground
   g.fillStyle='rgba(0,0,0,.28)';
-  g.beginPath(); g.ellipse(0,ROVER_R*0.72,ROVER_R*0.92,ROVER_R*0.32,0,0,7); g.fill();
+  g.beginPath(); g.ellipse(0,Rc*0.7,half*0.92,Rc*0.55,0,0,7); g.fill();
 
-  // cylindrical body, seen from above — this part spins on its own axis as it rolls
-  g.save(); g.rotate(rover.roll);
-  const bg=g.createLinearGradient(-ROVER_R,0,ROVER_R,0);
+  // cylinder body + rolling bands, clipped to the capsule silhouette
+  g.save(); roverCapsulePath(); g.clip();
+  const bg=g.createLinearGradient(-Rc,0,Rc,0);
   bg.addColorStop(0,'#2f3660'); bg.addColorStop(0.5,'#6672a3'); bg.addColorStop(1,'#2f3660');
-  g.fillStyle=bg; g.strokeStyle='#8b96c4'; g.lineWidth=2;
-  g.beginPath(); g.arc(0,0,ROVER_R,0,7); g.fill(); g.stroke();
-  // banded treads around the cylinder — these are what sell the rolling motion
-  g.strokeStyle='rgba(20,22,44,.55)'; g.lineWidth=3.4;
-  for(let i=0;i<8;i++){
-    const a=i*(Math.PI/4);
-    g.beginPath();
-    g.moveTo(Math.cos(a)*ROVER_R*0.3, Math.sin(a)*ROVER_R*0.3);
-    g.lineTo(Math.cos(a)*ROVER_R*0.96, Math.sin(a)*ROVER_R*0.96);
-    g.stroke();
+  g.fillStyle=bg; g.fillRect(-Rc-2,-half-2,Rc*2+4,ROVER_LEN+4);
+  // Bands wrap the cylinder's circumference (front-to-back), not its length —
+  // as it drives, they sweep from the leading edge to the trailing edge, like
+  // a paint roller or a vacuum's brush drum. This is what reads as *rolling*
+  // instead of a flat disc spinning in place.
+  const spacing=9;
+  const offset=((rover.roll*Rc)%spacing+spacing)%spacing;
+  g.strokeStyle='rgba(20,22,44,.55)'; g.lineWidth=2.4;
+  for(let x=-Rc-spacing+offset; x<Rc+spacing; x+=spacing){
+    g.beginPath(); g.moveTo(x,-half); g.lineTo(x,half); g.stroke();
   }
-  g.beginPath(); g.arc(0,0,ROVER_R*0.34,0,7); g.strokeStyle='rgba(255,255,255,.18)'; g.lineWidth=1.4; g.stroke();
-  g.restore();                        // stop spinning — everything below stays fixed to heading
+  g.restore();
 
-  // ultrasonic "eyes" mounted on the front rim, always facing the direction of travel
+  g.strokeStyle='#8b96c4'; g.lineWidth=2; roverCapsulePath(); g.stroke();
+
+  // ultrasonic "eyes" on the leading edge, always facing the direction of travel
   g.fillStyle=blocked?'#ff5470':'#7fd4ff';
-  g.beginPath(); g.arc(ROVER_R-5,-6,3.2,0,7); g.fill();
-  g.beginPath(); g.arc(ROVER_R-5,6,3.2,0,7); g.fill();
+  g.beginPath(); g.arc(Rc-4,-8,3,0,7); g.fill();
+  g.beginPath(); g.arc(Rc-4,8,3,0,7); g.fill();
 
-  // rotating sensor head with the flame lens, mounted centrally on top of the cylinder
+  // rotating sensor head with the flame lens, mounted centrally — independent
+  // of the roll, so it keeps scanning steadily while the body rolls beneath it
   g.rotate(rover.head);
   g.fillStyle='#2a3050'; g.strokeStyle='#9aa5d0'; g.lineWidth=1.6;
-  g.beginPath(); g.roundRect(-5,-7,18,14,5); g.fill(); g.stroke();
+  g.beginPath(); g.roundRect(-5,-7,16,14,5); g.fill(); g.stroke();
   const lens = live? senseAt(rover.a+OFF()[live]) : (winner?reads[winner]:0);
   g.fillStyle=rgb(lens||0); g.shadowColor=rgb(lens||0); g.shadowBlur=10;
-  g.beginPath(); g.arc(9,0,4.2,0,7); g.fill(); g.shadowBlur=0;
+  g.beginPath(); g.arc(8,0,4,0,7); g.fill(); g.shadowBlur=0;
   g.restore();
 }
 // Ghost block under the cursor + a standing prompt, so a student can SEE that
