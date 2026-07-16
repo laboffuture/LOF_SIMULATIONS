@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Leapfrog — Flight Physics Lab | Lab of Future</title>
+<!--
+  PROJECT LEAPFROG — FLIGHT PHYSICS SIMULATION (LAB BUILD)
+  Free-exploration counterpart to LOF_Leapfrog_Game.html.
+  One physics engine, three atmospheres. No difficulty multipliers, no fail states.
+  Everything on screen is computed live from:  Omega = sqrt( m*g / (Ct * rho * R^4) )
+  Single-file HTML, zero external dependencies, desktop-first + touch.
+-->
+<style>
+  :root{
+    --ink:#e9eef2; --dim:#9fb0bb; --panel:rgba(12,18,23,.86); --panel2:rgba(9,14,18,.94);
+    --line:rgba(255,255,255,.13); --bad:#ff5f5f; --warn:#ffb347; --good:#59d98c;
+    --acc:#4fd48d; --accdim:rgba(79,212,141,.16); --amber:#ffd27a;
+  }
+  body.w-earth{ --acc:#4fd48d; --accdim:rgba(79,212,141,.16); }
+  body.w-mars { --acc:#ff9a5c; --accdim:rgba(255,154,92,.16); }
+  body.w-titan{ --acc:#ffcf7d; --accdim:rgba(255,207,125,.16); }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%; background:#05080b;}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif; color:var(--ink);
+       -webkit-user-select:none; user-select:none; overflow:hidden;}
+  .mono{font-family:ui-monospace,"Cascadia Mono",Consolas,"Roboto Mono",monospace;}
+
+  #app{display:flex; flex-direction:column; height:100%;}
+
+  /* ---------- header ---------- */
+  #hdr{display:flex; align-items:center; gap:14px; padding:10px 14px; border-bottom:1px solid var(--line);
+       background:var(--panel2); flex-wrap:wrap; z-index:5;}
+  #brand{font-weight:800; letter-spacing:.22em; font-size:14px;}
+  #brand .lf{color:var(--acc);}
+  #brand small{display:block; font-weight:400; letter-spacing:.18em; font-size:9px; color:var(--dim);}
+  .tabs{display:flex; gap:6px;}
+  .tab{border:1px solid var(--line); background:transparent; color:var(--dim); border-radius:9px;
+       padding:7px 12px; cursor:pointer; font-size:12px; letter-spacing:.1em; text-align:left;}
+  .tab small{display:block; font-size:9px; letter-spacing:.04em; color:var(--dim); margin-top:2px;}
+  .tab.on{border-color:var(--acc); color:var(--ink); background:var(--accdim);}
+  .tab.on small{color:var(--acc);}
+  .tab.mod::after{content:" •"; color:var(--warn);}
+  #btnWhy8{border:1px solid var(--line); color:var(--dim); background:transparent; border-radius:20px;
+       padding:6px 12px; cursor:pointer; font-size:11px; letter-spacing:.08em;}
+  #btnWhy8:hover{border-color:var(--acc); color:var(--ink);}
+  #hdrSpace{flex:1;}
+
+  /* ---------- main ---------- */
+  #main{flex:1; display:flex; min-height:0;}
+  #stage{flex:1; position:relative; min-width:0;}
+  #cv{position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none;}
+
+  /* throttle rail on stage */
+  #thr{position:absolute; right:14px; top:16px; bottom:16px; width:96px; display:flex; flex-direction:column; align-items:center; gap:8px;}
+  #thrTrackWrap{flex:1; width:100%; display:flex; justify-content:center; position:relative;}
+  #thrTrack{position:relative; width:22px; height:100%; background:rgba(255,255,255,.07);
+      border:1px solid var(--line); border-radius:12px; cursor:pointer;}
+  #thrFill{position:absolute; left:0; right:0; bottom:0; height:0%; background:linear-gradient(0deg,var(--accdim),var(--acc)); border-radius:12px;}
+  #thrKnob{position:absolute; left:50%; transform:translate(-50%,50%); bottom:0%; width:40px; height:18px;
+      background:#e9eef2; border-radius:9px; box-shadow:0 2px 8px rgba(0,0,0,.5); cursor:grab;}
+  .mark{position:absolute; left:-34px; right:-8px; height:0; border-top:2px solid; pointer-events:none;}
+  .mark span{position:absolute; right:100%; margin-right:6px; top:-7px; font-size:9px; letter-spacing:.08em; white-space:nowrap;}
+  #thrHover{border-color:#eaffe9; color:#eaffe9;}
+  #thrWarn{border-color:var(--warn); color:var(--warn); border-top-style:dashed; display:none;}
+  #thrRed{border-color:var(--bad); color:var(--bad); display:none;}
+  .holdBtn{width:44px; height:38px; border-radius:10px; border:1px solid var(--line); background:var(--panel);
+      color:var(--ink); font-size:16px; cursor:pointer;}
+  .holdBtn:active{background:var(--accdim); border-color:var(--acc);}
+  #rpmBig{font-size:22px; font-weight:800; text-align:center;}
+  #rpmLab{font-size:9px; color:var(--dim); letter-spacing:.16em; text-align:center;}
+  #thrHead{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:6px 8px; width:100%; cursor:pointer;}
+
+  /* stage chips */
+  .schip{position:absolute; background:var(--panel); border:1px solid var(--line); border-radius:8px;
+      padding:6px 10px; font-size:11px; letter-spacing:.08em;}
+  #worldChip{top:14px; left:14px; color:var(--acc); font-weight:700;}
+  #hoverChip{top:14px; left:50%; transform:translateX(-50%); display:none; border-color:var(--good); color:#d8ffe9;}
+  #banner{position:absolute; top:52px; left:50%; transform:translateX(-50%); display:none;
+      background:rgba(60,10,10,.8); border:1px solid var(--bad); color:#ffd9d9; border-radius:8px;
+      padding:6px 12px; font-size:12px; letter-spacing:.08em; text-align:center; max-width:70%;}
+  #banner.warn{background:rgba(70,45,5,.82); border-color:var(--warn); color:#ffe9c4;}
+  #banner.on{display:block;}
+
+  /* ---------- right instrument column ---------- */
+  #dash{width:378px; min-width:378px; border-left:1px solid var(--line); background:var(--panel2);
+      overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:10px;}
+  .card{border:1px solid var(--line); border-radius:12px; padding:11px 12px; background:var(--panel);}
+  .card h3{font-size:10px; letter-spacing:.2em; color:var(--dim); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;}
+  .card h3 .q{border:1px solid var(--acc); color:var(--acc); border-radius:50%; width:20px; height:20px;
+      background:transparent; cursor:pointer; font-weight:700; font-size:11px; line-height:1;}
+  .eq{font-family:ui-monospace,Consolas,monospace; text-align:center; font-size:16px; color:var(--ink);
+      padding:4px 0 8px;}
+  .eq .vm{color:var(--warn);} .eq .vw{color:var(--acc);}
+  #eqLive{font-family:ui-monospace,Consolas,monospace; text-align:center; font-size:12px; color:var(--dim);
+      border-top:1px dashed var(--line); padding-top:8px; line-height:1.8;}
+  #eqLive b{color:var(--ink); font-size:14px;}
+  #eqCard{cursor:pointer;} #eqCard:hover{border-color:var(--acc);}
+
+  .rgrid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;}
+  .ro{border:1px solid rgba(255,255,255,.08); border-radius:9px; padding:7px 8px;}
+  .ro .k{font-size:8.5px; letter-spacing:.14em; color:var(--dim);}
+  .ro .v{font-size:15px; font-weight:700; margin-top:2px;}
+  .ro .u{font-size:9px; color:var(--dim);}
+
+  /* tip speed bar */
+  #tipWrap{cursor:pointer;} #tipWrap:hover{border-color:var(--acc);}
+  #tipBar{position:relative; height:20px; border-radius:10px; background:rgba(255,255,255,.07); overflow:hidden; margin-top:4px;}
+  #tipWarnZ,#tipRedZ{position:absolute; top:0; bottom:0;}
+  #tipWarnZ{background:rgba(255,179,71,.25);}
+  #tipRedZ{background:rgba(255,95,95,.3);}
+  #tipFill{position:absolute; left:0; top:0; bottom:0; width:0%; background:linear-gradient(90deg,rgba(127,215,168,.5),#7fd7a8);}
+  #tipMark{position:absolute; top:-3px; bottom:-3px; width:3px; background:#fff; border-radius:2px;}
+  #tipScale{display:flex; justify-content:space-between; font-size:9px; color:var(--dim); margin-top:4px;}
+  #tipRead{display:flex; justify-content:space-between; font-size:12px; margin-top:6px;}
+
+  /* motor bay */
+  #bayRing{position:relative; width:150px; height:150px; margin:4px auto;}
+  .pod{position:absolute; width:34px; height:34px; border-radius:50%; border:2px solid var(--line);
+      background:#101a20; color:var(--ink); font-size:12px; font-weight:700; cursor:pointer; transform:translate(-50%,-50%);}
+  .pod:hover{border-color:var(--acc);}
+  .pod.failed{border-color:var(--bad); background:#3a0f0f; color:#ff9d9d; animation:pulse .5s infinite;}
+  .pod.dead{border-color:#554; background:#1a1512; color:#776; cursor:default;}
+  .pod.oppHint{box-shadow:0 0 0 3px rgba(89,217,140,.5);}
+  @keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
+  #bayMsg{text-align:center; font-size:11px; color:var(--dim); min-height:30px; line-height:1.5;}
+  .btnrow{display:flex; gap:8px; justify-content:center; margin-top:6px; flex-wrap:wrap;}
+  .btn{border:1px solid var(--acc); color:var(--ink); background:var(--accdim); border-radius:9px;
+      padding:8px 13px; font-size:11px; letter-spacing:.1em; cursor:pointer; font-weight:600;}
+  .btn:hover{filter:brightness(1.2);}
+  .btn.ghost{background:transparent; border-color:var(--line); color:var(--dim);}
+  .btn:disabled{opacity:.35; cursor:not-allowed;}
+
+  /* power */
+  #powWrap{cursor:pointer;}
+  body.w-titan #powWrap:hover{border-color:var(--acc);}
+  #battBar{position:relative; height:20px; border-radius:10px; background:rgba(255,255,255,.07); overflow:hidden; margin-top:6px;}
+  #battFill{position:absolute; left:0; top:0; bottom:0; width:100%; background:linear-gradient(90deg,#2c6,#9f6);}
+  #battText{position:absolute; inset:0; text-align:center; font-size:11px; line-height:20px; font-weight:700;}
+  #powBody{font-size:11.5px; color:var(--dim); line-height:1.55; margin-top:6px;}
+  #powBody b{color:var(--ink);}
+
+  /* overrides */
+  .sl{display:grid; grid-template-columns:64px 1fr 74px; gap:8px; align-items:center; margin:7px 0;}
+  .sl label{font-size:10px; letter-spacing:.12em; color:var(--dim);}
+  .sl input[type=range]{width:100%; accent-color:var(--acc); cursor:pointer;}
+  .sl .val{font-size:12px; text-align:right;}
+
+  /* experiments footer */
+  #expBar{display:flex; gap:8px; padding:10px 14px; border-top:1px solid var(--line); background:var(--panel2);
+      overflow-x:auto; align-items:center;}
+  #expBar .lab{font-size:9px; letter-spacing:.2em; color:var(--dim); white-space:nowrap;}
+  .exp{border:1px solid var(--line); background:transparent; color:var(--ink); border-radius:20px;
+      padding:7px 13px; font-size:11px; cursor:pointer; white-space:nowrap; letter-spacing:.04em;}
+  .exp:hover{border-color:var(--acc); background:var(--accdim);}
+
+  #toast{position:fixed; bottom:74px; left:50%; transform:translateX(-50%); background:var(--panel2);
+      border:1px solid var(--acc); border-radius:10px; padding:9px 16px; font-size:12.5px; letter-spacing:.05em;
+      opacity:0; transition:opacity .25s; pointer-events:none; z-index:60; text-align:center; max-width:80vw;}
+  #toast.on{opacity:1;}
+
+  /* learning card overlay */
+  #cardOverlay{position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+      background:rgba(3,6,9,.82); z-index:50; padding:16px;}
+  #cardOverlay.on{display:flex;}
+  #cardPanel{width:min(560px,94vw); background:var(--panel2); border:1px solid var(--line); border-radius:16px; padding:22px 24px; max-height:88vh; overflow-y:auto;}
+  #cardKicker{font-size:11px; letter-spacing:.18em; color:var(--acc);}
+  #cardTitle{font-size:19px; letter-spacing:.06em; margin-top:4px;}
+  #cardBody{color:var(--dim); font-size:13.5px; line-height:1.6; margin-top:10px;}
+  #cardBody b{color:var(--ink);}
+  .liveRows{margin-top:10px; font-size:12.5px;}
+  .liveRows div{display:flex; justify-content:space-between; padding:5px 4px; border-bottom:1px solid rgba(255,255,255,.06);}
+  .liveRows span:last-child{font-family:ui-monospace,Consolas,monospace; color:var(--ink);}
+  .beq{font-family:ui-monospace,Consolas,monospace; text-align:center; font-size:15px; color:var(--acc);
+      border:1px dashed var(--line); border-radius:10px; padding:9px; margin:10px 0;}
+
+  @media (max-width:900px){
+    #main{flex-direction:column; overflow-y:auto;}
+    #stage{min-height:52vh; flex:none;}
+    #dash{width:100%; min-width:0; border-left:none; border-top:1px solid var(--line);}
+    body{overflow:auto;}
+  }
+  button:focus-visible{outline:2px solid var(--acc); outline-offset:2px;}
+</style>
+</head>
+<body class="w-earth">
+<div id="app">
+
+  <!-- ============ HEADER ============ -->
+  <div id="hdr">
+    <div id="brand">LEAP<span class="lf">FROG</span><small>FLIGHT PHYSICS LAB · LAB OF FUTURE</small></div>
+    <div class="tabs" id="worldTabs"></div>
+    <div class="tabs" id="frameTabs"></div>
+    <button id="btnWhy8">WHY EIGHT MOTORS?</button>
+    <div id="hdrSpace"></div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div id="main">
+    <div id="stage">
+      <canvas id="cv"></canvas>
+      <div class="schip" id="worldChip">EARTH · g 9.81 · ρ 1.0×</div>
+      <div class="schip" id="hoverChip">T = W · HOVER</div>
+      <div id="banner"></div>
+
+      <div id="thr">
+        <div id="thrHead" title="Tap for the physics">
+          <div id="rpmBig" class="mono">0</div>
+          <div id="rpmLab">ROTOR RPM</div>
+        </div>
+        <button class="holdBtn" id="rpmUpBtn" aria-label="Increase RPM">▲</button>
+        <div id="thrTrackWrap">
+          <div id="thrTrack">
+            <div id="thrFill"></div>
+            <div class="mark" id="thrHover"><span>HOVER</span></div>
+            <div class="mark" id="thrWarn"><span>BUFFET</span></div>
+            <div class="mark" id="thrRed"><span>REDLINE</span></div>
+            <div id="thrKnob"></div>
+          </div>
+        </div>
+        <button class="holdBtn" id="rpmDnBtn" aria-label="Decrease RPM">▼</button>
+      </div>
+    </div>
+
+    <!-- ============ INSTRUMENTS ============ -->
+    <div id="dash">
+      <div class="card" id="eqCard" title="Tap for the physics">
+        <h3>THE MASTER EQUATION — LIVE</h3>
+        <div class="eq">Ω = √( <span class="vm">m</span>·<span class="vw">g</span> / (Cₜ·<span class="vw">ρ</span>·<span class="vm">R</span>⁴) )</div>
+        <div id="eqLive">—</div>
+      </div>
+
+      <div class="card">
+        <h3>TELEMETRY</h3>
+        <div class="rgrid">
+          <div class="ro"><div class="k">HOVER REQ</div><div class="v mono" id="roHover">—</div><div class="u">RPM</div></div>
+          <div class="ro"><div class="k">THRUST / WEIGHT</div><div class="v mono" id="roTW">—</div><div class="u">ratio</div></div>
+          <div class="ro"><div class="k">POWER</div><div class="v mono" id="roPwr">—</div><div class="u">% of Earth hover</div></div>
+          <div class="ro"><div class="k">ALTITUDE</div><div class="v mono" id="roAlt">0.0</div><div class="u">m</div></div>
+          <div class="ro"><div class="k">V-SPEED</div><div class="v mono" id="roVs">0.0</div><div class="u">m/s</div></div>
+          <div class="ro"><div class="k">MOTORS</div><div class="v mono" id="roMot">4/4</div><div class="u">active</div></div>
+        </div>
+      </div>
+
+      <div class="card" id="tipWrap" title="Tap for the physics">
+        <h3>BLADE-TIP SPEED vs LOCAL SOUND <button class="q" id="qTip">?</button></h3>
+        <div id="tipBar">
+          <div id="tipWarnZ"></div><div id="tipRedZ"></div>
+          <div id="tipFill"></div><div id="tipMark"></div>
+        </div>
+        <div id="tipScale"><span>0 m/s</span><span id="tipSnd">a = 340 m/s</span></div>
+        <div id="tipRead" class="mono"><span id="tipVal">0 m/s</span><span id="tipMach">MACH 0.00</span></div>
+      </div>
+
+      <div class="card">
+        <h3>MOTOR BAY — REACTION TORQUE <button class="q" id="qTorque">?</button></h3>
+        <div id="bayRing"></div>
+        <div id="bayMsg">All torques cancelled. Click any pod to fail it and watch the fuselage spin.</div>
+        <div class="btnrow">
+          <button class="btn ghost" id="btnFailRandom">FAIL RANDOM</button>
+          <button class="btn ghost" id="btnResetMotors">RESET MOTORS</button>
+        </div>
+      </div>
+
+      <div class="card" id="powWrap">
+        <h3 id="powTitle">POWER</h3>
+        <div id="battBar"><div id="battFill"></div><div id="battText">100%</div></div>
+        <div id="powBody">—</div>
+        <div class="btnrow">
+          <button class="btn" id="btnWaitTsol" style="display:none">⌛ WAIT 1 TSOL (RTG CHARGES)</button>
+          <button class="btn ghost" id="btnDevil" style="display:none">🌪 SEND A DUST DEVIL</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>AIRFRAME OVERRIDES — FEEL THE R⁴</h3>
+        <div class="sl"><label>MASS m</label><input type="range" id="mRange" min="60" max="160" value="100"><div class="val mono" id="mVal">1.80 kg</div></div>
+        <div class="sl"><label>ROTOR R</label><input type="range" id="rRange" min="70" max="130" value="100"><div class="val mono" id="rVal">0.150 m</div></div>
+        <div class="btnrow"><button class="btn ghost" id="btnSpec">RESET TO SPEC</button></div>
+      </div>
+
+      <div style="text-align:center; color:#5c6c76; font-size:10px; letter-spacing:.14em; padding:4px 0 10px;">
+        Cₜ = 0.0345 · ρ in Earth-relative units · nothing tuned per world — only the equation
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EXPERIMENTS ============ -->
+  <div id="expBar"><span class="lab">EXPERIMENTS ▸</span></div>
+
+  <div id="toast"></div>
+
+  <!-- ============ LEARNING CARD ============ -->
+  <div id="cardOverlay">
+    <div id="cardPanel">
+      <div id="cardKicker">FIELD NOTE</div>
+      <div id="cardTitle">Title</div>
+      <div id="cardBody"></div>
+      <div class="btnrow" style="margin-top:16px"><button class="btn" id="cardClose">GOT IT</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+(function(){
+
+/* ================= physics ================= */
+var TAU=Math.PI*2, CT=0.0345;
+var TIERS={
+  quad:{key:'quad',name:'QUAD', n:4, m:1.8, R:0.15},
+  hexa:{key:'hexa',name:'HEXA', n:6, m:3.2, R:0.35},
+  octo:{key:'octo',name:'OCTO', n:8, m:4.5, R:0.40}
+};
+var WORLDS={
+  earth:{key:'earth',name:'EARTH', g:9.81, rho:1.0,  snd:340, temp:'+15 °C',  kV:0.50,
+    sky:['#6db3e8','#cfe8f6'], hazeC:null, ground:[89,133,79], ground2:[70,108,62], sil:[52,84,52],
+    sub:'g 9.81 · ρ 1.0×'},
+  mars:{key:'mars', name:'MARS',  g:3.71, rho:0.016,snd:240, temp:'−63 °C',  kV:0.15,
+    sky:['#c9905f','#ecc79c'], hazeC:null, ground:[163,85,46], ground2:[140,70,36], sil:[110,52,26],
+    sub:'g 3.71 · ρ 0.016×'},
+  titan:{key:'titan',name:'TITAN', g:1.35, rho:4.3,  snd:194, temp:'−179 °C', kV:1.00,
+    sky:['#4d350f','#c08736'], hazeC:'rgba(255,205,120,.08)', ground:[109,90,55], ground2:[92,75,45], sil:[70,55,30],
+    sub:'g 1.35 · ρ 4.3×'}
+};
+function hoverOmega(m,g,rho,n,R){ return Math.sqrt(m*g/(CT*rho*n*Math.pow(R,4))); }
+function rad2rpm(o){ return o*60/TAU; }
+function rpm2rad(r){ return r*TAU/60; }
+function fmt(n){ return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+function pwrRelEarthHover(w,m,n,R){
+  var raw=Math.sqrt(Math.pow(m*w.g,3)/(w.rho*n*R*R));
+  var base=Math.sqrt(Math.pow(TIERS.quad.m*WORLDS.earth.g,3)/(1*TIERS.quad.n*TIERS.quad.R*TIERS.quad.R));
+  return 100*raw/base;
+}
+function niceCeil(x){
+  var p=Math.pow(10,Math.floor(Math.log(x)/Math.LN10));
+  var m=x/p;
+  var nm = m<=1?1 : m<=2?2 : m<=2.5?2.5 : m<=4?4 : m<=5?5 : m<=8?8 : 10;
+  return nm*p;
+}
+
+/* ================= state ================= */
+var S={
+  world:'earth', frame:'quad',
+  mScale:1, rScale:1,
+  rpm:0,                 // absolute rotor rpm
+  alt:0, vy:0,
+  failed:null, dead:[],  // failed = awaiting opposite cut
+  spin:0, spinV:0,
+  batt:100, tsol:0,
+  devil:null, shake:0, t:0,
+  cardsSeen:{}
+};
+function tier(){ return TIERS[S.frame]; }
+function world(){ return WORLDS[S.world]; }
+function mNow(){ return tier().m*S.mScale; }
+function rNow(){ return tier().R*S.rScale; }
+function nActive(){ return tier().n - S.dead.length; }
+function hovFull(){ var w=world(),t=tier(); return hoverOmega(mNow(),w.g,w.rho,t.n,rNow()); }        // all motors
+function hovAct(){ var w=world(),t=tier(); return hoverOmega(mNow(),w.g,w.rho,Math.max(1,nActive()),rNow()); }
+function redlineRPM(){ return rad2rpm(0.80*world().snd/rNow()); }
+function warnRPM(){ return rad2rpm(0.75*world().snd/rNow()); }
+function dialMaxRPM(){
+  var base=rad2rpm(hovAct())*1.55;
+  if(S.world==='mars') base=Math.max(base, redlineRPM()*1.12);
+  return niceCeil(Math.max(60,base));
+}
+
+/* ================= DOM ================= */
+function $(id){ return document.getElementById(id); }
+var cv=$('cv'), ctx=cv.getContext('2d'), W=0,H=0;
+function resize(){
+  var r=cv.parentElement.getBoundingClientRect();
+  var DPR=Math.min(2,window.devicePixelRatio||1);
+  W=r.width; H=r.height;
+  cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize',resize);
+
+function toast(msg,ms){
+  var t=$('toast'); t.innerHTML=msg; t.classList.add('on');
+  clearTimeout(t._h); t._h=setTimeout(function(){t.classList.remove('on');},ms||2800);
+}
+
+/* ================= audio ================= */
+var AU={ctx:null};
+function auInit(){
+  if(AU.ctx) return;
+  var C=window.AudioContext||window.webkitAudioContext; if(!C) return;
+  AU.ctx=new C();
+  AU.master=AU.ctx.createGain(); AU.master.gain.value=0.45; AU.master.connect(AU.ctx.destination);
+  AU.rG=AU.ctx.createGain(); AU.rG.gain.value=0; AU.rG.connect(AU.master);
+  AU.rF=AU.ctx.createBiquadFilter(); AU.rF.type='lowpass'; AU.rF.frequency.value=900; AU.rF.connect(AU.rG);
+  AU.o1=AU.ctx.createOscillator(); AU.o1.type='sawtooth'; AU.o1.frequency.value=60; AU.o1.connect(AU.rF); AU.o1.start();
+  AU.o2=AU.ctx.createOscillator(); AU.o2.type='triangle'; AU.o2.frequency.value=62; AU.o2.connect(AU.rF); AU.o2.start();
+  AU.wG=AU.ctx.createGain(); AU.wG.gain.value=0; AU.wG.connect(AU.master);
+  AU.wO=AU.ctx.createOscillator(); AU.wO.type='sine'; AU.wO.frequency.value=700; AU.wO.connect(AU.wG); AU.wO.start();
+}
+document.addEventListener('pointerdown',function(){ auInit(); if(AU.ctx&&AU.ctx.state==='suspended')AU.ctx.resume(); });
+document.addEventListener('keydown',function(){ auInit(); if(AU.ctx&&AU.ctx.state==='suspended')AU.ctx.resume(); });
+function auRotor(frac,on){
+  if(!AU.ctx) return;
+  var f=45+frac*230;
+  AU.o1.frequency.setTargetAtTime(f,AU.ctx.currentTime,0.05);
+  AU.o2.frequency.setTargetAtTime(f*1.02+2,AU.ctx.currentTime,0.05);
+  AU.rF.frequency.setTargetAtTime(300+frac*1400,AU.ctx.currentTime,0.05);
+  AU.rG.gain.setTargetAtTime(on?(0.02+frac*0.11):0,AU.ctx.currentTime,0.08);
+}
+function auWarn(mach){
+  if(!AU.ctx) return;
+  if(mach>0.75){
+    var k=(mach-0.75)/0.15;
+    AU.wO.frequency.setTargetAtTime(600+2200*k,AU.ctx.currentTime,0.03);
+    var g=0.02+0.08*Math.min(1,k);
+    if(mach>0.80){ g*=(Math.sin(AU.ctx.currentTime*22)>0)?1:0.15; }
+    AU.wG.gain.setTargetAtTime(g,AU.ctx.currentTime,0.03);
+  } else AU.wG.gain.setTargetAtTime(0,AU.ctx.currentTime,0.06);
+}
+function blip(f,dur,type,vol){
+  if(!AU.ctx) return;
+  var o=AU.ctx.createOscillator(),g=AU.ctx.createGain();
+  o.type=type||'sine'; o.frequency.value=f; g.gain.value=vol||0.1;
+  o.connect(g); g.connect(AU.master);
+  g.gain.setTargetAtTime(0.0001,AU.ctx.currentTime+(dur||0.08),0.03);
+  o.start(); o.stop(AU.ctx.currentTime+(dur||0.08)+0.15);
+}
+function chime(){ blip(660,0.12); setTimeout(function(){blip(990,0.18);},110); }
+
+/* ================= learning cards ================= */
+var CARDS={
+  rpm:{k:'LEARNING · THE MASTER EQUATION', t:'One formula, three skies', body:function(){
+    var rows='';
+    [['earth','quad'],['mars','hexa'],['titan','octo']].forEach(function(p){
+      var w=WORLDS[p[0]],t=TIERS[p[1]];
+      var o=hoverOmega(t.m,w.g,w.rho,t.n,t.R);
+      rows+='<div><span>'+w.name+' · '+t.name+' (R '+t.R+' m)</span><span>'+fmt(rad2rpm(o))+' RPM · '+pwrRelEarthHover(w,t.m,t.n,t.R).toFixed(1)+'% pwr</span></div>';
+    });
+    return '<div class="beq">Ω = √( m·g / (Cₜ · ρ · R⁴) )</div>'+
+      'Lift must equal weight. Heavier craft (<b>m</b>) and stronger gravity (<b>g</b>) push the required RPM up; '+
+      'denser air (<b>ρ</b>) and bigger rotors (<b>R⁴</b> — fourth power!) pull it down. '+
+      'This lab has no difficulty sliders. Only this equation, evaluated live — try the R override slider and watch the fourth power work:'+
+      '<div class="liveRows">'+rows+'</div>';
+  }},
+  transonic:{k:'LEARNING · WHY ONLY MARS HAS A REDLINE', t:'The transonic ceiling', body:function(){
+    var w=WORLDS.mars,t=TIERS.hexa;
+    var o=hoverOmega(t.m,w.g,w.rho,t.n,t.R);
+    return 'Mars\' air is <b>1.6% of Earth\'s</b>, so rotors must spin furiously just to hover. But that air is cold CO₂ — '+
+      'sound travels at only <b>~240 m/s</b> there (Earth ~340, Titan ~194). Blade-tip speed is Ω × R; in forward flight the '+
+      'advancing blade adds your airspeed on top. As tips near the local speed of sound, shockwaves form: drag spikes, lift collapses.<br><br>'+
+      'You <b>feel</b> the ceiling before it breaks you — rising pitch, buffet, and the number climbing. Color, number and audio together, never color alone.'+
+      '<div class="liveRows">'+
+      '<div><span>Mars hexa hover tip Mach</span><span>'+((o*t.R)/w.snd).toFixed(2)+' (still air)</span></div>'+
+      '<div><span>Redline</span><span>Mach 0.80</span></div>'+
+      '<div><span>Earth hover tip Mach</span><span>0.22 — miles of headroom</span></div>'+
+      '<div><span>Titan hover tip Mach</span><span>0.03 — never a factor</span></div>'+
+      '</div>Only Mars is pinched from both sides: thin air demands RPM, cold air lowers the ceiling.';
+  }},
+  rtg:{k:'LEARNING · POWER ON TITAN', t:'Power that never sleeps — and never hurries', body:function(){
+    return 'Dragonfly carries an <b>MMRTG</b>: decaying plutonium making roughly <b>70 W</b>, steadily, day or night — '+
+      '<b>no daylight dependence at all</b>. But flight needs kilowatts, so the RTG trickle-charges a battery between hops.<br><br>'+
+      'At <b>−179 °C</b>, heaters take a large bite of that 70 W before the battery sees any of it. The mission rhythm follows: '+
+      'fly about half an hour, then wait about two Titan days while the charge creeps back. <b>Patience is the fuel.</b>';
+  }},
+  torque:{k:'LEARNING · WHY THE SPIN?', t:'Reaction torque', body:function(){
+    return 'Every rotor pushes the airframe the <b>opposite</b> way it spins. On a multicopter, spin directions alternate '+
+      'so the torques cancel.<br><br>Lose one motor and its uncancelled twin yaws the whole fuselage — the craft spins itself. '+
+      'The fix costs symmetry: <b>cut the diametrically opposite motor</b> to rebalance the torques, and fly on with less total '+
+      'thrust. On a quad that means half your lift. In the game build you get two seconds; here, take your time and watch.';
+  }},
+  octo:{k:'LEARNING · MISSION DESIGN', t:'Why eight?', body:function(){
+    return 'On Titan, nobody comes to fix you.<br><br>An <b>octocopter</b> that loses a motor — and cuts the opposite one — '+
+      'still flies on six with margin to spare. A quad in the same situation keeps only <b>half</b> its lift; a hexa on Mars '+
+      'ends up with its hover point pushed <b>above</b> the transonic redline (try it: hexa, Mars, fail a pod).<br><br>'+
+      'Redundancy is not a luxury out there. It is the design. <b>This is literally why NASA\'s Dragonfly is an octocopter.</b>';
+  }}
+};
+function showCard(key){
+  var c=CARDS[key]; if(!c) return;
+  $('cardKicker').textContent=c.k;
+  $('cardTitle').textContent=c.t;
+  $('cardBody').innerHTML=c.body();
+  $('cardOverlay').classList.add('on');
+  if(!S.cardsSeen[key]){ S.cardsSeen[key]=true; setTimeout(function(){toast('FIELD NOTE LOGGED · '+Object.keys(S.cardsSeen).length+'/5');},200); }
+  blip(520,0.1);
+}
+$('cardClose').addEventListener('click',function(){ $('cardOverlay').classList.remove('on'); });
+window.addEventListener('keydown',function(e){ if(e.key==='Escape') $('cardOverlay').classList.remove('on'); });
+$('eqCard').addEventListener('click',function(){ showCard('rpm'); });
+$('thrHead').addEventListener('click',function(){ showCard('rpm'); });
+$('tipWrap').addEventListener('click',function(){ showCard('transonic'); });
+$('qTip').addEventListener('click',function(e){ e.stopPropagation(); showCard('transonic'); });
+$('qTorque').addEventListener('click',function(e){ e.stopPropagation(); showCard('torque'); });
+$('btnWhy8').addEventListener('click',function(){ showCard('octo'); });
+$('powWrap').addEventListener('click',function(){ if(S.world==='titan') showCard('rtg'); });
+
+/* ================= header tabs ================= */
+function buildTabs(){
+  var wt=$('worldTabs'); wt.innerHTML='';
+  ['earth','mars','titan'].forEach(function(k){
+    var w=WORLDS[k], b=document.createElement('button');
+    b.className='tab'+(S.world===k?' on':'');
+    var t=tier(), o=hoverOmega(mNow(),w.g,w.rho,t.n,rNow());
+    b.innerHTML=w.name+'<small>'+fmt(rad2rpm(o))+' RPM hover · '+pwrRelEarthHover(w,mNow(),t.n,rNow()).toFixed(1)+'% pwr</small>';
+    b.addEventListener('click',function(){ setWorld(k); });
+    wt.appendChild(b);
+  });
+  var ft=$('frameTabs'); ft.innerHTML='';
+  ['quad','hexa','octo'].forEach(function(k){
+    var t=TIERS[k], b=document.createElement('button');
+    b.className='tab'+(S.frame===k?' on':'')+((S.frame===k&&(S.mScale!==1||S.rScale!==1))?' mod':'');
+    b.innerHTML=t.name+'<small>'+t.n+' motors · '+t.m+' kg · R '+t.R+' m</small>';
+    b.addEventListener('click',function(){ setFrame(k); });
+    ft.appendChild(b);
+  });
+}
+function setWorld(k){
+  S.world=k;
+  document.body.className='w-'+k;
+  $('worldChip').textContent=WORLDS[k].name+' · '+WORLDS[k].sub+' · '+WORLDS[k].temp;
+  if(k!=='titan') S.batt=100;
+  buildTabs(); buildPower(); clampRPM(); blip(500,0.06);
+  var t=tier(), hv=rad2rpm(hovAct());
+  if(k==='mars'&&hv>redlineRPM()){
+    toast('The '+t.name+' cannot hover on Mars — required RPM sits past the transonic ceiling. Watch the markers.',4200);
+  }
+}
+function setFrame(k){
+  S.frame=k; S.dead=[]; S.failed=null; S.spinV=0; S.mScale=1; S.rScale=1;
+  $('mRange').value=100; $('rRange').value=100;
+  buildTabs(); buildBay(); clampRPM(); syncOverrideLabels(); blip(500,0.06);
+}
+function clampRPM(){ S.rpm=Math.min(S.rpm, dialMaxRPM()); }
+
+/* ================= throttle ================= */
+var thrDrag=false;
+function thrFromEvent(e){
+  var r=$('thrTrack').getBoundingClientRect();
+  var f=1-(e.clientY-r.top)/r.height;
+  S.rpm=Math.max(0,Math.min(1,f))*dialMaxRPM();
+}
+$('thrTrack').addEventListener('pointerdown',function(e){ thrDrag=true; $('thrTrack').setPointerCapture(e.pointerId); thrFromEvent(e); });
+$('thrTrack').addEventListener('pointermove',function(e){ if(thrDrag) thrFromEvent(e); });
+$('thrTrack').addEventListener('pointerup',function(){ thrDrag=false; });
+$('thrTrack').addEventListener('pointercancel',function(){ thrDrag=false; });
+var rpmHold=0;
+function bindHold(id,dir){
+  var el=$(id);
+  el.addEventListener('pointerdown',function(e){ rpmHold=dir; el.setPointerCapture(e.pointerId); });
+  el.addEventListener('pointerup',function(){ rpmHold=0; });
+  el.addEventListener('pointercancel',function(){ rpmHold=0; });
+}
+bindHold('rpmUpBtn',1); bindHold('rpmDnBtn',-1);
+var keys={};
+window.addEventListener('keydown',function(e){
+  keys[e.key]=true;
+  if(/^[1-8]$/.test(e.key)) podAction(parseInt(e.key,10)-1);
+});
+window.addEventListener('keyup',function(e){ keys[e.key]=false; });
+
+/* ================= motor bay ================= */
+function buildBay(){
+  var t=tier(), ring=$('bayRing'); ring.innerHTML='';
+  for(var i=0;i<t.n;i++){
+    var ang=i*TAU/t.n - Math.PI/2;
+    var b=document.createElement('button');
+    b.className='pod'; b.textContent=(i+1);
+    b.style.left=(75+Math.cos(ang)*58)+'px';
+    b.style.top =(75+Math.sin(ang)*58)+'px';
+    (function(idx){ b.addEventListener('click',function(){ podAction(idx); }); })(i);
+    ring.appendChild(b);
+  }
+  paintBay();
+}
+function paintBay(){
+  var t=tier(), pods=$('bayRing').querySelectorAll('.pod');
+  for(var i=0;i<pods.length;i++){
+    pods[i].className='pod'
+      +(S.failed===i?' failed':'')
+      +(S.dead.indexOf(i)>=0?' dead':'')
+      +((S.failed!==null&&i===(S.failed+t.n/2)%t.n&&S.dead.indexOf(i)<0)?' oppHint':'');
+  }
+  $('roMot').textContent=nActive()+'/'+t.n;
+  var msg;
+  if(S.failed!==null){
+    msg='<b style="color:var(--bad)">MOTOR '+(S.failed+1)+' OUT</b> — uncancelled torque is yawing the craft. '+
+        'Cut its opposite: <b>pod '+(((S.failed+t.n/2)%t.n)+1)+'</b>.';
+  } else if(S.dead.length){
+    var hvA=rad2rpm(hovAct());
+    msg='Torque balanced on '+nActive()+'/'+t.n+' motors. Hover now needs <b class="mono">'+fmt(hvA)+' RPM</b>'+
+        (S.world==='mars'&&hvA>redlineRPM()?' — <b style="color:var(--bad)">above the redline. This craft is landing.</b>':'.');
+  } else {
+    msg='All torques cancelled. Click any pod to fail it and watch the fuselage spin.';
+  }
+  $('bayMsg').innerHTML=msg;
+}
+function podAction(i){
+  var t=tier();
+  if(i>=t.n) return;
+  if(S.failed===null){
+    if(S.dead.indexOf(i)>=0) return;
+    if(S.dead.length>=t.n-2){ toast('Not enough healthy pods left for a demo — reset the motors.'); return; }
+    S.failed=i; S.spinV=2.5; blip(220,0.2,'square',0.16);
+    toast('MOTOR '+(i+1)+' FAILED — reaction torque uncancelled');
+  } else {
+    if(i===S.failed) return;
+    var opp=(S.failed+t.n/2)%t.n;
+    if(i===opp){
+      S.dead.push(S.failed,opp); S.failed=null; S.spinV*=0.2;
+      chime();
+      var lost=Math.round(200/t.n);
+      toast('TORQUE BALANCED — thrust −'+lost+'%');
+      if(!S.cardsSeen.torque) setTimeout(function(){ showCard('torque'); },700);
+    } else if(S.dead.indexOf(i)<0){
+      blip(180,0.12,'square',0.16);
+      toast('Wrong pod — that one is still lifting you. The opposite is pod '+(opp+1)+'.');
+    }
+  }
+  paintBay();
+}
+$('btnFailRandom').addEventListener('click',function(){
+  var t=tier(), tries=0, i;
+  if(S.failed!==null){ toast('One is already out — cut its opposite first.'); return; }
+  do{ i=Math.floor(Math.random()*t.n); tries++; }while((S.dead.indexOf(i)>=0)&&tries<40);
+  podAction(i);
+});
+$('btnResetMotors').addEventListener('click',function(){
+  S.dead=[]; S.failed=null; S.spinV=0; paintBay(); toast('Motors reset — all '+tier().n+' pods healthy.');
+});
+
+/* ================= power panel ================= */
+function buildPower(){
+  var w=world();
+  $('btnWaitTsol').style.display = S.world==='titan'?'inline-block':'none';
+  $('btnDevil').style.display   = S.world==='mars' ?'inline-block':'none';
+  if(S.world==='earth'){
+    $('powTitle').textContent='POWER — GROUND SUPPORT';
+    $('powBody').innerHTML='Lab conditions: pack topped up by ground power. Battery is not the constraint here — Earth is your baseline: hover power defined as <b>100%</b>.';
+  } else if(S.world==='mars'){
+    $('powTitle').textContent='POWER — SOLAR + BATTERY';
+    $('powBody').innerHTML='A solar panel trickles charge under a dusty sky. Flying at <b>~150% of Earth hover power</b>, the pack drains fast — and settling dust slowly chokes the panel. Dust devils are turbulence <b>and</b> a free panel-cleaning in the same swirl.';
+  } else {
+    $('powTitle').textContent='POWER — MMRTG · TAP FOR THE PHYSICS';
+    $('powBody').innerHTML='<b>MMRTG output 70 W</b> · heaters at −179 °C take −48 W · <b>net +22 W to the battery</b> — day or night, it makes no difference. Flight draws kilowatts; hover here needs only <b>~2.6% of Earth power</b>, so the pack lasts — but recharging demands Tsols of patience.';
+  }
+}
+$('btnWaitTsol').addEventListener('click',function(){
+  S.tsol++; S.batt=Math.min(100,S.batt+36);
+  toast('TSOL +1 · RTG trickled +36% into the pack · TSOL '+S.tsol);
+  blip(300,0.1); setTimeout(function(){blip(420,0.12);},120);
+});
+$('btnDevil').addEventListener('click',function(){
+  if(S.devil){ toast('One is already crossing the field.'); return; }
+  S.devil={x:-60, sp:55+Math.random()*20, cleaned:false};
+});
+
+/* ================= overrides ================= */
+function syncOverrideLabels(){
+  $('mVal').textContent=mNow().toFixed(2)+' kg';
+  $('rVal').textContent=rNow().toFixed(3)+' m';
+}
+$('mRange').addEventListener('input',function(){ S.mScale=this.value/100; syncOverrideLabels(); buildTabs(); clampRPM(); });
+$('rRange').addEventListener('input',function(){ S.rScale=this.value/100; syncOverrideLabels(); buildTabs(); clampRPM(); });
+$('btnSpec').addEventListener('click',function(){
+  S.mScale=1; S.rScale=1; $('mRange').value=100; $('rRange').value=100;
+  syncOverrideLabels(); buildTabs(); clampRPM(); toast('Back to spec airframe.');
+});
+
+/* ================= experiments ================= */
+var EXPS=[
+  {t:'Earth hover', f:function(){ setFrame('quad'); setWorld('earth'); S.alt=14; S.vy=0; S.rpm=rad2rpm(hovAct());
+     toast('Quad on Earth — throttle parked exactly on the hover mark. T = W.'); }},
+  {t:'Same quad, Mars air', f:function(){ setFrame('quad'); setWorld('mars'); S.alt=18; S.vy=0; S.rpm=rad2rpm(hovAct());
+     toast('The quad\'s hover RPM on Mars sits PAST the transonic redline — it physically cannot hover here. Feel it fall.',4600); }},
+  {t:'Mars on six rotors', f:function(){ setFrame('hexa'); setWorld('mars'); S.alt=16; S.vy=0; S.rpm=rad2rpm(hovAct());
+     toast('Bigger rotors (R⁴!) + six motors drop hover RPM below the ceiling — barely. Narrow margin is the Mars condition.',4200); }},
+  {t:'Ride the redline', f:function(){ setFrame('hexa'); setWorld('mars'); S.alt=16; S.vy=0; S.rpm=redlineRPM()*0.985;
+     toast('Throttle parked just under Mach 0.80. Nudge ▲ and listen — you feel the ceiling before it breaks you.',4200); }},
+  {t:'Titan: nearly free', f:function(){ setFrame('octo'); setWorld('titan'); S.alt=14; S.vy=0; S.rpm=rad2rpm(hovAct());
+     toast('135 RPM. ~2.6% of Earth hover power. Hover is nearly free — the battery is the fight.',4200); }},
+  {t:'Lose a motor', f:function(){ if(S.failed===null){ $('btnFailRandom').click(); } toast('Now cut the opposite pod in the Motor Bay →'); }},
+  {t:'Feel the R⁴', f:function(){ $('rRange').value=80; S.rScale=0.8; syncOverrideLabels(); buildTabs(); clampRPM();
+     toast('Rotor radius −20% → hover RPM up ~56%. That is a fourth power at work. Slide R back and watch.',4600); }}
+];
+(function(){
+  var bar=$('expBar');
+  EXPS.forEach(function(x){
+    var b=document.createElement('button'); b.className='exp'; b.textContent=x.t;
+    b.addEventListener('click',function(){ x.f(); });
+    bar.appendChild(b);
+  });
+})();
+
+/* ================= simulation loop ================= */
+var last=performance.now();
+function loop(now){
+  requestAnimationFrame(loop);
+  var dt=Math.min(0.033,(now-last)/1000); last=now;
+  step(dt); render(); readouts();
+}
+function step(dt){
+  S.t+=dt;
+  var w=world(), t=tier();
+  // throttle input
+  var rIn=0;
+  if(keys['ArrowUp']||keys['w']||keys['W']) rIn+=1;
+  if(keys['ArrowDown']||keys['s']||keys['S']) rIn-=1;
+  if(rIn===0) rIn=rpmHold;
+  if(rIn!==0) S.rpm=Math.max(0,Math.min(dialMaxRPM(),S.rpm+rIn*dt*0.4*dialMaxRPM()));
+
+  var omega=rpm2rad(S.rpm);
+  var mach=(omega*rNow())/w.snd;
+
+  // transonic efficiency + buffet
+  var eff=1;
+  if(mach>0.80) eff=1-0.65*Math.min(1,(mach-0.80)/0.10);
+  if(mach>0.77) S.shake=Math.max(S.shake,(mach-0.77)*70);
+
+  // uncut failure: torque spin + lift bleed
+  if(S.failed!==null){ S.spinV+=dt*4; }
+  S.spin+=S.spinV*dt;
+  S.spinV*=Math.pow(0.6,dt);
+  var spinEff=1/(1+Math.max(0,S.spinV)*0.10);
+
+  // battery gate
+  var battOut = (S.world!=='earth' && S.batt<=0);
+  if(battOut){ S.rpm=Math.max(0,S.rpm-dialMaxRPM()*dt*0.5); omega=rpm2rad(S.rpm); }
+
+  var ge = S.alt<6 ? 1+0.25*(1-S.alt/6) : 1;
+  var hf=hovFull();
+  var tw = Math.pow(omega/hf,2)*(nActive()/t.n)*eff*ge*spinEff;
+
+  // power + battery
+  var pFrac=(nActive()/t.n)*Math.pow(omega/hf,3);
+  if(S.world==='titan'){ S.batt=Math.max(0,S.batt-0.48*pFrac*dt); }
+  if(S.world==='mars'){ S.batt=Math.max(0,Math.min(100,S.batt-0.40*pFrac*dt+0.05*dt)); }
+  if(battOut&&S.alt<=0.05&&!S._darkToast){ S._darkToast=true; toast('PACK DARK — '+(S.world==='titan'?'wait a Tsol for the RTG.':'send a dust devil, or wait for the sun.'),4200); }
+  if(S.batt>5) S._darkToast=false;
+
+  // vertical dynamics
+  var ay=w.g*(tw-1)-w.kV*S.vy;
+  S.vy+=ay*dt; S.alt+=S.vy*dt;
+  if(S.alt<=0){ if(S.vy<-3){ S.shake=Math.max(S.shake,10); blip(90,0.1,'square',0.12); } S.alt=0; S.vy=Math.max(0,S.vy*-0.1); }
+  if(S.alt>58){ S.alt=58; S.vy=Math.min(0,S.vy); if(!S._ceilToast){ S._ceilToast=true; toast('Lab ceiling — 58 m. The physics keeps going; the room does not.'); } }
+  if(S.alt<50) S._ceilToast=false;
+
+  // dust devil
+  if(S.devil){
+    var dvv=S.devil; dvv.x+=dvv.sp*dt;
+    if(Math.abs(dvv.x-W*0.44)<70){
+      S.shake=Math.max(S.shake,9);
+      S.vy+=(Math.random()*2-1)*4*dt;
+      if(!dvv.cleaned&&S.world==='mars'){ dvv.cleaned=true; S.batt=Math.min(100,S.batt+12);
+        toast('DUST DEVIL SCOURED THE PANELS · charge +12%'); blip(760,0.15); }
+    }
+    if(dvv.x>W+80) S.devil=null;
+  }
+  S.shake*=Math.pow(0.12,dt);
+
+  auRotor(S.rpm/Math.max(1,dialMaxRPM()), S.rpm>1);
+  auWarn(S.world==='mars'?mach:0);
+}
+
+/* ================= readouts / DOM sync ================= */
+function readouts(){
+  var w=world(), t=tier();
+  var dMax=dialMaxRPM();
+  var omega=rpm2rad(S.rpm);
+  var hf=hovFull(), hA=hovAct();
+  var mach=(omega*rNow())/w.snd;
+  var eff = mach>0.80 ? 1-0.65*Math.min(1,(mach-0.80)/0.10) : 1;
+  var ge = S.alt<6 ? 1+0.25*(1-S.alt/6) : 1;
+  var tw=Math.pow(omega/hf,2)*(nActive()/t.n)*eff*ge;
+  var pNow=pwrRelEarthHover(w,mNow(),t.n,rNow())*(nActive()/t.n)*Math.pow(omega/hf,3);
+
+  // throttle rail
+  var f=S.rpm/dMax;
+  $('thrFill').style.height=(f*100)+'%';
+  $('thrKnob').style.bottom=(f*100)+'%';
+  $('thrHover').style.bottom=Math.min(100,rad2rpm(hA)/dMax*100)+'%';
+  var isMars=S.world==='mars';
+  $('thrWarn').style.display=isMars?'block':'none';
+  $('thrRed').style.display=isMars?'block':'none';
+  if(isMars){
+    $('thrWarn').style.bottom=Math.min(100,warnRPM()/dMax*100)+'%';
+    $('thrRed').style.bottom=Math.min(100,redlineRPM()/dMax*100)+'%';
+  }
+  $('rpmBig').textContent=fmt(S.rpm);
+  $('rpmBig').style.color = isMars&&mach>0.80?'var(--bad)':isMars&&mach>0.75?'var(--warn)':'var(--ink)';
+
+  // equation live
+  $('eqLive').innerHTML='√( '+mNow().toFixed(2)+' × '+w.g+' / (0.0345 × '+w.rho+' × '+rNow().toFixed(3)+'⁴) )'+
+    ' = <b>'+fmt(rad2rpm(hf))+' RPM</b> to hover'+
+    (S.dead.length? ' <span style="color:var(--warn)">('+fmt(rad2rpm(hA))+' on '+nActive()+' motors)</span>':'');
+
+  // telemetry
+  $('roHover').textContent=fmt(rad2rpm(hA));
+  $('roTW').textContent=tw.toFixed(2);
+  $('roTW').style.color=Math.abs(tw-1)<0.03?'var(--good)':'var(--ink)';
+  $('roPwr').textContent=pNow.toFixed(1);
+  $('roAlt').textContent=S.alt.toFixed(1);
+  $('roVs').textContent=(S.vy>=0?'+':'')+S.vy.toFixed(1);
+
+  $('hoverChip').style.display = (Math.abs(tw-1)<0.03&&S.alt>0.3)?'block':'none';
+
+  // tip bar
+  var tip=omega*rNow();
+  $('tipSnd').textContent='a = '+w.snd+' m/s ('+w.temp+')';
+  $('tipWarnZ').style.left=(75)+'%'; $('tipWarnZ').style.width='5%';
+  $('tipRedZ').style.left='80%'; $('tipRedZ').style.width='20%';
+  var tf=Math.min(1,tip/w.snd);
+  $('tipFill').style.width=(tf*100)+'%';
+  $('tipFill').style.background = mach>0.80?'linear-gradient(90deg,rgba(255,95,95,.4),#ff6a5a)':
+    mach>0.75?'linear-gradient(90deg,rgba(255,179,71,.4),#ffb347)':'linear-gradient(90deg,rgba(127,215,168,.4),#7fd7a8)';
+  $('tipMark').style.left='calc('+(tf*100)+'% - 1px)';
+  $('tipVal').textContent=tip.toFixed(0)+' m/s tip';
+  $('tipMach').textContent='MACH '+mach.toFixed(2);
+  $('tipMach').style.color=mach>0.80?'var(--bad)':mach>0.75?'var(--warn)':'var(--ink)';
+
+  // battery
+  var showB=S.world!=='earth';
+  $('battBar').style.display=showB?'block':'none';
+  if(showB){
+    $('battFill').style.width=S.batt+'%';
+    $('battFill').style.background=S.batt<25?'linear-gradient(90deg,#c33,#e96)':'linear-gradient(90deg,#2c6,#9f6)';
+    $('battText').textContent=Math.round(S.batt)+'%'+(S.world==='titan'?' · TSOL '+S.tsol:'');
+  }
+
+  // banner
+  var bn=$('banner'); bn.removeAttribute('style');
+  if(isMars&&mach>0.80){ bn.className='on'; bn.textContent='⚠ TIP MACH '+mach.toFixed(2)+' — SHOCK STALL · LIFT COLLAPSING'; }
+  else if(isMars&&mach>0.75){ bn.className='on warn'; bn.textContent='TIP MACH '+mach.toFixed(2)+' — TRANSONIC BUFFET'; }
+  else if(S.failed!==null){ bn.className='on'; bn.textContent='⚠ UNCANCELLED TORQUE — CUT POD '+(((S.failed+t.n/2)%t.n)+1)+' IN THE MOTOR BAY'; }
+  else if(S.world!=='earth'&&S.batt<15){ bn.className='on warn'; bn.textContent='BATTERY '+Math.round(S.batt)+'% — THE PACK IS FADING'; }
+  else bn.className='';
+}
+
+/* ================= renderer ================= */
+function mix(a,b,k){ return [a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k]; }
+function css(c,al){ return 'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+','+(al===undefined?1:al)+')'; }
+function hash1(a){ var h=Math.sin(a*127.1)*43758.5453; return h-Math.floor(h); }
+
+var wash=[];
+function render(){
+  if(W<2){ resize(); }
+  var w=world(), t=tier();
+  var shx=(Math.random()*2-1)*S.shake, shy=(Math.random()*2-1)*S.shake;
+  ctx.clearRect(0,0,W,H);
+
+  // sky
+  var groundY=H-64;
+  var g=ctx.createLinearGradient(0,0,0,groundY);
+  g.addColorStop(0,w.sky[0]); g.addColorStop(1,w.sky[1]);
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,groundY);
+  if(w.hazeC){ ctx.fillStyle=w.hazeC;
+    for(var hb=0;hb<4;hb++){ ctx.fillRect(0,groundY*0.12+hb*groundY*0.18+Math.sin(S.t*0.2+hb)*6,W,10); } }
+  if(S.world==='mars'){ ctx.fillStyle='rgba(255,244,230,.85)'; ctx.beginPath(); ctx.arc(W*0.2,groundY*0.22,12,0,TAU); ctx.fill();
+    ctx.fillStyle='rgba(255,244,230,.15)'; ctx.beginPath(); ctx.arc(W*0.2,groundY*0.22,26,0,TAU); ctx.fill(); }
+  if(S.world==='earth'){ ctx.fillStyle='rgba(255,255,255,.5)';
+    for(var cl=0;cl<4;cl++){ var cxp=((cl*430+S.t*7)%(W+260))-130;
+      ctx.beginPath(); ctx.ellipse(cxp,groundY*0.2+cl*24,60,12,0,0,TAU); ctx.fill(); } }
+
+  // far silhouette hills (parallax)
+  ctx.fillStyle=css(mix(w.sil,[255,255,255],0.15),0.5);
+  ctx.beginPath(); ctx.moveTo(0,groundY);
+  for(var x=0;x<=W;x+=26){
+    var n=hash1(Math.floor((x+S.t*4)/90))*44+16;
+    ctx.lineTo(x,groundY-n);
+  }
+  ctx.lineTo(W,groundY); ctx.closePath(); ctx.fill();
+  ctx.fillStyle=css(w.sil,0.85);
+  ctx.beginPath(); ctx.moveTo(0,groundY);
+  for(var x2=0;x2<=W;x2+=22){
+    var n2=hash1(Math.floor((x2+S.t*10)/60)+50)*26+6;
+    ctx.lineTo(x2,groundY-n2);
+  }
+  ctx.lineTo(W,groundY); ctx.closePath(); ctx.fill();
+
+  // ground
+  var gg=ctx.createLinearGradient(0,groundY,0,H);
+  gg.addColorStop(0,css(w.ground)); gg.addColorStop(1,css(w.ground2));
+  ctx.fillStyle=gg; ctx.fillRect(0,groundY,W,H-groundY);
+  ctx.strokeStyle='rgba(255,255,255,.12)';
+  ctx.beginPath(); ctx.moveTo(0,groundY); ctx.lineTo(W,groundY); ctx.stroke();
+
+  // altitude scale
+  var scaleTop=70, pxPerM=(groundY-scaleTop)/60;
+  ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.fillStyle='rgba(233,238,242,.6)';
+  ctx.font='10px ui-monospace,Consolas,monospace'; ctx.textAlign='left';
+  for(var a=0;a<=60;a+=10){
+    var yy=groundY-a*pxPerM;
+    ctx.beginPath(); ctx.moveTo(10,yy); ctx.lineTo(a%20===0?26:18,yy); ctx.stroke();
+    if(a%20===0) ctx.fillText(a+' m',30,yy+3);
+  }
+
+  // dust devil
+  if(S.devil){
+    var dvx=S.devil.x;
+    for(var i=0;i<8;i++){
+      var yy2=groundY-(i*26+12), rr=14+i*5+Math.sin(S.t*4+i)*3;
+      ctx.fillStyle='rgba(214,170,120,.13)';
+      ctx.beginPath(); ctx.ellipse(dvx+Math.sin(S.t*2.5+i*1.7)*6,yy2,rr,rr*0.5,0,0,TAU); ctx.fill();
+    }
+    ctx.fillStyle='rgba(190,140,95,.3)';
+    ctx.beginPath(); ctx.ellipse(dvx,groundY,26,7,0,0,TAU); ctx.fill();
+  }
+
+  // drone position
+  var dx=W*0.44+shx, dy=groundY-S.alt*pxPerM - 12 + shy;
+
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,'+(0.32/(1+S.alt*0.07))+')';
+  var shR=44/(1+S.alt*0.02);
+  ctx.beginPath(); ctx.ellipse(dx,groundY-3,shR,shR*0.22,0,0,TAU); ctx.fill();
+
+  // ground effect ring
+  if(S.alt<6&&S.rpm>1){
+    ctx.strokeStyle='rgba(255,255,255,'+(0.18*(1-S.alt/6))+')';
+    ctx.lineWidth=2;
+    var gr=30+((S.t*40)%26);
+    ctx.beginPath(); ctx.ellipse(dx,groundY-3,gr,gr*0.2,0,0,TAU); ctx.stroke();
+  }
+
+  // downwash particles
+  var frac=S.rpm/Math.max(1,dialMaxRPM());
+  if(frac>0.05&&S.alt>0.2){
+    for(var k2=0;k2<2;k2++) wash.push({x:dx+(Math.random()*60-30),y:dy+16,v:60+frac*160,a:0.5});
+  }
+  ctx.strokeStyle='rgba(255,255,255,.3)';
+  for(var pi=wash.length-1;pi>=0;pi--){
+    var p=wash[pi]; p.y+=p.v*0.016; p.a-=0.02;
+    if(p.y>groundY-2||p.a<=0){ wash.splice(pi,1); continue; }
+    ctx.globalAlpha=p.a;
+    ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x,p.y+7); ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+
+  drawDrone(dx,dy,frac);
+
+  // force vectors
+  var omega=rpm2rad(S.rpm), hf=hovFull();
+  var eff = ((omega*rNow())/w.snd)>0.80 ? 1-0.65*Math.min(1,(((omega*rNow())/w.snd)-0.80)/0.10) : 1;
+  var ge = S.alt<6 ? 1+0.25*(1-S.alt/6) : 1;
+  var tw=Math.pow(omega/hf,2)*(nActive()/t.n)*eff*ge;
+  drawArrow(dx-92,dy, -Math.min(2.2,tw)*46, tw>0.02?'#7fd7a8':'rgba(127,215,168,.25)','T');
+  drawArrow(dx-92,dy, 46, '#ff8a7a','W');
+
+  // torque arc when failed
+  if(S.failed!==null){
+    ctx.strokeStyle='rgba(255,120,100,.85)'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(dx,dy,74,S.t*3,S.t*3+2.2); ctx.stroke();
+    var ea=S.t*3+2.2;
+    ctx.fillStyle='rgba(255,120,100,.85)';
+    ctx.beginPath();
+    ctx.moveTo(dx+Math.cos(ea)*74,dy+Math.sin(ea)*74);
+    ctx.lineTo(dx+Math.cos(ea-0.25)*66,dy+Math.sin(ea-0.25)*66);
+    ctx.lineTo(dx+Math.cos(ea-0.25)*82,dy+Math.sin(ea-0.25)*82);
+    ctx.closePath(); ctx.fill();
+  }
+}
+function drawArrow(x,y,len,color,label){
+  ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y+len); ctx.stroke();
+  var s=len<0?-1:1;
+  ctx.beginPath(); ctx.moveTo(x,y+len); ctx.lineTo(x-6,y+len-9*s); ctx.lineTo(x+6,y+len-9*s); ctx.closePath(); ctx.fill();
+  ctx.font='bold 12px ui-monospace,Consolas,monospace'; ctx.textAlign='center';
+  ctx.fillText(label,x,y+len+(len<0?-8:16));
+}
+function drawDrone(dx,dy,frac){
+  var t=tier();
+  var ringR = t.key==='quad'?46 : t.key==='hexa'?58 : 66;
+  ctx.save();
+  ctx.translate(dx,dy);
+  // hubs orbit when yawing
+  for(var i=0;i<t.n;i++){
+    var ang=i*TAU/t.n - Math.PI/2 + S.spin;
+    var rx=Math.cos(ang)*ringR, ry=Math.sin(ang)*ringR*0.38 - 8;
+    ctx.strokeStyle='#20262b'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(rx,ry); ctx.stroke();
+    var dead=S.dead.indexOf(i)>=0, failing=S.failed===i;
+    var rr=rNow()*120*(t.key==='quad'?1:0.62);
+    rr=Math.max(12,Math.min(34,rr));
+    if(dead||failing){
+      ctx.strokeStyle=failing?'#ff7a6a':'#5a4034'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(rx-rr*0.5,ry-rr*0.18); ctx.lineTo(rx+rr*0.5,ry+rr*0.18); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(rx-rr*0.5,ry+rr*0.18); ctx.lineTo(rx+rr*0.5,ry-rr*0.18); ctx.stroke();
+    } else {
+      ctx.fillStyle='rgba(210,225,235,'+(0.10+0.2*frac)+')';
+      ctx.beginPath(); ctx.ellipse(rx,ry,rr,rr*0.3,0,0,TAU); ctx.fill();
+      ctx.strokeStyle='rgba(230,240,250,.55)'; ctx.lineWidth=1.4;
+      var ba=S.t*(6+50*frac)+i;
+      ctx.beginPath(); ctx.moveTo(rx-Math.cos(ba)*rr,ry-Math.sin(ba)*rr*0.3);
+      ctx.lineTo(rx+Math.cos(ba)*rr,ry+Math.sin(ba)*rr*0.3); ctx.stroke();
+    }
+    // shock sparkle past redline (Mars)
+    if(S.world==='mars'&&(rpm2rad(S.rpm)*rNow())/world().snd>0.80&&!dead&&!failing){
+      ctx.fillStyle='rgba(255,220,200,'+(0.4+0.4*Math.random())+')';
+      ctx.beginPath(); ctx.arc(rx+rr*0.9,ry,2.2,0,TAU); ctx.fill();
+      ctx.beginPath(); ctx.arc(rx-rr*0.9,ry,2.2,0,TAU); ctx.fill();
+    }
+    ctx.fillStyle=dead?'#3a2c24':failing?'#ff6a5a':'#c8d4dc';
+    ctx.beginPath(); ctx.arc(rx,ry,4.6,0,TAU); ctx.fill();
+    ctx.fillStyle='rgba(233,238,242,.7)'; ctx.font='9px ui-monospace,Consolas,monospace'; ctx.textAlign='center';
+    ctx.fillText(String(i+1),rx,ry-8);
+  }
+  // body
+  ctx.fillStyle='#dfe6ea';
+  ctx.beginPath(); ctx.ellipse(0,4,20,11,0,0,TAU); ctx.fill();
+  ctx.fillStyle='#28323a';
+  ctx.beginPath(); ctx.ellipse(0,1,9,5,0,0,TAU); ctx.fill();
+  ctx.strokeStyle='#39434c'; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.moveTo(-14,13); ctx.lineTo(-14,20); ctx.lineTo(-3,20); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(14,13); ctx.lineTo(14,20); ctx.lineTo(3,20); ctx.stroke();
+  ctx.restore();
+}
+
+/* ================= boot ================= */
+function boot(){
+  resize();
+  buildTabs(); buildBay(); buildPower(); syncOverrideLabels();
+  $('worldChip').textContent='EARTH · '+WORLDS.earth.sub+' · '+WORLDS.earth.temp;
+  S.rpm=0;
+  requestAnimationFrame(loop);
+  setTimeout(function(){ toast('Drag the throttle rail past the HOVER mark to lift off. Tap anything with a ? — five field notes hide in this lab.',5200); },600);
+}
+boot();
+
+})();
+</script>
+</body>
+</html>
