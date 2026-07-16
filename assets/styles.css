@@ -241,6 +241,11 @@ main {
   line-height: 1.35;
 }
 
+/* When there's no icon, the badge has no icon height to clear, so give the title its own clearance */
+.badge + h3 {
+  margin-top: 20px;
+}
+
 .project-card p {
   margin: 0;
   font-size: 0.85rem;
