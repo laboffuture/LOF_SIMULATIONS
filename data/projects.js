@@ -6,7 +6,7 @@
 const PROJECTS = [
   // ---------------- ROBOTICS ----------------
   { id: "alien-waypoint-decoder", title: "Alien Waypoint Decoder", category: "robotics", status: "live", url: "../sims/robotics/alien-waypoint-decoder/index.html", description: "Decode alien signal waypoints and guide a rover through them." },
-  { id: "heat-seeker-rover", title: "Heat Seeker Rover", category: "robotics", status: "live", url: "../sims/robotics/heat-seeker-rover/index.html", icon: "../sims/robotics/heat-seeker-rover/icon.png", description: "A rover that tracks and homes in on heat signatures." },
+  { id: "heat-seeker-rover", title: "Heat Seeker Rover", category: "robotics", status: "live", url: "../sims/robotics/heat-seeker-rover/index.html", description: "A rover that tracks and homes in on heat signatures." },
   { id: "shadow-triggered-escape-bot", title: "Shadow-Triggered Escape Bot", category: "robotics", status: "live", url: "../sims/robotics/shadow-triggered-escape-bot/index.html", description: "A bot that reacts to shadow triggers to plan an escape route." },
   ...Array.from({ length: 27 }, (_, i) => ({
     id: `robotics-coming-soon-${i + 4}`,
