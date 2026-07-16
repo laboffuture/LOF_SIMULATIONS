@@ -6,7 +6,7 @@
 const PROJECTS = [
   // ---------------- ROBOTICS ----------------
   { id: "alien-waypoint-decoder", title: "Alien Waypoint Decoder", category: "robotics", status: "live", url: "../sims/robotics/alien-waypoint-decoder/index.html", description: "Decode alien signal waypoints and guide a rover through them." },
-  { id: "heat-seeker-rover", title: "Heat Seeker Rover", category: "robotics", status: "live", url: "../sims/robotics/heat-seeker-rover/index.html", description: "A rover that tracks and homes in on heat signatures." },
+  { id: "heat-seeker-rover", title: "Heat Seeker Rover", category: "robotics", status: "live", url: "../sims/robotics/heat-seeker-rover/index.html", icon: "../sims/robotics/heat-seeker-rover/icon.png", description: "A rover that tracks and homes in on heat signatures." },
   { id: "shadow-triggered-escape-bot", title: "Shadow-Triggered Escape Bot", category: "robotics", status: "live", url: "../sims/robotics/shadow-triggered-escape-bot/index.html", description: "A bot that reacts to shadow triggers to plan an escape route." },
   ...Array.from({ length: 27 }, (_, i) => ({
     id: `robotics-coming-soon-${i + 4}`,
@@ -28,9 +28,8 @@ const PROJECTS = [
   })),
 
   // ---------------- SPACE & ASTRONOMY ----------------
-  { id: "solar-system", title: "Solar System Simulation", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/solar-system/index.html", description: "An interactive model of the solar system's planets and orbits." },
   { id: "sol-sync-moon-lab", title: "Moon Lab", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/SolSync/Simulation.html", description: "Explore moon phases, tidal locking, and eclipses." },
-  ...Array.from({ length: 28 }, (_, i) => ({
+  ...Array.from({ length: 29 }, (_, i) => ({
     id: `space-astronomy-coming-soon-${i + 2}`,
     title: `Space & Astronomy Project ${String(i + 2).padStart(2, "0")}`,
     category: "space-astronomy",

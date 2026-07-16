@@ -18,6 +18,7 @@
         }
         el.innerHTML = `
           <span class="badge ${isLive ? "live" : "coming-soon"}">${isLive ? "Live" : "Coming Soon"}</span>
+          ${p.icon ? `<img class="project-icon" src="${p.icon}" alt="" />` : ""}
           <h3>${p.title}</h3>
           <p>${p.description || ""}</p>
         `;
