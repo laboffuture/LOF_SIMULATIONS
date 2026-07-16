@@ -189,7 +189,8 @@ const P={
 const src={x:648,y:150};
 let walls=[{x:320,y:280,w:CELL,h:CELL},{x:360,y:280,w:CELL,h:CELL},{x:480,y:80,w:CELL,h:CELL}];
 const START={x:88,y:H/2,a:0};
-const rover={x:START.x,y:START.y,a:START.a,head:0,pulse:0};
+const rover={x:START.x,y:START.y,a:START.a,head:0,pulse:0,roll:0};
+const ROVER_R=19;              // cylinder radius — also sets how fast it visually spins per pixel driven
 
 /* ---------- FSM ---------- */
 let state='scan', st=0;                       // st = seconds spent in current state
@@ -351,6 +352,7 @@ function update(dt){
     const nx=rover.x+Math.cos(rover.a)*P.speed*dt, ny=rover.y+Math.sin(rover.a)*P.speed*dt;
     if(!canMove(nx,ny)){ setState('warn'); return; }
     rover.x=nx; rover.y=ny; driven+=P.speed*dt;
+    rover.roll+=(P.speed*dt)/ROVER_R;              // spin the cylinder as it rolls forward
     if(driven>=DRIVE_STEP){ reads={left:null,front:null,right:null}; winner=null; setState('scan'); }
   }
 
@@ -360,7 +362,7 @@ function update(dt){
 
   else if(state==='reverse'){
     const nx=rover.x-Math.cos(rover.a)*P.speed*0.75*dt, ny=rover.y-Math.sin(rover.a)*P.speed*0.75*dt;
-    if(canMove(nx,ny)){ rover.x=nx; rover.y=ny; reversed+=P.speed*0.75*dt; }
+    if(canMove(nx,ny)){ rover.x=nx; rover.y=ny; reversed+=P.speed*0.75*dt; rover.roll-=(P.speed*0.75*dt)/ROVER_R; }
     else reversed=99;
     if(reversed>=52||st>1.6){
       // turn toward whichever flank has more room; break ties with heat
@@ -469,26 +471,40 @@ function drawLock(){
 }
 function drawRover(){
   g.save(); g.translate(rover.x,rover.y); g.rotate(rover.a);
-  // wheels
-  g.fillStyle='#161b30';
-  for(const [wx,wy] of [[-9,-15],[9,-15],[-9,15],[9,15]]){
-    g.beginPath(); g.roundRect(wx-6,wy-5,12,10,3); g.fill();
-  }
-  // chassis
-  const bg=g.createLinearGradient(-18,0,20,0); bg.addColorStop(0,'#3b4468'); bg.addColorStop(1,'#59648f');
+  // subtle ground shadow so the cylinder reads as a solid body, not a flat disc
+  g.fillStyle='rgba(0,0,0,.28)';
+  g.beginPath(); g.ellipse(0,ROVER_R*0.72,ROVER_R*0.92,ROVER_R*0.32,0,0,7); g.fill();
+
+  // cylindrical body, seen from above — this part spins on its own axis as it rolls
+  g.save(); g.rotate(rover.roll);
+  const bg=g.createLinearGradient(-ROVER_R,0,ROVER_R,0);
+  bg.addColorStop(0,'#2f3660'); bg.addColorStop(0.5,'#6672a3'); bg.addColorStop(1,'#2f3660');
   g.fillStyle=bg; g.strokeStyle='#8b96c4'; g.lineWidth=2;
-  g.beginPath(); g.roundRect(-18,-14,38,28,8); g.fill(); g.stroke();
-  // ultrasonic "eyes"
+  g.beginPath(); g.arc(0,0,ROVER_R,0,7); g.fill(); g.stroke();
+  // banded treads around the cylinder — these are what sell the rolling motion
+  g.strokeStyle='rgba(20,22,44,.55)'; g.lineWidth=3.4;
+  for(let i=0;i<8;i++){
+    const a=i*(Math.PI/4);
+    g.beginPath();
+    g.moveTo(Math.cos(a)*ROVER_R*0.3, Math.sin(a)*ROVER_R*0.3);
+    g.lineTo(Math.cos(a)*ROVER_R*0.96, Math.sin(a)*ROVER_R*0.96);
+    g.stroke();
+  }
+  g.beginPath(); g.arc(0,0,ROVER_R*0.34,0,7); g.strokeStyle='rgba(255,255,255,.18)'; g.lineWidth=1.4; g.stroke();
+  g.restore();                        // stop spinning — everything below stays fixed to heading
+
+  // ultrasonic "eyes" mounted on the front rim, always facing the direction of travel
   g.fillStyle=blocked?'#ff5470':'#7fd4ff';
-  g.beginPath(); g.arc(15,-6,3.4,0,7); g.fill();
-  g.beginPath(); g.arc(15,6,3.4,0,7); g.fill();
-  // rotating sensor head with the flame lens
+  g.beginPath(); g.arc(ROVER_R-5,-6,3.2,0,7); g.fill();
+  g.beginPath(); g.arc(ROVER_R-5,6,3.2,0,7); g.fill();
+
+  // rotating sensor head with the flame lens, mounted centrally on top of the cylinder
   g.rotate(rover.head);
   g.fillStyle='#2a3050'; g.strokeStyle='#9aa5d0'; g.lineWidth=1.6;
-  g.beginPath(); g.roundRect(-5,-7,20,14,5); g.fill(); g.stroke();
+  g.beginPath(); g.roundRect(-5,-7,18,14,5); g.fill(); g.stroke();
   const lens = live? senseAt(rover.a+OFF()[live]) : (winner?reads[winner]:0);
   g.fillStyle=rgb(lens||0); g.shadowColor=rgb(lens||0); g.shadowBlur=10;
-  g.beginPath(); g.arc(11,0,4.2,0,7); g.fill(); g.shadowBlur=0;
+  g.beginPath(); g.arc(9,0,4.2,0,7); g.fill(); g.shadowBlur=0;
   g.restore();
 }
 // Ghost block under the cursor + a standing prompt, so a student can SEE that
@@ -653,7 +669,7 @@ document.getElementById('fRand').onclick=()=>{
 document.getElementById('fClear').onclick=()=>{ walls=[]; hmDirty=true; };
 document.getElementById('fReset').onclick=reset;
 function reset(){
-  rover.x=START.x; rover.y=START.y; rover.a=START.a; rover.head=0;
+  rover.x=START.x; rover.y=START.y; rover.a=START.a; rover.head=0; rover.roll=0;
   reads={left:null,front:null,right:null}; winner=null; live=null;
   scanIdx=0; scanPhase='aim'; lockAfterTurn=false;
   setState('scan');
