@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orbital Mechanics Sandbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E8E6DF;
+  --paper-2:#DEDBD2;
+  --ink:#1B2A33;
+  --ink-2:#4A5A66;
+  --ink-3:#8A9AA6;
+  --rule:#B9BDB4;
+  --signal:#C2410C;
+  --signal-2:#EA580C;
+  --earth:#2D4A5A;
+  --ok:#15803D;
+  --warn:#A16207;
+  --grid:rgba(27,42,51,.07);
+  --mono:'Roboto Mono',ui-monospace,monospace;
+  --sans:'Archivo',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+#app{display:grid;grid-template-columns:1fr 340px;height:100vh}
+
+/* ---- STAGE ---- */
+#stage{position:relative;overflow:hidden;background:
+  linear-gradient(var(--grid) 1px,transparent 1px) 0 0/40px 40px,
+  linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/40px 40px,
+  var(--paper);
+  cursor:grab}
+#stage.drag{cursor:grabbing}
+canvas{display:block;width:100%;height:100%}
+
+#titlecard{position:absolute;top:20px;left:22px;pointer-events:none;z-index:3}
+#titlecard h1{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+#titlecard p{font-family:var(--mono);font-size:10px;color:var(--ink-3);letter-spacing:.06em;margin-top:3px}
+
+/* ---- TIME BAR ---- */
+#timebar{position:absolute;left:22px;right:22px;bottom:18px;z-index:4;
+  background:rgba(232,230,223,.94);border:1px solid var(--rule);
+  backdrop-filter:blur(6px);padding:11px 14px;display:flex;align-items:center;gap:14px}
+.tb-btn{font-family:var(--mono);font-size:11px;font-weight:700;background:transparent;
+  border:1px solid var(--rule);color:var(--ink);padding:6px 10px;cursor:pointer;letter-spacing:.05em}
+.tb-btn:hover{border-color:var(--ink);background:var(--paper-2)}
+.tb-btn.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tb-btn:focus-visible{outline:2px solid var(--signal);outline-offset:1px}
+#warpwrap{flex:1;display:flex;align-items:center;gap:10px}
+#warp{flex:1;-webkit-appearance:none;appearance:none;height:2px;background:var(--rule);cursor:pointer}
+#warp::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;background:var(--signal);
+  border-radius:50%;cursor:pointer;border:2px solid var(--paper)}
+#warp::-moz-range-thumb{width:13px;height:13px;background:var(--signal);border-radius:50%;
+  cursor:pointer;border:2px solid var(--paper)}
+#warp:focus-visible{outline:2px solid var(--signal);outline-offset:4px}
+.tlabel{font-family:var(--mono);font-size:10px;color:var(--ink-3);letter-spacing:.08em;
+  text-transform:uppercase;white-space:nowrap}
+#met{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.04em;
+  min-width:112px;text-align:right}
+
+/* ---- PANEL ---- */
+#panel{background:var(--paper-2);border-left:1px solid var(--rule);
+  overflow-y:auto;display:flex;flex-direction:column}
+#panel::-webkit-scrollbar{width:8px}
+#panel::-webkit-scrollbar-track{background:var(--paper-2)}
+#panel::-webkit-scrollbar-thumb{background:var(--rule)}
+.sec{border-bottom:1px solid var(--rule);padding:15px 16px}
+.sec-h{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:11px;display:flex;
+  justify-content:space-between;align-items:baseline}
+.sec-h span{color:var(--signal)}
+
+/* readout rows */
+.row{display:flex;justify-content:space-between;align-items:baseline;
+  font-family:var(--mono);font-size:11px;padding:3px 0}
+.row dt{color:var(--ink-3);letter-spacing:.04em}
+.row dd{font-weight:500;font-variant-numeric:tabular-nums}
+.row.big dd{font-size:15px;font-weight:700}
+.row .u{color:var(--ink-3);font-size:9px;margin-left:2px;font-weight:400}
+
+/* the big element readout */
+#elements{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+#elements .row{border-bottom:1px dotted var(--rule)}
+
+/* sliders */
+.ctl{margin-bottom:13px}
+.ctl:last-child{margin-bottom:0}
+.ctl-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.ctl-name{font-family:var(--mono);font-size:10px;color:var(--ink-2);letter-spacing:.06em}
+.ctl-val{font-family:var(--mono);font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;
+  background:var(--rule);cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;
+  background:var(--ink);border-radius:50%;cursor:pointer;border:2px solid var(--paper-2)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;background:var(--ink);
+  border-radius:50%;cursor:pointer;border:2px solid var(--paper-2)}
+input[type=range]:focus-visible{outline:2px solid var(--signal);outline-offset:4px}
+
+/* burn pad */
+#burnpad{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.bbtn{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.04em;
+  background:var(--paper);border:1px solid var(--rule);color:var(--ink);
+  padding:9px 4px;cursor:pointer;transition:.1s}
+.bbtn:hover{border-color:var(--signal);color:var(--signal)}
+.bbtn:active{background:var(--signal);color:var(--paper)}
+.bbtn:focus-visible{outline:2px solid var(--signal);outline-offset:1px}
+.bbtn.wide{grid-column:1/-1}
+.bbtn.hi{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.bbtn.hi:hover{background:var(--signal);border-color:var(--signal);color:var(--paper)}
+.bbtn:disabled{opacity:.35;cursor:not-allowed}
+
+/* presets */
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-family:var(--mono);font-size:9px;letter-spacing:.04em;background:var(--paper);
+  border:1px solid var(--rule);padding:5px 8px;cursor:pointer}
+.chip:hover{border-color:var(--ink)}
+.chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip:focus-visible{outline:2px solid var(--signal);outline-offset:1px}
+
+/* toggles */
+.tog{display:flex;align-items:center;justify-content:space-between;
+  font-family:var(--mono);font-size:10px;padding:4px 0;cursor:pointer;color:var(--ink-2)}
+.tog input{appearance:none;-webkit-appearance:none;width:26px;height:14px;background:var(--rule);
+  border-radius:0;position:relative;cursor:pointer;transition:.12s}
+.tog input:checked{background:var(--signal)}
+.tog input::after{content:'';position:absolute;top:2px;left:2px;width:10px;height:10px;
+  background:var(--paper);transition:.12s}
+.tog input:checked::after{left:14px}
+.tog input:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+
+/* note */
+.note{font-family:var(--mono);font-size:9.5px;line-height:1.5;color:var(--ink-3);
+  border-left:2px solid var(--rule);padding-left:8px;margin-top:9px}
+.note b{color:var(--signal);font-weight:700}
+
+#status{font-family:var(--mono);font-size:10px;letter-spacing:.05em;padding:7px 10px;
+  border:1px solid var(--rule);text-align:center;color:var(--ink-3)}
+#status.bad{border-color:var(--signal);color:var(--signal);font-weight:700}
+#status.good{border-color:var(--ok);color:var(--ok)}
+
+@media(max-width:900px){
+  #app{grid-template-columns:1fr;grid-template-rows:1fr auto}
+  #panel{border-left:none;border-top:1px solid var(--rule);max-height:46vh}
+  #timebar{left:10px;right:10px;bottom:10px;flex-wrap:wrap;gap:8px}
+  #met{min-width:auto}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <canvas id="cv"></canvas>
+    <div id="titlecard">
+      <h1>Orbital Mechanics Sandbox</h1>
+      <p>Two-body Keplerian · μ = 398600.4418 km³/s²</p>
+    </div>
+    <div id="timebar">
+      <button class="tb-btn" id="playBtn">PAUSE</button>
+      <div id="warpwrap">
+        <span class="tlabel">Time warp</span>
+        <input type="range" id="warp" min="0" max="7" step="1" value="2">
+        <span class="tlabel" id="warpVal" style="min-width:52px">×60</span>
+      </div>
+      <span class="tlabel">MET</span>
+      <div id="met">00:00:00:00</div>
+    </div>
+  </div>
+
+  <aside id="panel">
+    <div class="sec">
+      <div class="sec-h">Osculating elements <span id="satName">SAT-1</span></div>
+      <dl id="elements">
+        <div class="row big"><dt>alt</dt><dd><span id="e_alt">400</span><span class="u">km</span></dd></div>
+        <div class="row big"><dt>vel</dt><dd><span id="e_vel">7.67</span><span class="u">km/s</span></dd></div>
+        <div class="row"><dt>apo</dt><dd><span id="e_apo">400</span><span class="u">km</span></dd></div>
+        <div class="row"><dt>peri</dt><dd><span id="e_peri">400</span><span class="u">km</span></dd></div>
+        <div class="row"><dt>a</dt><dd><span id="e_a">6771</span><span class="u">km</span></dd></div>
+        <div class="row"><dt>e</dt><dd id="e_ecc">0.0000</dd></div>
+        <div class="row"><dt>T</dt><dd id="e_per">92.4m</dd></div>
+        <div class="row"><dt>ν</dt><dd><span id="e_nu">0.0</span><span class="u">°</span></dd></div>
+        <div class="row"><dt>fpa</dt><dd><span id="e_fpa">0.00</span><span class="u">°</span></dd></div>
+        <div class="row"><dt>ω</dt><dd><span id="e_arg">0.0</span><span class="u">°</span></dd></div>
+      </dl>
+      <div id="status" style="margin-top:11px">ORBIT STABLE</div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Initial orbit</div>
+      <div class="chips" id="presets">
+        <button class="chip on" data-p="leo">ISS 400km</button>
+        <button class="chip" data-p="gps">GPS MEO</button>
+        <button class="chip" data-p="geo">GEO</button>
+        <button class="chip" data-p="molniya">Molniya</button>
+        <button class="chip" data-p="gto">GTO</button>
+      </div>
+      <div class="note">Presets set <b>a</b> and <b>e</b> directly. Everything downstream — period, velocity, shape — is derived, never assigned.</div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Shape</div>
+      <div class="ctl">
+        <div class="ctl-top"><span class="ctl-name">PERIAPSIS ALT</span><span class="ctl-val"><span id="v_rp">400</span> km</span></div>
+        <input type="range" id="s_rp" min="100" max="40000" step="10" value="400">
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><span class="ctl-name">APOAPSIS ALT</span><span class="ctl-val"><span id="v_ra">400</span> km</span></div>
+        <input type="range" id="s_ra" min="100" max="40000" step="10" value="400">
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><span class="ctl-name">ARG. OF PERIAPSIS</span><span class="ctl-val"><span id="v_arg">0</span>°</span></div>
+        <input type="range" id="s_arg" min="0" max="359" step="1" value="0">
+      </div>
+      <div class="note">Apoapsis can't fall below periapsis — the sliders enforce it, because <b>ra ≥ rp</b> is definitional, not a rule.</div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Manoeuvre <span id="dvSpent">Δv 0 m/s</span></div>
+      <div id="burnpad">
+        <button class="bbtn" data-dv="0.01">PRO +10</button>
+        <button class="bbtn" data-dv="-0.01">RET −10</button>
+        <button class="bbtn" data-dv="0.1">PRO +100</button>
+        <button class="bbtn" data-dv="-0.1">RET −100</button>
+        <button class="bbtn" data-dr="0.05">RAD OUT +50</button>
+        <button class="bbtn" data-dr="-0.05">RAD IN −50</button>
+        <button class="bbtn wide hi" id="circBtn">CIRCULARISE HERE</button>
+        <button class="bbtn wide" id="hohBtn">HOHMANN → TARGET</button>
+      </div>
+      <div class="note">Burns apply at the satellite's <b>current position</b>. Where you burn decides what changes: prograde at periapsis raises apoapsis, and nowhere else.</div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Hohmann target</div>
+      <div class="ctl">
+        <div class="ctl-top"><span class="ctl-name">TARGET CIRC. ALT</span><span class="ctl-val"><span id="v_tgt">35786</span> km</span></div>
+        <input type="range" id="s_tgt" min="200" max="40000" step="10" value="35786">
+      </div>
+      <dl>
+        <div class="row"><dt>Δv₁ inject</dt><dd><span id="h_dv1">2399</span><span class="u">m/s</span></dd></div>
+        <div class="row"><dt>Δv₂ circ</dt><dd><span id="h_dv2">1457</span><span class="u">m/s</span></dd></div>
+        <div class="row"><dt>Δv total</dt><dd><span id="h_tot">3857</span><span class="u">m/s</span></dd></div>
+        <div class="row"><dt>transfer time</dt><dd id="h_tof">5.29h</dd></div>
+        <div class="row"><dt>prop. burned</dt><dd><span id="h_mf">58.7</span><span class="u">% @450s</span></dd></div>
+      </dl>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Display</div>
+      <label class="tog">SHOW VELOCITY VECTOR<input type="checkbox" id="t_vel" checked></label>
+      <label class="tog">SHOW GROUND TRACK<input type="checkbox" id="t_trail" checked></label>
+      <label class="tog">SHOW APSIDES<input type="checkbox" id="t_aps" checked></label>
+      <label class="tog">SHOW REFERENCE ORBITS<input type="checkbox" id="t_ref" checked></label>
+      <label class="tog">J2 OBLATENESS DRIFT<input type="checkbox" id="t_j2"></label>
+      <div class="note">J2 is Earth's equatorial bulge. Switch it on and watch <b>ω</b> rotate — the ellipse precesses while a and e stay fixed.</div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Reference</div>
+      <dl>
+        <div class="row"><dt>v circular</dt><dd><span id="r_vc">7.673</span><span class="u">km/s</span></dd></div>
+        <div class="row"><dt>v escape</dt><dd><span id="r_ve">10.851</span><span class="u">km/s</span></dd></div>
+        <div class="row"><dt>orbital energy</dt><dd><span id="r_en">-29.4</span><span class="u">MJ/kg</span></dd></div>
+        <div class="row"><dt>ang. momentum</dt><dd><span id="r_h">51950</span><span class="u">km²/s</span></dd></div>
+      </dl>
+      <div class="note">v = √(μ/r) · T = 2π√(a³/μ)<br>Vis-viva: v = √(μ(2/r − 1/a))</div>
+    </div>
+  </aside>
+</div>
+<script>
+// ===== ORBITAL MECHANICS CORE =====
+const MU = 398600.4418;      // km^3/s^2  Earth gravitational parameter
+const RE = 6371;             // km        Earth mean radius
+const J2 = 1.08262668e-3;    //           Earth oblateness
+const TAU = Math.PI * 2;
+const DEG = 180 / Math.PI;
+const SIDEREAL = 86164.0905; // s         Earth sidereal day
+
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const norm = a => { a %= TAU; return a < 0 ? a + TAU : a; };
+
+// Vis-viva: v = sqrt(mu * (2/r - 1/a))
+const visviva = (r, a) => Math.sqrt(MU * (2 / r - 1 / a));
+// Circular velocity: v = sqrt(mu/r)
+const vcirc = r => Math.sqrt(MU / r);
+// Period: T = 2*pi*sqrt(a^3/mu)
+const period = a => TAU * Math.sqrt(a * a * a / MU);
+// Semi-major axis from period
+const aFromT = T => Math.cbrt(MU * (T / TAU) * (T / TAU));
+// Escape velocity
+const vesc = r => Math.sqrt(2 * MU / r);
+
+// Anomaly conversions
+const nu2E = (nu, e) => Math.atan2(Math.sqrt(1 - e * e) * Math.sin(nu), e + Math.cos(nu));
+const E2M = (E, e) => E - e * Math.sin(E);
+const E2nu = (E, e) => Math.atan2(Math.sqrt(1 - e * e) * Math.sin(E), Math.cos(E) - e);
+function M2E(M, e) {
+  let E = e < 0.8 ? M : Math.PI;
+  for (let i = 0; i < 30; i++) {
+    const f = E - e * Math.sin(E) - M;
+    const fp = 1 - e * Math.cos(E);
+    const d = f / fp;
+    E -= d;
+    if (Math.abs(d) < 1e-12) break;
+  }
+  return E;
+}
+// Hyperbolic Kepler: M = e*sinh(F) - F  (F = hyperbolic anomaly)
+function M2F(M, e) {
+  let F = Math.asinh(M / e) || (M >= 0 ? 1 : -1);
+  for (let i = 0; i < 60; i++) {
+    const f = e * Math.sinh(F) - F - M;
+    const fp = e * Math.cosh(F) - 1;
+    if (!isFinite(fp) || Math.abs(fp) < 1e-14) break;
+    const d = f / fp;
+    F -= clamp(d, -1, 1);
+    if (Math.abs(d) < 1e-12) break;
+  }
+  return F;
+}
+const F2nu = (F, e) => 2 * Math.atan2(Math.sqrt(e + 1) * Math.tanh(F / 2), Math.sqrt(e - 1));
+const nu2F = (nu, e) => 2 * Math.atanh(Math.sqrt((e - 1) / (e + 1)) * Math.tan(nu / 2));
+const F2M = (F, e) => e * Math.sinh(F) - F;
+
+// State vectors -> osculating elements (planar)
+function elements(r, vr, vt) {
+  const v2 = vr * vr + vt * vt;
+  const energy = v2 / 2 - MU / r;
+  const a = -MU / (2 * energy);
+  const h = r * vt;
+  let e = Math.sqrt(Math.max(0, 1 + 2 * energy * h * h / (MU * MU)));
+  if (e < 1e-10) e = 0;
+  let nu = 0;
+  if (e > 1e-10) {
+    const p = a * (1 - e * e);
+    nu = Math.acos(clamp((p / r - 1) / e, -1, 1));
+    if (vr < 0) nu = TAU - nu;
+  }
+  return { a, e, nu, h, energy };
+}
+
+class Orbit {
+  constructor(o = {}) {
+    this.a = o.a ?? RE + 400;
+    this.e = o.e ?? 0;
+    this._M = norm(E2M(nu2E(o.nu ?? 0, this.e), this.e)); // canonical: mean anomaly
+    this.arg = o.arg ?? 0;      // argument of periapsis
+    this.t = 0;
+    this.escaped = false;
+    this.impacted = false;
+    this.j2on = o.j2on ?? false;
+  }
+  // nu is DERIVED from M, never stored. M advances linearly -> zero drift.
+  get hyp() { return this.e >= 1; }
+  get nu() {
+    return this.hyp ? F2nu(M2F(this._M, this.e), this.e)
+                    : E2nu(M2E(norm(this._M), this.e), this.e);
+  }
+  set nu(v) {
+    this._M = this.hyp ? F2M(nu2F(v, this.e), this.e)
+                       : norm(E2M(nu2E(v, this.e), this.e));
+  }
+  get p() { return this.a * (1 - this.e * this.e); }          // semi-latus rectum
+  get r() { return this.p / (1 + this.e * Math.cos(this.nu)); }
+  get ra() { return this.hyp ? Infinity : this.a * (1 + this.e); } // apoapsis radius
+  get rp() { return this.a * (1 - this.e); }                  // periapsis radius
+  get alt() { return this.r - RE; }
+  get apo() { return this.ra - RE; }
+  get peri() { return this.rp - RE; }
+  get T() { return this.hyp ? Infinity : period(this.a); }
+  get n() { const A = Math.abs(this.a); return Math.sqrt(MU / (A * A * A)); } // mean motion
+  get h() { return Math.sqrt(MU * this.p); }
+  get vt() { return this.h / this.r; }                        // transverse velocity
+  get vr() { return (MU / this.h) * this.e * Math.sin(this.nu); } // radial velocity
+  get v() { return Math.hypot(this.vr, this.vt); }
+  get energy() { return -MU / (2 * this.a); }
+  get theta() { return norm(this.nu + this.arg); }            // true longitude
+  get E() { return this.hyp ? M2F(this._M, this.e) : M2E(norm(this._M), this.e); }
+  get M() { return this.hyp ? this._M : norm(this._M); }
+  get fpa() { return Math.atan2(this.vr, this.vt) * DEG; }    // flight path angle
+  get x() { return this.r * Math.cos(this.theta); }
+  get y() { return this.r * Math.sin(this.theta); }
+  // J2 nodal/apsidal drift (rad/s) - equatorial planar approximation
+  get argDot() {
+    if (!this.j2on || this.a <= 0) return 0;
+    const pp = this.p;
+    return 0.75 * J2 * this.n * (RE / pp) * (RE / pp) * 2;
+  }
+
+  step(dt) {
+    if (this.impacted) return;
+    this._M += this.n * dt;   // exact linear advance (elliptic or hyperbolic)
+    if (!this.hyp) this.arg = norm(this.arg + this.argDot * dt);
+    this.t += dt;
+    if (this.hyp) this.escaped = true;
+    if (this.r <= RE) this.impacted = true;
+  }
+
+  // Apply delta-v. prograde/retrograde (tangential) + radial components in km/s
+  burn(dvt, dvr = 0) {
+    if (this.impacted) return false;
+    const r = this.r;
+    const nvt = this.vt + dvt;
+    const nvr = this.vr + dvr;
+    const E = elements(r, nvr, nvt);
+    if (!isFinite(E.a) || !isFinite(E.e)) return false;
+    if (E.e >= 1) {  // hyperbolic - real trajectory, propagate it properly
+      const thH = this.theta;
+      // e == 1 exactly is parabolic: p = a(1-e^2) = 0 -> singular. Nudge off it.
+      if (Math.abs(E.e - 1) < 1e-6) E.e = 1 + 1e-6;
+      this.a = E.a; this.e = E.e;
+      this._M = F2M(nu2F(E.nu, E.e), E.e);
+      this.arg = norm(thH - E.nu);
+      this.escaped = true;
+      return true;
+    }
+    if (E.a <= 0) return false;
+    if (this.escaped && E.e < 1) this.escaped = false;  // recapture
+    // preserve inertial orientation: arg shifts so true longitude is continuous
+    const th = this.theta;
+    this.a = E.a; this.e = E.e;
+    this._M = norm(E2M(nu2E(E.nu, E.e), E.e));
+    this.arg = norm(th - E.nu);
+    if (this.rp <= RE) { /* still valid, will impact on propagation */ }
+    return true;
+  }
+
+  clone() {
+    const o = new Orbit({ a: this.a, e: this.e, nu: 0, arg: this.arg, j2on: this.j2on });
+    o._M = this._M; o.t = this.t;
+    return o;
+  }
+}
+
+// Hohmann transfer between circular orbits r1 -> r2
+function hohmann(r1, r2) {
+  const at = (r1 + r2) / 2;
+  const dv1 = visviva(r1, at) - vcirc(r1);
+  const dv2 = vcirc(r2) - visviva(r2, at);
+  const tof = period(at) / 2;
+  // phase angle target must lead by at transfer
+  const n2 = Math.sqrt(MU / (r2 * r2 * r2));
+  const lead = Math.PI - n2 * tof;
+  return { at, dv1, dv2, total: Math.abs(dv1) + Math.abs(dv2), tof, lead: norm(lead) };
+}
+
+// Synodic period between two orbits
+const synodic = (T1, T2) => Math.abs(1 / (1 / T1 - 1 / T2));
+
+// Rocket equation: mass fraction burned for given dv
+const massFrac = (dv, isp) => 1 - Math.exp(-dv * 1000 / (isp * 9.80665));
+
+const _EXPORTS_ = {
+  MU, RE, J2, TAU, DEG, SIDEREAL, Orbit, elements, hohmann, synodic, massFrac,
+  visviva, vcirc, period, aFromT, vesc, norm, clamp, nu2E, E2M, M2E, E2nu, M2F, F2nu, nu2F, F2M
+};
+
+// ===== SIM STATE =====
+const S = {
+  sat: new Orbit({ a: RE + 400, e: 0, nu: 0, arg: 0 }),
+  running: true,
+  warp: 60,
+  dvSpent: 0,
+  tgtAlt: 35786,
+  scale: 1,
+  ox: 0, oy: 0,
+  trail: [],
+  show: { vel: true, trail: true, aps: true, ref: true },
+  ghost: null,
+};
+const WARPS = [1, 10, 60, 300, 1800, 3600, 21600, 86400];
+const WLBL = ['×1', '×10', '×60', '×300', '×1800', '×1h', '×6h', '×24h'];
+
+const PRESETS = {
+  leo: { rp: 400, ra: 400, arg: 0 },
+  gps: { rp: 20200, ra: 20200, arg: 0 },
+  geo: { rp: 35786, ra: 35786, arg: 0 },
+  molniya: { rp: 600, ra: 39360, arg: 270 },
+  gto: { rp: 400, ra: 35786, arg: 0 },
+};
+
+const REFS = [
+  { alt: 400, name: 'LEO' },
+  { alt: 20200, name: 'MEO/GPS' },
+  { alt: 35786, name: 'GEO' },
+];
+
+const $ = id => document.getElementById(id);
+const cv = $('cv'), cx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const r = cv.parentElement.getBoundingClientRect();
+  W = r.width; H = r.height;
+  cv.width = W * DPR; cv.height = H * DPR;
+  cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  fit();
+}
+function fit() {
+  const ra = isFinite(S.sat.ra) ? S.sat.ra : S.sat.r * 1.6;
+  // frame the ORBIT. Reference rings may fall outside - that's correct:
+  // they are context, not the subject.
+  const span = clamp(ra * 2.45, RE * 2.6, RE * 400);
+  S.scale = Math.min(W, H) / span;
+}
+const SX = x => W / 2 + (x + S.ox) * S.scale;
+const SY = y => H / 2 - (y + S.oy) * S.scale;
+
+// ===== DRAW =====
+function ellipsePath(o, steps = 260) {
+  cx.beginPath();
+  for (let i = 0; i <= steps; i++) {
+    const nu = (i / steps) * TAU;
+    const r = o.p / (1 + o.e * Math.cos(nu));
+    if (!isFinite(r) || r <= 0) continue;
+    const th = nu + o.arg;
+    const x = SX(r * Math.cos(th)), y = SY(r * Math.sin(th));
+    i === 0 ? cx.moveTo(x, y) : cx.lineTo(x, y);
+  }
+}
+
+function draw() {
+  cx.clearRect(0, 0, W, H);
+  const cxp = SX(0), cyp = SY(0), er = RE * S.scale;
+
+  // reference orbits
+  if (S.show.ref) {
+    cx.setLineDash([2, 5]);
+    cx.lineWidth = 1;
+    cx.strokeStyle = 'rgba(27,42,51,.20)';
+    for (const R of REFS) {
+      const rr = (RE + R.alt) * S.scale;
+      if (rr > Math.max(W, H) * 1.15) continue;   // off-frame: skip
+      cx.beginPath(); cx.arc(cxp, cyp, rr, 0, TAU); cx.stroke();
+      const lx = cxp + rr * 0.7071;
+      const ly = cyp - rr * 0.7071;
+      if (lx < W - 4 && ly > 10) {
+        cx.setLineDash([]);
+        cx.font = '9px Roboto Mono'; cx.fillStyle = 'rgba(27,42,51,.34)';
+        cx.textAlign = 'left';
+        cx.fillText(R.name, lx + 3, ly - 3);
+        cx.setLineDash([2, 5]);
+      }
+    }
+    cx.setLineDash([]);
+  }
+
+  // Earth
+  const g = cx.createRadialGradient(cxp - er * .3, cyp - er * .3, er * .1, cxp, cyp, er);
+  g.addColorStop(0, '#3E6273'); g.addColorStop(1, '#223D4A');
+  cx.fillStyle = g;
+  cx.beginPath(); cx.arc(cxp, cyp, er, 0, TAU); cx.fill();
+  cx.strokeStyle = 'rgba(27,42,51,.5)'; cx.lineWidth = 1; cx.stroke();
+  // atmosphere band
+  cx.strokeStyle = 'rgba(45,74,90,.22)'; cx.lineWidth = Math.max(1, 100 * S.scale);
+  cx.beginPath(); cx.arc(cxp, cyp, er + 50 * S.scale, 0, TAU); cx.stroke();
+
+  // ghost (projected orbit)
+  if (S.ghost) {
+    cx.setLineDash([4, 4]); cx.lineWidth = 1.25;
+    cx.strokeStyle = 'rgba(194,65,12,.55)';
+    ellipsePath(S.ghost); cx.stroke(); cx.setLineDash([]);
+  }
+
+  // trail
+  if (S.show.trail && S.trail.length > 1) {
+    cx.lineWidth = 1;
+    for (let i = 1; i < S.trail.length; i++) {
+      const a = i / S.trail.length;
+      cx.strokeStyle = `rgba(194,65,12,${a * .32})`;
+      cx.beginPath();
+      cx.moveTo(SX(S.trail[i - 1][0]), SY(S.trail[i - 1][1]));
+      cx.lineTo(SX(S.trail[i][0]), SY(S.trail[i][1]));
+      cx.stroke();
+    }
+  }
+
+  const o = S.sat;
+  if (o.impacted) { drawSat(o); hud(); return; }
+
+  // orbit path
+  cx.strokeStyle = o.escaped ? 'rgba(194,65,12,.75)' : 'rgba(27,42,51,.75)';
+  cx.lineWidth = 1.5;
+  if (o.escaped) {
+    cx.beginPath();
+    let started = false;
+    const lim = Math.acos(-1 / o.e) - 0.02;
+    for (let i = -60; i <= 60; i++) {
+      const nu = (i / 60) * lim;
+      const r = o.p / (1 + o.e * Math.cos(nu));
+      if (r <= 0 || r > RE * 60) continue;
+      const th = nu + o.arg;
+      const x = SX(r * Math.cos(th)), y = SY(r * Math.sin(th));
+      started ? cx.lineTo(x, y) : (cx.moveTo(x, y), started = true);
+    }
+    cx.stroke();
+  } else {
+    ellipsePath(o); cx.stroke();
+  }
+
+  // apsides
+  if (S.show.aps && !o.escaped && o.e > 1e-4) {
+    const pa = o.arg, aa = o.arg + Math.PI;
+    const px = SX(o.rp * Math.cos(pa)), py = SY(o.rp * Math.sin(pa));
+    const ax = SX(o.ra * Math.cos(aa)), ay = SY(o.ra * Math.sin(aa));
+    cx.setLineDash([1, 4]); cx.strokeStyle = 'rgba(27,42,51,.3)'; cx.lineWidth = 1;
+    cx.beginPath(); cx.moveTo(px, py); cx.lineTo(ax, ay); cx.stroke(); cx.setLineDash([]);
+    mark(px, py, 'Pe', o.peri);
+    mark(ax, ay, 'Ap', o.apo);
+  }
+
+  // velocity vector
+  if (S.show.vel && !o.impacted) {
+    const th = o.theta;
+    const ux = -Math.sin(th), uy = Math.cos(th);   // transverse unit
+    const rx = Math.cos(th), ry = Math.sin(th);    // radial unit
+    const vx = o.vt * ux + o.vr * rx;
+    const vy = o.vt * uy + o.vr * ry;
+    const m = Math.hypot(vx, vy);
+    const L = 46;
+    const sx = SX(o.x), sy = SY(o.y);
+    const ex = sx + (vx / m) * L, ey = sy - (vy / m) * L;
+    cx.strokeStyle = 'var(--signal)'; cx.strokeStyle = '#C2410C';
+    cx.lineWidth = 1.75;
+    cx.beginPath(); cx.moveTo(sx, sy); cx.lineTo(ex, ey); cx.stroke();
+    const ang = Math.atan2(ey - sy, ex - sx);
+    cx.beginPath();
+    cx.moveTo(ex, ey);
+    cx.lineTo(ex - 6 * Math.cos(ang - .4), ey - 6 * Math.sin(ang - .4));
+    cx.lineTo(ex - 6 * Math.cos(ang + .4), ey - 6 * Math.sin(ang + .4));
+    cx.closePath(); cx.fillStyle = '#C2410C'; cx.fill();
+    cx.font = '9px Roboto Mono'; cx.fillStyle = '#C2410C'; cx.textAlign = 'left';
+    cx.fillText(m.toFixed(3) + ' km/s', ex + 5, ey - 2);
+  }
+
+  drawSat(o);
+  hud();
+}
+
+function mark(x, y, lbl, alt) {
+  cx.fillStyle = '#1B2A33';
+  cx.beginPath(); cx.arc(x, y, 2.5, 0, TAU); cx.fill();
+  cx.font = '9px Roboto Mono'; cx.fillStyle = '#4A5A66'; cx.textAlign = 'center';
+  cx.fillText(`${lbl} ${Math.round(alt)}`, x, y - 7);
+}
+
+function drawSat(o) {
+  const x = SX(o.x), y = SY(o.y);
+  cx.fillStyle = o.impacted ? '#C2410C' : '#1B2A33';
+  cx.beginPath(); cx.arc(x, y, 4, 0, TAU); cx.fill();
+  cx.strokeStyle = '#E8E6DF'; cx.lineWidth = 1.5; cx.stroke();
+}
+
+function hud() {
+  if (!S.sat.impacted) return;
+  cx.font = '700 11px Roboto Mono'; cx.fillStyle = '#C2410C'; cx.textAlign = 'center';
+  cx.fillText('SURFACE IMPACT — PERIAPSIS BELOW GROUND', W / 2, 34);
+}
+
+// ===== READOUT =====
+const fmtT = s => {
+  if (!isFinite(s)) return '∞';
+  if (s < 5400) return (s / 60).toFixed(1) + 'm';
+  if (s < 172800) return (s / 3600).toFixed(2) + 'h';
+  return (s / 86400).toFixed(2) + 'd';
+};
+const fmtMET = s => {
+  const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600);
+  const m = Math.floor(s % 3600 / 60), x = Math.floor(s % 60);
+  return `${String(d).padStart(2, '0')}:${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}`;
+};
+
+const num = (v, f) => isFinite(v) ? f(v) : '—';
+function readout() {
+  const o = S.sat;
+  $('e_alt').textContent = o.impacted ? '—' : num(o.alt, v => Math.round(v).toLocaleString());
+  $('e_vel').textContent = o.impacted ? '—' : num(o.v, v => v.toFixed(3));
+  $('e_apo').textContent = o.escaped ? '∞' : num(o.apo, v => Math.round(v).toLocaleString());
+  $('e_peri').textContent = num(o.peri, v => Math.round(v).toLocaleString());
+  $('e_a').textContent = o.escaped ? '—' : num(o.a, v => Math.round(v).toLocaleString());
+  $('e_ecc').textContent = o.e.toFixed(4);
+  $('e_per').textContent = o.escaped ? '∞' : fmtT(o.T);
+  $('e_nu').textContent = num(o.nu, v => (o.escaped ? v * DEG : norm(v) * DEG).toFixed(1));
+  $('e_fpa').textContent = num(o.fpa, v => v.toFixed(2));
+  $('e_arg').textContent = num(o.arg, v => (norm(v) * DEG).toFixed(1));
+  $('met').textContent = fmtMET(o.t);
+  $('dvSpent').textContent = `Δv ${Math.round(S.dvSpent * 1000)} m/s`;
+
+  $('r_vc').textContent = num(vcirc(o.r), v => v.toFixed(3));
+  $('r_ve').textContent = num(vesc(o.r), v => v.toFixed(3));
+  $('r_en').textContent = num(o.energy, v => v.toFixed(2));
+  $('r_h').textContent = num(o.h, v => Math.round(v).toLocaleString());
+
+  const st = $('status');
+  if (o.impacted) { st.textContent = 'SURFACE IMPACT'; st.className = 'bad'; }
+  else if (o.escaped) { st.textContent = 'HYPERBOLIC — ESCAPED'; st.className = 'bad'; }
+  else if (o.peri < 100) { st.textContent = 'PERIAPSIS IN ATMOSPHERE'; st.className = 'bad'; }
+  else if (o.e < 0.001) { st.textContent = 'CIRCULAR ORBIT'; st.className = 'good'; }
+  else { st.textContent = 'ELLIPTICAL ORBIT'; st.className = ''; }
+}
+
+function hohmannPanel() {
+  const r1 = S.sat.a, r2 = RE + S.tgtAlt;
+  const h = hohmann(r1, r2);
+  $('h_dv1').textContent = Math.round(h.dv1 * 1000);
+  $('h_dv2').textContent = Math.round(h.dv2 * 1000);
+  $('h_tot').textContent = Math.round(h.total * 1000);
+  $('h_tof').textContent = fmtT(h.tof);
+  $('h_mf').textContent = (massFrac(h.total, 450) * 100).toFixed(1);
+}
+
+// ===== CONTROLS =====
+function setOrbit(rp, ra, argDeg) {
+  if (ra < rp) [rp, ra] = [ra, rp];
+  const RP = RE + rp, RA = RE + ra;
+  const a = (RP + RA) / 2, e = (RA - RP) / (RA + RP);
+  S.sat = new Orbit({ a, e, nu: 0, arg: (argDeg ?? 0) / DEG, j2on: $('t_j2').checked });
+  S.trail = []; S.dvSpent = 0;
+  fit(); sync(); hohmannPanel();
+}
+function sync() {
+  $('s_rp').value = Math.round(clamp(S.sat.peri, 100, 40000));
+  $('s_ra').value = Math.round(clamp(S.sat.apo, 100, 40000));
+  $('v_rp').textContent = Math.round(S.sat.peri).toLocaleString();
+  $('v_ra').textContent = Math.round(S.sat.apo).toLocaleString();
+  $('s_arg').value = Math.round(norm(S.sat.arg) * DEG);
+  $('v_arg').textContent = Math.round(norm(S.sat.arg) * DEG);
+}
+
+$('playBtn').onclick = e => {
+  S.running = !S.running;
+  e.target.textContent = S.running ? 'PAUSE' : 'RESUME';
+  e.target.classList.toggle('on', !S.running);
+};
+$('warp').oninput = e => {
+  S.warp = WARPS[+e.target.value];
+  $('warpVal').textContent = WLBL[+e.target.value];
+};
+
+for (const el of document.querySelectorAll('#presets .chip')) {
+  el.onclick = () => {
+    document.querySelectorAll('#presets .chip').forEach(c => c.classList.remove('on'));
+    el.classList.add('on');
+    const p = PRESETS[el.dataset.p];
+    setOrbit(p.rp, p.ra, p.arg);
+  };
+}
+
+function shapeChange() {
+  let rp = +$('s_rp').value, ra = +$('s_ra').value;
+  if (ra < rp) { ra = rp; $('s_ra').value = ra; }
+  setOrbit(rp, ra, +$('s_arg').value);
+  document.querySelectorAll('#presets .chip').forEach(c => c.classList.remove('on'));
+}
+$('s_rp').oninput = () => {
+  if (+$('s_ra').value < +$('s_rp').value) $('s_ra').value = $('s_rp').value;
+  shapeChange();
+};
+$('s_ra').oninput = () => {
+  if (+$('s_ra').value < +$('s_rp').value) $('s_rp').value = $('s_ra').value;
+  shapeChange();
+};
+$('s_arg').oninput = shapeChange;
+
+for (const b of document.querySelectorAll('[data-dv]')) {
+  const dv = +b.dataset.dv;
+  b.onmouseenter = () => { const g = S.sat.clone(); g.burn(dv); S.ghost = g; };
+  b.onmouseleave = () => S.ghost = null;
+  b.onclick = () => { if (S.sat.burn(dv)) { S.dvSpent += Math.abs(dv); S.ghost = null; fit(); sync(); } };
+}
+for (const b of document.querySelectorAll('[data-dr]')) {
+  const dr = +b.dataset.dr;
+  b.onmouseenter = () => { const g = S.sat.clone(); g.burn(0, dr); S.ghost = g; };
+  b.onmouseleave = () => S.ghost = null;
+  b.onclick = () => { if (S.sat.burn(0, dr)) { S.dvSpent += Math.abs(dr); S.ghost = null; fit(); sync(); } };
+}
+
+function circDv() { const o = S.sat; return vcirc(o.r) - o.vt; }
+$('circBtn').onmouseenter = () => {
+  const g = S.sat.clone(); g.burn(circDv(), -S.sat.vr); S.ghost = g;
+};
+$('circBtn').onmouseleave = () => S.ghost = null;
+$('circBtn').onclick = () => {
+  const d = circDv(), r = -S.sat.vr;
+  if (S.sat.burn(d, r)) { S.dvSpent += Math.hypot(d, r); S.ghost = null; fit(); sync(); }
+};
+
+$('hohBtn').onclick = () => {
+  const o = S.sat;
+  const r2 = RE + S.tgtAlt;
+  // burn tangentially to put apoapsis (or periapsis) at target
+  const at = (o.r + r2) / 2;
+  const need = visviva(o.r, at) - o.vt;
+  if (o.burn(need, -o.vr)) { S.dvSpent += Math.hypot(need, o.vr); fit(); sync(); }
+};
+$('hohBtn').onmouseenter = () => {
+  const o = S.sat, r2 = RE + S.tgtAlt, at = (o.r + r2) / 2;
+  const g = o.clone(); g.burn(visviva(o.r, at) - o.vt, -o.vr); S.ghost = g;
+};
+$('hohBtn').onmouseleave = () => S.ghost = null;
+
+$('s_tgt').oninput = e => {
+  S.tgtAlt = +e.target.value;
+  $('v_tgt').textContent = S.tgtAlt.toLocaleString();
+  hohmannPanel();
+};
+
+$('t_vel').onchange = e => S.show.vel = e.target.checked;
+$('t_trail').onchange = e => { S.show.trail = e.target.checked; if (!e.target.checked) S.trail = []; };
+$('t_aps').onchange = e => S.show.aps = e.target.checked;
+$('t_ref').onchange = e => S.show.ref = e.target.checked;
+$('t_j2').onchange = e => S.sat.j2on = e.target.checked;
+
+// pan + zoom
+let dragging = false, lx = 0, ly = 0;
+const stage = $('stage');
+stage.addEventListener('mousedown', e => { dragging = true; lx = e.clientX; ly = e.clientY; stage.classList.add('drag'); });
+window.addEventListener('mouseup', () => { dragging = false; stage.classList.remove('drag'); });
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  S.ox += (e.clientX - lx) / S.scale; S.oy -= (e.clientY - ly) / S.scale;
+  lx = e.clientX; ly = e.clientY;
+});
+stage.addEventListener('wheel', e => {
+  e.preventDefault();
+  S.scale *= e.deltaY < 0 ? 1.12 : 0.89;
+}, { passive: false });
+
+window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); $('playBtn').click(); }
+  if (e.key === 'r' || e.key === 'R') { S.ox = 0; S.oy = 0; fit(); }
+});
+
+// ===== LOOP =====
+let last = performance.now();
+function loop(now) {
+  const dtReal = Math.min((now - last) / 1000, 0.05);
+  last = now;
+  if (S.running && !S.sat.impacted) {
+    const dt = dtReal * S.warp;
+    // substep so fast warps don't skip periapsis
+    const ref = isFinite(S.sat.T) ? S.sat.T / 400 : 60;
+    const n = clamp(Math.ceil(dt / ref), 1, 400);
+    for (let i = 0; i < n; i++) S.sat.step(dt / n);
+    if (S.show.trail) {
+      S.trail.push([S.sat.x, S.sat.y]);
+      const cap = 340;
+      if (S.trail.length > cap) S.trail.shift();
+    }
+  }
+  draw(); readout();
+  requestAnimationFrame(loop);
+}
+window.addEventListener('resize', resize);
+resize(); setOrbit(400, 400, 0); hohmannPanel();
+requestAnimationFrame(loop);
+
+</script>
+</body>
+</html>
