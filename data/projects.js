@@ -29,7 +29,8 @@ const PROJECTS = [
 
   // ---------------- SPACE & ASTRONOMY ----------------
   { id: "solar-system", title: "Solar System Simulation", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/solar-system/index.html", description: "An interactive model of the solar system's planets and orbits." },
-  ...Array.from({ length: 29 }, (_, i) => ({
+  { id: "sol-sync-moon-lab", title: "Moon Lab", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/SolSync/Simulation.html", description: "Explore moon phases, tidal locking, and eclipses." },
+  ...Array.from({ length: 28 }, (_, i) => ({
     id: `space-astronomy-coming-soon-${i + 2}`,
     title: `Space & Astronomy Project ${String(i + 2).padStart(2, "0")}`,
     category: "space-astronomy",
