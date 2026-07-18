@@ -228,10 +228,26 @@ function heatAt(x,y){
   const h=P.intensity*(FALLOFF/(FALLOFF+d2));
   return h<0.2?0:h*occlusion(x,y);
 }
+// How well a heading `ang` points at the true flame bearing, from the rover's
+// own position: 1 when aimed straight at it, 0 at ±90°, negative past that.
+// Left unclamped (can go negative) so callers comparing two headings still
+// get a meaningful answer even near the ±90° zero-crossing.
+function headingGain(ang){
+  const bearing=Math.atan2(src.y-rover.y, src.x-rover.x);
+  return Math.cos(norm(bearing-ang));
+}
 // What the flame sensor actually reports when aimed along `ang`.
+// Modeled on real multi-sensor flame arrays: each sensor has a fixed heading
+// and its reading is the true heat at the rover's position, scaled by how
+// closely that heading points at the source (a cosine-shaped lobe centred on
+// the real bearing). This keeps the strongest reading pointing at the real
+// heat source at any distance and in any wall layout — sampling a single
+// fixed-distance point ahead (the old approach) lost that guarantee once the
+// source was far away or a wall sat unevenly between the probe rays.
 function senseAt(ang){
-  const px=rover.x+Math.cos(ang)*PROBE, py=rover.y+Math.sin(ang)*PROBE;
-  return Math.max(0,Math.min(100, heatAt(px,py)*P.sens/100));
+  const base=heatAt(rover.x,rover.y);                 // true heat + occlusion at the rover itself
+  const lobe=Math.max(0, headingGain(ang));
+  return Math.max(0,Math.min(100, base*lobe*lobe*P.sens/100));
 }
 // Heat at the rover itself. Probes decide *which way* to go; this decides
 // *when to stop* — otherwise the rover halts a whole probe-length short.
@@ -368,7 +384,7 @@ function update(dt){
     if(reversed>=52||st>1.6){
       // turn toward whichever flank has more room; break ties with heat
       const L=ping(rover.x,rover.y,rover.a-90*DEG,360), R=ping(rover.x,rover.y,rover.a+90*DEG,360);
-      let side = Math.abs(L-R)<20 ? (senseAt(rover.a-90*DEG)>=senseAt(rover.a+90*DEG)?-1:1) : (L>R?-1:1);
+      let side = Math.abs(L-R)<20 ? (headingGain(rover.a-90*DEG)>=headingGain(rover.a+90*DEG)?-1:1) : (L>R?-1:1);
       turnTarget=norm(rover.a+side*80*DEG);
       setState('turnAway');
     }
