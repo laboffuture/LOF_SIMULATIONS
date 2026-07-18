@@ -108,6 +108,8 @@
     transition: 0.15s;
   }
   button:hover { border-color: var(--accent); color: var(--accent); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button:disabled:hover { border-color: var(--border); color: var(--text); }
   button.primary { background: linear-gradient(90deg, #0d9488, #7c3aed); border: none; color: #fff; font-weight: 600; }
   button.primary:hover { filter: brightness(1.1); color: #fff; }
   button.active { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
@@ -242,7 +244,8 @@
       <button id="btnReset">↺ Reset Rover</button>
       <button id="btnClear">🧹 Clear Tiles</button>
       <button id="btnWall" data-mode="wall">🧱 Wall Tool</button>
-      <button id="btnErase" data-mode="erase">Erase Tool</button>
+      <button id="btnUndo" title="Undo (Ctrl+Z)">↶ Undo</button>
+      <button id="btnRedo" title="Redo (Ctrl+Y)">↷ Redo</button>
     </div>
     <canvas id="grid" width="640" height="640"></canvas>
     <p class="hint" style="margin-top:6px; text-align:center">
@@ -286,11 +289,8 @@
     { name: 'Red',    rgb: [220, 40, 40],   cmd: 'forward'  },
     { name: 'Yellow', rgb: [230, 210, 40],  cmd: 'backward' },
     { name: 'Green',  rgb: [40, 200, 90],   cmd: 'left'     },
-    { name: 'Cyan',   rgb: [40, 190, 210],  cmd: 'left'     },
-    { name: 'White',  rgb: [225, 225, 225], cmd: 'right'    },
-    { name: 'Gray',   rgb: [130, 130, 130], cmd: 'right'    },
+    { name: 'Grey',   rgb: [130, 130, 130], cmd: 'right'    },
     { name: 'Black',  rgb: [18, 18, 26],    cmd: 'stop'     },
-    { name: 'Blue',   rgb: [60, 90, 230],   cmd: 'stop'     },
   ];
   const WALL = 'WALL';
   const EMPTY = null;
@@ -314,6 +314,7 @@
   function resizeGrid(n) {
     N = n; cell = canvas.width / N; initTiles();
     rover = { x: 0, y: 0, dir: 2 }; // start facing down
+    history = []; redoStack = []; updateUndoRedoButtons();  // old snapshots don't fit the new grid size
     draw();
   }
 
@@ -336,7 +337,7 @@
   });
 
   function clearToolActive() {
-    ['btnWall','btnErase','btnRover'].forEach(id => document.getElementById(id).classList.remove('active'));
+    ['btnWall','btnRover'].forEach(id => document.getElementById(id).classList.remove('active'));
   }
 
   // ---- Drawing ----
@@ -467,26 +468,26 @@
   }
 
   // ---- Decision logic (the "alien code") ----
+  // Exactly one colour per command now, so the sensor just finds the closest
+  // known reference colour. Anything too dark or too far from any of the
+  // five references (an unrecognised colour) is treated as stop.
+  function nearestColor(rgb) {
+    let best = -1, bestDist = Infinity;
+    COLORS.forEach((c, i) => {
+      const ref = applyBright(c.rgb);
+      const d = (rgb[0]-ref[0])**2 + (rgb[1]-ref[1])**2 + (rgb[2]-ref[2])**2;
+      if (d < bestDist) { bestDist = d; best = i; }
+    });
+    return { idx: best, dist: Math.sqrt(bestDist) };
+  }
   function decide(rgb) {
-    const [r,g,b] = rgb;
-    const max = Math.max(r,g,b);
-    const min = Math.min(r,g,b);
-    // No clear waypoint -> stop
-    if (max < sensitivity) return { action: 'stop', why: 'No clear waypoint (too dark)' };
-    // All values similar -> turn right
-    if (max - min < sensitivity*0.45) return { action: 'right', why: 'All RGB values similar' };
-    // Red strongest -> forward
-    if (r > g && r > b) {
-      // Yellow = red & green both high, blue low -> backward
-      if (g > b + sensitivity*0.6 && Math.abs(r-g) < sensitivity) return { action: 'backward', why: 'Yellow detected (R+G high, B low)' };
-      return { action: 'forward', why: 'Red is strongest' };
-    }
-    // Green + Blue high -> turn left
-    if (g > r && b > sensitivity*0.6) return { action: 'left', why: 'Green + Blue are high' };
-    if (g > r && g > b) return { action: 'left', why: 'Green dominant' };
-    // Blue strongest but not with green -> stop (invalid zone)
-    if (b > r && b > g) return { action: 'stop', why: 'Invalid colour zone (blue)' };
-    return { action: 'right', why: 'Default' };
+    const max = Math.max(rgb[0], rgb[1], rgb[2]);
+    if (max < sensitivity) return { action: 'stop', why: 'No clear waypoint (empty tile / too dark)' };
+    const { idx, dist } = nearestColor(rgb);
+    const UNKNOWN_DIST = 90;   // how close a reading must be to a known colour
+    if (dist > UNKNOWN_DIST) return { action: 'stop', why: 'Unknown colour — treated as stop' };
+    const c = COLORS[idx];
+    return { action: c.cmd, why: `${c.name} detected` };
   }
 
   // ---- Apply an action to the rover ----
@@ -618,14 +619,52 @@
     if (x < 0 || y < 0 || x >= N || y >= N) return;
     if (paintMode === 'rover') { rover.x = x; rover.y = y; }
     else if (paintMode === 'wall') tiles[y][x] = WALL;
-    else if (paintMode === 'erase') tiles[y][x] = EMPTY;
     else tiles[y][x] = selColor;
     draw();
     refreshReadout();
   }
-  canvas.addEventListener('pointerdown', e => { painting = true; paintAt(e); });
+  canvas.addEventListener('pointerdown', e => {
+    const { x, y } = cellAt(e);
+    if (x >= 0 && y >= 0 && x < N && y < N) pushHistory();
+    painting = true; paintAt(e);
+  });
   canvas.addEventListener('pointermove', e => { if (painting) paintAt(e); });
   window.addEventListener('pointerup', () => painting = false);
+
+  // ---- Undo / Redo (replaces the old erase tool — much easier to fix a mistake) ----
+  let history = [], redoStack = [];
+  const HISTORY_LIMIT = 60;
+  const stateSnapshot = () => JSON.stringify({ tiles, rover });
+  function pushHistory() {
+    history.push(stateSnapshot());
+    if (history.length > HISTORY_LIMIT) history.shift();
+    redoStack = [];
+    updateUndoRedoButtons();
+  }
+  function restoreState(s) {
+    const obj = JSON.parse(s);
+    tiles = obj.tiles; rover = obj.rover;
+    document.querySelectorAll('.dir').forEach(b => b.classList.toggle('active', +b.dataset.dir === rover.dir));
+    draw(); refreshReadout();
+  }
+  function undo() {
+    if (!history.length) return;
+    redoStack.push(stateSnapshot());
+    restoreState(history.pop());
+    updateUndoRedoButtons();
+  }
+  function redo() {
+    if (!redoStack.length) return;
+    history.push(stateSnapshot());
+    restoreState(redoStack.pop());
+    updateUndoRedoButtons();
+  }
+  function updateUndoRedoButtons() {
+    document.getElementById('btnUndo').disabled = history.length === 0;
+    document.getElementById('btnRedo').disabled = redoStack.length === 0;
+  }
+  document.getElementById('btnUndo').onclick = undo;
+  document.getElementById('btnRedo').onclick = redo;
 
   // ---- Buttons ----
   function setRun() {
@@ -653,7 +692,7 @@
     dec.style.color = 'var(--muted)';
     dec.style.background = 'var(--panel-2)';
   }
-  document.getElementById('btnClear').onclick = () => { initTiles(); draw(); };
+  document.getElementById('btnClear').onclick = () => { pushHistory(); initTiles(); draw(); };
   document.getElementById('btnFront').onclick = () => triggerBumper('front', false);
   document.getElementById('btnBack').onclick  = () => triggerBumper('back', false);
 
@@ -666,7 +705,7 @@
       if (paintMode !== 'color') document.querySelectorAll('.swatch').forEach(e => e.classList.remove('sel'));
     };
   }
-  toolBtn('btnWall','wall'); toolBtn('btnErase','erase'); toolBtn('btnRover','rover');
+  toolBtn('btnWall','wall'); toolBtn('btnRover','rover');
 
   // ---- Rover direction controls ----
   function setDir(dir) {
@@ -686,7 +725,10 @@
   document.getElementById('rotR').onclick = () => setDir(rover.dir + 1);
   window.addEventListener('keydown', e => {
     const map = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 };
-    if (e.key in map) { e.preventDefault(); setDir(map[e.key]); }
+    if (e.key in map) { e.preventDefault(); setDir(map[e.key]); return; }
+    const k = e.key.toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && k === 'z') { e.preventDefault(); undo(); return; }
+    if ((e.ctrlKey || e.metaKey) && (k === 'y' || (e.shiftKey && k === 'z'))) { e.preventDefault(); redo(); return; }
   });
 
   // ---- Sliders ----
@@ -711,7 +753,7 @@
     const set = (x,y,c) => { if(x<N&&y<N) tiles[y][x]=c; };
     set(0,0,0); set(0,1,0); set(0,2,0);           // red -> forward down column
     set(0,3,2);                                    // green -> turn left
-    set(3,3,4); set(4,3,4);                        // white -> turn right
+    set(3,3,3); set(4,3,3);                        // grey -> turn right
     set(6,6,1);                                    // yellow -> backward
     // border walls
     for (let i=0;i<N;i++){ tiles[N-1][i]=WALL; tiles[i][N-1]=WALL; }
