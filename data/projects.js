@@ -19,7 +19,8 @@ const PROJECTS = [
   // ---------------- AEROSPACE ----------------
   { id: "airfoil-tester", title: "Airfoil Tester", category: "aerospace", status: "live", url: "../sims/aerospace/AirfoilTester/AirfoilTester.html", description: "Test airfoil shapes and see how they generate lift." },
   { id: "catapult-glider", title: "Catapult Glider", category: "aerospace", status: "live", url: "../sims/aerospace/CatapultGlider/CatapultGlider.html", description: "Launch a glider from a catapult and study its flight path." },
-  ...Array.from({ length: 28 }, (_, i) => ({
+  { id: "uttm", title: "UTTM — Universal Thrust Testing Machine", category: "aerospace", status: "live", url: "../sims/aerospace/UTTM/UTTM.html", description: "Bench-test motor and propeller combinations to find the best safe thrust setup." },
+  ...Array.from({ length: 27 }, (_, i) => ({
     id: `aerospace-coming-soon-${i + 1}`,
     title: `Aerospace Project ${String(i + 1).padStart(2, "0")}`,
     category: "aerospace",
