@@ -190,8 +190,8 @@ const src={x:648,y:150};
 let walls=[{x:320,y:280,w:CELL,h:CELL},{x:360,y:280,w:CELL,h:CELL},{x:480,y:80,w:CELL,h:CELL}];
 const START={x:88,y:H/2,a:0};
 const rover={x:START.x,y:START.y,a:START.a,head:0,pulse:0,roll:0};
-const ROVER_R=11;              // cylinder radius (like a paint roller/vacuum brush drum) — sets roll speed per pixel driven
-const ROVER_LEN=38;            // cylinder length, side-to-side (perpendicular to travel)
+const ROVER_R=12;              // cylinder radius (like a paint roller/vacuum brush drum) — sets roll speed per pixel driven
+const ROVER_LEN=50;            // cylinder length, side-to-side (perpendicular to travel) — long enough to read clearly as a drum, not a disc
 
 /* ---------- FSM ---------- */
 let state='scan', st=0;                       // st = seconds spent in current state
@@ -486,27 +486,55 @@ function drawRover(){
   const Rc=ROVER_R, half=ROVER_LEN/2;
 
   // subtle ground shadow so the cylinder reads as a solid body lying on the ground
-  g.fillStyle='rgba(0,0,0,.28)';
-  g.beginPath(); g.ellipse(0,Rc*0.7,half*0.92,Rc*0.55,0,0,7); g.fill();
+  g.fillStyle='rgba(0,0,0,.32)';
+  g.beginPath(); g.ellipse(0,Rc*0.75,half*0.94,Rc*0.6,0,0,7); g.fill();
 
   // cylinder body + rolling bands, clipped to the capsule silhouette
   g.save(); roverCapsulePath(); g.clip();
+  // Off-centre highlight (not dead-centre) is what sells a glossy round drum —
+  // a true specular hotspot never sits exactly in the middle of a cylinder.
   const bg=g.createLinearGradient(-Rc,0,Rc,0);
-  bg.addColorStop(0,'#2f3660'); bg.addColorStop(0.5,'#6672a3'); bg.addColorStop(1,'#2f3660');
+  bg.addColorStop(0,   '#6e1c05');
+  bg.addColorStop(0.24,'#ff8a3d');
+  bg.addColorStop(0.42,'#ff5e1a');
+  bg.addColorStop(0.68,'#e2410f');
+  bg.addColorStop(1,   '#7a2408');
   g.fillStyle=bg; g.fillRect(-Rc-2,-half-2,Rc*2+4,ROVER_LEN+4);
+
   // Bands wrap the cylinder's circumference (front-to-back), not its length —
   // as it drives, they sweep from the leading edge to the trailing edge, like
   // a paint roller or a vacuum's brush drum. This is what reads as *rolling*
-  // instead of a flat disc spinning in place.
+  // instead of a flat disc spinning in place. Paired dark/light strokes give
+  // each groove a shadowed and a lit edge, like a machined ridge.
   const spacing=9;
   const offset=((rover.roll*Rc)%spacing+spacing)%spacing;
-  g.strokeStyle='rgba(20,22,44,.55)'; g.lineWidth=2.4;
   for(let x=-Rc-spacing+offset; x<Rc+spacing; x+=spacing){
+    g.strokeStyle='rgba(30,10,4,.5)'; g.lineWidth=2.6;
     g.beginPath(); g.moveTo(x,-half); g.lineTo(x,half); g.stroke();
+    g.strokeStyle='rgba(255,205,140,.35)'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(x+1.6,-half); g.lineTo(x+1.6,half); g.stroke();
+  }
+
+  // Long specular streak down the lit side — reinforces the round cross-section.
+  const sheen=g.createLinearGradient(-Rc*0.55,0,-Rc*0.05,0);
+  sheen.addColorStop(0,'rgba(255,255,255,0)');
+  sheen.addColorStop(0.5,'rgba(255,235,200,.45)');
+  sheen.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=sheen; g.fillRect(-Rc*0.55,-half,Rc*0.5,ROVER_LEN);
+
+  // rounded end-cap shading — a soft radial dark-to-light gives the two flat
+  // ends of the drum a convex, 3-D feel instead of a flat cap (stays inside
+  // the capsule clip already active in this block)
+  for(const ey of [-half+Rc, half-Rc]){
+    const ecap=g.createRadialGradient(-Rc*0.2,ey,0.5,0,ey,Rc);
+    ecap.addColorStop(0,'rgba(255,205,150,.30)');
+    ecap.addColorStop(1,'rgba(60,16,4,.25)');
+    g.fillStyle=ecap;
+    g.beginPath(); g.arc(0,ey,Rc,0,7); g.fill();
   }
   g.restore();
 
-  g.strokeStyle='#8b96c4'; g.lineWidth=2; roverCapsulePath(); g.stroke();
+  g.strokeStyle='#3a1204'; g.lineWidth=2; roverCapsulePath(); g.stroke();
 
   // ultrasonic "eyes" on the leading edge, always facing the direction of travel
   g.fillStyle=blocked?'#ff5470':'#7fd4ff';
