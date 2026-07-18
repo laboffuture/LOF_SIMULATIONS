@@ -271,10 +271,6 @@
         <button class="dir" data-dir="1" title="Face right">▶</button>
         <button class="dir" data-dir="2" title="Face down">▼</button>
       </div>
-      <div class="toggle-row" style="margin-top:8px">
-        <button id="rotL">⟲ Rotate Left</button>
-        <button id="rotR">Rotate Right ⟳</button>
-      </div>
     </div>
   </div>
 </div>
@@ -721,8 +717,6 @@
     updateReadout(s, decide(s.rgb));
   }
   document.querySelectorAll('.dir').forEach(b => b.onclick = () => setDir(+b.dataset.dir));
-  document.getElementById('rotL').onclick = () => setDir(rover.dir + 3);
-  document.getElementById('rotR').onclick = () => setDir(rover.dir + 1);
   window.addEventListener('keydown', e => {
     const map = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 };
     if (e.key in map) { e.preventDefault(); setDir(map[e.key]); return; }
