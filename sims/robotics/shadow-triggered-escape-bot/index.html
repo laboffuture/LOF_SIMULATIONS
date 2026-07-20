@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Rabbit Escape Simulation · Light & Motion Sensors</title>
+<title>Sensor-Based Escape Simulation · Shadow Triggered Escape Bot</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,6 +12,7 @@
     --bg:#eef6ff; --panel:#ffffff; --panel2:#f4f8ff;
     --line:#dbe6f5; --txt:#25324a; --mut:#5f6f8a; --dim:#93a2ba;
     --accent:#ff8fab; --accent2:#7cc6ff; --leaf:#7ac77a; --sun:#ffd84d;
+    --ultra:#3fbfa8; --combo:#a97bf0;
     --warn:#f7a23b; --danger:#ff6b81; --ok:#54c48a;
     --shadow:0 12px 34px rgba(80,110,160,.14);
     --r:20px; --head:"Orbitron",sans-serif; --body:"Rajdhani",sans-serif;
@@ -34,12 +35,14 @@
   .title p{margin:4px 0 0;font-size:11px;font-weight:500;letter-spacing:.5px;color:var(--mut)}
 
   .tabs{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
-  .tab{cursor:pointer;border:2px solid var(--line);background:#fff;padding:13px 22px;border-radius:16px;
-    font-size:14px;font-weight:600;letter-spacing:.5px;color:var(--mut);display:flex;align-items:center;gap:10px;transition:.18s;user-select:none;box-shadow:var(--shadow)}
+  .tab{cursor:pointer;border:2px solid var(--line);background:#fff;padding:13px 20px;border-radius:16px;
+    font-size:13.5px;font-weight:600;letter-spacing:.4px;color:var(--mut);display:flex;align-items:center;gap:9px;transition:.18s;user-select:none;box-shadow:var(--shadow)}
   .tab:hover{transform:translateY(-2px);border-color:#bcd6f5}
   .tab.active{color:#fff;border-color:transparent;
     background:linear-gradient(145deg,var(--accent2),#5ab0f5);box-shadow:0 10px 24px rgba(90,176,245,.35)}
   .tab.light.active{background:linear-gradient(145deg,var(--sun),#ffbf3d);color:#5a4a12}
+  .tab.ultra.active{background:linear-gradient(145deg,var(--ultra),#279d88);box-shadow:0 10px 24px rgba(63,191,168,.35)}
+  .tab.combo.active{background:linear-gradient(145deg,var(--combo),#8656e0);box-shadow:0 10px 24px rgba(169,123,240,.35)}
 
   .grid{display:grid;grid-template-columns:300px 1fr 296px;gap:18px;align-items:start}
   @media (max-width:1150px){.grid{grid-template-columns:1fr}}
@@ -48,6 +51,7 @@
   .card .sub{font-size:14px;color:var(--mut);margin:0 0 14px;line-height:1.5}
 
   .ctrl{margin:18px 0}
+  .ctrl.sect{padding-top:14px;border-top:2px dashed var(--line)}
   .ctrl .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
   .ctrl label{font-size:14.5px;font-weight:600;color:var(--txt)}
   .ctrl .val{font-family:var(--head);font-size:13px;color:#e0759a;font-weight:700;font-variant-numeric:tabular-nums}
@@ -56,6 +60,7 @@
     box-shadow:inset 0 0 0 2px var(--line);cursor:pointer}
   input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;
     background:#fff;border:4px solid var(--accent2);box-shadow:0 3px 8px rgba(0,0,0,.18);cursor:grab}
+  input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:4px solid var(--accent2);cursor:grab}
   .hint{font-size:12.5px;color:var(--dim);margin-top:6px;line-height:1.4}
 
   .toggle{display:flex;gap:10px;margin-top:6px}
@@ -64,6 +69,14 @@
   .toggle button.on{color:#fff;border-color:transparent;background:linear-gradient(145deg,var(--danger),#ff5470);box-shadow:0 8px 18px rgba(255,107,129,.32)}
   .toggle button.on.safe{background:linear-gradient(145deg,var(--ok),#3fb87a);box-shadow:0 8px 18px rgba(84,196,138,.3)}
 
+  .hazbtn{display:block;width:100%;text-align:left;cursor:pointer;border:2px solid var(--line);background:#fff;color:var(--mut);
+    padding:12px 14px;border-radius:14px;font-size:14px;font-weight:600;margin-bottom:8px;transition:.15s;font-family:var(--body)}
+  .hazbtn:hover{transform:translateY(-2px)}
+  .hazbtn.on{color:#fff;border-color:transparent;box-shadow:0 8px 18px rgba(0,0,0,.18)}
+  .hazbtn.haz-shadow.on{background:linear-gradient(145deg,#6a6fb0,#4b4f8a)}
+  .hazbtn.haz-motion.on{background:linear-gradient(145deg,var(--danger),#ff5470)}
+  .hazbtn.haz-obstacle.on{background:linear-gradient(145deg,#c98a4b,#a8692e)}
+
   canvas{width:100%;height:auto;display:block;border-radius:16px;background:#cdeafc}
   .stage-foot{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;justify-content:center}
   .btn{cursor:pointer;border:2px solid var(--line);background:#fff;color:var(--txt);padding:11px 17px;
@@ -71,6 +84,10 @@
   .btn:hover{transform:translateY(-2px);border-color:#bcd6f5}
   .btn.sun{background:linear-gradient(145deg,#fff0bf,#ffe38a);border-color:#f2d873}
   .btn.dark{background:linear-gradient(145deg,#dfe7f5,#c9d6ec);border-color:#b9c8e2}
+  .btn.start{background:linear-gradient(145deg,#d7f5e4,#bcecd0);border-color:#a9e6c2;color:#1f7a4d}
+  .btn.pause{background:linear-gradient(145deg,#ffe8d0,#ffd6a8);border-color:#f5b478;color:#9a5a1a}
+  .btn.start.on{background:linear-gradient(145deg,#54c48a,#3fb87a);border-color:transparent;color:#fff;box-shadow:0 8px 18px rgba(84,196,138,.4)}
+  .btn.pause.on{background:linear-gradient(145deg,#ffb02e,#ff8f3d);border-color:transparent;color:#fff;box-shadow:0 8px 18px rgba(255,143,61,.35)}
 
   .reading{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:2px dashed var(--line)}
   .reading:last-child{border-bottom:none}
@@ -85,25 +102,28 @@
   .badge{display:flex;align-items:center;gap:9px;padding:13px;border-radius:16px;font-size:15px;font-weight:700;letter-spacing:.5px;justify-content:center;margin-top:8px}
   .b-safe{background:#e5f8ee;color:#2f9e69;border:2px solid #b8ecce}
   .b-danger{background:#ffe9ec;color:#e0455e;border:2px solid #ffc4ce}
+  .b-warn{background:#fff3e0;color:#b5690a;border:2px solid #ffd699}
 
   .action{margin-top:14px;padding:16px;border-radius:16px;background:linear-gradient(145deg,#fff7fa,#eef6ff);border:2px solid var(--line);text-align:center}
   .action .lab{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--dim);font-weight:600}
   .action .big{font-size:18px;font-weight:700;margin-top:6px;letter-spacing:.3px}
-  footer{margin-top:26px;text-align:center;font-size:12.5px;color:var(--dim)}
+  footer{margin-top:26px;text-align:center;font-size:12.5px;color:var(--dim);line-height:1.6}
 </style>
 </head>
 <body>
   <header class="top">
     <div class="logo">🐰</div>
     <div class="title">
-      <h1>RABBIT ESCAPE SIMULATION</h1>
-      <p>LIGHT &amp; MOTION SENSORS · LOF ROBOTICS</p>
+      <h1>SHADOW TRIGGERED ESCAPE BOT</h1>
+      <p>LDR · MICROWAVE RADAR · ULTRASONIC · COMBINED AUTO MODE · LOF ROBOTICS</p>
     </div>
   </header>
 
   <nav class="tabs" id="tabs">
-    <div class="tab light active" data-s="light">☀️ Light Sensor</div>
-    <div class="tab" data-s="motion">🏃 Motion Sensor</div>
+    <div class="tab light active" data-s="light">🌗 LDR Sensor</div>
+    <div class="tab motion" data-s="motion">📡 Microwave Radar</div>
+    <div class="tab ultra" data-s="ultra">📏 Ultrasonic Sensor</div>
+    <div class="tab combo" data-s="combo">🤖 Combined Auto Mode</div>
   </nav>
 
   <div class="grid">
@@ -119,104 +139,175 @@
     </section>
 
     <section class="card">
-      <h3>What the Rabbit Sees</h3>
+      <h3>What the Bot Senses</h3>
       <div id="readings"></div>
-      <div style="margin-top:6px">
+      <div id="meterWrap" style="margin-top:6px">
         <div class="meter"><div class="fill" id="meterFill"></div><div class="thr" id="meterThr"></div></div>
         <div class="meterlabels"><span id="meterMin">0</span><span id="meterLbl"></span><span id="meterMax">100</span></div>
       </div>
       <div class="badge b-safe" id="badge"><span id="badgeText">Safe</span></div>
       <div class="action">
-        <div class="lab">Rabbit is…</div>
+        <div class="lab">Bot is…</div>
         <div class="big" id="actText">Eating a carrot 🥕</div>
       </div>
     </section>
   </div>
 
-  <footer>Light danger → the rabbit hides in its <b>burrow</b> (middle of the field). A person coming near → it hops to the nearest <b>bush</b>. It always moves slowly so you can watch every hop. 🐇</footer>
+  <footer>Shadow crossing the threshold → the bot dashes for its <b>burrow</b>. A moving threat inside the radar ring → it hops to the nearest <b>bush</b>. An obstacle too close → it stops, turns, or reverses. In <b>Combined Auto Mode</b> all three sensors vote at once, exactly like the doc's decision table. 🐇</footer>
 
 <script>
 (() => {
 "use strict";
 const cv=document.getElementById('stage'), g=cv.getContext('2d');
 const W=cv.width, H=cv.height, GROUND=372;
-const HOME_X=Math.round(W*0.42);          // rabbit stands CENTRED between two bushes
+const HOME_X=Math.round(W*0.42);          // bot's home spot, centred between two bushes
 const BURROW_X=Math.round(W*0.90);        // burrow far to the right
-const SENSOR={x:HOME_X,y:GROUND-6};       // motion sensor location (scary ring)
-const BUSHES=[                            // a flanking bush each side of the rabbit (+ scenery)
-  {x:Math.round(W*0.06),s:1.05},          // 0,1 = left side
-  {x:Math.round(W*0.22),s:1.2},           // 1 = LEFT flank (equal distance)
-  {x:Math.round(W*0.62),s:1.2},           // 2 = RIGHT flank (equal distance)
-  {x:Math.round(W*0.70),s:1.05}           // 3 = right scenery
+const SENSOR={x:HOME_X,y:GROUND-6};       // radar sensor location
+const BUSHES=[
+  {x:Math.round(W*0.06),s:1.05},
+  {x:Math.round(W*0.22),s:1.2},           // LEFT flank
+  {x:Math.round(W*0.62),s:1.2},           // RIGHT flank
+  {x:Math.round(W*0.70),s:1.05}
 ];
+const PXCM=1.5;                            // px-per-cm scale for the ultrasonic tab
+// Vertical forest trail (ultrasonic tab): bot walks TOP -> BOTTOM toward a burrow at the far end,
+// with trees/bushes lining both sides. A gentler, lower-angle perspective (wider far end, shorter
+// "distant sky") and a soft curve down the middle so it reads as a real path, not a centred wedge.
+const CX=Math.round(W*0.5), TRAIL_Y0=130, TRAIL_Y1=330, BURROW_Y=TRAIL_Y1+40;
+const PATH_TOP_W=132, PATH_BOT_W=204;
+function pathT(y){ return Math.max(0,Math.min(1,(y-TRAIL_Y0)/(TRAIL_Y1-TRAIL_Y0))); }
+function pathHalfWidthAt(y){
+  const tt=pathT(y);
+  return (PATH_TOP_W+(PATH_BOT_W-PATH_TOP_W)*tt)/2;
+}
+function pathCenterXAt(y){ return CX+Math.sin(pathT(y)*Math.PI)*86; }   // bends out mid-trail, straight at both ends
+function depthScale(y){
+  const tt=pathT(y);
+  return 0.65+0.55*tt;
+}
+const SIDE_PROPS=[];
+for(let i=0;i<10;i++){
+  const py=TRAIL_Y0+20+i*((TRAIL_Y1-TRAIL_Y0-10)/9), hw=pathHalfWidthAt(py), cxp=pathCenterXAt(py);
+  SIDE_PROPS.push({x:cxp-hw-18-Math.random()*20,y:py+(Math.random()*12-6),type:i%2?'tree':'bush'});
+  SIDE_PROPS.push({x:cxp+hw+18+Math.random()*20,y:py+(Math.random()*12-6),type:i%2?'bush':'tree'});
+}
+const PATH_SPECKS=[];
+for(let i=0;i<26;i++){
+  PATH_SPECKS.push({ty:TRAIL_Y0+10+Math.random()*(TRAIL_Y1-TRAIL_Y0+30),dx:(Math.random()*2-1)*0.75,leaf:Math.random()<0.5,rot:Math.random()*3});
+}
+// Background filler foliage: fleshes out the empty ground on both sides of the path so nothing
+// reads as flat empty space between the path-hugging props and the corner trees.
+const FILLER_PROPS=[];
+for(let i=0;i<50;i++){
+  const y=TRAIL_Y0-40+Math.random()*(H-TRAIL_Y0+20);
+  const cy=Math.max(TRAIL_Y0,Math.min(TRAIL_Y1,y));
+  const hw=pathHalfWidthAt(cy), cxp=pathCenterXAt(cy), side=Math.random()<0.5?-1:1;
+  const x=cxp+side*(hw+12+Math.random()*(W*0.55));
+  if(x>4 && x<W-4) FILLER_PROPS.push({x,y,s:0.28+Math.random()*0.5,type:Math.random()<0.65?'bush':'tree'});
+}
+// Fine ground texture (grass tufts) across the whole floor for extra fill, cheap to draw.
+const GROUND_SPECKS=[];
+for(let i=0;i<70;i++){
+  GROUND_SPECKS.push({x:Math.random()*W,y:TRAIL_Y0-20+Math.random()*(H-TRAIL_Y0+30),h:4+Math.random()*7,rot:(Math.random()*0.6-0.3)});
+}
+const NUT_Y=TRAIL_Y0+(TRAIL_Y1-TRAIL_Y0)*0.4, NUT_PAUSE=280;   // where the bot stops for a snack, and how long (frames)
 
 /* ---------- STATE ---------- */
 let sensor='light', t=0;
-const P={ light:{sunlight:85,threshold:45}, motion:{range:150,speed:1.2} };
+const P={
+  light:{sunlight:85,threshold:45},
+  motion:{range:150,speed:1.2},
+  ultra:{safe:30,range:110}
+};
+const hz={shadow:false,motion:false,obstacle:false};   // combo-mode hazard toggles
+let paused=true, started=false;                         // combo-mode run state
 let human={x:W+60,y:GROUND-6,vx:0,vy:0,mode:'away',active:false,entered:false,face:-1,fromSide:'right',frozen:false,scale:1};
 let cloud=-280;
-let bird={active:false,x:-90,y:100,vx:1,vy:0,phase:'cruise',timer:0,targetX:0,cruiseY:100}; // predator hawk
-let birdThreat=false;                        // true once its shadow has touched the rabbit
-const rab={x:HOME_X,y:GROUND-8,state:'eating',hop:0,dip:0,chew:0,face:1,tx:HOME_X,hide:'burrow',bush:1};
+let bird={active:false,x:-90,y:100,vx:1,vy:0,phase:'cruise',timer:0,targetX:0,cruiseY:100};
+let birdThreat=false;
+const rab={x:HOME_X,y:GROUND-8,state:'eating',hop:0,dip:0,chew:0,face:1,dir:1,tx:HOME_X,ty:0,hide:'burrow',bush:1,hideProp:0,tilt:0,blockT:0,ateNut:false,eatT:0};
+const obstacle={active:false,x:0,y:0};                  // ultrasonic-tab obstacle on the trail
+const FLEE_MODES=['fastEscape','escape','turnEscape','altPath'];
 
 /* ---------- PARAM DEFS ---------- */
 const DEFS={
-  light:{title:'Light Sensor',sub:'The rabbit watches the light. If it gets dark (below the danger line) OR a predator’s shadow passes over it, the rabbit runs to the burrow. When it is bright and clear, it eats its carrot.',
-    controls:[['sunlight','Sunlight',0,100,1,v=>v+' %','Slide to make it brighter or darker'],
-      ['threshold','Danger Darkness Line',10,90,1,v=>v+' %','If light drops below this, the rabbit gets scared']]},
-  motion:{title:'Motion Sensor',sub:'The rabbit watches for movement. If a person walks TOWARD it and comes inside the ring, it hops to the nearest bush and hides. If the person walks away, it keeps eating.',
-    controls:[['range','How Close is Scary',80,300,5,v=>v+' cm','Size of the alert ring around the rabbit'],
-      ['speed','Walking Speed',0.5,3,0.1,v=>v.toFixed(1)+' ×','How fast the person walks']]}
+  light:{title:'LDR Sensor',sub:'The bot watches the light. If it gets dark (below the danger line) OR a predator’s shadow passes over it, the bot runs to the burrow. When it is bright and clear, it eats its carrot.',
+    controls:[['sunlight','Light Intensity',0,100,1,v=>v+' %','Slide to make it brighter or darker'],
+      ['threshold','Shadow Threshold',10,90,1,v=>v+' %','If light drops below this, the bot detects danger']]},
+  motion:{title:'Microwave Radar Sensor',sub:'The bot watches for movement. If a moving threat walks TOWARD it and enters the detection zone, it hops to the nearest bush and hides. If the threat walks away, it keeps eating.',
+    controls:[['range','Detection Range',80,300,5,v=>v+' cm','Size of the radar ring around the bot'],
+      ['speed','Threat Speed',0.5,3,0.1,v=>v.toFixed(1)+' ×','How fast the threat approaches']]},
+  ultra:{title:'Ultrasonic Sensor',sub:'The bot walks slowly down a forest trail toward its burrow, pinging sound waves ahead of it. It pauses partway for a snack — that\'s your moment to drop an obstacle. Get too close and it darts off the trail into the nearest tree or bush. Press Reset to send it down the trail again.',
+    controls:[['safe','Safe Distance Limit',10,90,1,v=>v+' cm','Minimum gap the bot needs before it reacts'],
+      ['range','Detection Range',40,160,5,v=>v+' cm','How far ahead the sensor can sense anything at all']]}
 };
 
-/* ---------- UI ---------- */
+/* ---------- UI: CONTROLS PANEL ---------- */
 const controlsEl=document.getElementById('controls'), footEl=document.getElementById('foot');
 function buildControls(){
-  const d=DEFS[sensor];
-  document.getElementById('paramTitle').textContent=d.title;
-  document.getElementById('paramSub').textContent=d.sub;
+  const titleEl=document.getElementById('paramTitle'), subEl=document.getElementById('paramSub');
   controlsEl.innerHTML='';
-  d.controls.forEach(([key,label,min,max,step,fmt,hint])=>{
-    const val=P[sensor][key];
-    const w=document.createElement('div');w.className='ctrl';
-    w.innerHTML=`<div class="row"><label>${label}</label><span class="val" id="v_${key}">${fmt(val)}</span></div>
-      <input type="range" min="${min}" max="${max}" step="${step}" value="${val}" id="r_${key}">
-      <div class="hint">${hint}</div>`;
-    controlsEl.appendChild(w);
-    const inp=w.querySelector('input');
-    const fill=()=>inp.style.setProperty('--fill',((inp.value-min)/(max-min)*100)+'%');fill();
-    inp.addEventListener('input',()=>{P[sensor][key]=parseFloat(inp.value);document.getElementById('v_'+key).textContent=fmt(parseFloat(inp.value));fill();});
-  });
-  if(sensor==='motion'){
-    const w=document.createElement('div');w.className='ctrl';
-    w.innerHTML=`<div class="row"><label>Send a person…</label></div>
-      <div class="toggle"><button id="tgToward">🚶 Toward rabbit</button><button id="tgAway" class="on safe">🧍 Away</button></div>
-      <div class="hint">Each time you press “Toward”, the person walks in from a different side of the field.</div>`;
-    controlsEl.appendChild(w);
-    document.getElementById('tgToward').onclick=()=>setDir('toward');
-    document.getElementById('tgAway').onclick=()=>setDir('away');
+  if(sensor==='combo'){
+    titleEl.textContent='Combined Auto Mode';
+    subEl.textContent='All three sensors run together. Toggle hazards below and watch the bot decide. Exact thresholds come from the LDR / Radar / Ultrasonic tabs — set them there first.';
+    const hzWrap=document.createElement('div'); hzWrap.className='ctrl';
+    hzWrap.innerHTML=`<div class="row"><label>Hazards</label></div>
+      <button class="hazbtn haz-shadow" id="hzShadow">🌑 Shadow</button>
+      <button class="hazbtn haz-motion" id="hzMotion">🏃 Motion</button>
+      <button class="hazbtn haz-obstacle" id="hzObstacle">🪨 Obstacle</button>
+      <div class="hint">Click to switch a hazard on or off. Combine two at once to see the bot's priority logic.</div>`;
+    controlsEl.appendChild(hzWrap);
+    document.getElementById('hzShadow').onclick=()=>toggleHazard('shadow');
+    document.getElementById('hzMotion').onclick=()=>toggleHazard('motion');
+    document.getElementById('hzObstacle').onclick=()=>toggleHazard('obstacle');
+    updateHazButtons();
+    const sum=document.createElement('div'); sum.className='ctrl sect';
+    sum.innerHTML=`<div class="row"><label>Thresholds in Use</label></div>
+      <div class="reading"><span class="k">Shadow Threshold</span><span class="v">${P.light.threshold}%</span></div>
+      <div class="reading"><span class="k">Motion Range</span><span class="v">${P.motion.range} cm</span></div>
+      <div class="reading"><span class="k">Safe Distance</span><span class="v">${P.ultra.safe} cm</span></div>
+      <div class="hint">Adjust these back on the individual sensor tabs.</div>`;
+    controlsEl.appendChild(sum);
+  }else{
+    const d=DEFS[sensor];
+    titleEl.textContent=d.title; subEl.textContent=d.sub;
+    d.controls.forEach(([key,label,min,max,step,fmt,hint])=>{
+      const val=P[sensor][key];
+      const w=document.createElement('div');w.className='ctrl';
+      w.innerHTML=`<div class="row"><label>${label}</label><span class="val" id="v_${key}">${fmt(val)}</span></div>
+        <input type="range" min="${min}" max="${max}" step="${step}" value="${val}" id="r_${key}">
+        <div class="hint">${hint}</div>`;
+      controlsEl.appendChild(w);
+      const inp=w.querySelector('input');
+      const fill=()=>inp.style.setProperty('--fill',((inp.value-min)/(max-min)*100)+'%');fill();
+      inp.addEventListener('input',()=>{P[sensor][key]=parseFloat(inp.value);document.getElementById('v_'+key).textContent=fmt(parseFloat(inp.value));fill();});
+    });
+    if(sensor==='motion'){
+      const w=document.createElement('div');w.className='ctrl';
+      w.innerHTML=`<div class="row"><label>Send a threat…</label></div>
+        <div class="toggle"><button id="tgToward">🚶 Toward bot</button><button id="tgAway" class="on safe">🧍 Away</button></div>
+        <div class="hint">Each time you press “Toward”, the threat approaches from a different side of the field.</div>`;
+      controlsEl.appendChild(w);
+      document.getElementById('tgToward').onclick=()=>setDir('toward');
+      document.getElementById('tgAway').onclick=()=>setDir('away');
+    }
   }
   buildFoot();
 }
-const ROUTES=[                               // all start ON THE GRASS (never from the sky)
-  {sx:W+50,sy:GROUND-6},   // straight from the right
-  {sx:-50, sy:GROUND-6},   // straight from the left
-  {sx:W+50,sy:H-28},       // diagonal from the right foreground
-  {sx:-50, sy:H-28}        // diagonal from the left foreground
+const ROUTES=[
+  {sx:W+50,sy:GROUND-6},{sx:-50,sy:GROUND-6},{sx:W+50,sy:H-28},{sx:-50,sy:H-28}
 ];
 function setDir(mode){
-  // any motion button first returns the rabbit to its start spot (avoids half-hopped states)
   rab.x=HOME_X;rab.y=GROUND-8;rab.state='eating';rab.dip=0;rab.hop=0;rab.face=1;rab.tx=HOME_X;
   if(mode==='toward'){
     const r=ROUTES[Math.floor(Math.random()*ROUTES.length)];
     human.x=r.sx;human.y=r.sy;human.scale=1;
-    human.fromSide=r.sx<W/2?'left':'right';  // remember which side they came from
+    human.fromSide=r.sx<W/2?'left':'right';
     const dx=SENSOR.x-human.x, dy=SENSOR.y-human.y, L=Math.hypot(dx,dy);
-    human.vx=dx/L; human.vy=dy/L;            // unit direction toward the rabbit
+    human.vx=dx/L; human.vy=dy/L;
     human.face=human.vx<0?-1:1;
     human.mode='toward';human.active=true;human.entered=false;human.frozen=false;
   }else{
-    // roam: stroll across the FRONT grass (below the flattened ring) and pass by
     const fromLeft=Math.random()<0.5;
     human.x=fromLeft?-60:W+60; human.y=H-16; human.scale=1.06;
     human.vx=fromLeft?1:-1; human.vy=0; human.face=human.vx<0?-1:1;
@@ -231,123 +322,200 @@ function buildFoot(){
       <button class="btn dark" id="fDark">☁️ Cast a Shadow</button>
       <button class="btn" id="fBird" style="background:linear-gradient(145deg,#e9e0ff,#cfc0ff);border-color:#c1b0ff">🦅 Send Predator</button>
       <button class="btn" id="fReset">↺ Reset</button>`;
-    document.getElementById('fSun').onclick=()=>{setSlider('sunlight',95);};
-    document.getElementById('fDark').onclick=()=>{setSlider('sunlight',22);};
+    document.getElementById('fSun').onclick=()=>setSlider('sunlight',95);
+    document.getElementById('fDark').onclick=()=>setSlider('sunlight',22);
     document.getElementById('fBird').onclick=sendBird;
-  }else{
-    footEl.innerHTML=`<button class="btn" id="fToward" style="background:linear-gradient(145deg,#ffd7de,#ffbcc7);border-color:#ffb0bd">🚶 Send Person Toward</button>
-      <button class="btn" id="fAway" style="background:linear-gradient(145deg,#d7f5e4,#bcecd0);border-color:#a9e6c2">🧍 Send Person Away</button>
+  }else if(sensor==='motion'){
+    footEl.innerHTML=`<button class="btn" id="fToward" style="background:linear-gradient(145deg,#ffd7de,#ffbcc7);border-color:#ffb0bd">🚶 Send Threat Toward</button>
+      <button class="btn" id="fAway" style="background:linear-gradient(145deg,#d7f5e4,#bcecd0);border-color:#a9e6c2">🧍 Send Threat Away</button>
       <button class="btn" id="fReset">↺ Reset</button>`;
     document.getElementById('fToward').onclick=()=>setDir('toward');
     document.getElementById('fAway').onclick=()=>setDir('away');
+  }else if(sensor==='ultra'){
+    footEl.innerHTML=`<button class="btn" id="fAddObs" style="background:linear-gradient(145deg,#ffd7de,#ffbcc7);border-color:#ffb0bd">🪨 Add Obstacle</button>
+      <button class="btn" id="fClearObs" style="background:linear-gradient(145deg,#dceafc,#c3daf6);border-color:#b3cdee">🧹 Clear Obstacle</button>
+      <button class="btn" id="fReset">↺ Reset</button>`;
+    document.getElementById('fAddObs').onclick=addObstacle;
+    document.getElementById('fClearObs').onclick=clearObstacle;
+  }else{ // combo
+    footEl.innerHTML=`<button class="btn start" id="fStart">▶ Start</button>
+      <button class="btn pause" id="fPause">⏸ Pause</button>
+      <button class="btn" id="fReset">↺ Reset</button>`;
+    document.getElementById('fStart').onclick=()=>{started=true;setPaused(false);};
+    document.getElementById('fPause').onclick=()=>setPaused(true);
+    setPaused(paused);
   }
   document.getElementById('fReset').onclick=reset;
 }
 function setSlider(key,v){const r=document.getElementById('r_'+key);if(r){r.value=v;r.dispatchEvent(new Event('input'));}}
-function sendBird(){ // launch the predator on a random path (straight or diagonal, either side)
+function toggleHazard(k){ hz[k]=!hz[k]; updateHazButtons(); }
+function updateHazButtons(){
+  const s=document.getElementById('hzShadow'), m=document.getElementById('hzMotion'), o=document.getElementById('hzObstacle');
+  if(s) s.classList.toggle('on',hz.shadow);
+  if(m) m.classList.toggle('on',hz.motion);
+  if(o) o.classList.toggle('on',hz.obstacle);
+}
+function setPaused(v){
+  paused=v;
+  const s=document.getElementById('fStart'), p=document.getElementById('fPause');
+  if(s&&p){ s.classList.toggle('on',!paused); p.classList.toggle('on',paused); }
+}
+function sendBird(){
   const r=Math.floor(Math.random()*4);
   const fromLeft=(r%2===0);
   bird.cruiseY=88+Math.random()*30;
   bird.x=fromLeft?-90:W+90; bird.vx=fromLeft?1:-1;
-  bird.y=(r<2)?bird.cruiseY:66;          // r>=2 => diagonal glide from higher up
+  bird.y=(r<2)?bird.cruiseY:66;
   bird.vy=(r<2)?0:0.18;
   bird.phase='cruise'; bird.timer=0; bird.targetX=0;
   bird.active=true; birdThreat=false;
 }
-function reset(){ // hard snap back to the eating spot — no hop-back animation
-  rab.x=HOME_X;rab.y=GROUND-8;rab.state='eating';rab.dip=0;rab.hop=0;rab.face=1;rab.tx=HOME_X;
+function reset(){
+  rab.y=GROUND-8;rab.dip=0;rab.hop=0;rab.tilt=0;rab.blockT=0;
+  if(sensor==='ultra'){ rab.state='walking'; rab.x=CX; rab.y=TRAIL_Y0; rab.face=1; rab.ateNut=false; rab.eatT=0; }
+  else{ rab.x=HOME_X; rab.state='eating'; rab.face=1; rab.tx=HOME_X; }
+  obstacle.active=false;
   human.active=false;human.mode='away';human.x=W+60;human.frozen=false;
   cloud=-280;bird.active=false;bird.phase='cruise';birdThreat=false;
-  // restore sliders to defaults (bright light + default threshold, etc.) so it stays safe
-  P.light.sunlight=85;P.light.threshold=45;P.motion.range=150;P.motion.speed=1.2;
-  DEFS[sensor].controls.forEach(([key])=>setSlider(key,P[sensor][key]));
-  const a=document.getElementById('tgToward'),b=document.getElementById('tgAway');if(a&&b){a.className='';b.className='on safe';}}
+  P.light.sunlight=85;P.light.threshold=45;
+  P.motion.range=150;P.motion.speed=1.2;
+  P.ultra.safe=30;P.ultra.range=110;
+  hz.shadow=false;hz.motion=false;hz.obstacle=false;
+  paused=true; started=false;
+  if(DEFS[sensor]) DEFS[sensor].controls.forEach(([key])=>setSlider(key,P[sensor][key]));
+  const a=document.getElementById('tgToward'),b=document.getElementById('tgAway');if(a&&b){a.className='';b.className='on safe';}
+  updateHazButtons();
+  setPaused(true);
+}
 document.getElementById('tabs').addEventListener('click',e=>{
   const tb=e.target.closest('.tab');if(!tb)return;
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   tb.classList.add('active');sensor=tb.dataset.s;reset();buildControls();
 });
 
-/* ---------- LOGIC ---------- */
+/* ---------- SENSOR LOGIC ---------- */
 function lightLevel(){
   let cov=0;
   if(cloud>-170){const d=Math.abs((cloud+140)-BURROW_X);cov=Math.max(0,1-d/220);}
   return Math.round(P.light.sunlight*(1-cov*0.55));
 }
-function updateBird(){ // fly the predator; hover + swoop when it spots the rabbit
-  if(!bird.active) return;
-  if(bird.phase==='cruise'){
-    bird.x += bird.vx*2.4; bird.y += bird.vy; if(bird.y>142) bird.y=142;
-    if(bird.x>0 && bird.x<W && Math.abs(bird.x-rab.x)<42){          // shadow finds the rabbit
-      birdThreat=true; bird.targetX=rab.x; bird.phase='hover'; bird.timer=0;   // rabbit starts hiding now
-    }
-    if(bird.x<-110 || bird.x>W+110){ bird.active=false; birdThreat=false; }
-  }else if(bird.phase==='hover'){                                    // pause a split second
-    bird.timer++; bird.y += Math.sin(bird.timer*0.3)*0.4;
-    if(bird.timer>36){ bird.phase='dive'; bird.timer=0; }
-  }else if(bird.phase==='dive'){                                     // swoop low over the spot
-    bird.x += (bird.targetX-bird.x)*0.06;
-    bird.y += (GROUND-66 - bird.y)*0.12;
-    bird.timer++;
-    if(bird.timer>60){ bird.phase='leave'; }
-  }else{                                                             // climb and fly away
-    bird.y += (bird.cruiseY - bird.y)*0.08;
-    bird.x += bird.vx*2.8;
-    if(bird.x<-120 || bird.x>W+120){ bird.active=false; birdThreat=false; }
-  }
+function computeLight(){
+  const L=lightLevel();
+  return {danger:(L<P.light.threshold)||birdThreat,L,dark:L<P.light.threshold};
 }
-function nearestHideout(){ // closest safe spot to the rabbit: a bush OR the burrow
-  let best={type:'burrow',x:BURROW_X,bush:-1,d:Math.abs(BURROW_X-rab.x)};
-  BUSHES.forEach((b,i)=>{const d=Math.abs(b.x-rab.x); if(d<best.d) best={type:'bush',x:b.x,bush:i,d};});
-  return best;
-}
-function threat(){
-  if(sensor==='light'){const L=lightLevel();return {danger:(L<P.light.threshold)||birdThreat,L,dark:L<P.light.threshold};}
+function computeMotion(){
   const dx=human.x-SENSOR.x, dy=human.y-SENSOR.y;
-  const rx=P.motion.range, ry=P.motion.range*0.42;               // flattened ground ellipse
+  const rx=P.motion.range, ry=P.motion.range*0.42;
   const inside=(dx*dx)/(rx*rx)+(dy*dy)/(ry*ry) < 1;
   const dist=Math.round(Math.hypot(dx,dy));
   const danger=human.active&&human.mode==='toward'&&inside;
   return {danger,dist,inside,onField:human.active&&human.mode==='toward'};
 }
-function oppositeBush(){ // person from LEFT -> hide RIGHT ; from RIGHT -> hide LEFT
+function addObstacle(){
+  const aheadMin=70, aheadMax=Math.min(P.ultra.range*PXCM,260);
+  let oy=rab.y+aheadMin+Math.random()*(aheadMax-aheadMin);
+  oy=Math.min(oy,TRAIL_Y1-10);
+  const hw=pathHalfWidthAt(oy);
+  obstacle.active=true; obstacle.x=pathCenterXAt(oy)+(Math.random()*2-1)*hw*0.5; obstacle.y=oy;
+}
+function clearObstacle(){ obstacle.active=false; }
+function nearestSideProp(){
+  let best=0,bd=1e9;
+  SIDE_PROPS.forEach((p,i)=>{ const d=Math.hypot(p.x-rab.x,p.y-rab.y); if(d<bd){bd=d;best=i;} });
+  return best;
+}
+function ultraStep(){
+  let distCm=null, detected=false;
+  if(obstacle.active){
+    const fwd=obstacle.y-rab.y;
+    if(fwd>=-4){ distCm=Math.max(0,fwd)/PXCM; detected=distCm<=P.ultra.range; }
+  }
+  const danger=detected && distCm<=P.ultra.safe;
+
+  if((rab.state==='walking'||rab.state==='nutbreak') && danger){
+    const pi=nearestSideProp(), p=SIDE_PROPS[pi];
+    rab.state='fleeing'; rab.hideProp=pi; rab.tx=p.x; rab.ty=p.y;
+    rab.face=p.x<rab.x?-1:1;
+  }else if(rab.state==='walking'){
+    if(!rab.ateNut && rab.y>=NUT_Y){
+      rab.state='nutbreak'; rab.eatT=0; rab.ateNut=true; rab.hop=0;
+    }else{
+      rab.y+=0.28;
+      rab.x=pathCenterXAt(rab.y);
+      rab.hop=Math.abs(Math.sin(t*0.05))*8;
+      rab.face=1;
+      if(rab.y>=TRAIL_Y1){ rab.y=TRAIL_Y1; rab.x=pathCenterXAt(rab.y); rab.state='arrived'; rab.hop=0; }
+    }
+  }else if(rab.state==='nutbreak'){
+    rab.eatT++; rab.chew+=0.18;
+    if(rab.eatT>NUT_PAUSE) rab.state='walking';
+  }else if(rab.state==='fleeing'){
+    const dx=rab.tx-rab.x, dy=rab.ty-rab.y, L=Math.hypot(dx,dy)||1, step=2.4;
+    if(L<=step){ rab.x=rab.tx; rab.y=rab.ty; rab.state='hiding'; rab.dip=0; clearObstacle(); }
+    else{ rab.x+=dx/L*step; rab.y+=dy/L*step; rab.hop=Math.abs(Math.sin(t*0.22))*12; }
+  }else if(rab.state==='hiding'){
+    rab.hop=0; rab.dip=Math.min(14,rab.dip+0.8);
+  }
+  // 'arrived' is terminal — nothing to update until Reset
+  const level = !detected?0 : distCm>P.ultra.safe?1 : distCm>P.ultra.safe*0.5?2 : 3;
+  return {distCm,detected,danger,level};
+}
+function comboInfo(){
+  const lightVal = hz.shadow ? Math.max(0,P.light.threshold-12) : 90;
+  const shadowDetected = lightVal < P.light.threshold;
+  const motionDetected = hz.motion;
+  const obstDist = hz.obstacle ? Math.max(5,Math.round(P.ultra.safe*0.4)) : P.ultra.range+40;
+  const obstacleDetected = hz.obstacle && obstDist<=P.ultra.range;
+  let decision,action,mode;
+  if(shadowDetected&&motionDetected){decision='High Danger';action='Fast Escape Mode';mode='fastEscape';}
+  else if(motionDetected&&obstacleDetected){decision='Threat Nearby, Path Blocked';action='Choose Alternate Path';mode='altPath';}
+  else if(shadowDetected){decision='Possible Danger';action='Escape Quickly';mode='escape';}
+  else if(motionDetected){decision='Moving Threat Nearby';action='Turn Away and Escape';mode='turnEscape';}
+  else if(obstacleDetected){decision='Path Blocked';action='Stop, Reverse, or Turn';mode='blocked';}
+  else {decision='Safe Condition';action='Idle or Slow Movement';mode='idle';}
+  return {shadowDetected,motionDetected,obstacleDetected,decision,action,mode};
+}
+function nearestHideout(){
+  let best={type:'burrow',x:BURROW_X,bush:-1,d:Math.abs(BURROW_X-rab.x)};
+  BUSHES.forEach((b,i)=>{const d=Math.abs(b.x-rab.x); if(d<best.d) best={type:'bush',x:b.x,bush:i,d};});
+  return best;
+}
+function oppositeBush(){
   const wantRight = human.fromSide==='left';
   let best=-1,bd=1e9;
   BUSHES.forEach((b,i)=>{
     const onRight=b.x>HOME_X;
     if(onRight===wantRight){const d=Math.abs(b.x-rab.x);if(d<bd){bd=d;best=i;}}
   });
-  if(best<0) best = wantRight?2:1;   // fallback bush on the wanted side
+  if(best<0) best = wantRight?2:1;
   return best;
 }
 
-/* ---------- READINGS ---------- */
-const readingsEl=document.getElementById('readings');
-function renderReadings(o){
-  let rows,meter,mthr,mlbl,showThr=true;
-  if(sensor==='light'){
-    const predTxt=bird.active?(birdThreat?'Shadow on rabbit! 🦅':'Flying over 🦅'):'None';
-    const statusTxt=birdThreat?'Predator Shadow! 🦅':(o.dark?'Too Dark 🌑':'Bright ☀️');
-    rows=[['Light Level',o.L+' %'],['Danger Line',P.light.threshold+' %'],['Predator',predTxt],['Status',statusTxt]];
-    meter=o.L;mthr=P.light.threshold;mlbl='light';
-  }else{
-    const dirTxt=human.frozen?'Frozen 🥶':(human.mode==='toward'?'Coming closer ➡️':'Walking away ⬅️');
-    rows=[['Person Distance',o.onField?o.dist+' cm':'far away'],['Scary Distance',P.motion.range+' cm'],['Direction',dirTxt],['Status',o.danger?'Danger! 🏃':'Safe 😊']];
-    meter=o.onField?Math.max(0,100-o.dist/P.motion.range*100):0;mthr=100;showThr=false;mlbl='closeness';
+/* ---------- SHARED BOT MOVEMENT ---------- */
+function fleeStep(danger,hideType,hideX,bushIdx,speed){
+  if(danger && (rab.state==='eating'||rab.state==='returning')){
+    rab.state='fleeing'; rab.hide=hideType; rab.bush=bushIdx; rab.tx=hideX;
   }
-  readingsEl.innerHTML=rows.map(r=>`<div class="reading"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('');
-  const f=document.getElementById('meterFill');f.style.width=Math.max(0,Math.min(100,meter))+'%';
-  f.style.background=o.danger?'linear-gradient(90deg,#ff6b81,#ff9aa8)':'linear-gradient(90deg,#7cc6ff,#54c48a)';
-  const thrEl=document.getElementById('meterThr');thrEl.style.display=showThr?'block':'none';thrEl.style.left=mthr+'%';
-  document.getElementById('meterLbl').textContent=mlbl;
-  const badge=document.getElementById('badge');badge.className='badge '+(o.danger?'b-danger':'b-safe');
-  document.getElementById('badgeText').textContent=o.danger?(sensor==='light'?'SHADOW — DANGER!':'PERSON NEAR — DANGER!'):'ALL SAFE';
-  const spot=rab.hide==='burrow'?'burrow':'bush', spotIcon=rab.hide==='burrow'?'🕳️':'🌿';
-  const act={eating:'Eating a carrot 🥕',fleeing:'Hopping to the '+spot+' 🏃',hiding:'Hiding in the '+spot+' '+spotIcon,returning:'Coming back out 🐇'}[rab.state];
-  document.getElementById('actText').textContent=act;
+  if(!danger && rab.state==='hiding') rab.state='returning';
+  if(rab.state==='fleeing'){
+    rab.face=rab.tx>=rab.x?1:-1;
+    rab.x+=Math.sign(rab.tx-rab.x)*speed;
+    rab.hop=Math.abs(Math.sin(t*0.14))*15;
+    if(Math.abs(rab.x-rab.tx)<=speed){rab.x=rab.tx;rab.state='hiding';}
+  }else if(rab.state==='hiding'){
+    rab.hop=0; rab.dip=Math.min(hideType==='burrow'?30:16, rab.dip+0.8);
+  }else if(rab.state==='returning'){
+    rab.dip=Math.max(0,rab.dip-0.7);
+    if(rab.dip<=0){
+      rab.face=HOME_X>=rab.x?1:-1;
+      rab.x+=Math.sign(HOME_X-rab.x)*speed;
+      rab.hop=Math.abs(Math.sin(t*0.14))*15;
+      if(Math.abs(rab.x-HOME_X)<=speed){rab.x=HOME_X;rab.state='eating';rab.face=1;}
+    }
+  }else{ rab.hop=(Math.sin(t*0.05)+1)*1.5; rab.chew+=0.25; }
 }
 
-/* ---------- DRAW HELPERS ---------- */
+/* ---------- DRAW HELPERS (shared art) ---------- */
 function rr(x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
 function puff(x,y,s){g.save();g.translate(x,y);g.scale(s,s);for(const[dx,dy,r]of[[0,0,20],[26,-6,26],[54,0,20],[26,12,18]]){g.beginPath();g.arc(dx,dy,r,0,7);g.fill();}g.restore();}
 
@@ -362,8 +530,7 @@ function drawBush(b){
   for(const[dx,dy,r]of[[-8,-28,10],[18,-16,8]]){g.beginPath();g.arc(dx,dy,r,0,7);g.fill();}
   g.restore();
 }
-
-function burrowArch(){ // arched tunnel entrance: flat bottom, rounded top
+function burrowArch(){
   const x=BURROW_X,y=GROUND,aw=28;
   g.beginPath();
   g.moveTo(x-aw,y+8); g.lineTo(x-aw,y-8);
@@ -372,43 +539,36 @@ function burrowArch(){ // arched tunnel entrance: flat bottom, rounded top
 }
 function drawBurrow(){
   const x=BURROW_X,y=GROUND;
-  // grassy mound (dome)
   const gm=g.createLinearGradient(0,y-62,0,y+4);gm.addColorStop(0,'#7fce72');gm.addColorStop(1,'#4d9646');
   g.fillStyle=gm;g.beginPath();g.ellipse(x,y+4,62,54,0,Math.PI,2*Math.PI);g.fill();
-  // dug-dirt apron
   g.fillStyle='#a9814f';g.beginPath();g.ellipse(x,y+8,66,16,0,0,7);g.fill();
   g.fillStyle='#946e3f';g.beginPath();g.ellipse(x,y+8,66,16,0,Math.PI,2*Math.PI);g.fill();
-  // arched tunnel (dark)
   const op=g.createLinearGradient(0,y-36,0,y+8);op.addColorStop(0,'#3a2a1a');op.addColorStop(1,'#120c06');
   burrowArch();g.fillStyle=op;g.fill();
-  // dirt rim around the arch
   burrowArch();g.lineWidth=9;g.strokeStyle='#8a6238';g.stroke();
   burrowArch();g.lineWidth=3;g.strokeStyle='#6d4b29';g.stroke();
-  // pebbles at the base
   g.fillStyle='#9aa0a8';
   for(const[dx,dy]of[[-48,12],[46,13],[-32,17],[36,18]]){g.beginPath();g.ellipse(x+dx,y+dy,6,4,0,0,7);g.fill();}
-  // grass tufts on the mound
   g.strokeStyle='#3f8a3a';g.lineWidth=2.5;
   for(const gx of [-54,-38,-22,34,48,58]){g.beginPath();g.moveTo(x+gx,y-14);g.lineTo(x+gx-3,y-28);g.moveTo(x+gx,y-14);g.lineTo(x+gx+3,y-27);g.stroke();}
 }
-function drawBurrowFront(){ // cover the rabbit's feet while it climbs back out
+function drawBurrowFront(){
   const x=BURROW_X,y=GROUND;
   g.fillStyle='#a9814f';g.beginPath();g.ellipse(x,y+8,66,16,0,0,7);g.fill();
   g.fillStyle='#946e3f';g.beginPath();g.ellipse(x,y+8,66,16,0,Math.PI,2*Math.PI);g.fill();
 }
-function drawBurrowHidden(){ // keep the tunnel reading dark while the rabbit is inside
+function drawBurrowHidden(){
   const y=GROUND;
   const op=g.createLinearGradient(0,y-36,0,y+8);op.addColorStop(0,'#3a2a1a');op.addColorStop(1,'#120c06');
   burrowArch();g.fillStyle=op;g.fill();
   burrowArch();g.lineWidth=3;g.strokeStyle='#6d4b29';g.stroke();
 }
-
-function scene(dark){
+function scene(dark,withBushes){
+  if(withBushes===undefined) withBushes=true;
   const sky=g.createLinearGradient(0,0,0,GROUND);
   if(dark){sky.addColorStop(0,'#8fa6c8');sky.addColorStop(1,'#b9cbe0');}
   else{sky.addColorStop(0,'#bfe6ff');sky.addColorStop(1,'#e8f7ff');}
   g.fillStyle=sky;g.fillRect(0,0,W,GROUND);
-  // sun
   if(sensor==='light'){
     const b=P.light.sunlight/100,x=96,y=74;
     const gl=g.createRadialGradient(x,y,6,x,y,92);gl.addColorStop(0,`rgba(255,225,110,${0.6*b+0.12})`);gl.addColorStop(1,'rgba(255,225,110,0)');
@@ -416,19 +576,15 @@ function scene(dark){
     g.fillStyle=`rgb(255,${200+Math.round(30*b)},${70+Math.round(20*b)})`;g.beginPath();g.arc(x,y,32,0,7);g.fill();
   }else{g.fillStyle='#ffe066';g.beginPath();g.arc(96,74,30,0,7);g.fill();}
   g.fillStyle='rgba(255,255,255,.9)';puff(560,66,1);puff(300,50,.8);
-  // hills
   g.fillStyle=dark?'#9fc39a':'#a9dca0';
   g.beginPath();g.moveTo(0,GROUND);g.bezierCurveTo(150,300,320,350,480,312);g.bezierCurveTo(620,282,700,330,W,306);g.lineTo(W,GROUND);g.closePath();g.fill();
-  // ground
   const gr=g.createLinearGradient(0,GROUND,0,H);gr.addColorStop(0,dark?'#6faa5f':'#8ed17e');gr.addColorStop(1,dark?'#4f8a45':'#69b45c');
   g.fillStyle=gr;g.fillRect(0,GROUND,W,H-GROUND);
   g.strokeStyle='rgba(90,150,80,.5)';g.lineWidth=2;
   for(let i=0;i<46;i++){const x=i*17+8;g.beginPath();g.moveTo(x,H);g.lineTo(x+3,H-9-((i*7)%7));g.stroke();}
-  BUSHES.forEach(drawBush);
-  drawBurrow();
+  if(withBushes){ BUSHES.forEach(drawBush); drawBurrow(); }
   if(dark){g.fillStyle='rgba(30,40,70,.16)';g.fillRect(0,0,W,GROUND);}
 }
-
 function shadowCloud(x){
   g.save();g.fillStyle='rgba(90,105,140,.92)';
   for(const[dx,dy,r]of[[0,0,32],[40,-12,40],[84,0,32],[124,6,26],[36,18,30],[84,18,30]]){g.beginPath();g.arc(x+dx,108+dy,r,0,7);g.fill();}
@@ -437,8 +593,7 @@ function shadowCloud(x){
   sh.addColorStop(0,'rgba(0,0,0,.38)');sh.addColorStop(1,'rgba(0,0,0,0)');
   g.fillStyle=sh;g.beginPath();g.ellipse(sx,GROUND-4,110,20,0,0,7);g.fill();
 }
-
-function drawRing(danger){ // detection zone drawn as a flattened ellipse lying on the grass
+function drawRing(danger){
   const rx=P.motion.range, p=Math.sin(t*0.08)*4, RX=rx+p, RY=(rx*0.42)+p*0.4;
   g.fillStyle=danger?'rgba(255,107,129,.12)':'rgba(124,198,255,.12)';
   g.beginPath();g.ellipse(SENSOR.x,SENSOR.y,RX,RY,0,0,7);g.fill();
@@ -446,29 +601,41 @@ function drawRing(danger){ // detection zone drawn as a flattened ellipse lying 
   g.beginPath();g.ellipse(SENSOR.x,SENSOR.y,RX,RY,0,0,7);g.stroke();g.setLineDash([]);
   g.fillStyle=danger?'rgba(255,107,129,.65)':'rgba(124,198,255,.6)';g.beginPath();g.arc(SENSOR.x,SENSOR.y,4,0,7);g.fill();
 }
+// --- Motion Sensor tab only: a "high angle" shot. Previously only the ring's ellipse ratio
+// changed, which was too subtle to read as a camera-angle change. Now the WHOLE frame — sky,
+// grass, bushes, ring, bot, threat — is squashed vertically together around the bottom edge,
+// the same technique real cameras give you when you tilt down: everything's silhouette gets
+// shorter and the ground looks like it's rushing up toward you. drawRing()/drawBush()/
+// drawRabbit()/drawHuman() themselves are untouched (still shared with the other tabs); the
+// squash is applied around their calls in the render loop, not inside them.
+const MOTION_SQUASH=0.62;
+function drawRingCircle(danger){   // a true circle in world space — the squash transform foreshortens it into the visible ellipse
+  const r=P.motion.range+Math.sin(t*0.08)*4;
+  g.fillStyle=danger?'rgba(255,107,129,.12)':'rgba(124,198,255,.12)';
+  g.beginPath();g.arc(SENSOR.x,SENSOR.y,r,0,7);g.fill();
+  g.strokeStyle=danger?'rgba(255,107,129,.8)':'rgba(124,198,255,.7)';g.lineWidth=2.5;g.setLineDash([8,8]);
+  g.beginPath();g.arc(SENSOR.x,SENSOR.y,r,0,7);g.stroke();g.setLineDash([]);
+  g.fillStyle=danger?'rgba(255,107,129,.65)':'rgba(124,198,255,.6)';g.beginPath();g.arc(SENSOR.x,SENSOR.y,4,0,7);g.fill();
+}
 function drawBird(){
   if(!bird.active) return;
   const x=bird.x, y=bird.y, on=Math.abs(x-rab.x)<42;
-  // moving ground shadow
   g.fillStyle=on?'rgba(0,0,0,.42)':'rgba(0,0,0,.26)';
   g.beginPath();g.ellipse(x,GROUND-4,36,12,0,0,7);g.fill();
-  // hawk silhouette (soaring, wings flap)
   const f=Math.sin(t*0.25)*9;
   g.save();g.translate(x,y);g.fillStyle='#3a4258';
-  g.beginPath();g.moveTo(0,2);g.quadraticCurveTo(-22,-8-f,-48,2-f*0.3);g.quadraticCurveTo(-22,9,0,6);g.closePath();g.fill(); // left wing
-  g.beginPath();g.moveTo(0,2);g.quadraticCurveTo(22,-8-f,48,2-f*0.3);g.quadraticCurveTo(22,9,0,6);g.closePath();g.fill();   // right wing
-  g.beginPath();g.ellipse(0,3,6,11,0,0,7);g.fill();                                   // body
-  g.beginPath();g.arc(bird.vx<0?-8:8,-1,4.5,0,7);g.fill();                            // head (points where it flies)
-  g.beginPath();g.moveTo(bird.vx<0?-12:12,-1);g.lineTo(bird.vx<0?-18:18,1);g.lineTo(bird.vx<0?-12:12,3);g.closePath();g.fill(); // beak
+  g.beginPath();g.moveTo(0,2);g.quadraticCurveTo(-22,-8-f,-48,2-f*0.3);g.quadraticCurveTo(-22,9,0,6);g.closePath();g.fill();
+  g.beginPath();g.moveTo(0,2);g.quadraticCurveTo(22,-8-f,48,2-f*0.3);g.quadraticCurveTo(22,9,0,6);g.closePath();g.fill();
+  g.beginPath();g.ellipse(0,3,6,11,0,0,7);g.fill();
+  g.beginPath();g.arc(bird.vx<0?-8:8,-1,4.5,0,7);g.fill();
+  g.beginPath();g.moveTo(bird.vx<0?-12:12,-1);g.lineTo(bird.vx<0?-18:18,1);g.lineTo(bird.vx<0?-12:12,3);g.closePath();g.fill();
   g.restore();
 }
 function drawHuman(){
   if(!human.active) return;
   const x=human.x,y=human.y, walk=human.frozen?0:Math.sin(t*0.2)*6, f=human.face;
-  // motion swoosh lines only while actually walking toward the rabbit
   if(human.mode==='toward'&&!human.frozen){g.strokeStyle='rgba(255,107,129,.5)';g.lineWidth=2;
     for(let i=1;i<=3;i++){g.beginPath();g.moveTo(x-f*(14+i*7),y-40);g.lineTo(x-f*(22+i*7),y-40);g.stroke();}}
-  // "frozen" mark when the person stops at the ring
   if(human.frozen){g.fillStyle='#e0455e';g.font='700 20px Orbitron, sans-serif';g.textAlign='center';g.fillText('!',x,y-104);g.textAlign='left';}
   g.save();g.translate(x,y);g.scale(f*human.scale,human.scale);
   g.fillStyle='rgba(0,0,0,.16)';g.beginPath();g.ellipse(0,4,22,6,0,0,7);g.fill();
@@ -481,14 +648,212 @@ function drawHuman(){
   g.fillStyle='#5a3d29';g.beginPath();g.arc(0,-88,13,Math.PI,2*Math.PI);g.fill();
   g.restore();
 }
-
-function drawRabbit(){
-  const scared=(rab.state==='fleeing'||rab.state==='hiding');
+function drawForestScene(){
+  // warm glow deep in the trees (the vanishing point), fading to shaded forest floor
+  const glow=g.createRadialGradient(CX,TRAIL_Y0-4,8,CX,TRAIL_Y0-4,280);
+  glow.addColorStop(0,'#fff6d8');glow.addColorStop(0.3,'#dcefb2');glow.addColorStop(0.65,'#5c9256');glow.addColorStop(1,'#26421f');
+  g.fillStyle=glow;g.fillRect(0,0,W,H);
+  const vg=g.createLinearGradient(0,H*0.5,0,H);
+  vg.addColorStop(0,'rgba(15,30,15,0)');vg.addColorStop(1,'rgba(10,22,10,.4)');
+  g.fillStyle=vg;g.fillRect(0,0,W,H);
+}
+// Realistic corner trees, drawn in "top-left" local space then mirrored with g.scale
+// so one routine covers all four corners. Top corners = overhanging canopy (the tunnel
+// ceiling); bottom corners = big close-up trunks framing the foreground, like the photo.
+function drawTopCornerTree(flip){
+  g.save();
+  g.translate(flip>0?-10:W+10,-10);
+  g.scale(flip,1);
+  g.fillStyle='#3a2a1a';
+  g.beginPath();g.moveTo(0,0);g.lineTo(46,0);g.quadraticCurveTo(28,70,14,140);g.lineTo(-2,140);g.closePath();g.fill();
+  g.strokeStyle='rgba(0,0,0,.28)';g.lineWidth=2;
+  for(const bx of [10,20,32]){g.beginPath();g.moveTo(bx,8);g.quadraticCurveTo(bx-5,70,bx-9,132);g.stroke();}
+  const layers=[[20,58,92,'#1c3a1a'],[68,20,72,'#28551f'],[38,105,62,'#336b2b'],[98,66,52,'#3f7e34'],[70,130,40,'#4c8e40']];
+  layers.forEach(([dx,dy,r,c])=>{g.fillStyle=c;g.beginPath();g.arc(dx,dy,r,0,7);g.fill();});
+  g.fillStyle='rgba(255,238,190,.20)';
+  g.beginPath();g.arc(105,42,22,0,7);g.fill();
+  g.beginPath();g.arc(55,95,15,0,7);g.fill();
+  g.restore();
+}
+function drawBottomCornerTree(flip){
+  g.save();
+  g.translate(flip>0?-24:W+24,H+10);
+  g.scale(flip,1);
+  const tg=g.createLinearGradient(-14,0,116,0);
+  tg.addColorStop(0,'#0f0a06');tg.addColorStop(0.45,'#3a2818');tg.addColorStop(0.55,'#4a3420');tg.addColorStop(1,'#150e08');
+  g.fillStyle=tg;
+  g.beginPath();
+  g.moveTo(-14,4);
+  g.quadraticCurveTo(-8,-95,20,-210);
+  g.lineTo(72,-210);
+  g.quadraticCurveTo(94,-95,116,4);
+  g.closePath();g.fill();
+  g.beginPath();
+  g.moveTo(-14,4);g.quadraticCurveTo(10,26,50,16);g.quadraticCurveTo(90,26,116,4);g.lineTo(116,26);g.lineTo(-14,26);g.closePath();g.fill();
+  g.strokeStyle='rgba(0,0,0,.32)';g.lineWidth=3;
+  for(const bx of [8,32,58,84]){g.beginPath();g.moveTo(bx,-6);g.quadraticCurveTo(bx+5,-105,bx-4,-205);g.stroke();}
+  g.strokeStyle='rgba(255,210,160,.10)';g.lineWidth=2;
+  for(const bx of [20,46,72]){g.beginPath();g.moveTo(bx,-16);g.lineTo(bx,-198);g.stroke();}
+  g.fillStyle='rgba(18,36,16,.88)';
+  g.beginPath();g.arc(30,-208,96,0,7);g.fill();
+  g.beginPath();g.arc(90,-190,70,0,7);g.fill();
+  g.restore();
+}
+function drawForestPath(){
+  g.save();
+  const grad=g.createLinearGradient(0,TRAIL_Y0,0,TRAIL_Y1+40);
+  grad.addColorStop(0,'rgba(226,208,164,.9)');grad.addColorStop(1,'rgba(146,108,68,.9)');
+  g.fillStyle=grad;
+  const STEPS=24;
+  g.beginPath();
+  for(let i=0;i<=STEPS;i++){
+    const y=TRAIL_Y0+(TRAIL_Y1+40-TRAIL_Y0)*(i/STEPS), x=pathCenterXAt(y)-pathHalfWidthAt(y);
+    i===0?g.moveTo(x,y):g.lineTo(x,y);
+  }
+  for(let i=STEPS;i>=0;i--){
+    const y=TRAIL_Y0+(TRAIL_Y1+40-TRAIL_Y0)*(i/STEPS), x=pathCenterXAt(y)+pathHalfWidthAt(y);
+    g.lineTo(x,y);
+  }
+  g.closePath();g.fill();
+  g.restore();
+  PATH_SPECKS.forEach(s=>{
+    const hw=pathHalfWidthAt(s.ty), x=pathCenterXAt(s.ty)+s.dx*hw;
+    g.save();g.translate(x,s.ty);g.rotate(s.rot);
+    g.fillStyle=s.leaf?'rgba(112,142,64,.65)':'rgba(96,74,52,.55)';
+    g.beginPath();g.ellipse(0,0,s.leaf?4:2.6,s.leaf?2.4:2.1,0,0,7);g.fill();
+    g.restore();
+  });
+}
+function drawFillerProp(p){
+  g.save();g.globalAlpha=0.72;
+  if(p.type==='tree') drawTree(p.x,p.y,p.s); else drawBushAt(p.x,p.y,p.s);
+  g.restore();
+}
+function drawGroundSpeck(p){
+  g.save();g.translate(p.x,p.y);g.rotate(p.rot);
+  g.strokeStyle='rgba(40,80,36,.4)';g.lineWidth=1.6;g.lineCap='round';
+  g.beginPath();g.moveTo(0,0);g.lineTo(-p.h*0.3,-p.h);g.moveTo(0,0);g.lineTo(0,-p.h*1.1);g.moveTo(0,0);g.lineTo(p.h*0.3,-p.h);g.stroke();
+  g.restore();
+}
+function drawTree(x,y,s){
+  g.save();g.translate(x,y);g.scale(s,s);
+  g.fillStyle='rgba(0,0,0,.16)';g.beginPath();g.ellipse(0,6,22,6,0,0,7);g.fill();
+  g.fillStyle='#6b4a2a';g.fillRect(-6,-8,12,30);
+  const cg=g.createLinearGradient(0,-78,0,-4);cg.addColorStop(0,'#4f9e4f');cg.addColorStop(1,'#2f6a32');
+  g.fillStyle=cg;
+  g.beginPath();g.arc(0,-56,34,0,7);g.fill();
+  g.beginPath();g.arc(-20,-38,24,0,7);g.fill();
+  g.beginPath();g.arc(20,-38,24,0,7);g.fill();
+  g.beginPath();g.arc(0,-28,28,0,7);g.fill();
+  g.fillStyle='rgba(255,255,255,.10)';g.beginPath();g.arc(-10,-64,12,0,7);g.fill();
+  g.restore();
+}
+function drawBushAt(x,y,s){
+  g.save();g.translate(x,y);g.scale(s,s);
+  g.fillStyle='rgba(0,0,0,.14)';g.beginPath();g.ellipse(0,8,28,7,0,0,7);g.fill();
+  const d=g.createLinearGradient(0,-40,0,8);d.addColorStop(0,'#7fd07a');d.addColorStop(1,'#4f9a48');
+  g.fillStyle=d;
+  for(const[dx,dy,r]of[[-18,-2,17],[0,-16,22],[18,-4,18],[5,1,19],[-8,-20,14]]){g.beginPath();g.arc(dx,dy,r,0,7);g.fill();}
+  g.fillStyle='rgba(255,255,255,.14)';g.beginPath();g.arc(-5,-20,7,0,7);g.fill();
+  g.fillStyle='#fff9e8';
+  for(const[fx,fy]of[[-16,10],[11,12],[2,15],[-3,6],[16,2]]){g.beginPath();g.arc(fx,fy,1.7,0,7);g.fill();}
+  g.restore();
+}
+function drawSideProp(p){
+  const s=depthScale(p.y)*(p.type==='tree'?1:0.85);
+  if(p.type==='tree') drawTree(p.x,p.y,s); else drawBushAt(p.x,p.y,s);
+}
+function drawNutIcon(x,y,scale){
+  g.save();g.translate(x,y+Math.sin(t*0.08)*2);g.scale(scale,scale);
+  g.fillStyle='rgba(0,0,0,.15)';g.beginPath();g.ellipse(0,10,9,3,0,0,7);g.fill();
+  g.fillStyle='#8a5a2b';g.beginPath();g.ellipse(0,3,6.5,8.5,0,0,7);g.fill();
+  g.fillStyle='#5c3d1e';g.beginPath();g.arc(0,-4,7,Math.PI,2*Math.PI);g.fill();
+  g.restore();
+}
+function drawSignpost(x,y,scale){
+  g.save();g.translate(x,y);g.scale(scale,scale);
+  g.strokeStyle='#5c3d1e';g.lineWidth=6;g.lineCap='round';
+  g.beginPath();g.moveTo(0,30);g.lineTo(0,-16);g.stroke();
+  g.save();g.translate(0,-22);g.rotate(-0.05);
+  g.fillStyle='#9a7248';g.beginPath();g.roundRect(-32,-13,64,26,4);g.fill();
+  g.strokeStyle='#5c3d1e';g.lineWidth=2;g.beginPath();g.roundRect(-32,-13,64,26,4);g.stroke();
+  g.fillStyle='#fff3d0';g.font='700 9px Rajdhani, sans-serif';g.textAlign='center';g.textBaseline='middle';
+  g.fillText('BOT TRAIL',0,0);
+  g.restore();
+  g.restore();
+}
+function drawBurrowVert(x,y,scale){
+  scale=scale||1;
+  g.save();g.translate(x,y);g.scale(scale,scale);
+  g.fillStyle='#8a6238';g.beginPath();g.ellipse(0,0,64,26,0,0,7);g.fill();
+  g.fillStyle='#6d4b29';g.beginPath();g.ellipse(0,0,64,26,0,Math.PI,2*Math.PI);g.fill();
+  const op=g.createRadialGradient(0,-2,4,0,-2,40);op.addColorStop(0,'#3a2a1a');op.addColorStop(1,'#120c06');
+  g.fillStyle=op;g.beginPath();g.ellipse(0,-2,40,18,0,0,7);g.fill();
+  g.strokeStyle='#3f8a3a';g.lineWidth=2.5;
+  for(const gx of [-50,-30,30,50]){g.beginPath();g.moveTo(gx,-16);g.lineTo(gx-4,-28);g.moveTo(gx,-16);g.lineTo(gx+4,-27);g.stroke();}
+  g.restore();
+}
+function drawObstacle(x,y,scale){
+  y=(y!=null)?y:GROUND-2; scale=scale||1;
+  g.save();g.translate(x,y);g.scale(scale,scale);
+  g.fillStyle='rgba(0,0,0,.18)';g.beginPath();g.ellipse(0,8,26,7,0,0,7);g.fill();
+  const rg=g.createLinearGradient(-22,-30,22,6);
+  rg.addColorStop(0,'#9a8f86');rg.addColorStop(1,'#5d534b');
+  g.fillStyle=rg;
+  g.beginPath();
+  g.moveTo(-24,4);
+  g.quadraticCurveTo(-26,-18,-8,-30);
+  g.quadraticCurveTo(10,-38,24,-16);
+  g.quadraticCurveTo(30,-2,20,6);
+  g.quadraticCurveTo(-4,12,-24,4);
+  g.closePath();g.fill();
+  g.strokeStyle='rgba(0,0,0,.22)';g.lineWidth=1.5;g.stroke();
+  g.fillStyle='rgba(255,255,255,.18)';g.beginPath();g.ellipse(-6,-20,10,6,-0.4,0,7);g.fill();
+  g.restore();
+}
+function drawPingWavesVert(x0,y0,targetY,rangePx,level){
+  // Teal (this tab's own accent colour) for a clear ping, so it reads as "ultrasonic" and
+  // doesn't get lost among the other tabs' blue/orange/red — shifts to warning colours as it closes in.
+  const color = level<=1?'63,214,196' : level===2?'255,190,60' : '255,90,110';
+  g.save();
+  g.shadowColor=`rgba(${color},.8)`;g.shadowBlur=6;
+  g.strokeStyle=`rgba(${color},.75)`;g.lineWidth=2.4;g.setLineDash([5,7]);
+  g.lineDashOffset=-(t*1.2)%12;
+  g.beginPath();g.moveTo(x0,y0);g.lineTo(x0,targetY);g.stroke();
+  g.setLineDash([]);
+  for(let i=0;i<3;i++){
+    const ph=((t*1.5)+i*22)%66;
+    if(ph>rangePx) continue;
+    g.globalAlpha=Math.max(0,1-ph/rangePx)*0.65;
+    g.beginPath();g.arc(x0,y0,10+ph,Math.PI/2-0.5,Math.PI/2+0.5);g.stroke();
+  }
+  g.globalAlpha=1;g.shadowBlur=0;
+  g.restore();
+}
+function drawPingWaves(x0,y0,targetX,rangePx,level){
+  const color = level<=1?'124,198,255' : level===2?'247,162,59' : '255,107,129';
+  g.save();
+  g.strokeStyle=`rgba(${color},.55)`;g.lineWidth=2;g.setLineDash([5,7]);
+  g.lineDashOffset=-(t*1.2)%12;
+  g.beginPath();g.moveTo(x0,y0);g.lineTo(targetX,y0);g.stroke();
+  g.setLineDash([]);
+  for(let i=0;i<3;i++){
+    const ph=((t*1.5)+i*22)%66;
+    if(ph>rangePx) continue;
+    g.globalAlpha=Math.max(0,1-ph/rangePx)*0.5;
+    g.beginPath();g.arc(x0,y0,10+ph,-0.5,0.5);g.stroke();
+  }
+  g.globalAlpha=1;
+  g.restore();
+}
+function drawRabbit(extraScale){
+  extraScale=extraScale||1;
+  const scared=(rab.state==='fleeing'||rab.state==='hiding'||rab.state==='blocked');
   const baseY=rab.y-rab.hop+rab.dip, face=rab.face;
-  g.save();g.translate(rab.x,baseY);g.scale(0.95*face,0.95);
+  g.save();g.translate(rab.x,baseY);g.rotate(rab.tilt||0);g.scale(0.95*face*extraScale,0.95*extraScale);
   if(rab.dip<8){g.fillStyle='rgba(0,0,0,.16)';g.beginPath();g.ellipse(0,10,30,8,0,0,7);g.fill();}
   g.fillStyle='#ffffff';g.beginPath();g.ellipse(-13,10,10,6,0,0,7);g.ellipse(13,10,10,6,0,0,7);g.fill();
-  g.fillStyle='#ffffff';g.beginPath();g.arc(-24,-6,8,0,7);g.fill(); // tail
+  g.fillStyle='#ffffff';g.beginPath();g.arc(-24,-6,8,0,7);g.fill();
   const bg=g.createLinearGradient(0,-30,0,14);bg.addColorStop(0,'#ffffff');bg.addColorStop(1,'#f1e9ff');
   g.fillStyle=bg;g.beginPath();g.ellipse(0,-8,25,28,0,0,7);g.fill();
   const droop=scared?0.5:0;
@@ -505,85 +870,228 @@ function drawRabbit(){
   if(rab.state==='eating'){const nod=Math.sin(rab.chew)*2;g.save();g.translate(0,-14+nod);
     g.fillStyle='#ff9f43';g.beginPath();g.moveTo(-4,0);g.lineTo(4,0);g.lineTo(0,18);g.closePath();g.fill();
     g.strokeStyle='#5faa54';g.lineWidth=2.5;g.beginPath();g.moveTo(0,0);g.lineTo(-4,-8);g.moveTo(0,0);g.lineTo(0,-9);g.moveTo(0,0);g.lineTo(4,-8);g.stroke();g.restore();}
+  if(rab.state==='nutbreak'){const nod=Math.sin(rab.chew)*2;g.save();g.translate(0,-12+nod);
+    g.fillStyle='#8a5a2b';g.beginPath();g.ellipse(0,3,5,7,0,0,7);g.fill();
+    g.fillStyle='#5c3d1e';g.beginPath();g.arc(0,-3,5.5,Math.PI,2*Math.PI);g.fill();g.restore();}
+  if(rab.state==='blocked'){
+    g.fillStyle='#e0455e';g.font='700 18px Orbitron, sans-serif';g.textAlign='center';
+    g.fillText('↩',0,-58);g.textAlign='left';
+  }
   g.restore();
 }
 
+/* ---------- READINGS PANELS ---------- */
+const readingsEl=document.getElementById('readings');
+function renderLightReadings(o){
+  const predTxt=bird.active?(birdThreat?'Shadow on bot! 🦅':'Flying over 🦅'):'None';
+  const statusTxt=birdThreat?'Predator Shadow! 🦅':(o.dark?'Too Dark 🌑':'Bright ☀️');
+  const rows=[['Light Level',o.L+' %'],['Shadow Threshold',P.light.threshold+' %'],['Shadow Detected',o.danger?'Yes':'No'],['Predator',predTxt],['Status',statusTxt]];
+  readingsEl.innerHTML=rows.map(r=>`<div class="reading"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('');
+  document.getElementById('meterWrap').style.display='block';
+  const f=document.getElementById('meterFill');f.style.width=Math.max(0,Math.min(100,o.L))+'%';
+  f.style.background=o.danger?'linear-gradient(90deg,#ff6b81,#ff9aa8)':'linear-gradient(90deg,#7cc6ff,#54c48a)';
+  const thr=document.getElementById('meterThr');thr.style.display='block';thr.style.left=P.light.threshold+'%';
+  document.getElementById('meterLbl').textContent='light';
+  const badge=document.getElementById('badge');badge.className='badge '+(o.danger?'b-danger':'b-safe');
+  document.getElementById('badgeText').textContent=o.danger?'SHADOW DETECTED — DANGER!':'NO SHADOW — SAFE';
+  const spot=rab.hide==='burrow'?'burrow':'bush', spotIcon=rab.hide==='burrow'?'🕳️':'🌿';
+  const act={eating:'Eating a carrot 🥕',fleeing:'Escaping to the '+spot+' 🏃',hiding:'Hiding in the '+spot+' '+spotIcon,returning:'Coming back out 🐇'}[rab.state];
+  document.getElementById('actText').textContent=act;
+}
+function renderMotionReadings(o){
+  const dirTxt=human.frozen?'Frozen 🥶':(human.mode==='toward'?'Coming closer ➡️':'Walking away ⬅️');
+  const threatLvl = !o.onField? 'None' : (o.dist>P.motion.range*0.66?'Low':o.dist>P.motion.range*0.33?'Medium':'High');
+  const rows=[['Threat Distance',o.onField?o.dist+' cm':'far away'],['Detection Range',P.motion.range+' cm'],['Motion Detected',o.danger?'Yes':'No'],['Threat Level',threatLvl],['Direction',dirTxt]];
+  readingsEl.innerHTML=rows.map(r=>`<div class="reading"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('');
+  document.getElementById('meterWrap').style.display='block';
+  const meter=o.onField?Math.max(0,100-o.dist/P.motion.range*100):0;
+  const f=document.getElementById('meterFill');f.style.width=Math.max(0,Math.min(100,meter))+'%';
+  f.style.background=o.danger?'linear-gradient(90deg,#ff6b81,#ff9aa8)':'linear-gradient(90deg,#7cc6ff,#54c48a)';
+  document.getElementById('meterThr').style.display='none';
+  document.getElementById('meterLbl').textContent='closeness';
+  const badge=document.getElementById('badge');badge.className='badge '+(o.danger?'b-danger':'b-safe');
+  document.getElementById('badgeText').textContent=o.danger?'MOTION NEAR — DANGER!':'ALL SAFE';
+  const spot=rab.hide==='burrow'?'burrow':'bush';
+  const act={eating:'Eating a carrot 🥕',fleeing:'Turning and escaping to the '+spot+' 🏃',hiding:'Hiding in the '+spot+' 🌿',returning:'Coming back out 🐇'}[rab.state];
+  document.getElementById('actText').textContent=act;
+}
+function renderUltraReadings(info){
+  const distTxt=info.detected?Math.round(info.distCm)+' cm':(info.distCm!=null?'out of range':'—');
+  const rows=[['Obstacle Distance',distTxt],['Safe Distance',P.ultra.safe+' cm'],['Detection Range',P.ultra.range+' cm'],['Obstacle Detected',info.detected?'Yes':'No']];
+  readingsEl.innerHTML=rows.map(r=>`<div class="reading"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('');
+  document.getElementById('meterWrap').style.display='block';
+  const meter=info.detected?Math.max(0,100-info.distCm/P.ultra.range*100):0;
+  const f=document.getElementById('meterFill');f.style.width=meter+'%';
+  f.style.background=info.level===3?'linear-gradient(90deg,#ff6b81,#ff9aa8)':info.level===2?'linear-gradient(90deg,#ffb02e,#ffd28a)':'linear-gradient(90deg,#7cc6ff,#54c48a)';
+  const thr=document.getElementById('meterThr');thr.style.display='block';thr.style.left=Math.max(0,100-P.ultra.safe/P.ultra.range*100)+'%';
+  document.getElementById('meterLbl').textContent='closeness';
+  const decision = rab.state==='hiding'?'Hidden — Safe':rab.state==='arrived'?'Reached Burrow':info.level===3?'Path Blocked':info.level===2?'Caution':'Path Clear';
+  const badge=document.getElementById('badge');
+  badge.className='badge '+((rab.state==='hiding'||rab.state==='arrived')?'b-safe':info.level===3?'b-danger':info.level===2?'b-warn':'b-safe');
+  const sensing=(rab.state==='walking'||rab.state==='nutbreak');
+  document.getElementById('badgeText').textContent=decision.toUpperCase()+((info.detected&&sensing)?'':(sensing?' — NOTHING IN RANGE':''));
+  const act={walking:'Walking down the trail 🐇',nutbreak:'Stopped for a snack 🌰',fleeing:'Darting for cover! 🏃',hiding:'Hiding behind the bush 🌿',arrived:'Made it home safely 🏠'}[rab.state]||'Walking down the trail 🐇';
+  document.getElementById('actText').textContent=act;
+}
+function renderComboReadings(info){
+  const rows=[
+    ['LDR — Shadow',info.shadowDetected?'Detected':'Clear'],
+    ['Radar — Motion',info.motionDetected?'Detected':'Clear'],
+    ['Ultrasonic — Obstacle',info.obstacleDetected?'Detected':'Clear'],
+    ['Bot Decision',info.decision]
+  ];
+  readingsEl.innerHTML=rows.map(r=>`<div class="reading"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('');
+  document.getElementById('meterWrap').style.display='block';
+  const meterMap={idle:6,blocked:42,escape:62,turnEscape:62,altPath:80,fastEscape:100};
+  const f=document.getElementById('meterFill');f.style.width=meterMap[info.mode]+'%';
+  f.style.background=info.mode==='idle'?'linear-gradient(90deg,#7cc6ff,#54c48a)':info.mode==='blocked'?'linear-gradient(90deg,#ffb02e,#ffd28a)':'linear-gradient(90deg,#ff6b81,#ff9aa8)';
+  document.getElementById('meterThr').style.display='block';document.getElementById('meterThr').style.left='40%';
+  document.getElementById('meterLbl').textContent='danger level';
+  const badge=document.getElementById('badge');
+  badge.className='badge '+(info.mode==='idle'?'b-safe':info.mode==='blocked'?'b-warn':'b-danger');
+  document.getElementById('badgeText').textContent=info.decision.toUpperCase();
+  const actText=document.getElementById('actText');
+  if(!started) actText.textContent='Ready — press Start';
+  else if(paused) actText.textContent='Paused';
+  else actText.textContent=info.action;
+}
+
 /* ---------- MAIN LOOP ---------- */
+function updateCombo(info){
+  if(info.mode==='blocked'){
+    if(rab.state!=='blocked'){rab.state='blocked';rab.blockT=0;}
+    rab.blockT++; rab.tilt=Math.sin(rab.blockT*0.25)*0.22;
+  }else{
+    if(rab.state==='blocked'){ rab.state='eating'; rab.tilt=0; }
+    const isFlee=FLEE_MODES.includes(info.mode);
+    const speed=info.mode==='fastEscape'?1.8:1.15;
+    let hideType='burrow', hideX=BURROW_X, bushIdx=-1;
+    if(info.mode==='turnEscape'||info.mode==='altPath'){ bushIdx=oppositeBush(); hideType='bush'; hideX=BUSHES[bushIdx].x; }
+    fleeStep(isFlee,hideType,hideX,bushIdx,speed);
+  }
+}
 function loop(){
   t++;
-  updateBird();
-  const o=threat();
-
-  // human movement — FREEZE when inside the rabbit's ring, otherwise walk
-  if(sensor==='motion'&&human.active){
-    const inRing = human.mode==='toward' && o.inside;
-    human.frozen = inRing;
-    if(!inRing){
-      human.x+=human.vx*P.motion.speed*1.15; human.y+=human.vy*P.motion.speed*1.15;
-    }
-    if(human.x>0&&human.x<W) human.entered=true;
-    if(human.entered&&(human.x<-70||human.x>W+70||human.y>H+40)){human.active=false;human.mode='away';human.frozen=false;}
-  }
-  // cloud drift — driven only by low light (not by the predator, it has its own shadow)
+  g.clearRect(0,0,W,H);
   if(sensor==='light'){
+    updateBird();
+    const o=computeLight();
     if(o.dark){if(cloud<-170)cloud=-280;cloud+=0.7;if(cloud>W+60)cloud=W+60;}
     else{cloud-=1.6;if(cloud<-280)cloud=-280;}
-  }
-
-  // rabbit state machine (slow & visible)
-  const SPEED=1.15, danger=o.danger;
-  if(danger&&(rab.state==='eating'||rab.state==='returning')){
-    rab.state='fleeing';
-    if(sensor==='light'){
-      if(birdThreat){ const h=nearestHideout(); rab.hide=h.type; rab.bush=h.bush; rab.tx=h.x; }  // predator → nearest place
-      else { rab.hide='burrow'; rab.tx=BURROW_X; }                                                // darkness → burrow
+    let hideType='burrow',hideX=BURROW_X,bushIdx=-1;
+    if(birdThreat){const h=nearestHideout();hideType=h.type;hideX=h.x;bushIdx=h.bush;}
+    fleeStep(o.danger,hideType,hideX,bushIdx,1.15);
+    scene(o.dark);
+    if(cloud>-170) shadowCloud(cloud);
+    drawBird();
+    const hidden=rab.state==='hiding';
+    if(!hidden) drawRabbit();
+    if(hidden){ if(rab.hide==='burrow') drawBurrowHidden(); else drawBush(BUSHES[rab.bush]); }
+    else if(rab.dip>3){ if(rab.hide==='burrow') drawBurrowFront(); else drawBush(BUSHES[rab.bush]); }
+    statusRibbon(o.danger,o.danger?'DANGER — HIDE!':'SAFE — MUNCHING');
+    renderLightReadings(o);
+  }else if(sensor==='motion'){
+    const o=computeMotion();
+    if(human.active){
+      const inRing=human.mode==='toward'&&o.inside;
+      human.frozen=inRing;
+      if(!inRing){ human.x+=human.vx*P.motion.speed*1.15; human.y+=human.vy*P.motion.speed*1.15; }
+      if(human.x>0&&human.x<W) human.entered=true;
+      if(human.entered&&(human.x<-70||human.x>W+70||human.y>H+40)){human.active=false;human.mode='away';human.frozen=false;}
     }
-    else{rab.hide='bush';rab.bush=oppositeBush();rab.tx=BUSHES[rab.bush].x;}
-  }
-  if(!danger&&rab.state==='hiding') rab.state='returning';
-
-  if(rab.state==='fleeing'){
-    rab.face=rab.tx>=rab.x?1:-1;
-    rab.x+=Math.sign(rab.tx-rab.x)*SPEED;
-    rab.hop=Math.abs(Math.sin(t*0.14))*15;
-    if(Math.abs(rab.x-rab.tx)<=SPEED){rab.x=rab.tx;rab.state='hiding';}
-  }else if(rab.state==='hiding'){
-    rab.hop=0;
-    rab.dip=Math.min(rab.hide==='burrow'?30:16, rab.dip+0.8);   // duck down slowly, then vanish behind the bush
-  }else if(rab.state==='returning'){
-    rab.dip=Math.max(0,rab.dip-0.7);
-    if(rab.dip<=0){
-      rab.face=HOME_X>=rab.x?1:-1;
-      rab.x+=Math.sign(HOME_X-rab.x)*SPEED;
-      rab.hop=Math.abs(Math.sin(t*0.14))*15;
-      if(Math.abs(rab.x-HOME_X)<=SPEED){rab.x=HOME_X;rab.state='eating';rab.face=1;}
+    let hideX=HOME_X,bushIdx=1;
+    if(o.danger){ bushIdx=oppositeBush(); hideX=BUSHES[bushIdx].x; }
+    fleeStep(o.danger,'bush',hideX,bushIdx,1.15);
+    g.fillStyle='#bfe6ff';g.fillRect(0,0,W,H);   // backdrop showing through the gap the squash below leaves at the top
+    g.save();
+    g.translate(0,H);g.scale(1,MOTION_SQUASH);g.translate(0,-H);   // squash the whole frame toward the bottom edge — the "camera tilted down" look
+    scene(false);
+    drawRingCircle(o.danger);
+    const hidden=rab.state==='hiding';
+    if(!hidden) drawRabbit();
+    if(hidden){ drawBush(BUSHES[rab.bush]); }
+    else if(rab.dip>3){ drawBush(BUSHES[rab.bush]); }
+    drawHuman();
+    g.restore();
+    statusRibbon(o.danger,o.danger?'DANGER — HIDE!':'SAFE — MUNCHING');
+    renderMotionReadings(o);
+  }else if(sensor==='ultra'){
+    const info=ultraStep();
+    drawForestScene();
+    drawTopCornerTree(1); drawTopCornerTree(-1);
+    GROUND_SPECKS.forEach(drawGroundSpeck);
+    FILLER_PROPS.forEach(drawFillerProp);
+    drawForestPath();
+    drawSignpost(pathCenterXAt(TRAIL_Y0+34)+pathHalfWidthAt(TRAIL_Y0+34)+16,TRAIL_Y0+34,depthScale(TRAIL_Y0+34));
+    const noseX=rab.x, noseY=rab.y-16;
+    if(obstacle.active && info.distCm!=null) drawPingWavesVert(noseX,noseY,obstacle.y,P.ultra.range*PXCM,info.level);
+    const drawList=SIDE_PROPS.map(p=>({y:p.y,fn:()=>drawSideProp(p)}));
+    if(!rab.ateNut) drawList.push({y:NUT_Y,fn:()=>drawNutIcon(pathCenterXAt(NUT_Y),NUT_Y,depthScale(NUT_Y))});
+    if(obstacle.active) drawList.push({y:obstacle.y,fn:()=>drawObstacle(obstacle.x,obstacle.y,depthScale(obstacle.y))});
+    if(rab.state!=='hiding') drawList.push({y:rab.y,fn:()=>drawRabbit(depthScale(rab.y))});
+    drawList.sort((a,b)=>a.y-b.y);
+    drawList.forEach(d=>d.fn());
+    drawBurrowVert(pathCenterXAt(BURROW_Y),BURROW_Y,depthScale(TRAIL_Y1));
+    drawBottomCornerTree(1); drawBottomCornerTree(-1);
+    const danger=rab.state==='fleeing'||info.level===3;
+    const ribbonTxt=rab.state==='hiding'?'HIDDEN — SAFE':rab.state==='arrived'?'SAFE — HOME':rab.state==='nutbreak'?'SNACK BREAK 🌰':danger?'OBSTACLE — REACT!':'PATH CLEAR';
+    statusRibbon(danger,ribbonTxt);
+    renderUltraReadings(info);
+  }else{ // combo
+    const info=comboInfo();
+    if(!paused) updateCombo(info);
+    const dim=hz.shadow;
+    scene(dim);
+    if(hz.shadow) shadowCloud(HOME_X-140);
+    if(hz.motion){
+      drawRing(info.motionDetected);
+      human.active=true; human.x=SENSOR.x+80; human.y=SENSOR.y; human.face=-1; human.frozen=true; human.scale=1;
+      drawHuman();
+    }else{
+      human.active=false;
     }
-  }else{rab.hop=(Math.sin(t*0.05)+1)*1.5;rab.chew+=0.25;}
-
-  // render — the sky only darkens for genuine low light, not for the passing predator
-  const dim = sensor==='light' ? o.dark : danger;
-  g.clearRect(0,0,W,H);
-  scene(dim);
-  if(sensor==='light'){ if(cloud>-170) shadowCloud(cloud); drawBird(); }
-  if(sensor==='motion') drawRing(danger);   // zone lies on the ground, under everything
-  // fully out of sight the moment it reaches the hideout (no ears/eyes/body showing)
-  const hidden = rab.state==='hiding';
-  if(!hidden) drawRabbit();
-  if(hidden){
-    if(rab.hide==='burrow') drawBurrowHidden(); else drawBush(BUSHES[rab.bush]);
-  } else if(rab.dip>3){                     // emerging cover while it climbs back out
-    if(rab.hide==='burrow') drawBurrowFront(); else drawBush(BUSHES[rab.bush]);
+    if(hz.obstacle){
+      const ox=HOME_X+95;
+      drawPingWaves(HOME_X+18,GROUND-30,ox,P.ultra.range*PXCM,info.obstacleDetected?3:1);
+      drawObstacle(ox);
+    }
+    const hidden=rab.state==='hiding';
+    if(!hidden) drawRabbit();
+    if(hidden){ if(rab.hide==='burrow') drawBurrowHidden(); else drawBush(BUSHES[rab.bush]); }
+    else if(rab.dip>3){ if(rab.hide==='burrow') drawBurrowFront(); else drawBush(BUSHES[rab.bush]); }
+    const danger=info.mode!=='idle';
+    statusRibbon(danger,started?(paused?'PAUSED':info.decision.toUpperCase()):'PRESS START');
+    renderComboReadings(info);
   }
-  if(sensor==='motion') drawHuman();        // person on top (foreground roamer reads as in front)
-
-  // status ribbon
-  g.fillStyle='rgba(255,255,255,.85)';rr(16,16,224,36,12);g.fill();
-  g.fillStyle=danger?'#ff6b81':'#54c48a';g.beginPath();g.arc(34,34,7,0,7);g.fill();
-  g.fillStyle='#2b3a57';g.font='700 13px Orbitron, sans-serif';
-  g.fillText(danger?'DANGER — HIDE!':'SAFE — MUNCHING',50,39);
-
-  renderReadings(o);
   requestAnimationFrame(loop);
+}
+function updateBird(){
+  if(!bird.active) return;
+  if(bird.phase==='cruise'){
+    bird.x += bird.vx*2.4; bird.y += bird.vy; if(bird.y>142) bird.y=142;
+    if(bird.x>0 && bird.x<W && Math.abs(bird.x-rab.x)<42){
+      birdThreat=true; bird.targetX=rab.x; bird.phase='hover'; bird.timer=0;
+    }
+    if(bird.x<-110 || bird.x>W+110){ bird.active=false; birdThreat=false; }
+  }else if(bird.phase==='hover'){
+    bird.timer++; bird.y += Math.sin(bird.timer*0.3)*0.4;
+    if(bird.timer>36){ bird.phase='dive'; bird.timer=0; }
+  }else if(bird.phase==='dive'){
+    bird.x += (bird.targetX-bird.x)*0.06;
+    bird.y += (GROUND-66 - bird.y)*0.12;
+    bird.timer++;
+    if(bird.timer>60){ bird.phase='leave'; }
+  }else{
+    bird.y += (bird.cruiseY - bird.y)*0.08;
+    bird.x += bird.vx*2.8;
+    if(bird.x<-120 || bird.x>W+120){ bird.active=false; birdThreat=false; }
+  }
+}
+function statusRibbon(danger,text){
+  g.fillStyle='rgba(255,255,255,.85)';rr(16,16,240,36,12);g.fill();
+  g.fillStyle=danger?'#ff6b81':'#54c48a';g.beginPath();g.arc(34,34,7,0,7);g.fill();
+  g.fillStyle='#2b3a57';g.font='700 12.5px Orbitron, sans-serif';
+  g.fillText(text,50,39);
 }
 
 buildControls(); loop();
