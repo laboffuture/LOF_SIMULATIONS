@@ -9679,9 +9679,14 @@ Error generating stack: ` +
                   Zt +
                 Ur +
                 Wr);
-          ((De += ot * Pn),
-            (Re += De * Pn),
-            (Dp += Fd !== 0 ? De * Pn : Wa(Tn - Dp) * 10 * Pn));
+          ((De += ot * Pn), (Re += De * Pn));
+          const Gs = Math.hypot(Q, K),
+            Ta = Wa(Math.atan2(K, Q) / Or - Dp);
+          Dp +=
+            Ta *
+            Math.min(40, 10 + 0.6 * Math.abs(Ta)) *
+            Math.min(1, Gs / 1.2) *
+            Pn;
           const ni = ((p() - 0.5) * 2 * (3 + N.gust * 22)) / Qa,
             Vr = N.gust * 25 * Math.sin(oe * 0.9 + Me),
             $r = -$.rollStiffness * de - $.rollDamping * ue + ni + Vr;
@@ -9751,19 +9756,19 @@ Error generating stack: ` +
         );
       }
       const od = {
-          dihedral: "Wing tips angled up — tilts level themselves out.",
-          flat: "Straight wing — steady-ish, nothing corrects a tilt.",
-          anhedral: "Wing tips angled down — quick to bank, quick to tip over.",
+          dihedral: "Wing tips angled upward — helps self-level.",
+          flat: "Straight wing — limited self-correction.",
+          anhedral: "Wing tips angled downward — banks quickly, less stability.",
         },
         ud = {
-          nose: "Weight forward — the nose pulls down into a dive.",
-          balanced: "Weight over the wing — trimmed for the best glide.",
-          tail: "Weight back — the nose keeps pitching up and stalling.",
+          nose: "Weight forward — nose drops; glider descends faster.",
+          balanced: "Weight balanced — stable flight with the best glide.",
+          tail: "Weight back — nose rises; glider may stall.",
         },
         sd = {
-          none: "Still air — the fairest test.",
-          mild: "A light headwind with small gusts.",
-          strong: "A stiff headwind with rough gusts.",
+          none: "Still air for a fair test.",
+          mild: "Light headwind with gentle gusts.",
+          strong: "Strong headwind with rough gusts.",
         };
       function ad({ type: o }) {
         const _ =

@@ -1203,8 +1203,13 @@ function updateDom(G,now){
 
 /* ---------- main loop ---------- */
 let lastT=performance.now();
+document.addEventListener("visibilitychange",()=>{ lastT=performance.now(); });
 function frame(now){
-  const dt=Math.min(0.06,(now-lastT)/1000); lastT=now;
+  /* dt from wall clock, not the rAF timestamp — browsers can replay queued
+     post-background callbacks with vsync-spaced timestamps, which would
+     fast-forward the sim far past the labeled speed. */
+  const real=performance.now();
+  const dt=document.hidden?0:Math.min(0.06,Math.max(0,(real-lastT)/1000)); lastT=real;
   if(state.playing) advance(dt);
   const G=geom(state.day);
   updateDom(G,now);

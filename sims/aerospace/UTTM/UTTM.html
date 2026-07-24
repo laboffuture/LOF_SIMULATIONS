@@ -866,11 +866,22 @@
         font-size: 10.5px;
       }
       td.best {
-        color: var(--accent);
+        color: var(--sky);
         font-weight: 700;
       }
+      tr.bestrow {
+        background: rgba(42, 120, 214, 0.09) !important;
+        box-shadow: inset 3px 0 0 var(--sky);
+      }
       tr.bestrow td {
-        background: rgba(232, 89, 12, 0.06);
+        color: var(--ink);
+        font-weight: 600;
+      }
+      td.star.best {
+        color: #f59e0b;
+        font-size: 13px;
+        font-weight: bold;
+        text-shadow: 0 0 5px rgba(245, 158, 11, 0.4);
       }
       .st {
         font-weight: 700;
@@ -1227,11 +1238,11 @@
         const e = rpm / motor.kv;
         const currentA = Math.max(0, (vEff - e) / Rt);
         const battA = currentA * throttle; // ESC steps voltage down, current up-stream drops
-        const elecW = vEff * currentA;
+        const battV = batt.v - battA * batt.r;
+        const elecW = battV * battA;
         const thrustN = ct * RHO * Math.pow(rpm / 60, 2) * Math.pow(D, 4);
         const thrustG = (thrustN / GRAV) * 1000;
         const effGW = elecW > 1 ? thrustG / elecW : 0;
-        const battV = batt.v - battA * batt.r;
         const lossW = currentA * currentA * motor.R + 0.02 * elecW; // copper + ESC/iron heat
         return {
           rpm,
@@ -1323,6 +1334,10 @@
           () => "dia",
           (k) => {
             state.prop = k;
+            // set default pitch to first available pitch for the selected prop
+            const pObj = PROPS[state.prop];
+            const firstPitch = Object.keys(pObj.pitches)[0];
+            state.pitch = firstPitch;
             onSetupChange();
           },
         );
@@ -1417,6 +1432,7 @@
         state.cut = null;
         state.temp = 25;
         state.thrEff = 0;
+        state.cellG = 0;
         state.samples = [];
         state.particles = [];
         hideAlarm();
@@ -1482,45 +1498,73 @@
         const m = MOTORS[state.motor],
           p = PROPS[state.prop],
           b = BATTS[state.batt];
-        const op = state.cut ? state.cutSnap.op : state.op;
         const thrPct = Math.round(
           (state.cut ? state.cutSnap.thr : state.throttle) * 100,
         );
+        const op = state.cut
+          ? state.cutSnap.op
+          : solveOp(m, p, state.pitch, b, state.throttle);
+        const thrustGVal =
+          state.running && state.cellG > 0 ? state.cellG : op.thrustG;
         const status = state.cut
           ? "cut"
-          : classifySafety(op, m, state.temp, state.running);
+          : classifySafety(op, m, state.temp, state.running || state.throttle > 0);
         const tb = $("logBody");
         $("logEmpty").style.display = "none";
         const tr = document.createElement("tr");
-        tr.dataset.g = op.thrustG.toFixed(0);
+        tr.dataset.g = thrustGVal.toFixed(0);
         tr.dataset.eff = op.effGW.toFixed(2);
         tr.dataset.safe = status === "safe" ? "1" : "0";
+        const motorLabel = m.name === "High power" ? "High" : m.name;
+        const setupStr = `${motorLabel} · ${p.inches}×${p.pitches[state.pitch]}″ · ${b.cells}S`;
         tr.innerHTML =
           `<td class="star"></td>` +
-          `<td>${m.name.split(" ")[0]} · ${p.inches}×${p.pitches[state.pitch]}″ · ${b.cells}S</td>` +
+          `<td>${setupStr}</td>` +
           `<td>${thrPct}%</td>` +
-          `<td>${op.thrustG.toFixed(0)}</td>` +
-          `<td>${op.currentA.toFixed(1)}</td>` +
+          `<td>${thrustGVal.toFixed(0)}</td>` +
+          `<td>${op.battA.toFixed(1)}</td>` +
           `<td>${op.elecW.toFixed(0)}</td>` +
           `<td>${op.effGW ? op.effGW.toFixed(1) : "—"}</td>` +
           `<td><span class="st ${status}">${status.toUpperCase()}</span></td>`;
         tb.prepend(tr);
-        // star the best qualifying run: SAFE, ≥500 g, highest g/W
+        updateBestRow();
+      }
+
+      function updateBestRow() {
+        const tb = $("logBody");
         let best = null;
         for (const row of tb.rows) {
           row.classList.remove("bestrow");
-          row.querySelector(".star").textContent = "";
-          if (
-            row.dataset.safe === "1" &&
-            +row.dataset.g >= 500 &&
-            (!best || +row.dataset.eff > +best.dataset.eff)
-          )
-            best = row;
+          const starCell = row.querySelector(".star");
+          if (starCell) {
+            starCell.textContent = "";
+            starCell.className = "star";
+            starCell.removeAttribute("title");
+          }
+          const eff = parseFloat(row.dataset.eff) || 0;
+          const isSafe = row.dataset.safe === "1";
+          if (eff > 0) {
+            if (!best) {
+              best = row;
+            } else {
+              const bestEff = parseFloat(best.dataset.eff) || 0;
+              const bestSafe = best.dataset.safe === "1";
+              if (isSafe && !bestSafe) {
+                best = row;
+              } else if (isSafe === bestSafe && eff > bestEff) {
+                best = row;
+              }
+            }
+          }
         }
         if (best) {
           best.classList.add("bestrow");
-          best.querySelector(".star").textContent = "★";
-          best.querySelector(".star").className = "star best";
+          const starCell = best.querySelector(".star");
+          if (starCell) {
+            starCell.textContent = "★";
+            starCell.className = "star best";
+            starCell.title = "Most Efficient Setup (" + (parseFloat(best.dataset.eff) || 0).toFixed(1) + " g/W)";
+          }
         }
       }
 
@@ -1806,7 +1850,7 @@
           ctx.font = "700 12px 'IBM Plex Mono', monospace";
           ctx.textAlign = "left";
           ctx.fillText(
-            "T = " + tg.toFixed(0) + " g",
+            "T = " + state.cellG.toFixed(0) + " g",
             cx + wArrow * 1.5 + 8,
             y1 + 16,
           );
@@ -1877,11 +1921,11 @@
         $("rpmVal").textContent = op.rpm.toLocaleString("en-US", {
           maximumFractionDigits: 0,
         });
-        $("curVal").textContent = op.currentA.toFixed(1);
+        $("curVal").textContent = op.battA.toFixed(1);
         $("powVal").textContent = op.elecW.toFixed(0);
         $("effVal").textContent = op.effGW ? op.effGW.toFixed(1) : "—";
         setGauge($("rpmSvg"), op.rpm / rpmMax);
-        setGauge($("curSvg"), op.currentA / curMax);
+        setGauge($("curSvg"), op.battA / curMax);
         $("battVal").textContent = op.battV.toFixed(1) + " V";
         $("battBar").firstElementChild.style.width =
           Math.max(
@@ -1895,7 +1939,7 @@
         tb.style.width =
           Math.max(0, Math.min(100, ((state.temp - 25) / 85) * 100)) + "%";
         $("tempVal").textContent = state.temp.toFixed(0) + " °C";
-        $("logBtn").disabled = !(state.running && op.rpm > 400) && !state.cut;
+        $("logBtn").disabled = !state.running && !state.cut && state.throttle < 0.03;
       }
 
       /* ---------------- main loop ---------------- */
