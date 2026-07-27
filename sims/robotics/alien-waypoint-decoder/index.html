@@ -25,13 +25,13 @@
     color: var(--text);
     height: 100vh;
     overflow: hidden;
-    padding: 10px 14px;
+    padding: 6px 14px;
     display: flex;
     flex-direction: column;
   }
   header {
     text-align: center;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     flex: 0 0 auto;
   }
   header h1 {
@@ -46,9 +46,9 @@
 
   .layout {
     display: grid;
-    grid-template-columns: 250px minmax(0, 1fr) 300px;
+    grid-template-columns: 300px minmax(0, 1fr) 300px;
     gap: 12px;
-    max-width: 1400px;
+    max-width: 1500px;
     width: 100%;
     margin: 0 auto;
     flex: 1 1 auto;
@@ -57,7 +57,7 @@
   .col-left, .col-right {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     min-height: 0;
     overflow: auto;
   }
@@ -77,7 +77,7 @@
   }
   canvas {
     display: block;
-    height: min(74vh, 560px);
+    height: min(62vh, 480px);
     width: auto;
     aspect-ratio: 1 / 1;
     max-width: 100%;
@@ -97,6 +97,8 @@
     margin-bottom: 12px;
     align-items: center;
   }
+  .bumper-btn { border-color: rgba(220,38,38,0.35); }
+  .bumper-btn:hover { border-color: var(--danger); color: var(--danger); }
   button {
     background: var(--panel-2);
     color: var(--text);
@@ -118,7 +120,7 @@
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 11px 13px;
+    padding: 9px 12px;
   }
   .card h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 8px; }
 
@@ -154,20 +156,21 @@
   .dir[data-dir="2"] { grid-area: down; }
   .dir.active { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
 
-  .control { margin-bottom: 9px; }
+  .control { margin-bottom: 6px; }
+  .control .hint { font-size: 10px; line-height: 1.35; margin-top: 4px; }
   .control label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
   .control label b { color: var(--text); }
   input[type=range] { width: 100%; accent-color: var(--accent); }
 
   .rgbchip { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: middle; margin-right: 6px; border: 1px solid var(--border); }
-  .decision { font-size: 14px; font-weight: 700; padding: 8px 10px; border-radius: 8px; text-align: center; margin-top: 10px; background: var(--panel-2); }
+  .decision { font-size: 14px; font-weight: 700; padding: 6px 10px; border-radius: 8px; text-align: center; margin-top: 7px; background: var(--panel-2); }
 
   /* ---- Light-intensity meter ---- */
-  .tilepreview { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-  .rgbchip.big { width: 40px; height: 40px; border-radius: 9px; margin: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+  .tilepreview { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .rgbchip.big { width: 36px; height: 36px; border-radius: 9px; margin: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
   .tilepreview .tname { font-size: 14px; font-weight: 600; }
   .tilepreview .tsub { font-size: 10px; color: var(--muted); }
-  .imeter { display: flex; flex-direction: column; gap: 9px; }
+  .imeter { display: flex; flex-direction: column; gap: 6px; }
   .bar label { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; }
   .bar label .lbl { color: var(--muted); font-weight: 600; }
   .bar label b { font-family: 'Consolas', monospace; color: var(--text); }
@@ -229,9 +232,13 @@
         <label>Grid Size <b><span id="vGrid">10</span> × <span id="vGrid2">10</span></b></label>
         <input type="range" id="gridsize" min="6" max="16" value="10">
       </div>
-      <div class="toggle-row">
-        <button id="btnFront">💥 Front Bumper Hit</button>
-        <button id="btnBack">💥 Back Bumper Hit</button>
+      <div class="control">
+        <button id="btnFront" class="bumper-btn" style="width:100%">💥 Front Bumper Hit</button>
+        <p class="hint" style="margin-top:6px">FRONT BUMPER HIT - WHEN PRESSED CONTINUOUSLY, IF ANY OBSTACLE IS NEAR THE FRONT BUMPER, THE ROVER MOVES BACKWARD.</p>
+      </div>
+      <div class="control">
+        <button id="btnBack" class="bumper-btn" style="width:100%">💥 Back Bumper Hit</button>
+        <p class="hint" style="margin-top:6px">BACK BUMPER HIT - WHEN PRESSED CONTINUOUSLY, IF ANY OBSTACLE IS NEAR THE BACK BUMPER, THE ROVER MOVES FORWARD.</p>
       </div>
     </div>
   </div>
@@ -243,7 +250,7 @@
       <button id="btnStep">⏭ Step</button>
       <button id="btnReset">↺ Reset Rover</button>
       <button id="btnClear">🧹 Clear Tiles</button>
-      <button id="btnWall" data-mode="wall">🧱 Wall Tool</button>
+      <button id="btnWall" data-mode="wall">🧱 Obstacle Tool</button>
       <button id="btnUndo" title="Undo (Ctrl+Z)">↶ Undo</button>
       <button id="btnRedo" title="Redo (Ctrl+Y)">↷ Redo</button>
     </div>
@@ -458,7 +465,7 @@
   // ---- Sensor: read tile under rover ----
   function readSensor() {
     const t = tiles[rover.y][rover.x];
-    if (t === EMPTY || t === WALL) return { rgb: [0,0,0], tileName: t === WALL ? 'Wall' : 'Empty' };
+    if (t === EMPTY || t === WALL) return { rgb: [0,0,0], tileName: t === WALL ? 'Obstacle' : 'Empty' };
     const rgb = applyBright(COLORS[t].rgb);
     return { rgb, tileName: COLORS[t].name };
   }
@@ -536,7 +543,6 @@
     else                   { stepForward(1);  flash('#fbbf24', 'BACK bumper → moving forward'); }
     if (!auto) draw();
   }
-
   let flashMsg = '', flashColor = '', flashUntil = 0;
   function flash(color, msg) { flashMsg = msg; flashColor = color; flashUntil = performance.now() + 1200; }
 
@@ -689,6 +695,7 @@
     dec.style.background = 'var(--panel-2)';
   }
   document.getElementById('btnClear').onclick = () => { pushHistory(); initTiles(); draw(); };
+  // Click to trigger a bumper directly — Front always backs the rover up, Back always sends it forward.
   document.getElementById('btnFront').onclick = () => triggerBumper('front', false);
   document.getElementById('btnBack').onclick  = () => triggerBumper('back', false);
 

@@ -62,7 +62,7 @@
   .toggle button.on{color:#fff;border-color:transparent;background:linear-gradient(145deg,var(--accent2),var(--accent));box-shadow:0 8px 18px rgba(255,122,61,.32)}
 
   canvas{max-width:100%;max-height:100%;width:auto;height:auto;display:block;border-radius:14px;
-    background:#0d1024;cursor:crosshair;touch-action:none;flex:0 1 auto;min-height:0}
+    background:#eef2f8;cursor:crosshair;touch-action:none;flex:0 1 auto;min-height:0}
   .stage-foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;justify-content:center;flex:0 0 auto}
   .btn{cursor:pointer;border:2px solid var(--line);background:#fff;color:var(--txt);padding:9px 14px;
     border-radius:12px;font-size:12.5px;font-weight:600;transition:.15s;font-family:var(--body);display:flex;gap:7px;align-items:center}
@@ -106,6 +106,18 @@
   .chip{display:inline-block;padding:4px 10px;border-radius:8px;font-size:10px;font-weight:700;letter-spacing:.6px;
     background:#fff1e4;color:var(--accent);border:1px solid var(--line);margin-top:6px}
   .sect{margin-top:12px;padding-top:10px;border-top:2px dashed var(--line)}
+
+  /* One-time tutorial modal — shown the first time the rover is clicked */
+  .tut-backdrop{position:fixed;inset:0;background:rgba(20,15,10,.55);display:none;
+    align-items:center;justify-content:center;z-index:50;padding:20px}
+  .tut-backdrop.show{display:flex}
+  .tut-box{background:var(--panel);border-radius:18px;box-shadow:var(--shadow);max-width:560px;width:100%;
+    padding:18px;border:1px solid var(--line)}
+  .tut-box h3{margin:0 0 8px;font-size:15px;font-weight:800;letter-spacing:.5px;color:#4a2f22}
+  .tut-video{width:100%;aspect-ratio:16/9;border-radius:12px;background:#101326;display:grid;
+    place-items:center;color:#cfd6ee;font-size:13px;text-align:center;padding:16px;overflow:hidden}
+  .tut-video video{width:100%;height:100%;object-fit:cover;display:block}
+  .tut-box .tut-close{margin-top:14px;width:100%}
 </style>
 </head>
 <body>
@@ -117,10 +129,22 @@
     </div>
   </header>
 
+  <div class="tut-backdrop" id="tutBackdrop">
+    <div class="tut-box">
+      <h3>👋 How this simulation works</h3>
+      <p class="sub" style="margin-bottom:10px">A quick 30–40s walkthrough of the canvas — drag the flame or the rover, click the grid to build walls.</p>
+      <div class="tut-video" id="tutVideoWrap">
+        <!-- Drop the actual tutorial clip in as: <video src="your-video.mp4" controls autoplay></video> -->
+        Tutorial video goes here
+      </div>
+      <button class="btn start on tut-close" id="tutClose">Got it, let's go →</button>
+    </div>
+  </div>
+
   <div class="grid">
     <section class="card">
       <h3>Mission Controls</h3>
-      <p class="sub">Change the world, then watch how the rover's decisions change. Drag the flame on the map. Click any empty square to build a wall.</p>
+      <p class="sub">Change the world, then watch how the rover's decisions change. Drag the flame — or the rover itself — on the map. Click any empty square to build a wall.</p>
       <div id="controls"></div>
     </section>
 
@@ -168,7 +192,7 @@
 const cv=document.getElementById('stage'), g=cv.getContext('2d');
 const W=cv.width, H=cv.height;
 const DEG=Math.PI/180;
-const CELL=40;                 // wall grid size
+const CELL=60;                 // wall grid size — big enough for one cell to actually fit the rover (ROVER_LEN=50)
 const PX_PER_CM=2.2;           // map pixels to the "cm" the ultrasonic reports
 const PROBE=64;                // how far ahead of the rover the flame sensor samples
 const DRIVE_STEP=80;           // pixels travelled per scan cycle
@@ -181,13 +205,12 @@ const P={
   sens:100,        // flame sensor gain, %
   range:55,        // ultrasonic detection range, cm
   speed:68,        // rover speed, px/s
-  spread:45,       // how far left/right the head swings, degrees
-  order:'LFR'      // scan direction: left-first or right-first
+  spread:45        // how far left/right the head swings, degrees
 };
 
 /* ---------- WORLD ---------- */
 const src={x:648,y:150};
-let walls=[{x:320,y:280,w:CELL,h:CELL},{x:360,y:280,w:CELL,h:CELL},{x:480,y:80,w:CELL,h:CELL}];
+let walls=[{x:300,y:240,w:CELL,h:CELL},{x:360,y:240,w:CELL,h:CELL},{x:480,y:60,w:CELL,h:CELL}];
 const START={x:88,y:H/2,a:0};
 const rover={x:START.x,y:START.y,a:START.a,head:0,pulse:0,roll:0};
 const ROVER_R=12;              // cylinder radius (like a paint roller/vacuum brush drum) — sets roll speed per pixel driven
@@ -195,14 +218,14 @@ const ROVER_LEN=50;            // cylinder length, side-to-side (perpendicular t
 
 /* ---------- FSM ---------- */
 let state='scan', st=0;                       // st = seconds spent in current state
-let scanIdx=0, scanPhase='aim', dwell=0;
+let scanPhase='toStart';                      // 'toStart': swinging the head to begin the sweep · 'sweep': the automatic pass itself
+const SWEEP_DUR=1.6;                          // seconds for one full automatic left-to-right sweep
 let reads={left:null,front:null,right:null};  // captured this cycle
 let live=null;                                // the direction currently being sampled
 let winner=null, winHeat=0;
 let dist=999, blocked=false, holdTimer=0, turnTarget=0, driven=0, reversed=0, lockAfterTurn=false;
 
 const OFF=()=>({left:-P.spread*DEG, front:0, right:P.spread*DEG});
-const orderList=()=>P.order==='LFR'?['left','front','right']:['right','front','left'];
 
 /* ---------- HEAT MODEL ---------- */
 // Walls block heat, not just movement — this is what makes thermal shadows appear.
@@ -328,17 +351,20 @@ function update(dt){
   blocked = dist<P.range;
 
   if(state==='scan'){
-    const dirs=orderList(), dir=dirs[scanIdx], off=OFF()[dir];
-    live=dir;
-    if(scanPhase==='aim'){
-      if(headToward(off,dt)){ scanPhase='dwell'; dwell=0; }
+    // Fully automatic: the head always sweeps left-to-right in one continuous
+    // pass (no left-first/right-first choice) — first it swings to the start
+    // of the sweep, then glides straight across, sampling left/front/right
+    // as it passes through each third of the arc. No manual staged dwelling.
+    if(scanPhase==='toStart'){
+      live='left';
+      if(headToward(-P.spread*DEG,dt)){ scanPhase='sweep'; st=0; }
     }else{
-      dwell+=dt;
-      reads[dir]=senseAt(rover.a+off);          // sample while the head is parked
-      if(dwell>0.36){
-        scanIdx++; scanPhase='aim';
-        if(scanIdx>=3){ scanIdx=0; live=null; setState('decide'); }
-      }
+      const t=Math.min(1,st/SWEEP_DUR);
+      rover.head=-P.spread*DEG+t*2*P.spread*DEG;
+      const zone = t<1/3?'left':t<2/3?'front':'right';
+      live=zone;
+      reads[zone]=senseAt(rover.a+rover.head);
+      if(t>=1){ live=null; scanPhase='toStart'; setState('decide'); }
     }
   }
 
@@ -406,8 +432,8 @@ function update(dt){
 
 /* ---------- DRAWING ---------- */
 function drawArena(){
-  g.fillStyle='#0d1024'; g.fillRect(0,0,W,H);
-  g.strokeStyle='rgba(255,255,255,.045)'; g.lineWidth=1;
+  g.fillStyle='#eef2f8'; g.fillRect(0,0,W,H);           // bright floor so the grid actually reads
+  g.strokeStyle='rgba(60,80,120,.25)'; g.lineWidth=1;
   for(let x=CELL;x<W;x+=CELL){g.beginPath();g.moveTo(x,0);g.lineTo(x,H);g.stroke();}
   for(let y=CELL;y<H;y+=CELL){g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();}
 
@@ -463,10 +489,10 @@ function drawPing(){
   if(state!=='drive'&&state!=='warn'&&state!=='reverse') return;
   const d=Math.min(dist*PX_PER_CM, rangePx());
   g.save(); g.translate(rover.x,rover.y); g.rotate(rover.a);
-  g.strokeStyle=blocked?'rgba(255,84,112,.85)':'rgba(90,200,255,.35)';
+  g.strokeStyle=blocked?'rgba(224,30,65,.9)':'rgba(20,105,185,.65)';
   g.lineWidth=2; g.setLineDash([6,6]);
   g.beginPath(); g.moveTo(16,0); g.lineTo(d,0); g.stroke(); g.setLineDash([]);
-  g.strokeStyle=blocked?'rgba(255,84,112,.5)':'rgba(90,200,255,.2)';
+  g.strokeStyle=blocked?'rgba(224,30,65,.55)':'rgba(20,105,185,.4)';
   g.beginPath(); g.arc(0,0,rangePx(),-24*DEG,24*DEG); g.stroke();
   g.restore();
 }
@@ -476,7 +502,7 @@ function drawWarn(){
   g.strokeStyle=`rgba(255,84,112,${.35+p*.5})`; g.lineWidth=3+p*2;
   g.beginPath(); g.arc(rover.x,rover.y,30+p*10,0,7); g.stroke();
   g.font='bold 22px '+'"Orbitron",sans-serif'; g.textAlign='center'; g.textBaseline='middle';
-  g.fillStyle=`rgba(255,120,140,${.6+p*.4})`; g.fillText('!',rover.x,rover.y-46);
+  g.fillStyle=`rgba(190,10,45,${.75+p*.25})`; g.fillText('!',rover.x,rover.y-46);
 }
 function drawLock(){
   if(state!=='hold') return;
@@ -484,7 +510,7 @@ function drawLock(){
   g.strokeStyle=`rgba(255,196,90,${.75*(1-p)})`; g.lineWidth=3;
   g.beginPath(); g.arc(rover.x,rover.y,26+p*40,0,7); g.stroke();
   g.font='700 12px "Orbitron",sans-serif'; g.textAlign='center';
-  g.fillStyle='rgba(255,214,140,.95)'; g.fillText('HEAT LOCK',rover.x,rover.y-42);
+  g.fillStyle='rgba(160,95,10,.95)'; g.fillText('HEAT LOCK',rover.x,rover.y-42);
 }
 // Capsule silhouette for a cylinder lying on its side: round end-caps face
 // sideways (perpendicular to travel), straight sides run front-to-back.
@@ -552,8 +578,9 @@ function drawRover(){
 
   g.strokeStyle='#3a1204'; g.lineWidth=2; roverCapsulePath(); g.stroke();
 
-  // ultrasonic "eyes" on the leading edge, always facing the direction of travel
-  g.fillStyle=blocked?'#ff5470':'#7fd4ff';
+  // ultrasonic "eyes" on the leading edge, always facing the direction of travel — a darker
+  // blue than before so they still show up clearly against the bright floor
+  g.fillStyle=blocked?'#e0143f':'#1469b9';
   g.beginPath(); g.arc(Rc-4,-8,3,0,7); g.fill();
   g.beginPath(); g.arc(Rc-4,8,3,0,7); g.fill();
 
@@ -567,53 +594,34 @@ function drawRover(){
   g.beginPath(); g.arc(8,0,4,0,7); g.fill(); g.shadowBlur=0;
   g.restore();
 }
-// Ghost block under the cursor + a standing prompt, so a student can SEE that
-// the grid is clickable without being told.
+// Ghost block under the cursor, so a student can SEE that the grid is
+// clickable without being told. The standing text hint was removed in favour
+// of a one-time tutorial video triggered by the first click on the rover.
 function drawHover(){
   if(hoverCell){
     const {x,y,ok,exists}=hoverCell;
     g.save();
     g.setLineDash([6,5]); g.lineWidth=2.5;
     if(exists){                       // hovering a block you'd remove
-      g.strokeStyle='rgba(255,120,140,.95)'; g.fillStyle='rgba(255,120,140,.12)';
+      g.strokeStyle='rgba(224,50,80,.95)'; g.fillStyle='rgba(255,120,140,.16)';
     }else if(ok){                     // empty cell you'd fill
-      g.strokeStyle='rgba(255,255,255,.85)'; g.fillStyle='rgba(140,170,255,.16)';
+      g.strokeStyle='rgba(50,80,180,.85)'; g.fillStyle='rgba(140,170,255,.22)';
     }else{                            // blocked (rover/flame) — show it's not allowed
-      g.strokeStyle='rgba(255,84,112,.7)'; g.fillStyle='rgba(255,84,112,.08)';
+      g.strokeStyle='rgba(224,50,80,.7)'; g.fillStyle='rgba(255,84,112,.1)';
     }
     g.beginPath(); g.roundRect(x+3,y+3,CELL-6,CELL-6,6); g.fill(); g.stroke();
     g.setLineDash([]);
     if(ok||exists){
       g.font='700 13px "Rajdhani",sans-serif'; g.textAlign='center'; g.textBaseline='middle';
-      g.fillStyle=exists?'rgba(255,180,195,.95)':'rgba(255,255,255,.95)';
+      g.fillStyle=exists?'rgba(200,30,60,.95)':'rgba(40,55,110,.95)';
       g.fillText(exists?'−':'+', x+CELL/2, y+CELL/2+1);
     }
     g.restore();
   }
-  // standing hint, bottom-left of the arena
-  g.font='600 13px "Rajdhani",sans-serif'; g.textAlign='left'; g.textBaseline='alphabetic';
-  g.fillStyle='rgba(255,255,255,.5)';
-  g.fillText('🧱 Click the grid to add or remove a wall   ·   🔥 Drag the flame', 14, H-14);
-}
-// A top banner while stopped, so it's obvious the rover is waiting for Start.
-// Kept as a strip (not a full dim) so students can still see and place things.
-function drawPausedOverlay(){
-  if(!paused) return;
-  const p=0.55+0.45*Math.sin(uiT*3);
-  const msg = started ? '⏸  PAUSED  —  press  ▶ Start  to resume'
-                      : '▶  SET UP THE SCENE,  THEN  PRESS  START';
-  g.save();
-  g.fillStyle='rgba(255,176,46,.14)'; g.fillRect(0,0,W,46);
-  g.strokeStyle=`rgba(255,196,90,${.4+p*.4})`; g.lineWidth=2;
-  g.beginPath(); g.moveTo(0,46); g.lineTo(W,46); g.stroke();
-  g.font='700 16px "Orbitron",sans-serif'; g.textAlign='center'; g.textBaseline='middle';
-  g.fillStyle=`rgba(255,220,150,${.75+p*.25})`;
-  g.fillText(msg, W/2, 24);
-  g.restore();
 }
 function draw(){
   drawArena(); drawWalls(); drawFlame();
-  drawCones(); drawPing(); drawWarn(); drawRover(); drawLock(); drawHover(); drawPausedOverlay();
+  drawCones(); drawPing(); drawWarn(); drawRover(); drawLock(); drawHover();
 }
 
 /* ---------- PANEL ---------- */
@@ -691,17 +699,9 @@ function buildControls(){
     });
   });
   const w=document.createElement('div'); w.className='ctrl';
-  w.innerHTML=`<div class="row"><label>Scan Direction</label></div>
-    <div class="toggle"><button id="oLFR" class="on">↰ Left first</button><button id="oRFL">Right first ↱</button></div>
-    <div class="hint">Which way the sensor head sweeps first. The comparison is the same — only the order changes.</div>`;
+  w.innerHTML=`<div class="row"><label>Rover Position</label></div>
+    <div class="hint">Drag the rover on the map to place it anywhere — it re-scans from wherever you drop it. The sensor head now sweeps left-to-right fully automatically, no direction to pick.</div>`;
   controlsEl.appendChild(w);
-  document.getElementById('oLFR').onclick=()=>setOrder('LFR');
-  document.getElementById('oRFL').onclick=()=>setOrder('RFL');
-}
-function setOrder(o){
-  P.order=o;
-  document.getElementById('oLFR').className=o==='LFR'?'on':'';
-  document.getElementById('oRFL').className=o==='RFL'?'on':'';
 }
 document.getElementById('foot').innerHTML=
   `<button class="btn start" id="fStart">▶ Start</button>
@@ -731,26 +731,36 @@ document.getElementById('fReset').onclick=reset;
 function reset(){
   rover.x=START.x; rover.y=START.y; rover.a=START.a; rover.head=0; rover.roll=0;
   reads={left:null,front:null,right:null}; winner=null; live=null;
-  scanIdx=0; scanPhase='aim'; lockAfterTurn=false;
+  scanPhase='toStart'; lockAfterTurn=false;
   setState('scan');
   started=false; setPaused(true);          // back to the armed-but-waiting state
 }
 
-/* ---------- MOUSE: drag the flame, click to build walls ---------- */
-let dragging=false, hoverCell=null;
+/* ---------- MOUSE: drag the flame or the rover, click to build walls ---------- */
+let draggingFlame=false, draggingRover=false, hoverCell=null;
 const pos=e=>{const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*(W/r.width), y:(e.clientY-r.top)*(H/r.height)};};
 // Single source of truth for wall placement — hover preview and click share it.
 function cellInfo(px,py){
   const x=Math.floor(px/CELL)*CELL, y=Math.floor(py/CELL)*CELL;
   const cx=x+CELL/2, cy=y+CELL/2;
   const exists=walls.some(w=>w.x===x&&w.y===y);
-  const nearRover=Math.hypot(cx-rover.x,cy-rover.y)<44;   // never trap the rover
+  const nearRover=Math.hypot(cx-rover.x,cy-rover.y)<62;   // never trap the rover — scaled up alongside the bigger cell size
   const nearFlame=Math.hypot(cx-src.x,cy-src.y)<30;       // never bury the flame
   return {x,y,exists,ok:!exists&&!nearRover&&!nearFlame};
 }
+/* First-ever click on the rover shows a short tutorial instead of starting a drag —
+   replaces the old standing text hint with something a beginner actually watches. */
+let tutorialShown=false;
+const tutBackdrop=document.getElementById('tutBackdrop');
+document.getElementById('tutClose').onclick=()=>tutBackdrop.classList.remove('show');
+tutBackdrop.addEventListener('click',e=>{ if(e.target===tutBackdrop) tutBackdrop.classList.remove('show'); });
 cv.addEventListener('pointerdown',e=>{
   const p=pos(e);
-  if(Math.hypot(p.x-src.x,p.y-src.y)<34){ dragging=true; hoverCell=null; cv.setPointerCapture(e.pointerId); return; }
+  if(!tutorialShown && Math.hypot(p.x-rover.x,p.y-rover.y)<30){
+    tutorialShown=true; tutBackdrop.classList.add('show'); return;
+  }
+  if(Math.hypot(p.x-src.x,p.y-src.y)<34){ draggingFlame=true; hoverCell=null; cv.setPointerCapture(e.pointerId); return; }
+  if(Math.hypot(p.x-rover.x,p.y-rover.y)<30){ draggingRover=true; hoverCell=null; cv.setPointerCapture(e.pointerId); return; }
   const c=cellInfo(p.x,p.y);
   if(c.exists) walls=walls.filter(w=>!(w.x===c.x&&w.y===c.y));
   else if(c.ok) walls.push({x:c.x,y:c.y,w:CELL,h:CELL});
@@ -758,21 +768,34 @@ cv.addEventListener('pointerdown',e=>{
 });
 cv.addEventListener('pointermove',e=>{
   const p=pos(e);
-  if(dragging){
+  if(draggingFlame){
     src.x=Math.max(20,Math.min(W-20,p.x)); src.y=Math.max(20,Math.min(H-20,p.y));
     hmDirty=true; return;
   }
-  // over the flame? that's a drag target, not a grid cell — no ghost block
-  hoverCell = Math.hypot(p.x-src.x,p.y-src.y)<34 ? null : cellInfo(p.x,p.y);
+  if(draggingRover){
+    rover.x=Math.max(20,Math.min(W-20,p.x)); rover.y=Math.max(20,Math.min(H-20,p.y));
+    return;
+  }
+  // over the flame or the rover? those are drag targets, not a grid cell — no ghost block
+  hoverCell = (Math.hypot(p.x-src.x,p.y-src.y)<34 || Math.hypot(p.x-rover.x,p.y-rover.y)<30) ? null : cellInfo(p.x,p.y);
 });
-cv.addEventListener('pointerup',()=>dragging=false);
+cv.addEventListener('pointerup',()=>{
+  if(draggingRover){
+    // Manually placed — re-scan fresh from the new spot instead of continuing
+    // whatever multi-second drive/turn/hold cycle belonged to the old one.
+    reads={left:null,front:null,right:null}; winner=null; live=null;
+    scanPhase='toStart'; lockAfterTurn=false;
+    setState('scan');
+  }
+  draggingFlame=false; draggingRover=false;
+});
 cv.addEventListener('pointerleave',()=>{hoverCell=null;});
 
 /* ---------- LOOP ---------- */
 let last=performance.now(), uiT=0;
 function frame(now){
   const dt=Math.min(0.05,(now-last)/1000); last=now;
-  uiT+=dt;                  // always advances — drives the flame flicker & banner while paused
+  uiT+=dt;                  // always advances — drives the flame flicker while paused
   if(!paused) update(dt);   // freeze the rover, but keep drawing so drags/walls still show
   draw(); panel();
   requestAnimationFrame(frame);
