@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Moon Lab — Phases · Tidal Locking · Eclipses</title>
+<title>SolSync — Phases · Tidal Locking · Eclipses</title>
 <style>
   /* ---------- Design tokens: "observatory logbook meets mission control" ---------- */
   :root{
@@ -48,8 +48,10 @@
   button:hover{background:#182a4b;border-color:#33517f}
   button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   button.primary{background:#173257;border-color:#2f5c93}
-  button.gold{color:#1a1405;background:var(--gold);border-color:var(--gold);font-weight:700}
+  button.gold{color:#1a1405;background:var(--gold);border-color:var(--gold);font-weight:700;transition:transform 0.1s, background 0.15s}
   button.gold:hover{background:#ffd489}
+  button.gold.jumping{background:#ffeac4 !important;box-shadow:0 0 14px rgba(244,194,107,0.7);transform:scale(0.95)}
+  button:disabled{opacity:0.5;cursor:not-allowed}
   .speedbox{display:flex;align-items:center;gap:8px;background:#0e1a30;border:1px solid var(--line);
     border-radius:999px;padding:6px 14px}
   .speedbox label{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.08em}
@@ -74,7 +76,7 @@
   .panel h3{font-family:var(--serif);font-weight:400;font-size:17px;margin:18px 0 8px;color:var(--paper)}
   canvas{display:block}
   #orbitCanvas{width:100%;aspect-ratio:1/1;border-radius:12px;background:#070d19}
-  #edgeCanvas{width:100%;height:196px;border-radius:12px;background:#070d19}
+  #edgeCanvas{width:100%;height:270px;border-radius:12px;background:#070d19}
   .cap{font-size:12.5px;color:var(--dim);margin:8px 2px 0}
   .cap b{color:var(--paper);font-weight:600}
   .legend{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
@@ -155,15 +157,17 @@
     border-radius:999px;padding:3px 9px;margin-top:auto}
   .badge.warn{border-color:#5a3a2c;color:#ffb27a}
 
-  footer{margin-top:26px;border-top:1px solid var(--line);padding-top:12px;
-    font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:#5f6d8d;text-align:center}
+  footer{margin-top:32px;border-top:1px solid var(--line);padding:10px 14px;
+    font-family:var(--sans);font-size:11px;line-height:1.45;
+    color:var(--dim);text-align:center;max-width:64ch;margin-left:auto;margin-right:auto;opacity:.9}
+  footer .fn-mark{color:var(--gold);font-weight:600;margin-right:4px}
 </style>
 </head>
 <body>
 
 <header>
   <div class="masthead">
-    <h1>Moon <em>Lab</em></h1>
+    <h1>Sol<em>Sync</em></h1>
     <div class="sub">Phases · Tidal Locking · Why Eclipses Are Rare</div>
   </div>
   <div>
@@ -257,13 +261,13 @@
 </section>
 
 <footer>
-  BUILT FOR LEARNING · ORBITS SIMPLIFIED TO CIRCLES · SIZES &amp; DISTANCES NOT TO SCALE · THE 5.1° TILT AND 18.6-YEAR NODE DRIFT ARE REAL · NOT FOR REAL-SKY PREDICTION
+  <span class="fn-mark">* Note:</span> Built for learning. Orbits are simplified to circles and sizes &amp; distances are not to scale; the 5.1° tilt and 18.6-year node drift are real. Not intended for real-sky prediction.
 </footer>
 
 <script>
 "use strict";
 /* =====================================================================
-   MOON LAB — Sun–Earth–Moon simulator
+   SOLSYNC — Sun–Earth–Moon simulator
    Phases · tidal locking · eclipse geometry (5.1° inclination + nodes)
    ===================================================================== */
 
@@ -298,7 +302,9 @@ const state = {
   cSolar:0, cLunar:0,
   active:null,              // {type, sub, day, beta}
   bannerUntil:0, toastUntil:0,
-  lastSyzDay:-99
+  popupKind:null,           // "new" | "full" — which phase the current caption describes
+  lastSyzDay:-99,
+  targetEclipseDay:0
 };
 
 /* ---------------- helpers ---------------- */
@@ -449,32 +455,37 @@ const RAYCRAT=[
   {lon:-47,lat: 24,rr:2.6,rays:52,len:1.1},  // Aristarchus
 ];
 function bakeMoonTex(){
-  const W=560,H=280,cv=mk(W,H),ctx=cv.getContext("2d");
+  /* higher-resolution near-side map: sc keeps feature sizes constant as res grows */
+  const W=760,H=380,sc=W/560,cv=mk(W,H),ctx=cv.getContext("2d");
   const img=ctx.createImageData(W,H),d=img.data;
   for(let y=0;y<H;y++){
     const lat=90-(y/H)*180;
     for(let x=0;x<W;x++){
       const lon=(x/W-0.5)*360;
-      let base=0.60+0.15*(fbm(x/32,y/32,7,4)-0.5)*2+0.05*(fbm(x/5,y/5,15,2)-0.5)*2;
-      base=clamp(base,0.32,0.86);
+      /* cleaner, brighter highlands (less blotchy than before) */
+      let base=0.64+0.09*(fbm(x/(30*sc),y/(30*sc),7,4)-0.5)*2+0.035*(fbm(x/(6*sc),y/(6*sc),15,2)-0.5)*2;
+      base=clamp(base,0.46,0.82);
       let m=0;
       for(let k=0;k<MOON_MARIA.length;k++){const P=MOON_MARIA[k];
         const a=_dlon(lon,P.lon)/P.rx,b=(lat-P.lat)/P.ry,g=Math.exp(-(a*a+b*b));
         m=1-(1-m)*(1-g*P.d);
       }
-      const mott=(fbm(x/11,y/11,23,3)-0.5)*2;
-      const hl=base, ba=0.205+0.05*mott;
+      m=clamp(m,0,1);
+      const mott=(fbm(x/(11*sc),y/(11*sc),23,3)-0.5)*2;
+      const hl=base, ba=0.16+0.045*mott;              // dark basaltic maria
       let val=_mix(hl,ba,m);
-      let r=val*198,gg=val*192,bb=val*184;
-      r=_mix(r,val*150,m*0.55);gg=_mix(gg,val*158,m*0.55);bb=_mix(bb,val*176,m*0.55);
+      /* light warm-grey highlands grading into distinctly darker, cooler maria */
+      let r=val*216,gg=val*208,bb=val*194;
+      r=_mix(r,val*112,m*0.72);gg=_mix(gg,val*122,m*0.72);bb=_mix(bb,val*150,m*0.72);
       const i=(y*W+x)*4;d[i]=r;d[i+1]=gg;d[i+2]=bb;d[i+3]=255;
     }
   }
   ctx.putImageData(img,0,0);
   const uv=(lon,lat)=>[(lon/360+0.5)*W,(0.5-lat/180)*H];
   let seed=12345; const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};
-  for(let n=0;n<150;n++){
-    const lon=(rnd()-0.5)*360, lat=(rnd()-0.5)*150, rr=1.1+rnd()*rnd()*4.6;
+  const NC=Math.round(150*sc*sc);
+  for(let n=0;n<NC;n++){
+    const lon=(rnd()-0.5)*360, lat=(rnd()-0.5)*150, rr=(1.1+rnd()*rnd()*4.6)*sc;
     const uvp=uv(lon,lat), px=uvp[0], py=uvp[1]; const fresh=rnd()<0.22;
     ctx.save();ctx.translate(px,py);
     ctx.fillStyle="rgba(28,29,34,0.42)";ctx.beginPath();ctx.ellipse(0,0,rr,rr*0.92,0,0,TAU);ctx.fill();
@@ -485,21 +496,21 @@ function bakeMoonTex(){
     ctx.restore();
   }
   RAYCRAT.forEach(function(C){
-    const uvp=uv(C.lon,C.lat), px=uvp[0], py=uvp[1], R0=C.rr*3.4;
+    const uvp=uv(C.lon,C.lat), px=uvp[0], py=uvp[1], R0=C.rr*3.4*sc;
     ctx.save();ctx.translate(px,py);
     for(let i=0;i<C.rays;i++){
-      const a=rnd()*TAU, L=R0*(3+C.len*rnd()*9), w=0.5+rnd()*1.1;
+      const a=rnd()*TAU, L=R0*(3+C.len*rnd()*9), w=(0.5+rnd()*1.1)*sc;
       const gx=Math.cos(a)*L, gy=Math.sin(a)*L*0.9;
       const gr=ctx.createLinearGradient(0,0,gx,gy);
       gr.addColorStop(0,"rgba(240,240,234,0.14)");gr.addColorStop(1,"rgba(240,240,234,0)");
       ctx.strokeStyle=gr;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(gx,gy);ctx.stroke();
     }
-    const eg=ctx.createRadialGradient(0,0,C.rr*0.5,0,0,R0*1.6);
+    const eg=ctx.createRadialGradient(0,0,C.rr*0.5*sc,0,0,R0*1.6);
     eg.addColorStop(0,"rgba(236,235,228,0.55)");eg.addColorStop(1,"rgba(236,235,228,0)");
     ctx.fillStyle=eg;ctx.beginPath();ctx.arc(0,0,R0*1.6,0,TAU);ctx.fill();
-    ctx.fillStyle="rgba(70,70,74,0.55)";ctx.beginPath();ctx.arc(0,0,C.rr*0.9,0,TAU);ctx.fill();
-    ctx.strokeStyle="rgba(250,249,244,0.6)";ctx.lineWidth=Math.max(0.6,C.rr*0.22);
-    ctx.beginPath();ctx.arc(0,0,C.rr*0.95,0,TAU);ctx.stroke();
+    ctx.fillStyle="rgba(70,70,74,0.55)";ctx.beginPath();ctx.arc(0,0,C.rr*0.9*sc,0,TAU);ctx.fill();
+    ctx.strokeStyle="rgba(250,249,244,0.6)";ctx.lineWidth=Math.max(0.6,C.rr*0.22*sc);
+    ctx.beginPath();ctx.arc(0,0,C.rr*0.95*sc,0,TAU);ctx.stroke();
     ctx.restore();
   });
   return cv;
@@ -587,8 +598,8 @@ function bakeSunDisc(R){
 function bakeMoonDisc(R,tex){
   const S=R*2+2,cv=mk(S,S),ctx=cv.getContext("2d"),c=S/2;
   drawSphereTex(ctx,c,c,R,tex,0);
-  const g=ctx.createRadialGradient(c,c,R*0.65,c,c,R);
-  g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(6,6,10,0.34)");
+  const g=ctx.createRadialGradient(c,c,R*0.62,c,c,R);
+  g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(6,6,10,0.42)");
   ctx.fillStyle=g;ctx.beginPath();ctx.arc(c,c,R,0,TAU);ctx.fill();
   return cv;
 }
@@ -609,7 +620,7 @@ function buildBodies(){
   TEX.moonTex  = bakeMoonTex();
   TEX.earthTex = bakeEarthTex();
   TEX.sunDisc  = bakeSunDisc(200);
-  TEX.moonDisc = bakeMoonDisc(280, TEX.moonTex);
+  TEX.moonDisc = bakeMoonDisc(320, TEX.moonTex);
   TEX.earthDisc= bakeEarthDisc(200, TEX.earthTex);
   TEX.ready=true;
 }
@@ -673,7 +684,111 @@ function darkOverlay(ctx,cx,cy,R,e){
 
 /* the Moon as seen from Earth.
    lambda = beacon offset from disc centre (deg); depth = lunar-eclipse 0..1 */
+let _3dCache={cv:null,e:-999,lambda:-999,depth:-999,R:0};
+
+function draw3DMoonDiskFancy(ctx,cx,cy,R,e,lambda,depth){
+  const iR=Math.round(R);
+  const S=iR*2;
+  if(!_3dCache.cv||_3dCache.R!==iR){
+    _3dCache.cv=document.createElement("canvas");
+    _3dCache.cv.width=S;_3dCache.cv.height=S;
+  }
+  if(Math.abs(_3dCache.e-e)>0.08||Math.abs(_3dCache.lambda-lambda)>0.08||Math.abs(_3dCache.depth-depth)>0.008||_3dCache.R!==iR){
+    _3dCache.e=e;_3dCache.lambda=lambda;_3dCache.depth=depth;_3dCache.R=iR;
+    const bctx=_3dCache.cv.getContext("2d");
+    bctx.clearRect(0,0,S,S);
+    if(TEX.ready && TEX.moonTex){
+      const tex=TEX.moonTex, tw=tex.width, th=tex.height;
+      if(!TEX.moonTexData){
+        const off=document.createElement("canvas");off.width=tw;off.height=th;
+        const ox=off.getContext("2d");ox.drawImage(tex,0,0);
+        TEX.moonTexData=ox.getImageData(0,0,tw,th).data;
+      }
+      const tdata=TEX.moonTexData;
+      const img=bctx.createImageData(S,S), d=img.data;
+      const eRad=e*RAD, sinE=Math.sin(eRad), cosE=Math.cos(eRad);
+      const rot=-lambda*RAD;
+      for(let y=0;y<S;y++){
+        const ny=(iR-y-0.5)/iR;
+        if(Math.abs(ny)>=1)continue;
+        const hh2=1-ny*ny; if(hh2<=0)continue;
+        const hh=Math.sqrt(hh2);
+        const phi=Math.asin(clamp(ny,-1,1));
+        const ty=clamp(Math.floor((0.5-phi/Math.PI)*th),0,th-1);
+        const rowOff=ty*tw*4;
+        for(let x=0;x<S;x++){
+          const nx=(x-iR+0.5)/iR;
+          if(nx*nx+ny*ny>1.0)continue;
+          const nz=Math.sqrt(Math.max(0,1-nx*nx-ny*ny));
+          const lam=Math.asin(clamp(nx/Math.max(0.001,hh),-1,1));
+          let u=(lam+rot)/TAU+0.5;
+          u=((u%1)+1)%1;
+          const tx=Math.floor(u*tw);
+          const ti=rowOff+tx*4;
+          let tr=tdata[ti], tg=tdata[ti+1], tb=tdata[ti+2];
+
+          // 3D surface relief gradient for crater rim highlights & shadows near terminator
+          const txN=(tx+1)%tw, txP=(tx-1+tw)%tw;
+          const tyN=Math.min(th-1,ty+1), tyP=Math.max(0,ty-1);
+          const iN=rowOff+txN*4, iP=rowOff+txP*4;
+          const iU=tyP*tw*4+tx*4, iD=tyN*tw*4+tx*4;
+          const dhx=(tdata[iN]-tdata[iP])/512;
+          const dhy=(tdata[iD]-tdata[iU])/512;
+
+          const dot=nx*sinE-nz*cosE;
+          const dotB=clamp((nx+dhx*0.45)*sinE - (nz+dhy*0.25)*cosE, -1, 1);
+          let sunLit=0;
+          if(dot>-0.08){
+            const t=clamp((dot+0.08)/0.16,0,1);
+            const smoothTerm=t*t*(3-2*t);
+            const direct=Math.pow(Math.max(0,dotB>0?dotB:dot*0.4),0.82);
+            sunLit=smoothTerm*(0.05+0.95*direct);
+          }
+          const limb=0.72+0.28*Math.pow(nz,0.5);
+          const earthshine=0.065*(1-sunLit)*Math.pow(nz,0.4);
+          let light=sunLit*limb+earthshine;
+          if(depth>0){
+            const shadowCopp=depth*sunLit;
+            tr=tr*light+140*shadowCopp;
+            tg=tg*light*(1-0.65*depth);
+            tb=tb*light*(1-0.75*depth);
+          }else{
+            tr=tr*light; tg=tg*light; tb=tb*light;
+          }
+          const idx=(y*S+x)*4;
+          d[idx]=clamp(tr,0,255);
+          d[idx+1]=clamp(tg,0,255);
+          d[idx+2]=clamp(tb,0,255);
+          d[idx+3]=255;
+        }
+      }
+      bctx.putImageData(img,0,0);
+    }
+  }
+  ctx.drawImage(_3dCache.cv,cx-iR,cy-iR);
+}
+
+/* the Moon as seen from Earth.
+   lambda = beacon offset from disc centre (deg); depth = lunar-eclipse 0..1 */
 function drawMoonDisk(ctx,cx,cy,R,e,lambda,depth,fancy){
+  if(fancy && TEX.ready){
+    ctx.save();
+    draw3DMoonDiskFancy(ctx,cx,cy,R,e,lambda,depth);
+    const bl=lambda*RAD, bcl=Math.cos(bl);
+    if(bcl>0){
+      const bx=cx+R*Math.sin(bl)*Math.cos(10*RAD), by=cy-R*Math.sin(10*RAD);
+      ctx.globalAlpha=0.6+0.4*((1-Math.cos(e*RAD))/2);
+      ctx.beginPath(); ctx.arc(bx,by,Math.max(2.4,R*0.055),0,TAU);
+      ctx.fillStyle="#ff5a5f"; ctx.fill();
+      ctx.lineWidth=1.2; ctx.strokeStyle="rgba(255,255,255,0.85)";
+      ctx.beginPath(); ctx.arc(bx,by,Math.max(3.8,R*0.09),0,TAU); ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,TAU);
+    ctx.strokeStyle="rgba(160,175,205,0.30)"; ctx.lineWidth=1; ctx.stroke();
+    return;
+  }
   ctx.save();
   ctx.beginPath(); ctx.arc(cx,cy,R,0,TAU); ctx.clip();
 
@@ -814,7 +929,12 @@ function drawEdge(G){
   const {w,h}=sizeCanvas(edgeC), ctx=ectx;
   blitStars(ctx,edgeC,w,h);
   const cx=w/2, cy=h/2;
-  const kx=(w/2-58)/R_M_ORB, kz=kx*EXAG;
+  const kx=(w/2-58)/R_M_ORB;
+  /* clamp the vertical exaggeration so the tilted loop + its N/F markers and
+     labels always fit — otherwise the top and bottom of the path get cropped */
+  const maxZ=R_M_ORB*SI;            // largest excursion above/below the plane
+  const vpad=48;                    // room for a marker (r=7) + its "ECLIPSE!" label
+  const kz=Math.min(kx*EXAG,(h/2-vpad)/maxZ);
   const ux=Math.cos(G.antiSun), uy=Math.sin(G.antiSun);
   const X=rel=>cx+(rel.x*ux+rel.y*uy)*kx;
   const Y=rel=>cy-rel.z*kz;
@@ -968,14 +1088,16 @@ function addLog(type,sub,t,beta,minor){
   logEl.prepend(li);
   while(logEl.children.length>36) logEl.lastChild.remove();
 }
-function showToast(msg){
+function showToast(msg,kind){
   const el=$("toast"); el.textContent=msg; el.classList.add("show");
-  state.toastUntil=performance.now()+3600;
+  state.toastUntil=performance.now()+2500;
+  state.popupKind=kind||null;      // phase-tied captions clear when the phase changes
 }
-function showBanner(title,sub,ms){
+function showBanner(title,sub,ms,kind){
   $("bTitle").textContent=title; $("bSub").textContent=sub;
   $("banner").classList.add("show");
-  state.bannerUntil=performance.now()+ms;
+  state.bannerUntil=performance.now()+(ms||2800);
+  state.popupKind=kind||null;
 }
 
 function fireEclipse(type,sub,t,beta,minor){
@@ -983,14 +1105,15 @@ function fireEclipse(type,sub,t,beta,minor){
   if(type==="solar") state.cSolar++; else state.cLunar++;
   state.active={type,sub,day:t,beta};
   if(minor){
-    showToast("🌙 Penumbral lunar eclipse — the Moon only grazes Earth's faint outer shadow.");
+    showToast("🌙 Penumbral lunar eclipse — the Moon only grazes Earth's faint outer shadow.","full");
   }else{
     showBanner(type==="solar"?"☀️ SOLAR ECLIPSE":"🌙 LUNAR ECLIPSE",
       type==="solar"
         ? sub+" — the New Moon hit a node, and its shadow touches Earth."
-        : sub+" — the Full Moon hit a node and slid into Earth's shadow.", 4500);
-    if(state.pauseOnEclipse){ state.day=t; setPlaying(false); }
+        : sub+" — the Full Moon hit a node and slid into Earth's shadow.", 2800,
+      type==="solar"?"new":"full");
   }
+  if(state.pauseOnEclipse){ state.day=t; setPlaying(false); }
 }
 
 function handleSyzygy(kind,t){
@@ -1000,12 +1123,12 @@ function handleSyzygy(kind,t){
   if(kind==="new"){
     if(ab<TH.solarCentral)      fireEclipse("solar","Central (total/annular)",t,b);
     else if(ab<TH.solarPartial) fireEclipse("solar","Partial",t,b);
-    else showToast("🌑 New Moon — passed "+fmt(ab,1)+"° "+side+" the Sun. No eclipse this month.");
+    else showToast("🌑 New Moon — passed "+fmt(ab,1)+"° "+side+" the Sun. No eclipse this month.","new");
   }else{
     if(ab<TH.lunarTotal)        fireEclipse("lunar","Total — blood moon",t,b);
     else if(ab<TH.lunarPartial) fireEclipse("lunar","Partial",t,b);
     else if(ab<TH.lunarPen)     fireEclipse("lunar","Penumbral (faint)",t,b,true);
-    else showToast("🌕 Full Moon — passed "+fmt(ab,1)+"° "+side+" Earth's shadow. No eclipse this month.");
+    else showToast("🌕 Full Moon — passed "+fmt(ab,1)+"° "+side+" Earth's shadow. No eclipse this month.","full");
   }
 }
 
@@ -1068,13 +1191,22 @@ rng.addEventListener("input",()=>{
   out.textContent=speedLabel(state.speed);
 });
 
-$("btnNext").addEventListener("click",()=>{
-  const r=findNextEclipse(state.day+1.2);
-  if(!r){ showToast("No eclipse found ahead — try Reset."); return; }
-  state.day=r.t-2;
+$("btnNext").addEventListener("click",function(){
+  const btn=this;
+  btn.classList.add("jumping");
+  setTimeout(()=>btn.classList.remove("jumping"),300);
+
+  const searchStart=Math.max(state.day+1.2, state.targetEclipseDay+1.2);
+  const r=findNextEclipse(searchStart);
+  if(!r){ showToast("No further eclipse found ahead — try Reset."); return; }
+
+  state.targetEclipseDay=r.t;
+  state.day=Math.max(0,r.t-2);
   setSpeed(1.0); setPlaying(true);
-  showToast("⏩ Jumped ahead — "+(r.kind==="solar"?"a solar":"a lunar")+
-            " eclipse lands in 2 days. Watch the N / F markers on the gauge.");
+
+  const yr=Math.floor(r.t/YEAR)+1;
+  const d=Math.floor(r.t%YEAR)+1;
+  showToast("⏩ Jumped to "+(r.kind==="solar"?"Solar":"Lunar")+" Eclipse (Yr "+yr+" · Day "+d+") — lands in 2 days.");
 });
 
 $("chkPause").addEventListener("change",e=>{ state.pauseOnEclipse=e.target.checked; });
@@ -1088,7 +1220,7 @@ $("chkLock").addEventListener("change",e=>{
 
 $("btnReset").addEventListener("click",()=>{
   Object.assign(state,{day:0,playing:true,locked:true,frozenPhi:0,pauseOnEclipse:true,
-    cSolar:0,cLunar:0,active:null,bannerUntil:0,toastUntil:0,lastSyzDay:-99});
+    cSolar:0,cLunar:0,active:null,bannerUntil:0,toastUntil:0,popupKind:null,lastSyzDay:-99,targetEclipseDay:0});
   $("chkLock").checked=true; $("chkPause").checked=true;
   logEl.innerHTML=""; logEmpty.style.display="block";
   $("banner").classList.remove("show"); $("toast").classList.remove("show");
@@ -1197,19 +1329,32 @@ function updateDom(G,now){
   stripCells.forEach((c,i)=>c.classList.toggle("on",i===G.idx));
   if(now>state.bannerUntil) bannerEl.classList.remove("show");
   if(now>state.toastUntil)  toastEl.classList.remove("show");
+  /* Drop a New/Full caption the moment the on-screen phase has actually moved on,
+     so a fast clock can't leave a stale, misleading description hanging. */
+  if(state.popupKind==="new" && G.idx!==0){
+    toastEl.classList.remove("show"); bannerEl.classList.remove("show"); state.popupKind=null;
+  }else if(state.popupKind==="full" && G.idx!==4){
+    toastEl.classList.remove("show"); bannerEl.classList.remove("show"); state.popupKind=null;
+  }
   if(state.active && Math.abs(G.day-state.active.day)>1.3) state.active=null;
   G.active=state.active;
 }
 
 /* ---------- main loop ---------- */
 let lastT=performance.now();
-document.addEventListener("visibilitychange",()=>{ lastT=performance.now(); });
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden) lastT=performance.now(); });
+window.addEventListener("focus",()=>{ lastT=performance.now(); });
+
 function frame(now){
-  /* dt from wall clock, not the rAF timestamp — browsers can replay queued
-     post-background callbacks with vsync-spaced timestamps, which would
-     fast-forward the sim far past the labeled speed. */
-  const real=performance.now();
-  const dt=document.hidden?0:Math.min(0.06,Math.max(0,(real-lastT)/1000)); lastT=real;
+  if(document.hidden){
+    lastT=now;
+    requestAnimationFrame(frame);
+    return;
+  }
+  const delta=(now-lastT)/1000;
+  lastT=now;
+  // If delta is larger than 100ms (e.g. background tab resume or lag spike), clamp to single 60fps frame to prevent burst jumps
+  const dt=(delta>0.1||delta<=0)?0.0166:delta;
   if(state.playing) advance(dt);
   const G=geom(state.day);
   updateDom(G,now);

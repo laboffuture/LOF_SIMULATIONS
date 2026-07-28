@@ -192,6 +192,8 @@ input[type=range]:focus-visible{outline:2px solid var(--signal);outline-offset:4
         <div class="row"><dt>ν</dt><dd><span id="e_nu">0.0</span><span class="u">°</span></dd></div>
         <div class="row"><dt>fpa</dt><dd><span id="e_fpa">0.00</span><span class="u">°</span></dd></div>
         <div class="row"><dt>ω</dt><dd><span id="e_arg">0.0</span><span class="u">°</span></dd></div>
+        <div class="row"><dt>i</dt><dd><span id="e_inc">0.0</span><span class="u">°</span></dd></div>
+        <div class="row"><dt>ω̇ J2</dt><dd><span id="e_argdot">+0.00</span><span class="u">°/d</span></dd></div>
       </dl>
       <div id="status" style="margin-top:11px">ORBIT STABLE</div>
     </div>
@@ -222,7 +224,11 @@ input[type=range]:focus-visible{outline:2px solid var(--signal);outline-offset:4
         <div class="ctl-top"><span class="ctl-name">ARG. OF PERIAPSIS</span><span class="ctl-val"><span id="v_arg">0</span>°</span></div>
         <input type="range" id="s_arg" min="0" max="359" step="1" value="0">
       </div>
-      <div class="note">Apoapsis can't fall below periapsis — the sliders enforce it, because <b>ra ≥ rp</b> is definitional, not a rule.</div>
+      <div class="ctl">
+        <div class="ctl-top"><span class="ctl-name">INCLINATION (i)</span><span class="ctl-val"><span id="v_inc">0.0</span>°</span></div>
+        <input type="range" id="s_inc" min="0" max="90" step="0.1" value="0">
+      </div>
+      <div class="note">Apoapsis can't fall below periapsis. At <b>i = 63.4°</b> (critical inclination), 5·cos²i − 1 = 0, freezing J2 <b>ω</b> precession! <i>(Note: 3D orbital plane tilt, RAAN, and nodal regression are simplified to 2D projection.)</i></div>
     </div>
 
     <div class="sec">
@@ -261,8 +267,8 @@ input[type=range]:focus-visible{outline:2px solid var(--signal);outline-offset:4
       <label class="tog">SHOW GROUND TRACK<input type="checkbox" id="t_trail" checked></label>
       <label class="tog">SHOW APSIDES<input type="checkbox" id="t_aps" checked></label>
       <label class="tog">SHOW REFERENCE ORBITS<input type="checkbox" id="t_ref" checked></label>
-      <label class="tog">J2 OBLATENESS DRIFT<input type="checkbox" id="t_j2"></label>
-      <div class="note">J2 is Earth's equatorial bulge. Switch it on and watch <b>ω</b> rotate — the ellipse precesses while a and e stay fixed.</div>
+      <label class="tog">J2 OBLATENESS DRIFT <span id="j2rate" style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--ink-3);margin-left:auto;margin-right:8px">dω/dt OFF</span><input type="checkbox" id="t_j2"></label>
+      <div class="note">J2 is Earth's equatorial bulge. At <b>i = 63.4°</b> (critical inclination), <b>ω̇ = 0</b>! Adjust inclination to test precession rates.</div>
     </div>
 
     <div class="sec">
@@ -273,7 +279,7 @@ input[type=range]:focus-visible{outline:2px solid var(--signal);outline-offset:4
         <div class="row"><dt>orbital energy</dt><dd><span id="r_en">-29.4</span><span class="u">MJ/kg</span></dd></div>
         <div class="row"><dt>ang. momentum</dt><dd><span id="r_h">51950</span><span class="u">km²/s</span></dd></div>
       </dl>
-      <div class="note">v = √(μ/r) · T = 2π√(a³/μ)<br>Vis-viva: v = √(μ(2/r − 1/a))</div>
+      <div class="note"><b>Textbook J₂ Formula:</b> dω/dt = ¾ J₂ n (R_E/p)² (5 cos²i − 1)<br>v = √(μ/r) · T = 2π√(a³/μ)<br>Vis-viva: v = √(μ(2/r − 1/a))</div>
     </div>
   </aside>
 </div>
@@ -355,6 +361,7 @@ class Orbit {
     this.e = o.e ?? 0;
     this._M = norm(E2M(nu2E(o.nu ?? 0, this.e), this.e)); // canonical: mean anomaly
     this.arg = o.arg ?? 0;      // argument of periapsis
+    this.inc = o.inc ?? 0;      // inclination angle (rad)
     this.t = 0;
     this.escaped = false;
     this.impacted = false;
@@ -390,11 +397,12 @@ class Orbit {
   get fpa() { return Math.atan2(this.vr, this.vt) * DEG; }    // flight path angle
   get x() { return this.r * Math.cos(this.theta); }
   get y() { return this.r * Math.sin(this.theta); }
-  // J2 nodal/apsidal drift (rad/s) - equatorial planar approximation
+  // J2 nodal/apsidal drift (rad/s) - inclination dependent: (5*cos^2(i) - 1)
   get argDot() {
     if (!this.j2on || this.a <= 0) return 0;
     const pp = this.p;
-    return 0.75 * J2 * this.n * (RE / pp) * (RE / pp) * 2;
+    const ci = Math.cos(this.inc);
+    return 0.75 * J2 * this.n * (RE / pp) * (RE / pp) * (5 * ci * ci - 1);
   }
 
   step(dt) {
@@ -436,7 +444,7 @@ class Orbit {
   }
 
   clone() {
-    const o = new Orbit({ a: this.a, e: this.e, nu: 0, arg: this.arg, j2on: this.j2on });
+    const o = new Orbit({ a: this.a, e: this.e, nu: 0, arg: this.arg, inc: this.inc, j2on: this.j2on });
     o._M = this._M; o.t = this.t;
     return o;
   }
@@ -482,11 +490,11 @@ const WARPS = [1, 10, 60, 300, 1800, 3600, 21600, 86400];
 const WLBL = ['×1', '×10', '×60', '×300', '×1800', '×1h', '×6h', '×24h'];
 
 const PRESETS = {
-  leo: { rp: 400, ra: 400, arg: 0 },
-  gps: { rp: 20200, ra: 20200, arg: 0 },
-  geo: { rp: 35786, ra: 35786, arg: 0 },
-  molniya: { rp: 600, ra: 39360, arg: 270 },
-  gto: { rp: 400, ra: 35786, arg: 0 },
+  leo: { rp: 400, ra: 400, arg: 0, inc: 51.6 },
+  gps: { rp: 20200, ra: 20200, arg: 0, inc: 55.0 },
+  geo: { rp: 35786, ra: 35786, arg: 0, inc: 0 },
+  molniya: { rp: 600, ra: 39360, arg: 270, inc: 63.4 },
+  gto: { rp: 400, ra: 35786, arg: 0, inc: 28.5 },
 };
 
 const REFS = [
@@ -694,8 +702,28 @@ function readout() {
   $('e_nu').textContent = num(o.nu, v => (o.escaped ? v * DEG : norm(v) * DEG).toFixed(1));
   $('e_fpa').textContent = num(o.fpa, v => v.toFixed(2));
   $('e_arg').textContent = num(o.arg, v => (norm(v) * DEG).toFixed(1));
+  const incDeg = o.inc * DEG;
+  $('e_inc').textContent = incDeg.toFixed(1);
+  const argDotDegDay = o.argDot * DEG * 86400;
+  $('e_argdot').textContent = (argDotDegDay >= 0 ? '+' : '') + argDotDegDay.toFixed(2);
   $('met').textContent = fmtMET(o.t);
   $('dvSpent').textContent = `Δv ${Math.round(S.dvSpent * 1000)} m/s`;
+
+  const j2El = $('j2rate');
+  if (j2El) {
+    if (!o.j2on) {
+      j2El.textContent = 'dω/dt OFF';
+      j2El.style.color = 'var(--ink-3)';
+    } else if (Math.abs(incDeg - 63.435) < 0.6) {
+      j2El.textContent = 'dω/dt 0.00°/d (FROZEN)';
+      j2El.style.color = 'var(--ok)';
+    } else {
+      const argDotDegOrb = isFinite(o.T) ? o.argDot * DEG * o.T : 0;
+      const sign = argDotDegDay >= 0 ? '+' : '';
+      j2El.textContent = `dω/dt ${sign}${argDotDegDay.toFixed(2)}°/d (${sign}${argDotDegOrb.toFixed(3)}°/orb)`;
+      j2El.style.color = 'var(--signal)';
+    }
+  }
 
   $('r_vc').textContent = num(vcirc(o.r), v => v.toFixed(3));
   $('r_ve').textContent = num(vesc(o.r), v => v.toFixed(3));
@@ -706,7 +734,13 @@ function readout() {
   if (o.impacted) { st.textContent = 'SURFACE IMPACT'; st.className = 'bad'; }
   else if (o.escaped) { st.textContent = 'HYPERBOLIC — ESCAPED'; st.className = 'bad'; }
   else if (o.peri < 100) { st.textContent = 'PERIAPSIS IN ATMOSPHERE'; st.className = 'bad'; }
-  else if (o.e < 0.001) { st.textContent = 'CIRCULAR ORBIT'; st.className = 'good'; }
+  else if (o.j2on && Math.abs(incDeg - 63.435) < 0.6) {
+    st.textContent = 'CRITICAL INCLINATION (63.4°) — ω̇ ZEROED OUT!';
+    st.className = 'good';
+  } else if (o.j2on) {
+    st.textContent = `J2 DRIFT: ${argDotDegDay >= 0 ? 'PROGRADE' : 'RETROGRADE'} (${(argDotDegDay >= 0 ? '+' : '') + argDotDegDay.toFixed(2)}°/d)`;
+    st.className = '';
+  } else if (o.e < 0.001) { st.textContent = 'CIRCULAR ORBIT'; st.className = 'good'; }
   else { st.textContent = 'ELLIPTICAL ORBIT'; st.className = ''; }
 }
 
@@ -721,11 +755,12 @@ function hohmannPanel() {
 }
 
 // ===== CONTROLS =====
-function setOrbit(rp, ra, argDeg) {
+function setOrbit(rp, ra, argDeg, incDeg) {
   if (ra < rp) [rp, ra] = [ra, rp];
   const RP = RE + rp, RA = RE + ra;
   const a = (RP + RA) / 2, e = (RA - RP) / (RA + RP);
-  S.sat = new Orbit({ a, e, nu: 0, arg: (argDeg ?? 0) / DEG, j2on: $('t_j2').checked });
+  const inc = (incDeg ?? (S.sat ? S.sat.inc * DEG : 0)) / DEG;
+  S.sat = new Orbit({ a, e, nu: 0, arg: (argDeg ?? 0) / DEG, inc, j2on: $('t_j2').checked });
   S.trail = []; S.dvSpent = 0;
   fit(); sync(); hohmannPanel();
 }
@@ -736,6 +771,8 @@ function sync() {
   $('v_ra').textContent = Math.round(S.sat.apo).toLocaleString();
   $('s_arg').value = Math.round(norm(S.sat.arg) * DEG);
   $('v_arg').textContent = Math.round(norm(S.sat.arg) * DEG);
+  $('s_inc').value = (S.sat.inc * DEG).toFixed(1);
+  $('v_inc').textContent = (S.sat.inc * DEG).toFixed(1);
 }
 
 $('playBtn').onclick = e => {
@@ -753,14 +790,14 @@ for (const el of document.querySelectorAll('#presets .chip')) {
     document.querySelectorAll('#presets .chip').forEach(c => c.classList.remove('on'));
     el.classList.add('on');
     const p = PRESETS[el.dataset.p];
-    setOrbit(p.rp, p.ra, p.arg);
+    setOrbit(p.rp, p.ra, p.arg, p.inc);
   };
 }
 
 function shapeChange() {
   let rp = +$('s_rp').value, ra = +$('s_ra').value;
   if (ra < rp) { ra = rp; $('s_ra').value = ra; }
-  setOrbit(rp, ra, +$('s_arg').value);
+  setOrbit(rp, ra, +$('s_arg').value, +$('s_inc').value);
   document.querySelectorAll('#presets .chip').forEach(c => c.classList.remove('on'));
 }
 $('s_rp').oninput = () => {
@@ -772,6 +809,7 @@ $('s_ra').oninput = () => {
   shapeChange();
 };
 $('s_arg').oninput = shapeChange;
+$('s_inc').oninput = shapeChange;
 
 for (const b of document.querySelectorAll('[data-dv]')) {
   const dv = +b.dataset.dv;
