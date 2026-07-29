@@ -88,6 +88,13 @@ canvas{display:block;width:100%;height:100%}
 .row dd{font-weight:500;font-variant-numeric:tabular-nums}
 .row.big dd{font-size:15px;font-weight:700}
 .row .u{color:var(--ink-3);font-size:9px;margin-left:2px;font-weight:400}
+.row dt .sym,.ctl-name .sym{color:var(--ink-3);font-weight:400;opacity:.75}
+.row[title]{cursor:help}
+.sec-h[title],.ctl-name[title],.tog[title]{cursor:help}
+.note i.def{color:var(--ink-2);font-style:normal;font-weight:700}
+body:not(.advanced) .adv{display:none!important}
+.tog.master{color:var(--ink);font-weight:700;border-bottom:1px dotted var(--rule);padding-bottom:8px;margin-bottom:6px}
+.tog.master input:checked{background:var(--ink)}
 
 /* the big element readout */
 #elements{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
@@ -156,15 +163,72 @@ input[type=range]:focus-visible{outline:2px solid var(--signal);outline-offset:4
   #met{min-width:auto}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---- SIMPLE / FULL MODE ---- */
+body.mode-simple .full-only{display:none!important}
+body.mode-full .simple-only{display:none!important}
+
+/* top bar: mode switch + help links */
+#topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  position:sticky;top:0;z-index:5;background:var(--paper-2)}
+#modeseg{display:flex;border:1px solid var(--rule)}
+.modebtn{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.06em;
+  background:transparent;border:none;color:var(--ink-2);padding:6px 12px;cursor:pointer}
+.modebtn+.modebtn{border-left:1px solid var(--rule)}
+.modebtn.on{background:var(--ink);color:var(--paper)}
+.modebtn:focus-visible{outline:2px solid var(--signal);outline-offset:1px}
+#helpbtns{display:flex;gap:6px}
+.linkbtn{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.04em;
+  background:transparent;border:1px solid var(--rule);color:var(--ink-2);padding:6px 8px;cursor:pointer}
+.linkbtn:hover{border-color:var(--signal);color:var(--signal)}
+.linkbtn:focus-visible{outline:2px solid var(--signal);outline-offset:1px}
+
+/* simple readout card */
+#simpleCard .row.big{padding:6px 0}
+#simpleCard .row.big dt{font-size:11px}
+#shapeSentence{font-family:var(--sans);font-size:13px;line-height:1.5;color:var(--ink);
+  margin-top:10px;padding-top:10px;border-top:1px solid var(--rule)}
+#shapeSentence.warn{color:var(--signal)}
+
+/* overlays (walkthrough + glossary) */
+#scrim{position:fixed;inset:0;background:rgba(27,42,51,.55);z-index:50;
+  display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(2px)}
+#scrim.show{display:flex}
+.ovl{display:none;background:var(--paper);border:1px solid var(--ink);max-width:460px;width:100%;
+  max-height:84vh;overflow-y:auto;box-shadow:0 18px 50px rgba(27,42,51,.4)}
+.ovl.show{display:block}
+.ovl-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  padding:18px 20px 0}
+.ovl-h h2{font-size:15px;font-weight:700;letter-spacing:.02em;color:var(--ink)}
+.ovl-close{font-family:var(--mono);font-size:16px;line-height:1;background:transparent;border:none;
+  color:var(--ink-3);cursor:pointer;padding:2px 4px}
+.ovl-close:hover{color:var(--signal)}
+.ovl-body{padding:12px 20px 20px;font-family:var(--sans);font-size:13px;line-height:1.6;color:var(--ink-2)}
+.ovl-body p{margin-bottom:11px}
+.ovl-body ol{margin:0 0 12px 18px}
+.ovl-body ol li{margin-bottom:7px}
+.ovl-body b{color:var(--ink)}
+.ovl-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.ovl-btn{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.04em;
+  border:1px solid var(--ink);background:var(--ink);color:var(--paper);padding:9px 14px;cursor:pointer}
+.ovl-btn.ghost{background:transparent;color:var(--ink)}
+.ovl-btn:hover{background:var(--signal);border-color:var(--signal);color:var(--paper)}
+.ovl-btn:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.gloss dt{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);
+  letter-spacing:.03em;margin-top:12px}
+.gloss dt .sym{color:var(--ink-3);font-weight:400}
+.gloss dd{font-size:12.5px;line-height:1.55;margin-top:2px}
+.gloss dt.advtag::after{content:' · advanced';color:var(--signal);font-size:8.5px;
+  font-weight:700;letter-spacing:.08em}
 </style>
 </head>
-<body>
+<body class="mode-simple">
 <div id="app">
   <div id="stage">
     <canvas id="cv"></canvas>
     <div id="titlecard">
       <h1>Orbital Mechanics Sandbox</h1>
-      <p>Two-body Keplerian · μ = 398600.4418 km³/s²</p>
+      <p>Fly a satellite around Earth — change its path and see what happens</p>
     </div>
     <div id="timebar">
       <button class="tb-btn" id="playBtn">PAUSE</button>
@@ -179,104 +243,183 @@ input[type=range]:focus-visible{outline:2px solid var(--signal);outline-offset:4
   </div>
 
   <aside id="panel">
-    <div class="sec">
-      <div class="sec-h">Osculating elements <span id="satName">SAT-1</span></div>
-      <dl id="elements">
-        <div class="row big"><dt>alt</dt><dd><span id="e_alt">400</span><span class="u">km</span></dd></div>
-        <div class="row big"><dt>vel</dt><dd><span id="e_vel">7.67</span><span class="u">km/s</span></dd></div>
-        <div class="row"><dt>apo</dt><dd><span id="e_apo">400</span><span class="u">km</span></dd></div>
-        <div class="row"><dt>peri</dt><dd><span id="e_peri">400</span><span class="u">km</span></dd></div>
-        <div class="row"><dt>a</dt><dd><span id="e_a">6771</span><span class="u">km</span></dd></div>
-        <div class="row"><dt>e</dt><dd id="e_ecc">0.0000</dd></div>
-        <div class="row"><dt>T</dt><dd id="e_per">92.4m</dd></div>
-        <div class="row"><dt>ν</dt><dd><span id="e_nu">0.0</span><span class="u">°</span></dd></div>
-        <div class="row"><dt>fpa</dt><dd><span id="e_fpa">0.00</span><span class="u">°</span></dd></div>
-        <div class="row"><dt>ω</dt><dd><span id="e_arg">0.0</span><span class="u">°</span></dd></div>
-      </dl>
-      <div id="status" style="margin-top:11px">ORBIT STABLE</div>
-    </div>
-
-    <div class="sec">
-      <div class="sec-h">Initial orbit</div>
-      <div class="chips" id="presets">
-        <button class="chip on" data-p="leo">ISS 400km</button>
-        <button class="chip" data-p="gps">GPS MEO</button>
-        <button class="chip" data-p="geo">GEO</button>
-        <button class="chip" data-p="molniya">Molniya</button>
-        <button class="chip" data-p="gto">GTO</button>
+    <div class="sec" id="topbar">
+      <div id="modeseg">
+        <button class="modebtn on" data-mode="simple" title="A clean view: just height, speed, and the orbit's shape in plain words.">Simple</button>
+        <button class="modebtn" data-mode="full" title="The complete panel — every readout and control.">Full</button>
       </div>
-      <div class="note">Presets set <b>a</b> and <b>e</b> directly. Everything downstream — period, velocity, shape — is derived, never assigned.</div>
+      <div id="helpbtns">
+        <button class="linkbtn" id="howBtn">How to use</button>
+        <button class="linkbtn" id="glosBtn">Glossary</button>
+      </div>
+    </div>
+
+    <div class="sec simple-only" id="simpleCard">
+      <div class="sec-h">Your satellite</div>
+      <dl>
+        <div class="row big"><dt>height</dt><dd><span id="sm_alt">400</span><span class="u">km</span></dd></div>
+        <div class="row big"><dt>speed</dt><dd><span id="sm_vel">7.67</span><span class="u">km/s</span></dd></div>
+      </dl>
+      <div id="shapeSentence">A nearly circular orbit about 400 km above Earth. One lap takes about 92 minutes.</div>
+    </div>
+
+    <div class="sec full-only">
+      <div class="sec-h" title="A live snapshot of the orbit your satellite is on this instant. Change anything and these numbers update.">Your orbit right now <span id="satName">SAT-1</span></div>
+      <dl id="elements">
+        <div class="row big" title="Altitude — how high above Earth's surface the satellite is at this moment."><dt>height</dt><dd><span id="e_alt">400</span><span class="u">km</span></dd></div>
+        <div class="row big" title="How fast the satellite is travelling right now. Satellites in low orbit move about 8 km every second!"><dt>speed</dt><dd><span id="e_vel">7.67</span><span class="u">km/s</span></dd></div>
+        <div class="row" title="Apoapsis — the highest point of the orbit, farthest from Earth."><dt>high point</dt><dd><span id="e_apo">400</span><span class="u">km</span></dd></div>
+        <div class="row" title="Periapsis — the lowest point of the orbit, closest to Earth."><dt>low point</dt><dd><span id="e_peri">400</span><span class="u">km</span></dd></div>
+        <div class="row" title="Semi-major axis (a) — the overall size of the orbit, measured from Earth's centre."><dt>size <span class="sym">a</span></dt><dd><span id="e_a">6771</span><span class="u">km</span></dd></div>
+        <div class="row" title="Eccentricity (e) — how stretched the orbit is. 0 = a perfect circle; closer to 1 = a long, stretched oval."><dt>stretch <span class="sym">e</span></dt><dd id="e_ecc">0.0000</dd></div>
+        <div class="row" title="Period (T) — how long one full lap around Earth takes."><dt>lap time <span class="sym">T</span></dt><dd id="e_per">92.4m</dd></div>
+        <div class="row" title="True anomaly (ν, 'noo') — how far around the orbit the satellite has travelled, measured from the low point."><dt>spot <span class="sym">ν</span></dt><dd><span id="e_nu">0.0</span><span class="u">°</span></dd></div>
+        <div class="row" title="Flight-path angle (fpa) — the angle of travel. 0° means flying level; positive means climbing away from Earth, negative means falling toward it."><dt>climb <span class="sym">fpa</span></dt><dd><span id="e_fpa">0.00</span><span class="u">°</span></dd></div>
+        <div class="row" title="Argument of periapsis (ω, 'oh-may-ga') — which direction the orbit's low point faces, i.e. how the oval is rotated."><dt>oval dir. <span class="sym">ω</span></dt><dd><span id="e_arg">0.0</span><span class="u">°</span></dd></div>
+        <div class="row" title="Inclination (i) — how tilted the orbit is compared with Earth's equator. 0° hugs the equator, 90° goes over the poles."><dt>tilt <span class="sym">i</span></dt><dd><span id="e_inc">0.0</span><span class="u">°</span></dd></div>
+        <div class="row adv" title="Drift — how many degrees per day Earth's bulge slowly rotates the whole orbit (only when 'Earth-bulge drift' is switched on below)."><dt>drift</dt><dd><span id="e_argdot">+0.00</span><span class="u">°/d</span></dd></div>
+      </dl>
+      <div id="status" style="margin-top:11px">ORBIT LOOKS GOOD</div>
+      <div class="note">Hover any label above to see what it means. <b>High point</b> and <b>low point</b> are the two ends of the orbit; <b>stretch</b> tells you how oval it is.</div>
     </div>
 
     <div class="sec">
-      <div class="sec-h">Shape</div>
+      <div class="sec-h">Start from a real mission</div>
+      <div class="chips" id="presets">
+        <button class="chip on" data-p="leo" title="International Space Station — the crewed lab where astronauts live and work, circling about 400 km up.">Space Station</button>
+        <button class="chip" data-p="gps" title="GPS navigation satellites, about 20,200 km up. They beam signals that let your phone and car maps know where you are.">GPS (maps)</button>
+        <button class="chip" data-p="geo" title="Geostationary orbit, about 35,786 km up. It circles at the exact speed Earth spins, so the satellite hovers over one spot — used for TV and weather satellites.">TV / weather</button>
+        <button class="chip" data-p="molniya" title="Molniya orbit — a stretched oval that lingers for hours high over far-north regions, where a hovering GEO satellite can't reach.">Far-north (Molniya)</button>
+        <button class="chip" data-p="gto" title="Geostationary Transfer Orbit — the stretched 'on-ramp' a rocket coasts along to climb from low orbit up to GEO.">Transfer (GTO)</button>
+      </div>
+      <div class="note">Tap a real orbit to copy it (hover a name to see what it's used for). The <b>Space Station</b> flies low and fast; <b>GPS</b> and <b>TV/weather</b> satellites sit much higher; <b>Far-north</b> and <b>Transfer</b> are stretched ovals.</div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Change the orbit's shape</div>
       <div class="ctl">
-        <div class="ctl-top"><span class="ctl-name">PERIAPSIS ALT</span><span class="ctl-val"><span id="v_rp">400</span> km</span></div>
+        <div class="ctl-top"><span class="ctl-name" title="Periapsis — height of the orbit's lowest point above Earth's surface.">LOW POINT HEIGHT</span><span class="ctl-val"><span id="v_rp">400</span> km</span></div>
         <input type="range" id="s_rp" min="100" max="40000" step="10" value="400">
       </div>
       <div class="ctl">
-        <div class="ctl-top"><span class="ctl-name">APOAPSIS ALT</span><span class="ctl-val"><span id="v_ra">400</span> km</span></div>
+        <div class="ctl-top"><span class="ctl-name" title="Apoapsis — height of the orbit's highest point above Earth's surface.">HIGH POINT HEIGHT</span><span class="ctl-val"><span id="v_ra">400</span> km</span></div>
         <input type="range" id="s_ra" min="100" max="40000" step="10" value="400">
       </div>
-      <div class="ctl">
-        <div class="ctl-top"><span class="ctl-name">ARG. OF PERIAPSIS</span><span class="ctl-val"><span id="v_arg">0</span>°</span></div>
+      <div class="ctl full-only">
+        <div class="ctl-top"><span class="ctl-name" title="Argument of periapsis (ω) — rotates the whole oval, changing which direction the low point faces.">OVAL DIRECTION <span class="sym">ω</span></span><span class="ctl-val"><span id="v_arg">0</span>°</span></div>
         <input type="range" id="s_arg" min="0" max="359" step="1" value="0">
       </div>
-      <div class="note">Apoapsis can't fall below periapsis — the sliders enforce it, because <b>ra ≥ rp</b> is definitional, not a rule.</div>
-    </div>
-
-    <div class="sec">
-      <div class="sec-h">Manoeuvre <span id="dvSpent">Δv 0 m/s</span></div>
-      <div id="burnpad">
-        <button class="bbtn" data-dv="0.01">PRO +10</button>
-        <button class="bbtn" data-dv="-0.01">RET −10</button>
-        <button class="bbtn" data-dv="0.1">PRO +100</button>
-        <button class="bbtn" data-dv="-0.1">RET −100</button>
-        <button class="bbtn" data-dr="0.05">RAD OUT +50</button>
-        <button class="bbtn" data-dr="-0.05">RAD IN −50</button>
-        <button class="bbtn wide hi" id="circBtn">CIRCULARISE HERE</button>
-        <button class="bbtn wide" id="hohBtn">HOHMANN → TARGET</button>
+      <div class="ctl full-only">
+        <div class="ctl-top"><span class="ctl-name" title="Inclination (i) — how tilted the orbit is versus the equator. 0° hugs the equator, 90° passes over the poles.">TILT <span class="sym">i</span></span><span class="ctl-val"><span id="v_inc">0.0</span>°</span></div>
+        <input type="range" id="s_inc" min="0" max="90" step="0.1" value="0">
       </div>
-      <div class="note">Burns apply at the satellite's <b>current position</b>. Where you burn decides what changes: prograde at periapsis raises apoapsis, and nowhere else.</div>
+      <div class="note">Slide the <b>low</b> and <b>high</b> points to squash or stretch the orbit. The high point can never be lower than the low point, so the sliders keep them in order.<span class="full-only"> <b>Oval direction</b> spins the shape around; <b>tilt</b> leans it relative to the equator.</span></div>
     </div>
 
     <div class="sec">
-      <div class="sec-h">Hohmann target</div>
+      <div class="sec-h" title="Fire the engine to change the orbit. Δv (delta-v) adds up the total speed change you've spent — like a fuel meter.">Fire the engine <span id="dvSpent">Δv 0 m/s</span></div>
+      <div id="burnpad">
+        <button class="bbtn" data-dv="0.1" title="Prograde: fire forward to speed up by 100 m/s.">SPEED UP +100</button>
+        <button class="bbtn" data-dv="-0.1" title="Retrograde: fire backward to slow down by 100 m/s.">SLOW DOWN −100</button>
+        <button class="bbtn full-only" data-dv="0.01" title="Prograde: fire forward to speed up by 10 m/s. Speeding up raises the far side of the orbit.">SPEED UP +10</button>
+        <button class="bbtn full-only" data-dv="-0.01" title="Retrograde: fire backward to slow down by 10 m/s. Slowing down lowers the far side of the orbit.">SLOW DOWN −10</button>
+        <button class="bbtn full-only" data-dr="0.05" title="Push outward, away from Earth, by 50 m/s.">PUSH OUT +50</button>
+        <button class="bbtn full-only" data-dr="-0.05" title="Push inward, toward Earth, by 50 m/s.">PUSH IN −50</button>
+        <button class="bbtn wide hi" id="circBtn" title="Make the orbit a perfect circle at your current height in one burn.">MAKE IT A CIRCLE</button>
+        <button class="bbtn wide full-only" id="hohBtn" title="Fire the burn that starts a Hohmann transfer toward the target orbit set below.">SEND TO TARGET →</button>
+      </div>
+      <div class="note"><b>Δv</b> ("delta-vee") just means <i class="def">a change in speed</i> from firing the engine. <b>Speed up</b> (prograde) fires forward; <b>slow down</b> (retrograde) fires backward. Here's the surprise: a burn changes the orbit on the <i class="def">opposite</i> side. Speed up at the low point and the high point rises.</div>
+    </div>
+
+    <div class="sec full-only">
+      <div class="sec-h" title="A Hohmann transfer is the fuel-cheapest way to move between two round orbits: one burn to leave, a coast, then one burn to arrive.">Plan a trip to another orbit</div>
       <div class="ctl">
-        <div class="ctl-top"><span class="ctl-name">TARGET CIRC. ALT</span><span class="ctl-val"><span id="v_tgt">35786</span> km</span></div>
+        <div class="ctl-top"><span class="ctl-name" title="The height of the round orbit you want to travel to.">DESTINATION HEIGHT</span><span class="ctl-val"><span id="v_tgt">35786</span> km</span></div>
         <input type="range" id="s_tgt" min="200" max="40000" step="10" value="35786">
       </div>
       <dl>
-        <div class="row"><dt>Δv₁ inject</dt><dd><span id="h_dv1">2399</span><span class="u">m/s</span></dd></div>
-        <div class="row"><dt>Δv₂ circ</dt><dd><span id="h_dv2">1457</span><span class="u">m/s</span></dd></div>
-        <div class="row"><dt>Δv total</dt><dd><span id="h_tot">3857</span><span class="u">m/s</span></dd></div>
-        <div class="row"><dt>transfer time</dt><dd id="h_tof">5.29h</dd></div>
-        <div class="row"><dt>prop. burned</dt><dd><span id="h_mf">58.7</span><span class="u">% @450s</span></dd></div>
+        <div class="row" title="First burn (Δv₁): the speed change needed to leave your orbit and start coasting toward the target."><dt>burn 1 — leave</dt><dd><span id="h_dv1">2399</span><span class="u">m/s</span></dd></div>
+        <div class="row" title="Second burn (Δv₂): the speed change needed to settle into the target orbit when you arrive."><dt>burn 2 — arrive</dt><dd><span id="h_dv2">1457</span><span class="u">m/s</span></dd></div>
+        <div class="row" title="The two burns added together — the total speed change the trip costs."><dt>total change</dt><dd><span id="h_tot">3857</span><span class="u">m/s</span></dd></div>
+        <div class="row" title="How long the coast between the two burns takes."><dt>travel time</dt><dd id="h_tof">5.29h</dd></div>
+        <div class="row adv" title="Roughly how much of a real rocket's fuel this trip would use up (from the rocket equation). (Advanced aerospace physics.)"><dt>fuel used</dt><dd><span id="h_mf">58.7</span><span class="u">%</span></dd></div>
       </dl>
+      <div class="note">Pick a <b>destination height</b>, then press <b>Send to target</b> above. Notice a higher destination costs more total speed change — that's why reaching faraway orbits needs so much fuel.</div>
     </div>
 
-    <div class="sec">
-      <div class="sec-h">Display</div>
-      <label class="tog">SHOW VELOCITY VECTOR<input type="checkbox" id="t_vel" checked></label>
-      <label class="tog">SHOW GROUND TRACK<input type="checkbox" id="t_trail" checked></label>
-      <label class="tog">SHOW APSIDES<input type="checkbox" id="t_aps" checked></label>
-      <label class="tog">SHOW REFERENCE ORBITS<input type="checkbox" id="t_ref" checked></label>
-      <label class="tog">J2 OBLATENESS DRIFT<input type="checkbox" id="t_j2"></label>
-      <div class="note">J2 is Earth's equatorial bulge. Switch it on and watch <b>ω</b> rotate — the ellipse precesses while a and e stay fixed.</div>
+    <div class="sec full-only">
+      <div class="sec-h">Show or hide</div>
+      <label class="tog master" title="Off by default. Turn on to reveal extra high-school / college-level numbers and tools: orbit energy, angular momentum, Earth-bulge drift, and the rocket fuel estimate.">ADVANCED EXTRAS<input type="checkbox" id="t_adv"></label>
+      <label class="tog" title="The orange arrow showing which way and how fast the satellite is moving.">SPEED ARROW<input type="checkbox" id="t_vel" checked></label>
+      <label class="tog" title="The fading trail left behind the satellite as it flies.">PATH TRAIL<input type="checkbox" id="t_trail" checked></label>
+      <label class="tog" title="Markers for the orbit's highest and lowest points.">HIGH / LOW POINTS<input type="checkbox" id="t_aps" checked></label>
+      <label class="tog" title="Dashed rings showing common real orbits (low orbit, GPS, and the TV/weather orbit) for comparison.">REFERENCE RINGS<input type="checkbox" id="t_ref" checked></label>
+      <label class="tog adv" title="Turn on the slow twist that Earth's equatorial bulge gives every orbit.">EARTH-BULGE DRIFT <span id="j2rate" style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--ink-3);margin-left:auto;margin-right:8px">drift off</span><input type="checkbox" id="t_j2"></label>
+      <div class="note adv">Earth isn't a perfect ball — it bulges at the equator, and that bulge slowly twists every orbit around over days. At a <b>tilt of 63.4°</b> the twist stops completely — a trick real satellites use to stay put.</div>
     </div>
 
-    <div class="sec">
-      <div class="sec-h">Reference</div>
+    <div class="sec full-only">
+      <div class="sec-h">Handy speeds</div>
       <dl>
-        <div class="row"><dt>v circular</dt><dd><span id="r_vc">7.673</span><span class="u">km/s</span></dd></div>
-        <div class="row"><dt>v escape</dt><dd><span id="r_ve">10.851</span><span class="u">km/s</span></dd></div>
-        <div class="row"><dt>orbital energy</dt><dd><span id="r_en">-29.4</span><span class="u">MJ/kg</span></dd></div>
-        <div class="row"><dt>ang. momentum</dt><dd><span id="r_h">51950</span><span class="u">km²/s</span></dd></div>
+        <div class="row" title="The exact speed needed for a perfectly round orbit at your current height."><dt>circle speed</dt><dd><span id="r_vc">7.673</span><span class="u">km/s</span></dd></div>
+        <div class="row" title="Reach this speed and you'd break free of Earth's gravity for good."><dt>escape speed</dt><dd><span id="r_ve">10.851</span><span class="u">km/s</span></dd></div>
+        <div class="row adv" title="The orbit's total energy per kilogram. More negative = more tightly bound to Earth. (High-school / college physics.)"><dt>orbit energy</dt><dd><span id="r_en">-29.4</span><span class="u">MJ/kg</span></dd></div>
+        <div class="row adv" title="Angular momentum — a measure of the orbit's 'spin' that stays constant as the satellite coasts. (High-school / college physics.)"><dt>spin</dt><dd><span id="r_h">51950</span><span class="u">km²/s</span></dd></div>
       </dl>
-      <div class="note">v = √(μ/r) · T = 2π√(a³/μ)<br>Vis-viva: v = √(μ(2/r − 1/a))</div>
+      <div class="note adv"><b>The math behind it</b> (for the curious):<br>
+        • Speed anywhere: v = √(μ(2/r − 1/a))<br>
+        • Circle speed: v = √(μ/r)<br>
+        • Lap time: T = 2π√(a³/μ)<br>
+        <b>What the letters mean:</b> <i class="def">v</i> = speed, <i class="def">r</i> = current distance from Earth's centre, <i class="def">a</i> = orbit size, <i class="def">μ</i> ("mu") = Earth's gravity strength, <i class="def">T</i> = lap time.</div>
     </div>
   </aside>
 </div>
+
+<div id="scrim">
+  <div class="ovl" id="ovlWelcome">
+    <div class="ovl-h"><h2>Welcome to the Orbital Sandbox</h2><button class="ovl-close" data-close aria-label="Close">×</button></div>
+    <div class="ovl-body">
+      <p>Watch a satellite loop around Earth — and change its path yourself. An orbit is just the curved road a satellite follows as it falls around the planet without ever hitting it.</p>
+      <p><b>Try this:</b></p>
+      <ol>
+        <li>Tap a real mission (like the <b>Space Station</b>) to load its orbit.</li>
+        <li>Drag the <b>low point</b> and <b>high point</b> sliders to squash or stretch the orbit.</li>
+        <li>Press <b>Speed up</b> or <b>Slow down</b> to fire the engine and watch the shape change.</li>
+      </ol>
+      <p>You're starting in <b>Simple</b> view — just height, speed, and the orbit's shape in plain words. Switch to <b>Full</b> anytime (top of the panel) for every readout and control. Stuck on a word? Open the <b>Glossary</b>.</p>
+      <div class="ovl-actions">
+        <button class="ovl-btn" data-close>Start exploring</button>
+        <button class="ovl-btn ghost" id="welcomeGlos">Open glossary</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ovl" id="ovlGlossary">
+    <div class="ovl-h"><h2>Glossary</h2><button class="ovl-close" data-close aria-label="Close">×</button></div>
+    <div class="ovl-body">
+      <dl class="gloss">
+        <dt>Orbit</dt><dd>The looping path a satellite follows as it falls around Earth without hitting it.</dd>
+        <dt>Altitude (height)</dt><dd>How high the satellite is above Earth's surface.</dd>
+        <dt>Low point <span class="sym">periapsis</span></dt><dd>The point of the orbit closest to Earth.</dd>
+        <dt>High point <span class="sym">apoapsis</span></dt><dd>The point of the orbit farthest from Earth.</dd>
+        <dt>Orbit shape <span class="sym">eccentricity, e</span></dt><dd>How stretched the loop is. A value of 0 is a perfect circle; closer to 1 is a long, stretched oval.</dd>
+        <dt>Orbit size <span class="sym">a</span></dt><dd>The overall size of the orbit, measured from Earth's centre.</dd>
+        <dt>Lap time <span class="sym">period, T</span></dt><dd>How long one full trip around Earth takes.</dd>
+        <dt>Speed up <span class="sym">prograde</span></dt><dd>Firing the engine forwards, in the direction you're moving, to go faster.</dd>
+        <dt>Slow down <span class="sym">retrograde</span></dt><dd>Firing the engine backwards to go slower.</dd>
+        <dt>Δv <span class="sym">delta-v</span></dt><dd>"Delta-vee" — a change in speed from firing the engine. Rockets carry a limited budget of it.</dd>
+        <dt>Tilt <span class="sym">inclination, i</span></dt><dd>How tilted the orbit is compared with Earth's equator. 0° hugs the equator, 90° goes over the poles.</dd>
+        <dt>Escape speed</dt><dd>Go this fast and you break free of Earth's gravity for good.</dd>
+        <dt class="advtag">Orbit energy</dt><dd>The orbit's total energy per kilogram. More negative means more tightly bound to Earth. <i>(High-school / college physics.)</i></dd>
+        <dt class="advtag">Angular momentum <span class="sym">spin</span></dt><dd>A measure of the orbit's "spin" that stays constant while the satellite coasts. <i>(High-school / college physics.)</i></dd>
+        <dt class="advtag">Earth-bulge drift <span class="sym">J2</span></dt><dd>Earth bulges at the equator, and that bulge slowly twists an orbit around over days. At a tilt of 63.4° the twist stops. <i>(Advanced.)</i></dd>
+        <dt class="advtag">Hohmann transfer</dt><dd>The fuel-cheapest way to move between two round orbits: one burn to leave, a long coast, then one burn to arrive.</dd>
+      </dl>
+      <div class="ovl-actions"><button class="ovl-btn" data-close>Close</button></div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ===== ORBITAL MECHANICS CORE =====
 const MU = 398600.4418;      // km^3/s^2  Earth gravitational parameter
@@ -355,6 +498,7 @@ class Orbit {
     this.e = o.e ?? 0;
     this._M = norm(E2M(nu2E(o.nu ?? 0, this.e), this.e)); // canonical: mean anomaly
     this.arg = o.arg ?? 0;      // argument of periapsis
+    this.inc = o.inc ?? 0;      // inclination angle (rad)
     this.t = 0;
     this.escaped = false;
     this.impacted = false;
@@ -390,11 +534,12 @@ class Orbit {
   get fpa() { return Math.atan2(this.vr, this.vt) * DEG; }    // flight path angle
   get x() { return this.r * Math.cos(this.theta); }
   get y() { return this.r * Math.sin(this.theta); }
-  // J2 nodal/apsidal drift (rad/s) - equatorial planar approximation
+  // J2 nodal/apsidal drift (rad/s) - inclination dependent: (5*cos^2(i) - 1)
   get argDot() {
     if (!this.j2on || this.a <= 0) return 0;
     const pp = this.p;
-    return 0.75 * J2 * this.n * (RE / pp) * (RE / pp) * 2;
+    const ci = Math.cos(this.inc);
+    return 0.75 * J2 * this.n * (RE / pp) * (RE / pp) * (5 * ci * ci - 1);
   }
 
   step(dt) {
@@ -436,7 +581,7 @@ class Orbit {
   }
 
   clone() {
-    const o = new Orbit({ a: this.a, e: this.e, nu: 0, arg: this.arg, j2on: this.j2on });
+    const o = new Orbit({ a: this.a, e: this.e, nu: 0, arg: this.arg, inc: this.inc, j2on: this.j2on });
     o._M = this._M; o.t = this.t;
     return o;
   }
@@ -482,17 +627,17 @@ const WARPS = [1, 10, 60, 300, 1800, 3600, 21600, 86400];
 const WLBL = ['×1', '×10', '×60', '×300', '×1800', '×1h', '×6h', '×24h'];
 
 const PRESETS = {
-  leo: { rp: 400, ra: 400, arg: 0 },
-  gps: { rp: 20200, ra: 20200, arg: 0 },
-  geo: { rp: 35786, ra: 35786, arg: 0 },
-  molniya: { rp: 600, ra: 39360, arg: 270 },
-  gto: { rp: 400, ra: 35786, arg: 0 },
+  leo: { rp: 400, ra: 400, arg: 0, inc: 51.6 },
+  gps: { rp: 20200, ra: 20200, arg: 0, inc: 55.0 },
+  geo: { rp: 35786, ra: 35786, arg: 0, inc: 0 },
+  molniya: { rp: 600, ra: 39360, arg: 270, inc: 63.4 },
+  gto: { rp: 400, ra: 35786, arg: 0, inc: 28.5 },
 };
 
 const REFS = [
-  { alt: 400, name: 'LEO' },
-  { alt: 20200, name: 'MEO/GPS' },
-  { alt: 35786, name: 'GEO' },
+  { alt: 400, name: 'Low orbit' },
+  { alt: 20200, name: 'GPS' },
+  { alt: 35786, name: 'TV / weather' },
 ];
 
 const $ = id => document.getElementById(id);
@@ -616,8 +761,8 @@ function draw() {
     const ax = SX(o.ra * Math.cos(aa)), ay = SY(o.ra * Math.sin(aa));
     cx.setLineDash([1, 4]); cx.strokeStyle = 'rgba(27,42,51,.3)'; cx.lineWidth = 1;
     cx.beginPath(); cx.moveTo(px, py); cx.lineTo(ax, ay); cx.stroke(); cx.setLineDash([]);
-    mark(px, py, 'Pe', o.peri);
-    mark(ax, ay, 'Ap', o.apo);
+    mark(px, py, 'Low', o.peri);
+    mark(ax, ay, 'High', o.apo);
   }
 
   // velocity vector
@@ -665,7 +810,7 @@ function drawSat(o) {
 function hud() {
   if (!S.sat.impacted) return;
   cx.font = '700 11px Roboto Mono'; cx.fillStyle = '#C2410C'; cx.textAlign = 'center';
-  cx.fillText('SURFACE IMPACT — PERIAPSIS BELOW GROUND', W / 2, 34);
+  cx.fillText("CRASHED — THE ORBIT'S LOW POINT DROPPED BELOW THE GROUND", W / 2, 34);
 }
 
 // ===== READOUT =====
@@ -694,8 +839,27 @@ function readout() {
   $('e_nu').textContent = num(o.nu, v => (o.escaped ? v * DEG : norm(v) * DEG).toFixed(1));
   $('e_fpa').textContent = num(o.fpa, v => v.toFixed(2));
   $('e_arg').textContent = num(o.arg, v => (norm(v) * DEG).toFixed(1));
+  const incDeg = o.inc * DEG;
+  $('e_inc').textContent = incDeg.toFixed(1);
+  const argDotDegDay = o.argDot * DEG * 86400;
+  $('e_argdot').textContent = (argDotDegDay >= 0 ? '+' : '') + argDotDegDay.toFixed(2);
   $('met').textContent = fmtMET(o.t);
   $('dvSpent').textContent = `Δv ${Math.round(S.dvSpent * 1000)} m/s`;
+
+  const j2El = $('j2rate');
+  if (j2El) {
+    if (!o.j2on) {
+      j2El.textContent = 'drift off';
+      j2El.style.color = 'var(--ink-3)';
+    } else if (Math.abs(incDeg - 63.435) < 0.6) {
+      j2El.textContent = 'drift 0.00°/day (frozen)';
+      j2El.style.color = 'var(--ok)';
+    } else {
+      const sign = argDotDegDay >= 0 ? '+' : '';
+      j2El.textContent = `drift ${sign}${argDotDegDay.toFixed(2)}°/day`;
+      j2El.style.color = 'var(--signal)';
+    }
+  }
 
   $('r_vc').textContent = num(vcirc(o.r), v => v.toFixed(3));
   $('r_ve').textContent = num(vesc(o.r), v => v.toFixed(3));
@@ -703,11 +867,41 @@ function readout() {
   $('r_h').textContent = num(o.h, v => Math.round(v).toLocaleString());
 
   const st = $('status');
-  if (o.impacted) { st.textContent = 'SURFACE IMPACT'; st.className = 'bad'; }
-  else if (o.escaped) { st.textContent = 'HYPERBOLIC — ESCAPED'; st.className = 'bad'; }
-  else if (o.peri < 100) { st.textContent = 'PERIAPSIS IN ATMOSPHERE'; st.className = 'bad'; }
-  else if (o.e < 0.001) { st.textContent = 'CIRCULAR ORBIT'; st.className = 'good'; }
-  else { st.textContent = 'ELLIPTICAL ORBIT'; st.className = ''; }
+  if (o.impacted) { st.textContent = 'CRASHED INTO EARTH'; st.className = 'bad'; }
+  else if (o.escaped) { st.textContent = 'ESCAPED — FLEW OFF INTO SPACE'; st.className = 'bad'; }
+  else if (o.peri < 100) { st.textContent = 'TOO LOW — SKIMMING THE AIR'; st.className = 'bad'; }
+  else if (o.j2on && Math.abs(incDeg - 63.435) < 0.6) {
+    st.textContent = 'MAGIC TILT (63.4°) — ORBIT TWIST STOPPED!';
+    st.className = 'good';
+  } else if (o.j2on) {
+    st.textContent = `ORBIT TWISTING ${argDotDegDay >= 0 ? 'FORWARD' : 'BACKWARD'} (${(argDotDegDay >= 0 ? '+' : '') + argDotDegDay.toFixed(2)}°/day)`;
+    st.className = '';
+  } else if (o.e < 0.001) { st.textContent = 'ROUND ORBIT'; st.className = 'good'; }
+  else { st.textContent = 'OVAL ORBIT'; st.className = ''; }
+
+  // ---- simple-mode card ----
+  $('sm_alt').textContent = o.impacted ? '—' : num(o.alt, v => Math.round(v).toLocaleString());
+  $('sm_vel').textContent = o.impacted ? '—' : num(o.v, v => v.toFixed(2));
+  const ss = $('shapeSentence');
+  ss.textContent = shapeSentence(o);
+  ss.classList.toggle('warn', o.impacted || o.escaped || o.peri < 100);
+}
+
+// Plain-language description of the orbit for Simple mode
+function shapeSentence(o) {
+  if (o.impacted) return 'It crashed into Earth. Try raising the low point above the surface.';
+  if (o.escaped) return "It sped up so much it escaped Earth's gravity for good.";
+  const lapMin = o.T / 60;
+  const lap = lapMin < 90 ? `${Math.round(lapMin)} minutes`
+            : lapMin < 1440 ? `${(lapMin / 60).toFixed(1)} hours`
+            : `${(lapMin / 1440).toFixed(1)} days`;
+  const lo = Math.round(o.peri).toLocaleString();
+  const hi = Math.round(o.apo).toLocaleString();
+  let s = o.e < 0.02
+    ? `A nearly circular orbit about ${lo} km above Earth. One lap takes about ${lap}.`
+    : `A stretched oval — it swings from ${lo} km up at its lowest to ${hi} km at its highest. One lap takes about ${lap}.`;
+  if (o.peri < 100) s += ' Warning: the low point is dipping into the atmosphere and will drag it down.';
+  return s;
 }
 
 function hohmannPanel() {
@@ -721,11 +915,12 @@ function hohmannPanel() {
 }
 
 // ===== CONTROLS =====
-function setOrbit(rp, ra, argDeg) {
+function setOrbit(rp, ra, argDeg, incDeg) {
   if (ra < rp) [rp, ra] = [ra, rp];
   const RP = RE + rp, RA = RE + ra;
   const a = (RP + RA) / 2, e = (RA - RP) / (RA + RP);
-  S.sat = new Orbit({ a, e, nu: 0, arg: (argDeg ?? 0) / DEG, j2on: $('t_j2').checked });
+  const inc = (incDeg ?? (S.sat ? S.sat.inc * DEG : 0)) / DEG;
+  S.sat = new Orbit({ a, e, nu: 0, arg: (argDeg ?? 0) / DEG, inc, j2on: $('t_j2').checked });
   S.trail = []; S.dvSpent = 0;
   fit(); sync(); hohmannPanel();
 }
@@ -736,6 +931,8 @@ function sync() {
   $('v_ra').textContent = Math.round(S.sat.apo).toLocaleString();
   $('s_arg').value = Math.round(norm(S.sat.arg) * DEG);
   $('v_arg').textContent = Math.round(norm(S.sat.arg) * DEG);
+  $('s_inc').value = (S.sat.inc * DEG).toFixed(1);
+  $('v_inc').textContent = (S.sat.inc * DEG).toFixed(1);
 }
 
 $('playBtn').onclick = e => {
@@ -753,14 +950,14 @@ for (const el of document.querySelectorAll('#presets .chip')) {
     document.querySelectorAll('#presets .chip').forEach(c => c.classList.remove('on'));
     el.classList.add('on');
     const p = PRESETS[el.dataset.p];
-    setOrbit(p.rp, p.ra, p.arg);
+    setOrbit(p.rp, p.ra, p.arg, p.inc);
   };
 }
 
 function shapeChange() {
   let rp = +$('s_rp').value, ra = +$('s_ra').value;
   if (ra < rp) { ra = rp; $('s_ra').value = ra; }
-  setOrbit(rp, ra, +$('s_arg').value);
+  setOrbit(rp, ra, +$('s_arg').value, +$('s_inc').value);
   document.querySelectorAll('#presets .chip').forEach(c => c.classList.remove('on'));
 }
 $('s_rp').oninput = () => {
@@ -772,6 +969,7 @@ $('s_ra').oninput = () => {
   shapeChange();
 };
 $('s_arg').oninput = shapeChange;
+$('s_inc').oninput = shapeChange;
 
 for (const b of document.querySelectorAll('[data-dv]')) {
   const dv = +b.dataset.dv;
@@ -821,6 +1019,49 @@ $('t_trail').onchange = e => { S.show.trail = e.target.checked; if (!e.target.ch
 $('t_aps').onchange = e => S.show.aps = e.target.checked;
 $('t_ref').onchange = e => S.show.ref = e.target.checked;
 $('t_j2').onchange = e => S.sat.j2on = e.target.checked;
+$('t_adv').onchange = e => {
+  document.body.classList.toggle('advanced', e.target.checked);
+  if (!e.target.checked) {           // leaving advanced: switch the extra physics off cleanly
+    $('t_j2').checked = false;
+    S.sat.j2on = false;
+  }
+};
+
+// ===== SIMPLE / FULL MODE =====
+function setMode(mode) {
+  const simple = mode !== 'full';
+  document.body.classList.toggle('mode-simple', simple);
+  document.body.classList.toggle('mode-full', !simple);
+  document.querySelectorAll('.modebtn').forEach(b =>
+    b.classList.toggle('on', b.dataset.mode === (simple ? 'simple' : 'full')));
+  fit();   // panel width unchanged, but keep framing consistent
+}
+document.querySelectorAll('.modebtn').forEach(b => b.onclick = () => setMode(b.dataset.mode));
+
+// ===== WALKTHROUGH + GLOSSARY OVERLAYS =====
+const scrim = $('scrim');
+function openOverlay(id) {
+  document.querySelectorAll('.ovl').forEach(o => o.classList.toggle('show', o.id === id));
+  scrim.classList.add('show');
+}
+function closeOverlay() {
+  scrim.classList.remove('show');
+  document.querySelectorAll('.ovl').forEach(o => o.classList.remove('show'));
+}
+$('howBtn').onclick = () => openOverlay('ovlWelcome');
+$('glosBtn').onclick = () => openOverlay('ovlGlossary');
+$('welcomeGlos').onclick = () => openOverlay('ovlGlossary');
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = closeOverlay);
+scrim.addEventListener('click', e => { if (e.target === scrim) closeOverlay(); });
+window.addEventListener('keydown', e => { if (e.key === 'Escape' && scrim.classList.contains('show')) closeOverlay(); });
+
+// show the walkthrough on first visit
+try {
+  if (!localStorage.getItem('apogee_seen')) {
+    openOverlay('ovlWelcome');
+    localStorage.setItem('apogee_seen', '1');
+  }
+} catch (_) { openOverlay('ovlWelcome'); }
 
 // pan + zoom
 let dragging = false, lx = 0, ly = 0;

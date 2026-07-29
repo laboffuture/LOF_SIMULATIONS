@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sed -n '10821,11432p' CatapultGlider.html > /c/Users/TRG-LO~1/AppData/Local/Temp/claude/z--LOF-SIMULATIONS/b768cb1a-420f-46d9-bf98-ced99fac15ad/scratchpad/cg_style.css && wc -l /c/Users/TRG-LO~1/AppData/Local/Temp/claude/z--LOF-SIMULATIONS/b768cb1a-420f-46d9-bf98-ced99fac15ad/scratchpad/cg_style.css && sed -n '11434,11437p' CatapultGlider.html)",
+      "Bash(grep -oE 'src:url\\\\\\(data:font[^\\)]{0,40}' CatapultGlider.html)",
+      "Bash(grep -oE 'box-shadow:[^;}]{0,60}' CatapultGlider.html)",
+      "Bash(grep -oE '\"[A-Z][A-Za-z /·—-]{4,40}\"' CatapultGlider.html)",
+      "Bash(grep -oE '@font-face[^{]{0,3}' CatapultGlider.html)",
+      "Bash(grep -oE '@font-face.{0,120}' CatapultGlider.html)",
+      "Bash(cp /z/LOF_SIMULATIONS/sims/aerospace/UTTM/UTTM.html /z/LOF_SIMULATIONS/sims/aerospace/UTTM/UTTM.html.bak && echo \"backup created\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\TRG-LO~1\\AppData\\Local\\Temp\\claude\\z--LOF-SIMULATIONS\\b768cb1a-420f-46d9-bf98-ced99fac15ad\\scratchpad",
+      "Z:\\LOF_SIMULATIONS\\sims\\aerospace\\UTTM"
+    ]
+  }
+}

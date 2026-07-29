@@ -30,7 +30,7 @@ const PROJECTS = [
   })),
 
   // ---------------- SPACE & ASTRONOMY ----------------
-  { id: "solsync", title: "SolSync — Moon Lab", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/SolSync/simulation.html", description: "Explore Moon phases, tidal locking, and eclipses through orbit and telescope views." },
+  { id: "solsync", title: "SolSync", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/SolSync/simulation.html", description: "Explore Moon phases, tidal locking, and eclipses through orbit and telescope views." },
   { id: "apogee", title: "Apogee — Orbital Mechanics Sandbox", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/apogee/simulation.html", description: "Launch satellites and shape their orbits in an interactive orbital mechanics sandbox." },
   { id: "leapfrog", title: "Project Leapfrog — Flight Physics Lab", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/leapfrog/simulation.html", description: "Free-exploration flight physics lab: experiment with gravity, thrust, and trajectories." },
   ...Array.from({ length: 27 }, (_, i) => ({
