@@ -24,7 +24,6 @@
         --leaf: #7ac77a;
         --sun: #ffd84d;
         --ultra: #3fbfa8;
-        --combo: #a97bf0;
         --warn: #f7a23b;
         --danger: #ff6b81;
         --ok: #54c48a;
@@ -134,10 +133,6 @@
       .tab.ultra.active {
         background: linear-gradient(145deg, var(--ultra), #279d88);
         box-shadow: 0 10px 24px rgba(63, 191, 168, 0.35);
-      }
-      .tab.combo.active {
-        background: linear-gradient(145deg, var(--combo), #8656e0);
-        box-shadow: 0 10px 24px rgba(169, 123, 240, 0.35);
       }
 
       .grid {
@@ -263,53 +258,6 @@
         background: linear-gradient(145deg, var(--ok), #3fb87a);
         box-shadow: 0 8px 18px rgba(84, 196, 138, 0.3);
       }
-      /* Smaller sub-choice nested right under a hazard button (e.g. which side/source it uses) —
-         same on/off styling, just lower visual weight than the hazard toggle it belongs to. */
-      .toggle.sub {
-        gap: 6px;
-        margin-top: 4px;
-        margin-bottom: 10px;
-      }
-      .toggle.sub button {
-        padding: 7px;
-        font-size: 11.5px;
-        border-radius: 10px;
-      }
-
-      .hazbtn {
-        display: block;
-        width: 100%;
-        text-align: left;
-        cursor: pointer;
-        border: 2px solid var(--line);
-        background: #fff;
-        color: var(--mut);
-        padding: 12px 14px;
-        border-radius: 14px;
-        font-size: 14px;
-        font-weight: 600;
-        margin-bottom: 8px;
-        transition: 0.15s;
-        font-family: var(--body);
-      }
-      .hazbtn:hover {
-        transform: translateY(-2px);
-      }
-      .hazbtn.on {
-        color: #fff;
-        border-color: transparent;
-        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
-      }
-      .hazbtn.haz-shadow.on {
-        background: linear-gradient(145deg, #6a6fb0, #4b4f8a);
-      }
-      .hazbtn.haz-motion.on {
-        background: linear-gradient(145deg, var(--danger), #ff5470);
-      }
-      .hazbtn.haz-obstacle.on {
-        background: linear-gradient(145deg, #c98a4b, #a8692e);
-      }
-
       canvas {
         width: 100%;
         height: auto;
@@ -477,13 +425,6 @@
         margin-top: 6px;
         letter-spacing: 0.3px;
       }
-      footer {
-        margin-top: 26px;
-        text-align: center;
-        font-size: 12.5px;
-        color: var(--dim);
-        line-height: 1.6;
-      }
     </style>
   </head>
   <body>
@@ -492,7 +433,7 @@
       <div class="title">
         <h1>SHADOW TRIGGERED ESCAPE BOT</h1>
         <p>
-          LDR · MOTION SENSOR · ULTRASONIC · COMBINED AUTO MODE · LOF ROBOTICS
+          LDR · MOTION SENSOR · ULTRASONIC · LOF ROBOTICS
         </p>
       </div>
     </header>
@@ -501,7 +442,6 @@
       <div class="tab light active" data-s="light">🌗 LDR Sensor</div>
       <div class="tab motion" data-s="motion">📡 Motion Sensor</div>
       <div class="tab ultra" data-s="ultra">📏 Ultrasonic Sensor</div>
-      <div class="tab combo" data-s="combo">🤖 Combined Auto Mode</div>
     </nav>
 
     <div class="grid">
@@ -538,14 +478,6 @@
         </div>
       </section>
     </div>
-
-    <footer>
-      Shadow crossing the threshold → the bot dashes for its <b>burrow</b>. A
-      moving threat inside the radar ring → it hops to the nearest <b>bush</b>.
-      An obstacle too close → it stops, turns, or reverses. In
-      <b>Combined Auto Mode</b> all three sensors vote at once, exactly like the
-      doc's decision table. 🐇
-    </footer>
 
     <script>
       (() => {
@@ -736,18 +668,9 @@
           motion: { range: 150, speed: 1.2 },
           ultra: { safe: 30, range: 110, size: 1 },
         };
-        const hz = { shadow: false, motion: false, obstacle: false }; // combo-mode hazard toggles
         let paused = true,
-          started = false; // combo-mode run state
+          started = false; // ultrasonic-tab run state
         let motionSelectedDir = "away"; // Motion Sensor tab: which direction is armed, chosen in the left panel before pressing Send Threat
-        let comboMotionDir = "toward"; // Combined Auto Mode: which side the Motion hazard's person is placed on
-        // Combined Auto Mode's Motion hazard is a fixed toggle (not a moving threat like the Motion
-        // Sensor tab), so "Toward" vs "Away" is represented as two fixed distances from the sensor —
-        // close enough to always be inside a default-sized zone, or far enough that only a larger
-        // Detection Range catches it, matching the same "away can still trigger if range is big
-        // enough" behavior the Motion Sensor tab itself has.
-        const COMBO_MOTION_OFFSET = { toward: 55, away: 220 };
-        let comboShadowSource = "cloud"; // Combined Auto Mode: what's casting the Shadow hazard — a passing cloud or a predator bird overhead
         let human = {
           x: W + 60,
           y: GROUND - 6,
@@ -808,8 +731,6 @@
           fadeT: 0,
           lastDist: null,
         };
-        const FLEE_MODES = ["fastEscape", "escape", "turnEscape", "altPath"];
-
         /* ---------- PARAM DEFS ---------- */
         const DEFS = {
           light: {
@@ -902,53 +823,7 @@
           const titleEl = document.getElementById("paramTitle"),
             subEl = document.getElementById("paramSub");
           controlsEl.innerHTML = "";
-          if (sensor === "combo") {
-            titleEl.textContent = "Combined Auto Mode";
-            subEl.textContent =
-              "All three sensors run together. Toggle hazards below and watch the bot decide. Exact thresholds come from the LDR / Motion / Ultrasonic tabs — set them there first.";
-            const hzWrap = document.createElement("div");
-            hzWrap.className = "ctrl";
-            hzWrap.innerHTML = `<div class="row"><label>Hazards</label></div>
-      <button class="hazbtn haz-shadow" id="hzShadow">🌑 Shadow</button>
-      <div class="toggle sub"><button id="comboShadowCloud">Cloud</button><button id="comboShadowBird">Predator Bird</button></div>
-      <button class="hazbtn haz-motion" id="hzMotion">🏃 Motion</button>
-      <div class="toggle sub"><button id="comboDirToward">Toward</button><button id="comboDirAway">Away</button></div>
-      <button class="hazbtn haz-obstacle" id="hzObstacle">🪨 Obstacle</button>
-      <div class="hint">Click a hazard to arm it, choose its option, then press Start below the stage — nothing happens until then. Combine two hazards at once to see the bot's priority logic.</div>`;
-            controlsEl.appendChild(hzWrap);
-            document.getElementById("hzShadow").onclick = () =>
-              toggleHazard("shadow");
-            document.getElementById("hzMotion").onclick = () =>
-              toggleHazard("motion");
-            document.getElementById("hzObstacle").onclick = () =>
-              toggleHazard("obstacle");
-            document.getElementById("comboShadowCloud").onclick = () => {
-              comboShadowSource = "cloud";
-              updateComboSubButtons();
-            };
-            document.getElementById("comboShadowBird").onclick = () => {
-              comboShadowSource = "bird";
-              updateComboSubButtons();
-            };
-            document.getElementById("comboDirToward").onclick = () => {
-              comboMotionDir = "toward";
-              updateComboSubButtons();
-            };
-            document.getElementById("comboDirAway").onclick = () => {
-              comboMotionDir = "away";
-              updateComboSubButtons();
-            };
-            updateHazButtons();
-            updateComboSubButtons();
-            const sum = document.createElement("div");
-            sum.className = "ctrl sect";
-            sum.innerHTML = `<div class="row"><label>Thresholds in Use</label></div>
-      <div class="reading"><span class="k">Shadow Threshold</span><span class="v">${P.light.threshold}%</span></div>
-      <div class="reading"><span class="k">Motion Range</span><span class="v">${P.motion.range} cm</span></div>
-      <div class="reading"><span class="k">Safe Distance</span><span class="v">${P.ultra.safe} cm</span></div>
-      <div class="hint">Adjust these back on the individual sensor tabs.</div>`;
-            controlsEl.appendChild(sum);
-          } else {
+          {
             const d = DEFS[sensor];
             titleEl.textContent = d.title;
             subEl.textContent = d.sub;
@@ -1108,7 +983,8 @@
       <button class="btn" id="fReset">↺ Reset</button>`;
             document.getElementById("fSendThreat").onclick = () =>
               setDir(motionSelectedDir);
-          } else if (sensor === "ultra") {
+          } else {
+            // ultra
             footEl.innerHTML = `<button class="btn start" id="fStart">▶ Start</button>
       <button class="btn pause" id="fPause">⏸ Pause</button>
       <button class="btn" id="fClearObs" style="background:linear-gradient(145deg,#dceafc,#c3daf6);border-color:#b3cdee">🧹 Clear All</button>
@@ -1120,17 +996,6 @@
             document.getElementById("fPause").onclick = () => setPaused(true);
             document.getElementById("fClearObs").onclick = clearObstacle;
             setPaused(paused);
-          } else {
-            // combo
-            footEl.innerHTML = `<button class="btn start" id="fStart">▶ Start</button>
-      <button class="btn pause" id="fPause">⏸ Pause</button>
-      <button class="btn" id="fReset">↺ Reset</button>`;
-            document.getElementById("fStart").onclick = () => {
-              started = true;
-              setPaused(false);
-            };
-            document.getElementById("fPause").onclick = () => setPaused(true);
-            setPaused(paused);
           }
           document.getElementById("fReset").onclick = reset;
         }
@@ -1141,18 +1006,6 @@
             r.dispatchEvent(new Event("input"));
           }
         }
-        function toggleHazard(k) {
-          hz[k] = !hz[k];
-          updateHazButtons();
-        }
-        function updateHazButtons() {
-          const s = document.getElementById("hzShadow"),
-            m = document.getElementById("hzMotion"),
-            o = document.getElementById("hzObstacle");
-          if (s) s.classList.toggle("on", hz.shadow);
-          if (m) m.classList.toggle("on", hz.motion);
-          if (o) o.classList.toggle("on", hz.obstacle);
-        }
         // Reflects the armed-but-not-yet-sent direction in the left panel toggle — separate from
         // setDir(), which only fires once "Send Threat" is actually pressed below the stage.
         function updateThreatDirButtons() {
@@ -1161,22 +1014,6 @@
           if (a && b) {
             a.className = motionSelectedDir === "toward" ? "on" : "";
             b.className = motionSelectedDir === "away" ? "on safe" : "";
-          }
-        }
-        // Same idea as updateThreatDirButtons(), for Combined Auto Mode's two per-hazard sub-choices
-        // (Shadow's Cloud/Predator Bird source, Motion's Toward/Away direction).
-        function updateComboSubButtons() {
-          const sc = document.getElementById("comboShadowCloud"),
-            sb = document.getElementById("comboShadowBird");
-          if (sc && sb) {
-            sc.className = comboShadowSource === "cloud" ? "on safe" : "";
-            sb.className = comboShadowSource === "bird" ? "on" : "";
-          }
-          const a = document.getElementById("comboDirToward"),
-            b = document.getElementById("comboDirAway");
-          if (a && b) {
-            a.className = comboMotionDir === "toward" ? "on" : "";
-            b.className = comboMotionDir === "away" ? "on safe" : "";
           }
         }
         function setPaused(v) {
@@ -1243,9 +1080,6 @@
           P.ultra.safe = 30;
           P.ultra.range = 110;
           P.ultra.size = 1;
-          hz.shadow = false;
-          hz.motion = false;
-          hz.obstacle = false;
           paused = true;
           started = false;
           if (DEFS[sensor])
@@ -1254,10 +1088,6 @@
             );
           motionSelectedDir = "away";
           updateThreatDirButtons();
-          comboMotionDir = "toward";
-          comboShadowSource = "cloud";
-          updateComboSubButtons();
-          updateHazButtons();
           setPaused(true);
         }
         document.getElementById("tabs").addEventListener("click", (e) => {
@@ -1542,63 +1372,6 @@
                 ? 2
                 : 3;
           return { distCm, detected, danger, level };
-        }
-        function comboInfo() {
-          // Hazards are only "live" once Start has been pressed — armed-but-not-started hazards
-          // (picked with the buttons and their Cloud/Bird or Toward/Away sub-choice) stay inert,
-          // same as the Motion Sensor tab not sending a threat until you press Send Threat.
-          const shadowOn = started && hz.shadow,
-            motionOn = started && hz.motion,
-            obstacleOn = started && hz.obstacle;
-          const lightVal = shadowOn ? Math.max(0, P.light.threshold - 12) : 90;
-          const shadowDetected = lightVal < P.light.threshold;
-          // Same detection-range comparison the Motion Sensor tab uses, just along a straight line
-          // (the person sits level with the sensor here) — "Toward" sits close enough to always be
-          // inside a default-sized zone, "Away" only counts as detected once Detection Range is
-          // opened up wide enough to actually reach it.
-          const motionDetected =
-            motionOn && COMBO_MOTION_OFFSET[comboMotionDir] < P.motion.range;
-          const obstDist = obstacleOn
-            ? Math.max(5, Math.round(P.ultra.safe * 0.4))
-            : P.ultra.range + 40;
-          const obstacleDetected = obstacleOn && obstDist <= P.ultra.range;
-          let decision, action, mode;
-          if (shadowDetected && motionDetected) {
-            decision = "High Danger";
-            action = "Fast Escape Mode";
-            mode = "fastEscape";
-          } else if (motionDetected && obstacleDetected) {
-            decision = "Threat Nearby, Path Blocked";
-            action = "Choose Alternate Path";
-            mode = "altPath";
-          } else if (shadowDetected) {
-            decision = "Possible Danger";
-            action = "Escape Quickly";
-            mode = "escape";
-          } else if (motionDetected) {
-            decision = "Moving Threat Nearby";
-            action = "Turn Away and Escape";
-            mode = "turnEscape";
-          } else if (obstacleDetected) {
-            decision = "Path Blocked";
-            action = "Stop, Reverse, or Turn";
-            mode = "blocked";
-          } else {
-            decision = "Safe Condition";
-            action = "Idle or Slow Movement";
-            mode = "idle";
-          }
-          return {
-            shadowOn,
-            motionOn,
-            obstacleOn,
-            shadowDetected,
-            motionDetected,
-            obstacleDetected,
-            decision,
-            action,
-            mode,
-          };
         }
         function nearestHideout() {
           let best = {
@@ -1914,33 +1687,6 @@
           g.fillStyle = sh;
           g.beginPath();
           g.ellipse(sx, GROUND - 4, 110, 20, 0, 0, 7);
-          g.fill();
-        }
-        function drawRing(danger) {
-          const rx = P.motion.range,
-            p = Math.sin(t * 0.08) * 4,
-            RX = rx + p,
-            RY = rx * 0.42 + p * 0.4;
-          g.fillStyle = danger
-            ? "rgba(255,107,129,.12)"
-            : "rgba(124,198,255,.12)";
-          g.beginPath();
-          g.ellipse(SENSOR.x, SENSOR.y, RX, RY, 0, 0, 7);
-          g.fill();
-          g.strokeStyle = danger
-            ? "rgba(255,107,129,.8)"
-            : "rgba(124,198,255,.7)";
-          g.lineWidth = 2.5;
-          g.setLineDash([8, 8]);
-          g.beginPath();
-          g.ellipse(SENSOR.x, SENSOR.y, RX, RY, 0, 0, 7);
-          g.stroke();
-          g.setLineDash([]);
-          g.fillStyle = danger
-            ? "rgba(255,107,129,.65)"
-            : "rgba(124,198,255,.6)";
-          g.beginPath();
-          g.arc(SENSOR.x, SENSOR.y, 4, 0, 7);
           g.fill();
         }
         // A small cottage for background flavour — sits up near the horizon, well clear of the bushes/
@@ -3005,34 +2751,6 @@
           }
           g.restore();
         }
-        function drawPingWaves(x0, y0, targetX, rangePx, level) {
-          const color =
-            level <= 1
-              ? "124,198,255"
-              : level === 2
-                ? "247,162,59"
-                : "255,107,129";
-          g.save();
-          g.strokeStyle = `rgba(${color},.55)`;
-          g.lineWidth = 2;
-          g.setLineDash([5, 7]);
-          g.lineDashOffset = -(t * 1.2) % 12;
-          g.beginPath();
-          g.moveTo(x0, y0);
-          g.lineTo(targetX, y0);
-          g.stroke();
-          g.setLineDash([]);
-          for (let i = 0; i < 3; i++) {
-            const ph = (t * 1.5 + i * 22) % 66;
-            if (ph > rangePx) continue;
-            g.globalAlpha = Math.max(0, 1 - ph / rangePx) * 0.5;
-            g.beginPath();
-            g.arc(x0, y0, 10 + ph, -0.5, 0.5);
-            g.stroke();
-          }
-          g.globalAlpha = 1;
-          g.restore();
-        }
         function drawRabbit(extraScale) {
           extraScale = extraScale || 1;
           const scared =
@@ -3354,89 +3072,7 @@
                 arrived: "Made it home safely 🏠",
               }[rab.state] || "Walking down the trail 🐇";
         }
-        function renderComboReadings(info) {
-          const rows = [
-            [
-              "Simulation",
-              !started ? "Press Start to begin" : paused ? "Paused" : "Running",
-            ],
-            ["LDR — Shadow", info.shadowDetected ? "Detected" : "Clear"],
-            ["Motion Sensor", info.motionDetected ? "Detected" : "Clear"],
-            [
-              "Ultrasonic — Obstacle",
-              info.obstacleDetected ? "Detected" : "Clear",
-            ],
-            ["Bot Decision", info.decision],
-          ];
-          readingsEl.innerHTML = rows
-            .map(
-              (r) =>
-                `<div class="reading"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`,
-            )
-            .join("");
-          document.getElementById("meterWrap").style.display = "block";
-          const meterMap = {
-            idle: 6,
-            blocked: 42,
-            escape: 62,
-            turnEscape: 62,
-            altPath: 80,
-            fastEscape: 100,
-          };
-          const f = document.getElementById("meterFill");
-          f.style.width = meterMap[info.mode] + "%";
-          f.style.background =
-            info.mode === "idle"
-              ? "linear-gradient(90deg,#7cc6ff,#54c48a)"
-              : info.mode === "blocked"
-                ? "linear-gradient(90deg,#ffb02e,#ffd28a)"
-                : "linear-gradient(90deg,#ff6b81,#ff9aa8)";
-          document.getElementById("meterThr").style.display = "block";
-          document.getElementById("meterThr").style.left = "40%";
-          document.getElementById("meterLbl").textContent = "danger level";
-          const badge = document.getElementById("badge");
-          badge.className =
-            "badge " +
-            (info.mode === "idle"
-              ? "b-safe"
-              : info.mode === "blocked"
-                ? "b-warn"
-                : "b-danger");
-          document.getElementById("badgeText").textContent =
-            info.decision.toUpperCase();
-          const actText = document.getElementById("actText");
-          if (!started) actText.textContent = "Ready — press Start";
-          else if (paused) actText.textContent = "Paused";
-          else actText.textContent = info.action;
-        }
-
         /* ---------- MAIN LOOP ---------- */
-        function updateCombo(info) {
-          if (info.mode === "blocked") {
-            if (rab.state !== "blocked") {
-              rab.state = "blocked";
-              rab.blockT = 0;
-            }
-            rab.blockT++;
-            rab.tilt = Math.sin(rab.blockT * 0.25) * 0.22;
-          } else {
-            if (rab.state === "blocked") {
-              rab.state = "eating";
-              rab.tilt = 0;
-            }
-            const isFlee = FLEE_MODES.includes(info.mode);
-            const speed = info.mode === "fastEscape" ? 1.8 : 1.15;
-            let hideType = "burrow",
-              hideX = BURROW_X,
-              bushIdx = -1;
-            if (info.mode === "turnEscape" || info.mode === "altPath") {
-              bushIdx = oppositeBush();
-              hideType = "bush";
-              hideX = BUSHES[bushIdx].x;
-            }
-            fleeStep(isFlee, hideType, hideX, bushIdx, speed);
-          }
-        }
         function loop() {
           t++;
           g.clearRect(0, 0, W, H);
@@ -3524,7 +3160,8 @@
             }
             if (!humanBehind) drawHuman();
             renderMotionReadings(o);
-          } else if (sensor === "ultra") {
+          } else {
+            // ultra
             const info = ultraStep();
             drawForestScene();
             drawTopCornerTree(1);
@@ -3590,63 +3227,6 @@
               H - 14,
             );
             renderUltraReadings(info);
-          } else {
-            // combo
-            const info = comboInfo();
-            if (!paused) updateCombo(info);
-            // Nothing below actually shows until Start is pressed — arming a hazard (and picking
-            // its Cloud/Bird or Toward/Away option) is just setup, same as the Motion Sensor tab
-            // not sending its threat until "Send Threat" is pressed.
-            scene(info.shadowOn && comboShadowSource === "cloud");
-            if (info.shadowOn) {
-              if (comboShadowSource === "cloud") {
-                shadowCloud(HOME_X - 140);
-              } else {
-                bird.active = true;
-                bird.x = HOME_X + 6;
-                bird.y = 96;
-                drawBird();
-              }
-            } else {
-              bird.active = false;
-            }
-            if (info.motionOn) {
-              drawRing(info.motionDetected);
-              human.active = true;
-              human.x = SENSOR.x + COMBO_MOTION_OFFSET[comboMotionDir];
-              human.y = SENSOR.y;
-              human.face = -1;
-              human.frozen = true;
-              human.scale = 1;
-              // The threat here always sits to the right of the bot — fromSide has to match that
-              // fixed position, not whatever the Motion Sensor tab last left it as, or
-              // oppositeBush() can send the bot fleeing toward the threat instead of away.
-              human.fromSide = "right";
-              drawHuman();
-            } else {
-              human.active = false;
-            }
-            if (info.obstacleOn) {
-              const ox = HOME_X + 95;
-              drawPingWaves(
-                HOME_X + 18,
-                GROUND - 30,
-                ox,
-                P.ultra.range * PXCM,
-                info.obstacleDetected ? 3 : 1,
-              );
-              drawObstacle(ox);
-            }
-            const hidden = rab.state === "hiding";
-            if (!hidden) drawRabbit();
-            if (hidden) {
-              if (rab.hide === "burrow") drawBurrowHidden();
-              else drawBush(BUSHES[rab.bush]);
-            } else if (rab.dip > 3) {
-              if (rab.hide === "burrow") drawBurrowFront();
-              else drawBush(BUSHES[rab.bush]);
-            }
-            renderComboReadings(info);
           }
           requestAnimationFrame(loop);
         }
