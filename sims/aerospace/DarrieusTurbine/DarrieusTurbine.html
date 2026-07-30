@@ -81,7 +81,6 @@
         text-transform: uppercase;
         color: var(--txt);
       }
-
       .grid {
         display: grid;
         grid-template-columns: 290px 1fr 300px;
@@ -98,6 +97,12 @@
         .grid {
           grid-template-columns: 1fr;
           flex: 0 0 auto;
+        }
+        .card.controls,
+        .card.readings {
+          width: 100%;
+          max-width: 560px;
+          margin: 0 auto;
         }
       }
       .card {
@@ -142,7 +147,7 @@
       .ctrl .row {
         display: flex;
         justify-content: space-between;
-        align-items: baseline;
+        align-items: center;
         margin-bottom: 5px;
       }
       .ctrl label {
@@ -414,6 +419,13 @@
         padding-top: 12px;
         border-top: 1px solid var(--line);
       }
+      .sect-label {
+        display: block;
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--txt);
+        margin-bottom: 8px;
+      }
     </style>
   </head>
   <body>
@@ -428,8 +440,8 @@
       <section class="card controls">
         <h3>Turbine Bench</h3>
         <p class="sub">
-          Set up the mini wind-tunnel test, then press Start to spin the turbine
-          up.
+          Choose the wind speed and turbine settings, then press Start to
+          begin the test.
         </p>
 
         <div class="ctrl">
@@ -450,11 +462,10 @@
 
         <div class="ctrl">
           <div class="row"><label>Blade Type</label></div>
-          <div class="fixedchip">🌀 Curved Darrieus Blade</div>
+          <div class="fixedchip">🌀 Curved Darrieus Blades</div>
           <p class="hint">
-            The curved "eggbeater" shape always spins the same direction, no
-            matter which way the wind blows — that's why it's called
-            uni-directional.
+            Curved eggbeater blades capture wind from any direction, making
+            the turbine omnidirectional.
           </p>
         </div>
 
@@ -469,7 +480,7 @@
             <button data-v="4">4</button>
           </div>
           <p class="hint" id="bladeNote">
-            Balanced — smooth rotation and efficient power.
+            Balanced speed, smooth, reliable.
           </p>
         </div>
 
@@ -509,48 +520,29 @@
           ><span class="v" id="rpmVal">0 <small>Stopped</small></span>
         </div>
         <div class="reading">
-          <span class="k">Voltage Generated</span
+          <span class="k">Generator Voltage</span
           ><span class="v" id="voltVal">0.0 V <small>—</small></span>
         </div>
         <div class="meter">
-          <div
-            class="fill"
-            id="voltFill"
-            style="background: var(--volt)"
-          ></div>
+          <div class="fill" id="voltFill" style="background: var(--volt)"></div>
         </div>
         <div class="meterlabels">
           <span>0V</span><span>7V</span><span>14V+</span>
         </div>
 
         <div class="reading">
-          <span class="k">Current Flow</span
+          <span class="k">Load Current</span
           ><span class="v" id="currVal">0.00 A</span>
         </div>
         <div class="meter">
-          <div
-            class="fill"
-            id="currFill"
-            style="background: var(--curr)"
-          ></div>
+          <div class="fill" id="currFill" style="background: var(--curr)"></div>
         </div>
         <div class="meterlabels">
           <span>0A</span><span>1.5A</span><span>3A+</span>
         </div>
 
         <div class="sect">
-          <div
-            class="row"
-            style="
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 4px;
-            "
-          >
-            <label style="font-size: 13.5px; font-weight: 600"
-              >Charging Status</label
-            >
-          </div>
+          <label class="sect-label">Charging Status</label>
           <div class="badge b-off" id="chargeBadge">Not Charging</div>
           <p class="devnote" id="devNote">
             Select a wind speed and press Start.
@@ -558,7 +550,7 @@
         </div>
 
         <div class="sect">
-          <label style="font-size: 13.5px; font-weight: 600">Energy Flow</label>
+          <label class="sect-label">Energy Flow</label>
           <div class="flow" id="flowRow">
             <div class="node" data-n="wind">
               <span class="ic">💨</span><span class="lb">Wind</span>
@@ -593,15 +585,15 @@
         const BLADE_MOD = {
           2: {
             speed: 1.12,
-            note: "Fastest spin, but the power output is bumpier.",
+            note: "Fastest, high variation, poor starting.",
           },
           3: {
             speed: 1.0,
-            note: "Balanced — smooth rotation and efficient power.",
+            note: "Balanced speed, smooth, reliable.",
           },
           4: {
             speed: 0.88,
-            note: "Smoothest, most stable power, but a little slower.",
+            note: "Slower, smoothest, best starting.",
           },
         };
         const DEVICES = {
@@ -623,7 +615,11 @@
           running: false,
           rpm: 0,
           targetRpm: 0,
-          angle: 0,
+          // Starting at a round angle (0) puts every blade count through the same
+          // degenerate symmetry at rest — e.g. two of a 4-blade rotor land exactly
+          // edge-on (invisible) and two of a 3-blade rotor land on the same curve.
+          // An off-axis start keeps every blade visually distinct while idle.
+          angle: 20,
           voltage: 0,
           current: 0,
           charging: false,
@@ -675,7 +671,7 @@
         startBtn.addEventListener("click", () => {
           S.running = !S.running;
           startBtn.classList.toggle("on", S.running);
-          startBtn.textContent = S.running ? "⏸ Pause" : "▶ Start";
+          startBtn.textContent = S.running ? "⏹ Stop" : "▶ Start";
         });
         document.getElementById("resetBtn").addEventListener("click", () => {
           S.running = false;
@@ -806,7 +802,8 @@
           if (!S.running) {
             statusHint.textContent = "Pick a wind speed, then press Start.";
           } else if (S.wind === "off") {
-            statusHint.textContent = "Blower armed — choose Low, Medium or High.";
+            statusHint.textContent =
+              "Blower armed — choose Low, Medium or High.";
           } else if (!S.charging) {
             statusHint.textContent = `Spinning up on ${WIND[S.wind].label.toLowerCase()} wind — waiting for enough voltage.`;
           } else {
@@ -945,6 +942,11 @@
           const n = S.blades;
           const angleRad = (S.angle * Math.PI) / 180;
           const mid = (SHAFT_TOP + SHAFT_BOT) / 2;
+          // A pure side-on silhouette makes blades with equal cos(angle) land on the
+          // exact same curve (e.g. two of a 3-blade rotor, or the "edge-on" pair of a
+          // 4-blade rotor going fully invisible) — nudging each blade's midpoint by its
+          // own depth keeps every blade visually distinct no matter the rotation angle.
+          const MID_SPREAD = 26;
           const blades = [];
           for (let i = 0; i < n; i++) {
             const a = angleRad + (i * 2 * Math.PI) / n;
@@ -955,11 +957,12 @@
           const drawBlade = (b) => {
             const outer = b.bulge,
               inner = b.bulge * 0.72;
+            const midY = mid + MID_SPREAD * b.depth;
             const alpha = 0.55 + 0.45 * ((b.depth + 1) / 2);
             ctx.beginPath();
             ctx.moveTo(SHAFT_X, SHAFT_TOP);
-            ctx.quadraticCurveTo(SHAFT_X + outer, mid, SHAFT_X, SHAFT_BOT);
-            ctx.quadraticCurveTo(SHAFT_X + inner, mid, SHAFT_X, SHAFT_TOP);
+            ctx.quadraticCurveTo(SHAFT_X + outer, midY, SHAFT_X, SHAFT_BOT);
+            ctx.quadraticCurveTo(SHAFT_X + inner, midY, SHAFT_X, SHAFT_TOP);
             ctx.closePath();
             ctx.fillStyle = `rgba(42,120,214,${alpha})`;
             ctx.fill();
@@ -998,7 +1001,9 @@
         // the same horizontal projection at once) — this top-down inset is what
         // actually shows the blade count unambiguously.
         function drawTopView() {
-          const cx = 580, cy = 66, ring = 30;
+          const cx = 580,
+            cy = 66,
+            ring = 30;
           ctx.beginPath();
           ctx.arc(cx, cy, ring + 14, 0, Math.PI * 2);
           ctx.fillStyle = "rgba(255,255,255,.75)";
@@ -1016,7 +1021,8 @@
           const n = S.blades;
           for (let i = 0; i < n; i++) {
             const a = angleRad + (i * 2 * Math.PI) / n;
-            const bx = cx + ring * Math.cos(a), by = cy + ring * Math.sin(a);
+            const bx = cx + ring * Math.cos(a),
+              by = cy + ring * Math.sin(a);
             ctx.strokeStyle = "#2a78d6";
             ctx.lineWidth = 4;
             ctx.lineCap = "round";
