@@ -84,7 +84,7 @@
 
   /* --- stage --- */
   canvas{max-width:100%;max-height:100%;width:auto;height:auto;display:block;border-radius:14px;
-    background:#0c1524;cursor:default;flex:0 1 auto;min-height:0}
+    background:#eef3fb;cursor:default;flex:0 1 auto;min-height:0}
   .stepbanner{width:100%;max-width:820px;margin-top:8px;padding:9px 14px;border-radius:14px;
     background:linear-gradient(145deg,#eaf2ff,#dfeaff);border:2px solid #c7dcfb;display:none;flex:0 0 auto}
   .stepbanner.show{display:flex;align-items:center;gap:10px;justify-content:space-between}
@@ -624,9 +624,9 @@ function renderDash(){
 /* =================== DRAWING =================== */
 function drawBackdrop(){
   const g=ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0,'#101c30'); g.addColorStop(1,'#0a1220');
+  g.addColorStop(0,'#f3f8ff'); g.addColorStop(1,'#dfe9f7');
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-  ctx.strokeStyle='rgba(120,160,220,.07)'; ctx.lineWidth=1;
+  ctx.strokeStyle='rgba(40,70,140,.08)'; ctx.lineWidth=1;
   for(let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
   for(let y=0;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
 }
@@ -730,7 +730,7 @@ function drawGripper(upper,grip,fAngleScreen){
     const a=dirAngle+s*open;
     ctx.save();
     ctx.translate(grip.x,grip.y); ctx.rotate(a);
-    ctx.fillStyle='#d7e2f7'; ctx.strokeStyle='#465b85'; ctx.lineWidth=1.2;
+    ctx.fillStyle='#a9bfe0'; ctx.strokeStyle='#1c2740'; ctx.lineWidth=1.5;
     ctx.beginPath();
     ctx.moveTo(3,-FW*0.5);
     ctx.lineTo(FLEN-4,-FW*0.32);
