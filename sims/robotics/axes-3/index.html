@@ -630,11 +630,21 @@ function drawBackdrop(){
   for(let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
   for(let y=0;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
 }
+// A single round black tabletop (seen at a slight angle, so it reads as an
+// ellipse) that the base, object zone and drop zone all sit on — instead of a
+// flat rectangular floor strip running the full width of the canvas.
 function drawFloor(){
-  ctx.fillStyle='#08090c';
-  ctx.fillRect(0,basePivot.y,W,H-basePivot.y);
-  ctx.strokeStyle='rgba(120,170,230,.25)'; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.moveTo(0,basePivot.y); ctx.lineTo(W,basePivot.y); ctx.stroke();
+  const cx=basePivot.x, cy=basePivot.y, rx=390, ry=95;
+  ctx.save();
+  const grd=ctx.createRadialGradient(cx,cy-ry*0.5,10,cx,cy,rx);
+  grd.addColorStop(0,'#161719'); grd.addColorStop(0.7,'#0a0a0c'); grd.addColorStop(1,'#020203');
+  ctx.fillStyle=grd;
+  ctx.beginPath(); ctx.ellipse(cx,cy,rx,ry,0,0,7); ctx.fill();
+  ctx.strokeStyle='rgba(140,180,235,.35)'; ctx.lineWidth=2.5;
+  ctx.stroke();
+  ctx.strokeStyle='rgba(180,210,255,.12)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.ellipse(cx,cy,rx-7,ry-5,0,0,7); ctx.stroke();
+  ctx.restore();
 }
 // A real stool shape (narrower seat on top, wider foot at the ground, lit from
 // above) instead of a flat dark box — that box barely contrasted against the
