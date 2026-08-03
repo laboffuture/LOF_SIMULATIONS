@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Command Deck · Axes 3 Pick-and-Place Arm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef3fb; --panel:#ffffff; --panel2:#f3f8ff;
+    --line:#dce6f5; --txt:#18233a; --mut:#5a6d8c; --dim:#95a7c4;
+    --accent:#2563eb; --accent2:#38bdf8; --warn:#f7a23b; --danger:#ff5470; --ok:#22c55e; --rec:#e0455e;
+    --shadow:0 12px 34px rgba(40,70,140,.14);
+    --r:20px; --head:"Orbitron",sans-serif; --body:"Rajdhani",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:var(--body); font-size:15.5px; font-weight:500; color:var(--txt);
+    background:
+      radial-gradient(900px 500px at 6% -8%,#e3edff 0,transparent 60%),
+      radial-gradient(900px 600px at 102% 0%,#e6f7ff 0,transparent 55%),
+      linear-gradient(180deg,#f3f7fd,#e9f0fb);
+    height:100vh; overflow:hidden; padding:10px clamp(10px,2vw,26px);
+    display:flex; flex-direction:column;
+  }
+  h1,h3,h4,.badge,.chip,.cmdbtn,.stepbanner .lab{font-family:var(--head)}
+  header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;flex:0 0 auto}
+  .logo{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:22px;
+    background:linear-gradient(145deg,#fff,#dce9ff);border:1px solid var(--line);box-shadow:var(--shadow)}
+  .title h1{margin:0;font-size:19px;font-weight:800;letter-spacing:1px;color:#12213f}
+  .title p{margin:2px 0 0;font-size:11px;font-weight:500;letter-spacing:.5px;color:var(--mut)}
+  .outcomes{margin-left:auto;font-size:12px;color:var(--mut)}
+  .outcomes summary{cursor:pointer;font-weight:700;color:var(--accent);list-style:none;font-family:var(--head);font-size:11px;letter-spacing:.5px}
+  .outcomes summary::-webkit-details-marker{display:none}
+  .outcomes[open]{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 12px;box-shadow:var(--shadow);position:absolute;right:16px;top:50px;width:280px;z-index:40}
+  .outcomes ul{margin:6px 0 0;padding-left:16px;line-height:1.5}
+
+  .grid{display:grid;grid-template-columns:300px 1fr 350px;gap:12px;align-items:stretch;
+    flex:1 1 auto;min-height:0}
+  @media (max-width:1280px){body{overflow:auto}.grid{grid-template-columns:1fr;flex:0 0 auto}.outcomes[open]{position:static;width:auto;margin-top:6px}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);
+    padding:14px;overflow-y:auto;overflow-x:hidden;min-height:0}
+  .card.stage{display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:12px}
+  .card h3{margin:0 0 3px;font-size:14.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#12213f}
+  .card .sub{font-size:12.5px;color:var(--mut);margin:0 0 8px;line-height:1.4}
+
+  /* --- serial connection --- */
+  .serialbox{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:10px}
+  .baudrow{font-size:12.5px;color:var(--mut);display:flex;justify-content:space-between;padding:2px 0}
+  .baudrow b{color:var(--txt);font-family:var(--body)}
+
+  /* --- command groups --- */
+  .cmdgroup{margin-bottom:12px}
+  .cmdgroup h4{margin:0 0 6px;font-size:11px;letter-spacing:.6px;color:var(--accent);text-transform:uppercase}
+  .cmdgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .cmdgrid.single{grid-template-columns:1fr}
+  .cmdbtn{cursor:pointer;border:2px solid var(--line);background:#fff;color:var(--txt);padding:10px 5px;
+    border-radius:10px;font-size:12.5px;font-weight:700;letter-spacing:.2px;transition:.13s;font-family:var(--body);text-align:center}
+  .cmdbtn:hover:not(:disabled){transform:translateY(-2px);border-color:var(--accent2)}
+  .cmdbtn:active:not(:disabled){transform:translateY(0)}
+  .cmdbtn:disabled{opacity:.38;cursor:not-allowed}
+  .cmdbtn.rec{border-color:#f3c6cd}
+  .cmdbtn.expect{border-color:var(--accent);background:linear-gradient(145deg,#eaf2ff,#dbe9ff);
+    box-shadow:0 0 0 3px rgba(37,99,235,.18);animation:pulse 1.3s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(37,99,235,.18)}50%{box-shadow:0 0 0 6px rgba(37,99,235,.06)}}
+
+  .objtoggle{display:flex;gap:6px;margin-bottom:8px}
+  .objtoggle button{flex:1;cursor:pointer;border:2px solid var(--line);background:#fff;color:var(--mut);
+    padding:6px 4px;border-radius:10px;font-size:17px;line-height:1.2;font-weight:700;transition:.13s}
+  .objtoggle button span{display:block;font-size:10.5px;letter-spacing:.2px;margin-top:2px;font-family:var(--body)}
+  .objtoggle button.on{border-color:var(--accent);background:linear-gradient(145deg,#eaf2ff,#dbe9ff);box-shadow:0 0 0 3px rgba(37,99,235,.15);color:var(--accent)}
+  .weightrow{display:flex;justify-content:space-between;font-size:13px;color:var(--mut);margin-bottom:4px}
+  .weightrow span:last-child{font-weight:700;color:var(--accent)}
+  input[type=range]{-webkit-appearance:none;width:100%;height:8px;border-radius:8px;outline:none;
+    background:linear-gradient(90deg,var(--accent2),var(--accent)) no-repeat;background-size:var(--fill,11%) 100%;
+    box-shadow:inset 0 0 0 2px var(--line);cursor:pointer;margin-bottom:4px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+    background:#fff;border:3px solid var(--accent);box-shadow:0 2px 6px rgba(0,0,0,.18);cursor:grab}
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--accent);cursor:grab}
+  .hint{font-size:11.5px;color:var(--dim);margin-top:2px;line-height:1.35}
+
+  /* --- stage --- */
+  canvas{max-width:100%;max-height:100%;width:auto;height:auto;display:block;border-radius:14px;
+    background:#0c1524;cursor:default;flex:0 1 auto;min-height:0}
+  .stepbanner{width:100%;max-width:820px;margin-top:8px;padding:9px 14px;border-radius:14px;
+    background:linear-gradient(145deg,#eaf2ff,#dfeaff);border:2px solid #c7dcfb;display:none;flex:0 0 auto}
+  .stepbanner.show{display:flex;align-items:center;gap:10px;justify-content:space-between}
+  .stepbanner .lab{font-size:11px;color:var(--accent);letter-spacing:.5px;font-weight:700}
+  .stepbanner .txt{font-size:14px;font-weight:600;color:#12213f;margin-top:2px}
+  .stepbanner .prog{font-family:var(--head);font-size:12px;color:var(--accent);font-weight:800;white-space:nowrap}
+  .stage-foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;justify-content:center;flex:0 0 auto}
+  .btn{cursor:pointer;border:2px solid var(--line);background:#fff;color:var(--txt);padding:8px 13px;
+    border-radius:11px;font-size:13.5px;font-weight:600;transition:.15s;font-family:var(--body)}
+  .btn:hover{transform:translateY(-2px);border-color:var(--accent2)}
+
+  /* --- serial display --- */
+  .serialgrid{margin-top:8px}
+  .srow{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1.5px dashed var(--line);font-size:13.5px}
+  .srow:last-child{border-bottom:none}
+  .srow .k{color:var(--mut)}
+  .srow .v{font-family:var(--body);font-weight:600;font-size:13px;text-align:right}
+  .txtrack{position:relative;height:22px;margin:9px 0 4px;background:var(--panel2);border-radius:10px;border:1.5px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;padding:0 8px}
+  .txtrack span{font-size:10px;font-weight:700;color:var(--dim);font-family:var(--head)}
+  .txdot{position:absolute;left:34px;top:50%;width:9px;height:9px;border-radius:50%;background:var(--accent2);
+    transform:translate(0,-50%);opacity:0;box-shadow:0 0 8px var(--accent2)}
+  .txdot.go{animation:txmove .42s ease-in-out}
+  @keyframes txmove{0%{left:34px;opacity:1}90%{opacity:1}100%{left:calc(100% - 40px);opacity:0}}
+
+  /* --- servo angle display --- */
+  .angrow{margin:8px 0}
+  .angrow .lab{display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px}
+  .angrow .lab b{color:var(--txt)}
+  .angrow .lab span{font-family:var(--body);color:var(--accent);font-weight:700}
+  .angbar{height:10px;border-radius:6px;background:var(--panel2);border:1.5px solid var(--line);position:relative;overflow:hidden}
+  .angbar .fill{position:absolute;inset:0 auto 0 0;width:0;border-radius:5px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .12s}
+
+  /* --- status grid --- */
+  .statusgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+  .stat{background:var(--panel2);border:1.5px solid var(--line);border-radius:10px;padding:6px 8px}
+  .stat .k{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+  .stat .v{font-size:14px;font-weight:700;margin-top:2px}
+  .stat .v.g{color:var(--ok)} .stat .v.r{color:var(--rec)} .stat .v.n{color:var(--mut)} .stat .v.a{color:var(--accent)}
+
+  .warnbanner{display:none;align-items:center;gap:8px;margin-top:9px;padding:8px 10px;border-radius:11px;
+    background:#fff0e0;border:2px solid #f7cf9c;color:#9a5a1a;font-size:13px;font-weight:700}
+  .warnbanner.show{display:flex}
+
+  .logbox{margin-top:10px;padding-top:8px;border-top:2px dashed var(--line)}
+  .logbox h4{margin:0 0 6px;font-size:11px;letter-spacing:.6px;color:var(--mut);text-transform:uppercase}
+  .loglist{max-height:150px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
+  .logrow{font-size:11.5px;display:flex;gap:6px;padding:3px 6px;border-radius:6px;background:var(--panel2)}
+  .logrow .lt{font-family:var(--body);color:var(--dim);white-space:nowrap}
+  .logrow .lm{color:var(--txt)}
+</style>
+</head>
+<body>
+  <header class="top">
+    <div class="logo">🦾</div>
+    <div class="title">
+      <h1>AXES 3 · COMMAND DECK</h1>
+      <p>3DOF PICK-AND-PLACE ARM · PYTHON → SERIAL → ARDUINO → SERVO · LOF ROBOTICS</p>
+    </div>
+    <details class="outcomes">
+      <summary>▸ What you'll learn</summary>
+      <ul>
+        <li>What a 3DOF robotic arm is</li>
+        <li>How MG996 &amp; MG90S servos are used</li>
+        <li>Command-based control &amp; serial comms</li>
+        <li>How Arduino turns commands into servo motion</li>
+        <li>Gripper pick / release and HOME resets</li>
+        <li>Record &amp; replay of movement sequences</li>
+      </ul>
+    </details>
+  </header>
+
+  <div class="grid">
+    <section class="card">
+      <h3>Command Panel</h3>
+      <p class="sub">Every button sends the literal command a real Python script would send to the Arduino over serial.</p>
+
+      <div class="serialbox">
+        <div class="baudrow"><span>Serial Link</span><b>COM8 · 9600 baud</b></div>
+        <div class="baudrow"><span>Status</span><b style="color:var(--ok)">● Live</b></div>
+      </div>
+
+      <div class="cmdgroup">
+        <h4>Axis 1 · Base Rotation</h4>
+        <div class="cmdgrid">
+          <button class="cmdbtn" data-cmd="BASE_LEFT">BASE_LEFT</button>
+          <button class="cmdbtn" data-cmd="BASE_RIGHT">BASE_RIGHT</button>
+        </div>
+      </div>
+      <div class="cmdgroup">
+        <h4>Axis 2 · Shoulder</h4>
+        <div class="cmdgrid">
+          <button class="cmdbtn" data-cmd="SHOULDER_UP">SHOULDER_UP</button>
+          <button class="cmdbtn" data-cmd="SHOULDER_DOWN">SHOULDER_DOWN</button>
+        </div>
+      </div>
+      <div class="cmdgroup">
+        <h4>Axis 3 · Elbow</h4>
+        <div class="cmdgrid">
+          <button class="cmdbtn" data-cmd="ELBOW_FORWARD">ELBOW_FORWARD</button>
+          <button class="cmdbtn" data-cmd="ELBOW_BACKWARD">ELBOW_BACKWARD</button>
+        </div>
+      </div>
+      <div class="cmdgroup">
+        <h4>Gripper &amp; Home</h4>
+        <div class="cmdgrid">
+          <button class="cmdbtn" data-cmd="GRIPPER_TOGGLE">GRIPPER_TOGGLE</button>
+          <button class="cmdbtn" data-cmd="HOME">HOME</button>
+        </div>
+      </div>
+      <div class="cmdgroup">
+        <h4>Record &amp; Replay</h4>
+        <div class="cmdgrid">
+          <button class="cmdbtn rec" data-cmd="START_RECORD">START_RECORD</button>
+          <button class="cmdbtn rec" data-cmd="STOP_RECORD">STOP_RECORD</button>
+          <button class="cmdbtn rec" data-cmd="PLAY_RECORD">PLAY_RECORD</button>
+          <button class="cmdbtn rec" data-cmd="STOP_REPLAY">STOP_REPLAY</button>
+        </div>
+      </div>
+      <div class="cmdgroup">
+        <h4>Object</h4>
+        <div class="objtoggle">
+          <button class="objbtn on" data-obj="crate">📦<span>Crate</span></button>
+          <button class="objbtn" data-obj="ball">🔴<span>Ball</span></button>
+          <button class="objbtn" data-obj="can">🥫<span>Can</span></button>
+        </div>
+        <div class="weightrow"><span>Weight</span><span id="weightVal">150 g</span></div>
+        <input type="range" id="weightSlider" min="50" max="1000" step="25" value="150">
+        <div class="hint">Above 500 g it's too heavy to lift — try it and watch the warning.</div>
+      </div>
+    </section>
+
+    <section class="card stage">
+      <canvas id="stage" width="820" height="520"></canvas>
+      <div class="stepbanner" id="stepBanner">
+        <div>
+          <div class="lab" id="stepLab">STEP 1 / 10</div>
+          <div class="txt" id="stepTxt">—</div>
+        </div>
+        <div class="prog" id="stepProg"></div>
+      </div>
+      <div class="stage-foot">
+        <button class="btn" id="resetBtn">↺ Reset Simulation</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Telemetry &amp; Feedback</h3>
+      <p class="sub">What Python sends, what Arduino receives, and what each servo does about it.</p>
+
+      <div class="serialgrid">
+        <div class="srow"><span class="k">Port</span><span class="v" id="sPort">—</span></div>
+        <div class="srow"><span class="k">Baud Rate</span><span class="v">9600</span></div>
+        <div class="srow"><span class="k">Command Sent</span><span class="v" id="sSent">—</span></div>
+      </div>
+      <div class="txtrack"><span>PYTHON</span><div class="txdot" id="txDot"></div><span>ARDUINO</span></div>
+
+      <div class="sect" style="margin-top:10px">
+        <div class="angrow"><div class="lab"><b>Base Servo</b><span id="angBaseV">0°</span></div><div class="angbar"><div class="fill" id="angBaseF"></div></div></div>
+        <div class="angrow"><div class="lab"><b>Shoulder Servo</b><span id="angShoulderV">0°</span></div><div class="angbar"><div class="fill" id="angShoulderF"></div></div></div>
+        <div class="angrow"><div class="lab"><b>Elbow Servo</b><span id="angElbowV">0°</span></div><div class="angbar"><div class="fill" id="angElbowF"></div></div></div>
+        <div class="angrow"><div class="lab"><b>Gripper (MG90S)</b><span id="angGripV">OPEN</span></div><div class="angbar"><div class="fill" id="angGripF"></div></div></div>
+      </div>
+
+      <div class="statusgrid">
+        <div class="stat"><div class="k">Gripper</div><div class="v" id="statGripper">Open</div></div>
+        <div class="stat"><div class="k">Recording</div><div class="v" id="statRecording">OFF</div></div>
+        <div class="stat"><div class="k">Replay</div><div class="v" id="statReplay">Stopped</div></div>
+        <div class="stat"><div class="k">Object</div><div class="v" id="statObject">Not Picked</div></div>
+        <div class="stat"><div class="k">Home</div><div class="v" id="statHome">At Home</div></div>
+        <div class="stat"><div class="k">Recorded Steps</div><div class="v" id="statBuffer">0</div></div>
+      </div>
+
+      <div class="warnbanner" id="warnBanner"><span>⚠</span><span id="warnText"></span></div>
+
+      <div class="logbox">
+        <h4>Activity Log</h4>
+        <div class="loglist" id="logList"></div>
+      </div>
+    </section>
+  </div>
+
+<script>
+(() => {
+"use strict";
+const DEG=Math.PI/180;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* =================== GEOMETRY / KINEMATICS =================== */
+const cv=document.getElementById('stage'), ctx=cv.getContext('2d');
+const W=cv.width, H=cv.height;
+const basePivot={x:410,y:440};
+const MAST=60, L1=140, L2=120;
+const shoulderScreen={x:basePivot.x, y:basePivot.y-MAST};
+
+// Shoulder [0,90] and elbow-fold [0,90] are each capped so a joint's motion never
+// crosses the peak of its own sin/cos curve — past that peak, more presses of e.g.
+// SHOULDER_UP would start lowering it again even though the button still says "up".
+// Keeping both ranges inside one monotonic quarter-turn means every button always
+// moves the arm the same direction, no matter how many times it's pressed.
+const RANGE={ base:[-75,75], shoulder:[0,90], elbow:[0,90] };
+const STEP ={ base:15, shoulder:15, elbow:15 };
+const HOME_A={ base:0, shoulder:70, elbow:90 };
+const BASE_TOL=15, READY_SHOULDER=30, READY_ELBOW=30, LIFT_SHOULDER=50;
+// Matched to "press each button repeatedly until it stops" — the natural way anyone
+// actually operates these — rather than a precise, easy-to-undershoot mid-range pose.
+const PICK_RADIUS=150;   // on-screen px — how close the gripper must visually be to grab/place
+const OBJECT_BASE=RANGE.base[0], DROP_BASE=RANGE.base[1];
+
+// current (eased, "what the servo has actually reached") vs target (what was last commanded)
+const current={ base:HOME_A.base, shoulder:HOME_A.shoulder, elbow:HOME_A.elbow };
+const target ={ base:HOME_A.base, shoulder:HOME_A.shoulder, elbow:HOME_A.elbow };
+
+// Point on a joint, projected from the arm's own vertical plane onto the screen —
+// base rotation sways the horizontal reach left/right (sin) while height always
+// maps straight to screen Y, so shoulder/elbow keep their true height at any base angle.
+function jointScreen(planeX, heightAboveFloor, baseDeg){
+  return { x: basePivot.x + planeX*Math.sin(baseDeg*DEG), y: basePivot.y - heightAboveFloor };
+}
+function armPose(S, foldDeg, baseDeg){
+  const s=S*DEG, f=(S+foldDeg)*DEG;
+  const elbowJoint = jointScreen(L1*Math.cos(s), MAST+L1*Math.sin(s), baseDeg);
+  const gripJoint  = jointScreen(L1*Math.cos(s)+L2*Math.cos(f), MAST+L1*Math.sin(s)+L2*Math.sin(f), baseDeg);
+  return { elbowJoint, gripJoint, fAngle:f };
+}
+// Static pickup / drop-off pads, placed exactly where the arm ends up when shoulder,
+// elbow and base are all run to their limit (0, 0, ±75°) — i.e. "hold each button
+// until it stops". PICK_RADIUS then gives slack around that for anything close to it.
+const objectZone = armPose(0, 0, OBJECT_BASE).gripJoint;
+const dropZone    = armPose(0, 0, DROP_BASE).gripJoint;
+
+/* =================== STATE =================== */
+let mode='command';           // 'command' | 'guided' | 'record'
+let gripperOpen=true, gripAnim=1;
+let objectHeld=false, placed=false;
+let objectPos={x:objectZone.x,y:objectZone.y};
+let objectType='crate', objectWeightG=150;
+const HEAVY_LIMIT_G=500;
+// gh = ground half-height — how far the shape extends below its own center, so a
+// resting object can be placed with its actual base touching the floor, not its middle.
+const OBJECT_SHAPES={
+  crate:{label:'Crate', color:'#d69a4a', dark:'#5c3c1c', r:16, gh:13.6},
+  ball:{label:'Ball', color:'#e0455e', dark:'#7a1f2c', light:'#ff8fa0', r:14, gh:14},
+  can:{label:'Can', color:'#22d3ee', dark:'#0e6478', light:'#a9f2ff', r:13, gh:13.65}
+};
+let recording=false, replaying=false, recordBuffer=[], replayIdx=0, replayToken=0;
+let guidedIdx=0, homeAckStep1=false, homeAckStep10=false;
+let logEntries=[];
+let warnTimer=null;
+let txToken=0;
+
+const SERVO_MSG={
+  BASE_LEFT:'Base servo rotating left.', BASE_RIGHT:'Base servo rotating right.',
+  SHOULDER_UP:'Shoulder servo moving up.', SHOULDER_DOWN:'Shoulder servo moving down.',
+  ELBOW_FORWARD:'Elbow servo moving forward.', ELBOW_BACKWARD:'Elbow servo moving backward.',
+  GRIPPER_TOGGLE:'Gripper state changed.', HOME:'Arm returned to home position.',
+  START_RECORD:'Movement recording started.', STOP_RECORD:'Movement recording saved.',
+  PLAY_RECORD:'Playing recorded movement.', STOP_REPLAY:'Replay stopped.'
+};
+const RECORDABLE=new Set(['BASE_LEFT','BASE_RIGHT','SHOULDER_UP','SHOULDER_DOWN','ELBOW_FORWARD','ELBOW_BACKWARD','GRIPPER_TOGGLE','HOME']);
+
+function isHome(){ return Math.abs(current.base)<3 && Math.abs(current.shoulder-HOME_A.shoulder)<3 && Math.abs(current.elbow-HOME_A.elbow)<3; }
+
+/* =================== GUIDED SEQUENCE =================== */
+const GUIDED_STEPS=[
+  {text:'Press HOME to start from the safe home position.', cmds:['HOME'], check:()=>homeAckStep1},
+  {text:'Rotate the base toward the Object Zone.', cmds:['BASE_LEFT'], check:()=>current.base<=OBJECT_BASE+BASE_TOL},
+  {text:'Lower the shoulder to approach the object.', cmds:['SHOULDER_DOWN'], check:()=>current.shoulder<=READY_SHOULDER},
+  {text:'Extend the elbow forward to reach the object.', cmds:['ELBOW_FORWARD'], check:()=>current.elbow<=READY_ELBOW},
+  {text:'Close the gripper to pick up the object.', cmds:['GRIPPER_TOGGLE'], check:()=>objectHeld},
+  {text:'Lift the object by raising the shoulder.', cmds:['SHOULDER_UP'], check:()=>current.shoulder>=LIFT_SHOULDER},
+  {text:'Rotate toward the Drop Zone.', cmds:['BASE_RIGHT'], check:()=>current.base>=DROP_BASE-BASE_TOL},
+  {text:'Lower the arm to place the object.', cmds:['SHOULDER_DOWN'], check:()=>current.shoulder<=READY_SHOULDER},
+  {text:'Open the gripper to release the object.', cmds:['GRIPPER_TOGGLE'], check:()=>placed},
+  {text:'Return the arm to the HOME position.', cmds:['HOME'], check:()=>homeAckStep10 && isHome()}
+];
+
+/* =================== DOM =================== */
+const els={
+  sPort:document.getElementById('sPort'), sSent:document.getElementById('sSent'),
+  txDot:document.getElementById('txDot'),
+  angBaseV:document.getElementById('angBaseV'), angBaseF:document.getElementById('angBaseF'),
+  angShoulderV:document.getElementById('angShoulderV'), angShoulderF:document.getElementById('angShoulderF'),
+  angElbowV:document.getElementById('angElbowV'), angElbowF:document.getElementById('angElbowF'),
+  angGripV:document.getElementById('angGripV'), angGripF:document.getElementById('angGripF'),
+  statGripper:document.getElementById('statGripper'), statRecording:document.getElementById('statRecording'),
+  statReplay:document.getElementById('statReplay'), statObject:document.getElementById('statObject'),
+  statHome:document.getElementById('statHome'), statBuffer:document.getElementById('statBuffer'),
+  warnBanner:document.getElementById('warnBanner'), warnText:document.getElementById('warnText'),
+  logList:document.getElementById('logList'),
+  stepBanner:document.getElementById('stepBanner'), stepLab:document.getElementById('stepLab'),
+  stepTxt:document.getElementById('stepTxt'), stepProg:document.getElementById('stepProg')
+};
+const btnEls={};
+document.querySelectorAll('.cmdbtn').forEach(b=>{ btnEls[b.dataset.cmd]=b; b.addEventListener('click',()=>sendCommand(b.dataset.cmd)); });
+
+/* =================== LOG / WARN =================== */
+function logPush(msg){
+  const t=new Date().toLocaleTimeString([], {hour12:false});
+  logEntries.unshift({t,msg});
+  if(logEntries.length>60) logEntries.length=60;
+  renderLog();
+}
+function renderLog(){
+  els.logList.innerHTML = logEntries.map(e=>`<div class="logrow"><span class="lt">${e.t}</span><span class="lm">${e.msg}</span></div>`).join('');
+}
+function pushWarn(msg){
+  els.warnText.textContent=msg; els.warnBanner.classList.add('show');
+  logPush('⚠ '+msg);
+  clearTimeout(warnTimer);
+  warnTimer=setTimeout(()=>els.warnBanner.classList.remove('show'),3800);
+}
+
+/* =================== JOINT MOVEMENT =================== */
+function moveJoint(joint,delta){
+  const [mn,mx]=RANGE[joint];
+  const nv=clamp(target[joint]+delta,mn,mx);
+  if(nv===target[joint]){ pushWarn('Angle limit reached.'); return false; }
+  target[joint]=nv; return true;
+}
+function goHome(){
+  target.base=HOME_A.base; target.shoulder=HOME_A.shoulder; target.elbow=HOME_A.elbow;
+  if(mode==='guided'){ if(guidedIdx===0) homeAckStep1=true; else if(guidedIdx===9) homeAckStep10=true; }
+}
+
+/* =================== GRIPPER / OBJECT =================== */
+// Reachability is judged by how close the gripper actually LOOKS to the target on
+// screen (a generous radius), not by separate strict angle thresholds — so if the
+// arm visually reaches the crate, closing the gripper picks it up.
+function attemptPick(){
+  if(objectWeightG>HEAVY_LIMIT_G){ pushWarn('Object exceeds lightweight limit.'); return; }
+  const gp=currentGripScreen();
+  const dx=gp.x-objectPos.x, dy=gp.y-objectPos.y, dist=Math.hypot(dx,dy);
+  if(dist>PICK_RADIUS){
+    if(Math.abs(dx)>Math.abs(dy)+15) pushWarn('Target is outside reachable range.');
+    else pushWarn('Align gripper before closing.');
+    return;
+  }
+  objectHeld=true; placed=false;
+  clearTimeout(warnTimer); els.warnBanner.classList.remove('show');
+  logPush('Object picked successfully.');
+}
+function releaseObject(){
+  objectHeld=false;
+  const gp=currentGripScreen();
+  const dx=gp.x-dropZone.x, dy=gp.y-dropZone.y;
+  if(Math.hypot(dx,dy)<=PICK_RADIUS){
+    placed=true; objectPos={x:dropZone.x,y:dropZone.y};
+    clearTimeout(warnTimer); els.warnBanner.classList.remove('show');
+    logPush('Object placed in drop zone.');
+  } else {
+    // Not over the drop pad — let it fall to the floor at that x, rather than
+    // leaving it hanging in mid-air wherever the gripper happened to open.
+    placed=false;
+    objectPos={x:gp.x, y:basePivot.y-OBJECT_SHAPES[objectType].gh};
+  }
+}
+function doGripperToggle(){
+  if(gripperOpen){ gripperOpen=false; if(!objectHeld) attemptPick(); }
+  else { gripperOpen=true; if(objectHeld) releaseObject(); }
+}
+function currentGripScreen(){
+  return armPose(current.shoulder, current.elbow, current.base).gripJoint;
+}
+
+/* =================== RECORD / REPLAY =================== */
+function startRecord(){
+  if(replaying){ replaying=false; replayToken++; }
+  recordBuffer=[]; recording=true;
+}
+function stopRecord(){ recording=false; }
+function playRecord(){
+  if(recordBuffer.length===0){ pushWarn('No recorded movement found.'); return false; }
+  if(replaying) return false;
+  replaying=true; replayIdx=0; replayToken++;
+  scheduleReplayStep(replayToken);
+  return true;
+}
+function scheduleReplayStep(token){
+  if(token!==replayToken || !replaying) return;
+  if(replayIdx>=recordBuffer.length){ replaying=false; updateButtonStates(); return; }
+  const cmd=recordBuffer[replayIdx++];
+  sendCommand(cmd,{fromReplay:true});
+  setTimeout(()=>scheduleReplayStep(token), 620);
+}
+function stopReplay(){
+  const was=replaying;
+  replaying=false; replayToken++;
+  if(was) pushWarn('Replay stopped by user.');
+  return true;
+}
+
+/* =================== COMMAND DISPATCH =================== */
+function applyCommand(cmd){
+  switch(cmd){
+    case 'BASE_LEFT': return moveJoint('base',-STEP.base);
+    case 'BASE_RIGHT': return moveJoint('base',STEP.base);
+    case 'SHOULDER_UP': return moveJoint('shoulder',STEP.shoulder);
+    case 'SHOULDER_DOWN': return moveJoint('shoulder',-STEP.shoulder);
+    case 'ELBOW_FORWARD': return moveJoint('elbow',-STEP.elbow);
+    case 'ELBOW_BACKWARD': return moveJoint('elbow',STEP.elbow);
+    case 'GRIPPER_TOGGLE': doGripperToggle(); return true;
+    case 'HOME': goHome(); return true;
+    case 'START_RECORD': startRecord(); return true;
+    case 'STOP_RECORD': stopRecord(); return true;
+    case 'PLAY_RECORD': return playRecord();
+    case 'STOP_REPLAY': return stopReplay();
+  }
+  return true;
+}
+function fireTxAnim(){
+  els.txDot.classList.remove('go'); void els.txDot.offsetWidth; els.txDot.classList.add('go');
+}
+function sendCommand(cmd, opts){
+  opts=opts||{};
+  const fromReplay=!!opts.fromReplay;
+  if(replaying && !fromReplay && cmd!=='STOP_REPLAY') return;
+
+  els.sSent.textContent=cmd;
+  logPush('Sent: '+cmd+'.');
+  fireTxAnim();
+  setTimeout(()=>{
+    logPush('Command received by Arduino.');
+    setTimeout(()=>{
+      const ok=applyCommand(cmd);
+      if(ok){
+        logPush(SERVO_MSG[cmd]);
+        if(recording && !fromReplay && RECORDABLE.has(cmd)) recordBuffer.push(cmd);
+      }
+      updateButtonStates();
+    },200);
+  },240);
+}
+
+/* =================== OBJECT TYPE / WEIGHT =================== */
+const objBtns=document.querySelectorAll('.objbtn');
+objBtns.forEach(b=>b.addEventListener('click',()=>{
+  objectType=b.dataset.obj;
+  objBtns.forEach(o=>o.classList.toggle('on',o===b));
+}));
+const weightSlider=document.getElementById('weightSlider'), weightVal=document.getElementById('weightVal');
+function renderWeight(){
+  weightVal.textContent=objectWeightG+' g'+(objectWeightG>HEAVY_LIMIT_G?' (too heavy)':'');
+  weightVal.style.color=objectWeightG>HEAVY_LIMIT_G?'var(--danger)':'var(--accent)';
+  weightSlider.style.setProperty('--fill', ((objectWeightG-50)/(1000-50)*100)+'%');
+}
+weightSlider.addEventListener('input',()=>{ objectWeightG=parseInt(weightSlider.value,10); renderWeight(); });
+renderWeight();
+
+/* =================== MODE SWITCHING =================== */
+// Guided Pick-and-Place and Record & Replay tabs are hidden for now — mode stays
+// 'command' — but the guided-sequence logic below is left in place so the tabs
+// (and this function) can be reconnected later without rebuilding it.
+function setMode(m){
+  mode=m;
+  els.stepBanner.classList.toggle('show', m==='guided');
+  if(m==='guided'){ guidedIdx=0; homeAckStep1=false; homeAckStep10=false; renderGuidedBanner(); }
+  else clearExpectHighlights();
+}
+
+function clearExpectHighlights(){ Object.values(btnEls).forEach(b=>b.classList.remove('expect')); }
+function renderGuidedBanner(){
+  clearExpectHighlights();
+  const step=GUIDED_STEPS[guidedIdx];
+  if(!step){
+    els.stepLab.textContent='COMPLETE'; els.stepTxt.textContent='Pick-and-place sequence complete! Press Reset to run it again.';
+    els.stepProg.textContent='10 / 10'; return;
+  }
+  els.stepLab.textContent='STEP '+(guidedIdx+1)+' / '+GUIDED_STEPS.length;
+  els.stepTxt.textContent=step.text;
+  els.stepProg.textContent=(guidedIdx+1)+' / '+GUIDED_STEPS.length;
+  step.cmds.forEach(c=>{ if(btnEls[c]) btnEls[c].classList.add('expect'); });
+}
+function guidedTick(){
+  if(mode!=='guided') return;
+  const step=GUIDED_STEPS[guidedIdx];
+  if(!step) return;
+  if(step.check()){
+    guidedIdx++;
+    renderGuidedBanner();
+  }
+}
+
+/* =================== BUTTON STATE LOCKOUT =================== */
+function updateButtonStates(){
+  Object.entries(btnEls).forEach(([cmd,btn])=>{
+    let dis = replaying && cmd!=='STOP_REPLAY';
+    if(cmd==='START_RECORD' && recording) dis=true;
+    if(cmd==='STOP_RECORD' && !recording) dis=true;
+    if(cmd==='PLAY_RECORD' && (replaying||recording)) dis=true;
+    if(cmd==='STOP_REPLAY' && !replaying) dis=true;
+    btn.disabled=dis;
+  });
+}
+
+/* =================== RESET =================== */
+document.getElementById('resetBtn').addEventListener('click',resetSim);
+function resetSim(){
+  target.base=HOME_A.base; target.shoulder=HOME_A.shoulder; target.elbow=HOME_A.elbow;
+  current.base=HOME_A.base; current.shoulder=HOME_A.shoulder; current.elbow=HOME_A.elbow;
+  gripperOpen=true; gripAnim=1;
+  objectHeld=false; placed=false; objectPos={x:objectZone.x,y:objectZone.y};
+  recording=false; replaying=false; recordBuffer=[]; replayToken++;
+  guidedIdx=0; homeAckStep1=false; homeAckStep10=false;
+  els.sSent.textContent='—';
+  clearTimeout(warnTimer); els.warnBanner.classList.remove('show');
+  logPush('Simulation reset.');
+  if(mode==='guided') renderGuidedBanner();
+  updateButtonStates();
+}
+
+/* =================== DASHBOARD RENDER =================== */
+function pct(v,mn,mx){ return clamp((v-mn)/(mx-mn)*100,0,100); }
+function renderDash(){
+  els.angBaseV.textContent=Math.round(current.base)+'°';
+  els.angBaseF.style.width=pct(current.base,RANGE.base[0],RANGE.base[1])+'%';
+  els.angShoulderV.textContent=Math.round(current.shoulder)+'°';
+  els.angShoulderF.style.width=pct(current.shoulder,RANGE.shoulder[0],RANGE.shoulder[1])+'%';
+  els.angElbowV.textContent=Math.round(current.elbow)+'°';
+  els.angElbowF.style.width=pct(current.elbow,RANGE.elbow[0],RANGE.elbow[1])+'%';
+  els.angGripV.textContent=gripperOpen?'OPEN':'CLOSED';
+  els.angGripF.style.width=(gripAnim*100)+'%';
+
+  els.statGripper.textContent=gripperOpen?'Open':'Closed';
+  els.statGripper.className='v '+(gripperOpen?'g':'r');
+  els.statRecording.textContent=recording?'ON':'OFF';
+  els.statRecording.className='v '+(recording?'r':'n');
+  els.statReplay.textContent=replaying?'Running':'Stopped';
+  els.statReplay.className='v '+(replaying?'a':'n');
+  els.statObject.textContent=(objectHeld?'Picked':(placed?'Placed':'Not Picked'))+' · '+objectWeightG+'g';
+  els.statObject.className='v '+(objectHeld?'a':(placed?'g':'n'));
+  els.statHome.textContent=isHome()?'At Home':'Away';
+  els.statHome.className='v '+(isHome()?'g':'n');
+  els.statBuffer.textContent=recordBuffer.length;
+}
+
+/* =================== DRAWING =================== */
+function drawBackdrop(){
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#101c30'); g.addColorStop(1,'#0a1220');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(120,160,220,.07)'; ctx.lineWidth=1;
+  for(let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for(let y=0;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+}
+function drawFloor(){
+  ctx.fillStyle='#08090c';
+  ctx.fillRect(0,basePivot.y,W,H-basePivot.y);
+  ctx.strokeStyle='rgba(120,170,230,.25)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0,basePivot.y); ctx.lineTo(W,basePivot.y); ctx.stroke();
+}
+// A real stool shape (narrower seat on top, wider foot at the ground, lit from
+// above) instead of a flat dark box — that box barely contrasted against the
+// dark canvas background and read as "floating" even though it touched the floor.
+function drawPad(pos,label,color){
+  ctx.save();
+  const footY=basePivot.y-2;
+  ctx.fillStyle=color+'2a'; ctx.strokeStyle=color; ctx.lineWidth=2; ctx.setLineDash([5,4]);
+  ctx.beginPath(); ctx.ellipse(pos.x,footY,48,15,0,0,7); ctx.fill(); ctx.stroke();
+  ctx.setLineDash([]);
+
+  const topY=pos.y, botY=basePivot.y-6, topW=34, botW=48;
+  const grd=ctx.createLinearGradient(0,topY,0,botY);
+  grd.addColorStop(0,'#41577e'); grd.addColorStop(1,'#182338');
+  ctx.fillStyle=grd; ctx.strokeStyle='#6485bd'; ctx.lineWidth=1.6;
+  ctx.beginPath();
+  ctx.moveTo(pos.x-topW/2,topY); ctx.lineTo(pos.x+topW/2,topY);
+  ctx.lineTo(pos.x+botW/2,botY); ctx.lineTo(pos.x-botW/2,botY);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+
+  ctx.fillStyle='rgba(255,255,255,.18)';
+  ctx.beginPath(); ctx.ellipse(pos.x,topY,topW/2,5,0,0,7); ctx.fill();
+  ctx.strokeStyle='rgba(140,175,230,.55)'; ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.ellipse(pos.x,topY,topW/2,5,0,0,7); ctx.stroke();
+
+  ctx.font='700 11px "Orbitron",sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle=color; ctx.fillText(label,pos.x,basePivot.y+22);
+  ctx.restore();
+}
+function drawTurntable(){
+  ctx.save();
+  ctx.fillStyle='#1a2740'; ctx.strokeStyle='#3d5480'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.ellipse(basePivot.x,basePivot.y,64,20,0,0,7); ctx.fill(); ctx.stroke();
+  // rotation marker sweeps across the turntable to show base angle
+  const t=current.base/RANGE.base[1]; // -1..1
+  ctx.strokeStyle='#ffb02e'; ctx.lineWidth=3; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(basePivot.x,basePivot.y);
+  ctx.lineTo(basePivot.x+t*54, basePivot.y-6);
+  ctx.stroke();
+  ctx.fillStyle='#0e1a2e'; ctx.beginPath(); ctx.ellipse(basePivot.x,basePivot.y,18,7,0,0,7); ctx.fill();
+  ctx.restore();
+}
+function drawMast(){
+  ctx.save();
+  const grd=ctx.createLinearGradient(basePivot.x-14,0,basePivot.x+14,0);
+  grd.addColorStop(0,'#233a5e'); grd.addColorStop(.5,'#4d76ad'); grd.addColorStop(1,'#1c2f4d');
+  ctx.fillStyle=grd; ctx.strokeStyle='#2a4066'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.roundRect(basePivot.x-11,shoulderScreen.y,22,MAST,4); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+function limb(a,b,r1,r2,fill){
+  const ang=Math.atan2(b.y-a.y,b.x-a.x);
+  const nx=Math.cos(ang+Math.PI/2), ny=Math.sin(ang+Math.PI/2);
+  ctx.save();
+  ctx.fillStyle=fill; ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=1.4;
+  ctx.beginPath();
+  ctx.moveTo(a.x+nx*r1,a.y+ny*r1);
+  ctx.lineTo(b.x+nx*r2,b.y+ny*r2);
+  ctx.arc(b.x,b.y,r2,ang+Math.PI/2,ang-Math.PI/2);
+  ctx.lineTo(a.x-nx*r1,a.y-ny*r1);
+  ctx.arc(a.x,a.y,r1,ang-Math.PI/2,ang+Math.PI/2);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+function drawJoint(p,r,fill){
+  ctx.save(); ctx.fillStyle=fill; ctx.strokeStyle='rgba(0,0,0,.4)'; ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.arc(p.x,p.y,r,0,7); ctx.fill(); ctx.stroke(); ctx.restore();
+}
+// A real two-finger servo claw: a wrist bracket the fingers hinge from, tapered
+// finger blades (wide at the hinge, narrow at the tip) and a dark rubber contact
+// pad at each fingertip — not just two bare lines meeting at a point.
+function drawGripper(upper,grip,fAngleScreen){
+  const dirAngle=Math.atan2(grip.y-upper.y,grip.x-upper.x);
+  const open=0.14+gripAnim*0.5;
+  const FLEN=22, FW=5.5;
+  ctx.save();
+  ctx.translate(grip.x,grip.y); ctx.rotate(dirAngle);
+  ctx.fillStyle='#2a3450'; ctx.strokeStyle='#111a2e'; ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.roundRect(-3,-8,13,16,3); ctx.fill(); ctx.stroke();
+  ctx.restore();
+
+  for(const s of [-1,1]){
+    const a=dirAngle+s*open;
+    ctx.save();
+    ctx.translate(grip.x,grip.y); ctx.rotate(a);
+    ctx.fillStyle='#d7e2f7'; ctx.strokeStyle='#465b85'; ctx.lineWidth=1.2;
+    ctx.beginPath();
+    ctx.moveTo(3,-FW*0.5);
+    ctx.lineTo(FLEN-4,-FW*0.32);
+    ctx.quadraticCurveTo(FLEN,0,FLEN-4,FW*0.32);
+    ctx.lineTo(3,FW*0.5);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#1c2740';
+    ctx.beginPath(); ctx.arc(FLEN-4,0,2.2,0,7); ctx.fill();
+    ctx.restore();
+  }
+  ctx.save(); ctx.translate(grip.x,grip.y); ctx.rotate(dirAngle);
+  ctx.fillStyle='#38bdf8'; ctx.shadowColor='#38bdf8'; ctx.shadowBlur=6;
+  ctx.beginPath(); ctx.arc(3,0,2,0,7); ctx.fill(); ctx.shadowBlur=0;
+  ctx.restore();
+}
+// Soft contact shadow directly on the floor under wherever the object is resting —
+// keeps it visually grounded even when dropped somewhere other than the two pads.
+function drawGroundShadow(pos){
+  const sh=OBJECT_SHAPES[objectType]||OBJECT_SHAPES.crate;
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,.4)';
+  ctx.beginPath(); ctx.ellipse(pos.x, basePivot.y-3, sh.r*1.1, sh.r*0.32, 0, 0, 7); ctx.fill();
+  ctx.restore();
+}
+function drawObjectShape(pos){
+  const sh=OBJECT_SHAPES[objectType]||OBJECT_SHAPES.crate;
+  ctx.save(); ctx.translate(pos.x,pos.y);
+  if(objectType==='ball'){
+    const r=sh.r;
+    const grd=ctx.createRadialGradient(-r*0.3,-r*0.3,1,0,0,r);
+    grd.addColorStop(0,sh.light); grd.addColorStop(1,sh.color);
+    ctx.fillStyle=grd; ctx.strokeStyle=sh.dark; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.arc(0,0,r,0,7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.35)';
+    ctx.beginPath(); ctx.arc(-r*0.32,-r*0.32,r*0.28,0,7); ctx.fill();
+  } else if(objectType==='can'){
+    const w=sh.r*1.5, h=sh.r*2.1;
+    ctx.fillStyle=sh.color; ctx.strokeStyle=sh.dark; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.roundRect(-w/2,-h/2,w,h,4); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle='rgba(0,0,0,.18)';
+    for(const dx of [-w*0.22,0,w*0.22]){ ctx.beginPath(); ctx.moveTo(dx,-h/2+3); ctx.lineTo(dx,h/2-3); ctx.stroke(); }
+    ctx.fillStyle='rgba(255,255,255,.28)';
+    ctx.beginPath(); ctx.roundRect(-w/2+2,-h/2+2,3,h-4,2); ctx.fill();
+  } else {
+    const s=sh.r;
+    ctx.fillStyle=sh.color; ctx.strokeStyle=sh.dark; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.roundRect(-s,-s*0.85,s*2,s*1.7,3); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle='rgba(0,0,0,.25)';
+    ctx.beginPath(); ctx.moveTo(-s,0); ctx.lineTo(s,0); ctx.moveTo(0,-s*0.85); ctx.lineTo(0,s*0.85); ctx.stroke();
+  }
+  ctx.restore();
+  const heavy=objectWeightG>HEAVY_LIMIT_G;
+  const label=objectWeightG+' g';
+  ctx.save();
+  ctx.font='700 10px "Rajdhani",sans-serif'; ctx.textAlign='center';
+  const tw=ctx.measureText(label).width;
+  ctx.fillStyle=heavy?'rgba(255,84,112,.92)':'rgba(15,23,42,.8)';
+  ctx.beginPath(); ctx.roundRect(pos.x-tw/2-6,pos.y-sh.r-24,tw+12,15,7); ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.fillText(label,pos.x,pos.y-sh.r-13);
+  ctx.restore();
+}
+function draw(){
+  drawBackdrop(); drawFloor();
+  drawPad(objectZone,'OBJECT ZONE','#38bdf8');
+  drawPad(dropZone,'DROP ZONE','#22c55e');
+  drawTurntable(); drawMast();
+
+  const pose=armPose(current.shoulder,current.elbow,current.base);
+  limb(shoulderScreen,pose.elbowJoint,13,9,'#3b6ea5');
+  limb(pose.elbowJoint,pose.gripJoint,9,6,'#ffb02e');
+  drawJoint(shoulderScreen,14,'#2c4d78');
+  drawJoint(pose.elbowJoint,10,'#e8940f');
+  drawGripper(pose.elbowJoint,pose.gripJoint,pose.fAngle);
+
+  if(objectHeld){ drawObjectShape(currentGripScreen()); }
+  else {
+    drawGroundShadow(objectPos);
+    drawObjectShape(objectPos);
+  }
+}
+
+/* =================== MAIN LOOP =================== */
+let last=performance.now();
+function ease(dt){
+  const rate=Math.min(1,dt*5.5);
+  ['base','shoulder','elbow'].forEach(k=>{
+    current[k]+=(target[k]-current[k])*rate;
+    if(Math.abs(target[k]-current[k])<0.08) current[k]=target[k];
+  });
+  gripAnim += ((gripperOpen?1:0)-gripAnim)*Math.min(1,dt*7);
+}
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  ease(dt);
+  draw(); renderDash(); guidedTick();
+  requestAnimationFrame(frame);
+}
+els.sPort.textContent='COM8';
+updateButtonStates();
+logPush('Simulation started. The serial link is live — every command below plays out over it automatically.');
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
