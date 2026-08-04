@@ -35,9 +35,12 @@ const PROJECTS = [
   { id: "solsync", title: "SolSync", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/SolSync/simulation.html", description: "Explore Moon phases, tidal locking, and eclipses through orbit and telescope views." },
   { id: "apogee", title: "Apogee — Orbital Mechanics Sandbox", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/apogee/simulation.html", description: "Launch satellites and shape their orbits in an interactive orbital mechanics sandbox." },
   { id: "leapfrog", title: "Project Leapfrog — Flight Physics Lab", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/leapfrog/simulation.html", description: "Free-exploration flight physics lab: experiment with gravity, thrust, and trajectories." },
-  ...Array.from({ length: 27 }, (_, i) => ({
-    id: `space-astronomy-coming-soon-${i + 4}`,
-    title: `Space & Astronomy Project ${String(i + 4).padStart(2, "0")}`,
+  { id: "mirror-maze-spectrum", title: "Mirror Maze Spectrum", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/mirror-maze-spectrum/simulation.html", description: "An optics bench: bend, split, and color a light beam with mirrors, prisms, gratings, filters, and lenses." },
+  { id: "aerovoyage", title: "AeroVoyage — Rotor Lift Lab", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/aerovoyage/simulation.html", description: "Fly one rotor drone across Earth, Mars, Titan, and the Moon to see why the same design behaves differently on each world." },
+  { id: "ascent-lab", title: "Ascent Lab", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/ascent-lab/simulation.html", description: "Build a pressure rocket — nose, body, fins, and launch pressure — then launch it and read altitude, drag, and stability from the flight." },
+  ...Array.from({ length: 24 }, (_, i) => ({
+    id: `space-astronomy-coming-soon-${i + 5}`,
+    title: `Space & Astronomy Project ${String(i + 5).padStart(2, "0")}`,
     category: "space-astronomy",
     status: "coming-soon",
     description: "Coming soon.",
