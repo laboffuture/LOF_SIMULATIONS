@@ -9,7 +9,8 @@ const PROJECTS = [
   { id: "heat-seeker-rover", title: "Heat Seeker Rover", category: "robotics", status: "live", url: "../sims/robotics/heat-seeker-rover/index.html", description: "A rover that tracks and homes in on heat signatures." },
   { id: "shadow-triggered-escape-bot", title: "Shadow-Triggered Escape Bot", category: "robotics", status: "live", url: "../sims/robotics/shadow-triggered-escape-bot/index.html", description: "A bot that reacts to shadow triggers to plan an escape route." },
   { id: "axes-3", title: "Axes 3 — Command-Controlled Pick and Place Arm", category: "robotics", status: "live", url: "../sims/robotics/axes-3/index.html", description: "Drive a 3DOF robotic arm with real Python-to-Arduino serial commands to pick and place objects." },
-  ...Array.from({ length: 26 }, (_, i) => ({
+  { id: "invisible-line-patrol-bot", title: "Invisible Line Patrol Bot", category: "robotics", status: "live", url: "../sims/robotics/invisible-line-patrol-bot/index.html", description: "Track an invisible UV path with dual sensors, gear-driven walking legs, and spiral patrol search." },
+  ...Array.from({ length: 25 }, (_, i) => ({
     id: `robotics-coming-soon-${i + 4}`,
     title: `Robotics Project ${String(i + 4).padStart(2, "0")}`,
     category: "robotics",
