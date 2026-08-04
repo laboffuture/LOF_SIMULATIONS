@@ -630,20 +630,10 @@ function drawBackdrop(){
   for(let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
   for(let y=0;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
 }
-// A single round black tabletop (seen at a slight angle, so it reads as an
-// ellipse) that the base, object zone and drop zone all sit on — instead of a
-// flat rectangular floor strip running the full width of the canvas.
-function drawFloor(){
-  const cx=basePivot.x, cy=basePivot.y, rx=390, ry=95;
+function drawBaseShadow(){
   ctx.save();
-  const grd=ctx.createRadialGradient(cx,cy-ry*0.5,10,cx,cy,rx);
-  grd.addColorStop(0,'#161719'); grd.addColorStop(0.7,'#0a0a0c'); grd.addColorStop(1,'#020203');
-  ctx.fillStyle=grd;
-  ctx.beginPath(); ctx.ellipse(cx,cy,rx,ry,0,0,7); ctx.fill();
-  ctx.strokeStyle='rgba(140,180,235,.35)'; ctx.lineWidth=2.5;
-  ctx.stroke();
-  ctx.strokeStyle='rgba(180,210,255,.12)'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.ellipse(cx,cy,rx-7,ry-5,0,0,7); ctx.stroke();
+  ctx.fillStyle='rgba(0,0,0,.28)';
+  ctx.beginPath(); ctx.ellipse(basePivot.x,basePivot.y-2,50,15,0,0,7); ctx.fill();
   ctx.restore();
 }
 // A real stool shape (narrower seat on top, wider foot at the ground, lit from
@@ -656,35 +646,30 @@ function drawPad(pos,label,color){
   ctx.beginPath(); ctx.ellipse(pos.x,footY,48,15,0,0,7); ctx.fill(); ctx.stroke();
   ctx.setLineDash([]);
 
-  const topY=pos.y, botY=basePivot.y-6, topW=34, botW=48;
-  const grd=ctx.createLinearGradient(0,topY,0,botY);
-  grd.addColorStop(0,'#41577e'); grd.addColorStop(1,'#182338');
-  ctx.fillStyle=grd; ctx.strokeStyle='#6485bd'; ctx.lineWidth=1.6;
-  ctx.beginPath();
-  ctx.moveTo(pos.x-topW/2,topY); ctx.lineTo(pos.x+topW/2,topY);
-  ctx.lineTo(pos.x+botW/2,botY); ctx.lineTo(pos.x-botW/2,botY);
-  ctx.closePath(); ctx.fill(); ctx.stroke();
+  // A small table with 4 legs: back pair drawn first (narrower stance, so the
+  // tabletop and front legs overlap their tops and read as "further away"),
+  // then the tabletop slab, then the front pair on top with a wider stance.
+  const topY=pos.y, tw=32, th=7, legW=5;
 
+  ctx.fillStyle='#151517'; ctx.strokeStyle='#3a3a3e'; ctx.lineWidth=1;
+  [-tw*0.32, tw*0.32].forEach(dx=>{
+    ctx.beginPath(); ctx.roundRect(pos.x+dx-legW/2, topY-2, legW, footY-(topY-2), 2); ctx.fill(); ctx.stroke();
+  });
+
+  const grd=ctx.createLinearGradient(0,topY-th/2,0,topY+th/2);
+  grd.addColorStop(0,'#2c2d31'); grd.addColorStop(1,'#050506');
+  ctx.fillStyle=grd; ctx.strokeStyle='#55575e'; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.roundRect(pos.x-tw/2,topY-th/2,tw,th,3); ctx.fill(); ctx.stroke();
   ctx.fillStyle='rgba(255,255,255,.18)';
-  ctx.beginPath(); ctx.ellipse(pos.x,topY,topW/2,5,0,0,7); ctx.fill();
-  ctx.strokeStyle='rgba(140,175,230,.55)'; ctx.lineWidth=1.2;
-  ctx.beginPath(); ctx.ellipse(pos.x,topY,topW/2,5,0,0,7); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(pos.x,topY-th/2+1.5,tw/2-3,2,0,0,7); ctx.fill();
+
+  ctx.fillStyle='#0a0a0c'; ctx.strokeStyle='#55575e'; ctx.lineWidth=1.2;
+  [-tw*0.48, tw*0.48].forEach(dx=>{
+    ctx.beginPath(); ctx.roundRect(pos.x+dx-legW/2, topY+th/2-1, legW, footY-(topY+th/2-1), 2); ctx.fill(); ctx.stroke();
+  });
 
   ctx.font='700 11px "Orbitron",sans-serif'; ctx.textAlign='center';
   ctx.fillStyle=color; ctx.fillText(label,pos.x,basePivot.y+22);
-  ctx.restore();
-}
-function drawTurntable(){
-  ctx.save();
-  ctx.fillStyle='#1a2740'; ctx.strokeStyle='#3d5480'; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.ellipse(basePivot.x,basePivot.y,64,20,0,0,7); ctx.fill(); ctx.stroke();
-  // rotation marker sweeps across the turntable to show base angle
-  const t=current.base/RANGE.base[1]; // -1..1
-  ctx.strokeStyle='#ffb02e'; ctx.lineWidth=3; ctx.lineCap='round';
-  ctx.beginPath(); ctx.moveTo(basePivot.x,basePivot.y);
-  ctx.lineTo(basePivot.x+t*54, basePivot.y-6);
-  ctx.stroke();
-  ctx.fillStyle='#0e1a2e'; ctx.beginPath(); ctx.ellipse(basePivot.x,basePivot.y,18,7,0,0,7); ctx.fill();
   ctx.restore();
 }
 function drawMast(){
@@ -795,10 +780,11 @@ function drawObjectShape(pos){
   ctx.restore();
 }
 function draw(){
-  drawBackdrop(); drawFloor();
+  drawBackdrop();
   drawPad(objectZone,'OBJECT ZONE','#38bdf8');
   drawPad(dropZone,'DROP ZONE','#22c55e');
-  drawTurntable(); drawMast();
+  drawBaseShadow();
+  drawMast();
 
   const pose=armPose(current.shoulder,current.elbow,current.base);
   limb(shoulderScreen,pose.elbowJoint,13,9,'#3b6ea5');
