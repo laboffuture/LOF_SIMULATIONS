@@ -1,0 +1,2595 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cosmic Pulse Tracker — Lost Signal Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #eef3fb;
+        --panel: #ffffff;
+        --panel2: #f3f8ff;
+        --line: #dce6f5;
+        --txt: #18233a;
+        --mut: #5a6d8c;
+        --dim: #95a7c4;
+        --accent: #2563eb;
+        --accent2: #38bdf8;
+        --rf: #06b6d4;
+        --alien: #8b5cf6;
+        --alien2: #c4b5fd;
+        --warn: #f7a23b;
+        --danger: #ff5470;
+        --ok: #22c55e;
+        --shadow: 0 12px 34px rgba(40, 70, 140, 0.14);
+        --r: 20px;
+        --head: "Orbitron", sans-serif;
+        --body: "Rajdhani", sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        font-family: var(--body);
+        font-size: 15.5px;
+        font-weight: 500;
+        color: var(--txt);
+        background:
+          radial-gradient(900px 500px at 6% -8%, #e3edff 0, transparent 60%),
+          radial-gradient(900px 600px at 102% 0%, #efe7ff 0, transparent 55%),
+          linear-gradient(180deg, #f3f7fd, #e9f0fb);
+        height: 100vh;
+        overflow: hidden;
+        padding: 10px clamp(10px, 2vw, 26px);
+        display: flex;
+        flex-direction: column;
+      }
+      h1,
+      h3,
+      h4,
+      .chip,
+      .modebanner .lab,
+      .bars-title {
+        font-family: var(--head);
+      }
+      header.top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+        flex: 0 0 auto;
+        position: relative;
+      }
+      .logo {
+        width: 42px;
+        height: 42px;
+        border-radius: 13px;
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+        background: linear-gradient(145deg, #fff, #dff5fb);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+      }
+      .title h1 {
+        margin: 0;
+        font-size: 19px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: #12213f;
+      }
+      .title p {
+        margin: 2px 0 0;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        color: var(--mut);
+      }
+      .helpbtns {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+      }
+      .helpbtn {
+        cursor: pointer;
+        font-weight: 700;
+        color: #fff;
+        font-family: var(--head);
+        font-size: 12.5px;
+        letter-spacing: 0.3px;
+        background: linear-gradient(145deg, #22d3ee, var(--rf));
+        border: none;
+        padding: 10px 16px;
+        border-radius: 12px;
+        box-shadow: 0 8px 18px rgba(6, 182, 212, 0.32);
+        transition: 0.15s;
+      }
+      .helpbtn:hover {
+        transform: translateY(-2px);
+      }
+      .helpbtn.on {
+        box-shadow:
+          inset 0 0 0 2px #fff,
+          0 8px 18px rgba(6, 182, 212, 0.32);
+      }
+      .helpbar {
+        display: none;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 14px 16px;
+        font-size: 14.5px;
+        line-height: 1.55;
+        color: var(--txt);
+        position: absolute;
+        right: 0;
+        top: 56px;
+        width: 400px;
+        max-width: min(400px, 90vw);
+        max-height: 75vh;
+        overflow-y: auto;
+        z-index: 40;
+      }
+      .helpbar.show {
+        display: block;
+      }
+      @media (max-width: 1280px) {
+        .helpbar {
+          position: static;
+          width: auto;
+          max-width: none;
+          margin-top: 8px;
+        }
+      }
+      .tabpanel {
+        display: none;
+      }
+      .tabpanel.on {
+        display: block;
+      }
+      .tabpanel ol,
+      .tabpanel ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .tabpanel li {
+        margin-bottom: 5px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 310px 1fr 340px;
+        gap: 12px;
+        align-items: stretch;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      @media (max-width: 1280px) {
+        body {
+          overflow: auto;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+          flex: 0 0 auto;
+        }
+        /* Single-column: the stage card is no longer height-bounded, so the
+           zone needs an explicit height instead of "whatever is left over". */
+        .stagewrap {
+          flex: 0 0 auto;
+          height: clamp(300px, 52vw, 460px);
+        }
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        box-shadow: var(--shadow);
+        padding: 14px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
+      }
+      .card.stage {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        overflow: hidden;
+        padding: 10px;
+        gap: 8px;
+      }
+      .card h3 {
+        margin: 0 0 3px;
+        font-size: 14.5px;
+        font-weight: 700;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        color: #12213f;
+      }
+      .card .sub {
+        font-size: 12.5px;
+        color: var(--mut);
+        margin: 0 0 8px;
+        line-height: 1.4;
+      }
+
+      .cmdgroup {
+        margin-bottom: 14px;
+      }
+      .cmdgroup h4 {
+        margin: 0 0 6px;
+        font-size: 11px;
+        letter-spacing: 0.6px;
+        color: var(--rf);
+        text-transform: uppercase;
+      }
+      .cmdgroup.tx h4 {
+        color: var(--alien);
+      }
+      .seg {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-bottom: 6px;
+      }
+      .seg button {
+        cursor: pointer;
+        border: 2px solid var(--line);
+        background: #fff;
+        color: var(--mut);
+        padding: 8px 6px;
+        border-radius: 11px;
+        font-size: 12.5px;
+        font-weight: 700;
+        transition: 0.15s;
+        font-family: var(--body);
+      }
+      .seg button:hover {
+        border-color: var(--accent2);
+      }
+      .seg button.on {
+        color: #fff;
+        border-color: transparent;
+        background: linear-gradient(145deg, var(--alien2), var(--alien));
+        box-shadow: 0 8px 18px rgba(139, 92, 246, 0.35);
+      }
+      .seg.rx button.on {
+        background: linear-gradient(145deg, #22d3ee, var(--rf));
+        box-shadow: 0 8px 18px rgba(6, 182, 212, 0.35);
+      }
+      .toggle {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .toggle button {
+        flex: 1;
+        cursor: pointer;
+        border: 2px solid var(--line);
+        background: #fff;
+        color: var(--mut);
+        padding: 8px 6px;
+        border-radius: 11px;
+        font-size: 12.5px;
+        font-weight: 700;
+        transition: 0.15s;
+        font-family: var(--body);
+      }
+      .toggle button.on {
+        color: #fff;
+        border-color: transparent;
+        background: linear-gradient(145deg, #54c48a, #3fb87a);
+        box-shadow: 0 8px 18px rgba(84, 196, 138, 0.35);
+      }
+
+      .ctrl {
+        margin: 10px 0;
+      }
+      .ctrl .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 5px;
+      }
+      .ctrl label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--txt);
+      }
+      .ctrl .val {
+        font-family: var(--head);
+        font-size: 12px;
+        color: var(--accent);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      input[type="range"] {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 9px;
+        border-radius: 10px;
+        outline: none;
+        background: linear-gradient(90deg, var(--accent2), var(--accent))
+          no-repeat;
+        background-size: var(--fill, 50%) 100%;
+        box-shadow: inset 0 0 0 2px var(--line);
+        cursor: pointer;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 19px;
+        height: 19px;
+        border-radius: 50%;
+        background: #fff;
+        border: 4px solid var(--accent);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+        cursor: grab;
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 17px;
+        height: 17px;
+        border-radius: 50%;
+        background: #fff;
+        border: 4px solid var(--accent);
+        cursor: grab;
+      }
+      .hint {
+        font-size: 11.5px;
+        color: var(--dim);
+        margin-top: 4px;
+        line-height: 1.35;
+      }
+
+      canvas {
+        max-width: 100%;
+        display: block;
+      }
+      /* The zone owns every pixel the other rows don't need. Its backing store
+         is re-cut to match, so stretching never distorts the drawing. */
+      .stagewrap {
+        flex: 1 1 auto;
+        width: 100%;
+        min-height: 200px;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      #zone {
+        width: 100%;
+        height: 100%;
+        border-radius: 14px;
+        background: #060b18;
+        cursor: crosshair;
+        touch-action: none;
+        box-shadow: inset 0 0 0 1px #1d2a44;
+      }
+
+      .modebanner {
+        width: 100%;
+        padding: 9px 14px;
+        border-radius: 14px;
+        background: linear-gradient(145deg, #e7fbff, #d8f2fb);
+        border: 2px solid #bfe8f5;
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .modebanner .lab {
+        font-size: 11px;
+        color: var(--rf);
+        letter-spacing: 0.5px;
+        font-weight: 700;
+      }
+      .modebanner .txt {
+        font-size: 14px;
+        font-weight: 700;
+        color: #123243;
+        margin-top: 2px;
+      }
+      .modebanner .chip {
+        font-family: var(--head);
+        font-size: 11px;
+        color: #fff;
+        font-weight: 800;
+        white-space: nowrap;
+        padding: 6px 12px;
+        border-radius: 9px;
+        background: linear-gradient(145deg, var(--accent2), var(--accent));
+      }
+      .modebanner .chip.near {
+        background: linear-gradient(145deg, #fbbf24, #f59e0b);
+      }
+      .modebanner .chip.here {
+        background: linear-gradient(145deg, #4ade80, #16a34a);
+      }
+      .modebanner .chip.lost {
+        background: linear-gradient(145deg, #94a3b8, #64748b);
+      }
+
+      /* The handheld stays compact: it is sized by the OLED's height, not by
+         the available width, so every pixel it doesn't take goes to the zone. */
+      .device {
+        --oledh: clamp(64px, 9vh, 92px);
+        width: 100%;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex: 0 0 auto;
+        background: linear-gradient(160deg, #1c2740, #111a2e);
+        border: 2px solid #2b3a58;
+        border-radius: 14px;
+        padding: 7px 9px;
+      }
+      .device .screenwrap {
+        flex: 0 0 auto;
+        border-radius: 9px;
+        padding: 4px;
+        background: #05100c;
+        border: 2px solid #0f2a20;
+      }
+      #oled {
+        border-radius: 5px;
+        display: block;
+        height: var(--oledh);
+        width: calc(var(--oledh) * 700 / 228);
+        max-width: 100%;
+      }
+      .device .side {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 5px;
+        min-width: 0;
+      }
+      .bars-title {
+        font-size: 9.5px;
+        letter-spacing: 0.7px;
+        color: #7d93bb;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .bars {
+        display: flex;
+        gap: 5px;
+        align-items: flex-end;
+        height: clamp(24px, 3.4vh, 34px);
+      }
+      .bars i {
+        flex: 1 1 auto;
+        background: #22304d;
+        border-radius: 4px;
+        transition:
+          background 0.12s,
+          box-shadow 0.12s;
+      }
+      .bars i:nth-child(1) {
+        height: 34%;
+      }
+      .bars i:nth-child(2) {
+        height: 52%;
+      }
+      .bars i:nth-child(3) {
+        height: 70%;
+      }
+      .bars i:nth-child(4) {
+        height: 86%;
+      }
+      .bars i:nth-child(5) {
+        height: 100%;
+      }
+      .bars i.on {
+        background: linear-gradient(180deg, #6ee7b7, #10b981);
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.55);
+      }
+      .bars i.on.weak {
+        background: linear-gradient(180deg, #fca5a5, #ef4444);
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+      }
+      .bars i.on.mid {
+        background: linear-gradient(180deg, #fcd34d, #f59e0b);
+        box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+      }
+      .buzzrow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .led {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #2a3550;
+        box-shadow: inset 0 0 0 2px #131d31;
+        flex: 0 0 auto;
+        transition:
+          background 0.05s,
+          box-shadow 0.05s;
+      }
+      .led.hot {
+        background: #ff5470;
+        box-shadow:
+          0 0 14px rgba(255, 84, 112, 0.9),
+          inset 0 0 0 2px #7a1024;
+      }
+      .buzztxt {
+        font-size: 12px;
+        color: #9fb4d8;
+        font-weight: 600;
+        line-height: 1.25;
+      }
+      .buzztxt b {
+        color: #e6f0ff;
+        font-family: var(--head);
+        font-size: 11.5px;
+      }
+
+      .stage-foot {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+      .btn {
+        cursor: pointer;
+        border: 2px solid var(--line);
+        background: #fff;
+        color: var(--txt);
+        padding: 8px 13px;
+        border-radius: 11px;
+        font-size: 13.5px;
+        font-weight: 600;
+        transition: 0.15s;
+        font-family: var(--body);
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent2);
+      }
+      .btn.pause.on {
+        background: linear-gradient(145deg, #22d3ee, var(--rf));
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(6, 182, 212, 0.35);
+      }
+
+      .reading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 7px 0;
+        border-bottom: 1.5px dashed var(--line);
+        font-size: 13px;
+      }
+      .reading:last-child {
+        border-bottom: none;
+      }
+      .reading .k {
+        color: var(--mut);
+      }
+      .reading .v {
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .hbar {
+        height: 14px;
+        border-radius: 8px;
+        background: var(--panel2);
+        border: 1.5px solid var(--line);
+        position: relative;
+        overflow: hidden;
+        margin: 4px 0 8px;
+      }
+      .hbar .fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0;
+        border-radius: 7px;
+        transition:
+          width 0.12s,
+          background 0.2s;
+      }
+
+      .verdict {
+        padding: 10px;
+        border-radius: 12px;
+        background: var(--panel2);
+        border: 1.5px solid var(--line);
+        text-align: center;
+        font-weight: 700;
+        font-size: 13.5px;
+        margin: 8px 0;
+        color: var(--txt);
+        line-height: 1.45;
+      }
+      .verdict.ok {
+        background: #e9fbf1;
+        border-color: #bfeed3;
+        color: #12643a;
+      }
+      .verdict.part {
+        background: #fff6e6;
+        border-color: #fadfb1;
+        color: #8a5a08;
+      }
+      .verdict.bad {
+        background: #ffeef1;
+        border-color: #ffcdd6;
+        color: #8f1e33;
+      }
+
+      #strip {
+        width: 100%;
+        height: auto;
+        border-radius: 12px;
+        background: var(--panel2);
+        border: 1.5px solid var(--line);
+      }
+
+      .statusgrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .stat {
+        background: var(--panel2);
+        border: 1.5px solid var(--line);
+        border-radius: 10px;
+        padding: 6px 8px;
+      }
+      .stat .k {
+        font-size: 10.5px;
+        color: var(--dim);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        font-weight: 700;
+      }
+      .stat .v {
+        font-size: 14px;
+        font-weight: 700;
+        margin-top: 2px;
+      }
+      .stat .v.g {
+        color: var(--ok);
+      }
+      .stat .v.u {
+        color: var(--alien);
+      }
+      .stat .v.n {
+        color: var(--mut);
+      }
+      .stat .v.a {
+        color: var(--accent);
+      }
+      .stat .v.w {
+        color: var(--warn);
+      }
+      .stat .v.d {
+        color: var(--danger);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="logo">📡</div>
+      <div class="title">
+        <h1>COSMIC PULSE TRACKER — LOST SIGNAL LAB</h1>
+        <p>RF PULSE DECODING · SIGNAL STRENGTH · LOF ROBOTICS</p>
+      </div>
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">
+          What You'll Learn
+        </button>
+      </div>
+      <div class="helpbar" id="helpbar">
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li>
+              Gibson is lost somewhere in the dark zone. His beacon is
+              transmitting — pick <b>what</b> he is sending: SOS, Warning,
+              Location Pulse or System Glitch.
+            </li>
+            <li>
+              Choose an <b>RF pulse pattern</b>. Long and doubled pulses survive
+              damage; short and continuous ones fall apart.
+            </li>
+            <li>
+              <b>Click or drag anywhere</b> in the dark zone to move the
+              receiver. Drag the white knob on the antenna to <b>aim</b> it.
+            </li>
+            <li>
+              Watch the OLED climb
+              <b>NO SIGNAL → FAR → NEARBY → GIBSON IS HERE!</b> and the buzzer
+              beep faster as you close in.
+            </li>
+            <li>
+              Push up <b>Signal Damage</b> and
+              <b>Background Interference</b> and watch the decoder start reading
+              the <b>wrong</b> message.
+            </li>
+            <li>
+              Compare the <b>SENT / RECEIVED / DECODED</b> strips on the right
+              to see damaged pulses being voted back into a readable message.
+            </li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <ul>
+            <li>Why radio signal strength drops off sharply with distance</li>
+            <li>
+              How a directional antenna makes the same spot read strong or weak
+            </li>
+            <li>
+              How a message rides on a pattern of short and long RF pulses
+            </li>
+            <li>
+              How noise and interference flip pulses into the wrong symbols
+            </li>
+            <li>How repeating a frame lets a receiver vote errors out</li>
+            <li>
+              Why a receiver can confidently decode the <i>wrong</i> message
+            </li>
+            <li>
+              Why the receiver only knows what it hears — not the real distance
+            </li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- ================= CONTROLS ================= -->
+      <section class="card">
+        <h3>Controls</h3>
+        <p class="sub">
+          Set up Gibson's beacon, the alien zone, and your handheld receiver.
+        </p>
+
+        <div class="cmdgroup tx">
+          <h4>Gibson Beacon — Transmitter</h4>
+          <div class="seg" id="segMsg">
+            <button data-msg="sos" class="on">SOS</button>
+            <button data-msg="warn">Warning</button>
+            <button data-msg="loc">Location Pulse</button>
+            <button data-msg="glitch">System Glitch</button>
+          </div>
+          <div class="hint" id="msgHint">
+            A repeating distress call: three short, three long, three short.
+          </div>
+          <div class="ctrl">
+            <div class="row">
+              <label>Signal Damage / Glitch</label
+              ><span class="val" id="v_damage">10%</span>
+            </div>
+            <input
+              type="range"
+              id="r_damage"
+              min="0"
+              max="100"
+              step="1"
+              value="10"
+            />
+            <div class="hint">
+              How broken the beacon's own pulses are before they even leave.
+            </div>
+          </div>
+        </div>
+
+        <div class="cmdgroup tx">
+          <h4>RF Pulse Pattern</h4>
+          <div class="seg" id="segPat">
+            <button data-pat="short" class="on">Short Burst</button>
+            <button data-pat="long">Long Burst</button>
+            <button data-pat="double">Double Pulse</button>
+            <button data-pat="carrier">Continuous</button>
+          </div>
+          <div class="hint" id="patHint">
+            Quick, low-energy pulses. Fast to send, easy to corrupt.
+          </div>
+        </div>
+
+        <div class="cmdgroup">
+          <h4>Alien Zone — Channel</h4>
+          <div class="ctrl">
+            <div class="row">
+              <label>Background Interference</label
+              ><span class="val" id="v_noise">15%</span>
+            </div>
+            <input
+              type="range"
+              id="r_noise"
+              min="0"
+              max="100"
+              step="1"
+              value="15"
+            />
+            <div class="hint">
+              Alien storm static that raises the noise floor everywhere.
+            </div>
+          </div>
+          <div class="toggle">
+            <button id="relocateBtn">🔀 Relocate Gibson</button>
+          </div>
+        </div>
+
+        <div class="cmdgroup">
+          <h4>Receiver</h4>
+          <div class="ctrl">
+            <div class="row">
+              <label>Distance to Beacon</label
+              ><span class="val" id="v_dist">28.0 m</span>
+            </div>
+            <input
+              type="range"
+              id="r_dist"
+              min="1"
+              max="60"
+              step="0.5"
+              value="28"
+            />
+            <div class="hint">
+              Or just click and drag in the dark zone to move the receiver.
+            </div>
+          </div>
+          <div class="ctrl">
+            <div class="row">
+              <label>Receiver Direction</label
+              ><span class="val" id="v_dir">0°</span>
+            </div>
+            <input
+              type="range"
+              id="r_dir"
+              min="0"
+              max="359"
+              step="1"
+              value="0"
+            />
+            <div class="hint">
+              Where the antenna points. Aimed away, a close beacon reads faint.
+            </div>
+          </div>
+          <div class="toggle">
+            <button id="buzzBtn" class="on">🔊 Buzzer ON</button>
+          </div>
+          <h4 style="margin-top: 12px">OLED Display Mode</h4>
+          <div class="seg rx" id="segOled">
+            <button data-oled="msg" class="on">Message</button>
+            <button data-oled="bars">Signal Bars</button>
+            <button data-oled="pulse">Pulse View</button>
+            <button data-oled="debug">Debug</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= STAGE ================= -->
+      <section class="card stage">
+        <div class="stagewrap"><canvas id="zone" width="820" height="360"></canvas></div>
+
+        <div class="modebanner">
+          <div>
+            <div class="lab">RECEIVER VERDICT</div>
+            <div class="txt" id="bannerTxt">Listening for Gibson's beacon…</div>
+          </div>
+          <div class="chip lost" id="bannerChip">NO SIGNAL</div>
+        </div>
+
+        <div class="device">
+          <div class="screenwrap">
+            <canvas id="oled" width="700" height="228"></canvas>
+          </div>
+          <div class="side">
+            <div>
+              <div class="bars-title">Signal Bars</div>
+              <div class="bars" id="barsBox">
+                <i></i><i></i><i></i><i></i><i></i>
+              </div>
+            </div>
+            <div class="buzzrow">
+              <div class="led" id="buzzLed"></div>
+              <div class="buzztxt">
+                BUZZER <b id="buzzRate">SILENT</b><br /><span id="buzzNote"
+                  >Beeps faster as you close in.</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-foot">
+          <button class="btn pause" id="pauseBtn">⏸ Pause</button>
+          <button class="btn" id="resetBtn">↺ Reset Simulation</button>
+        </div>
+      </section>
+
+      <!-- ================= TELEMETRY ================= -->
+      <section class="card">
+        <h3>Signal Telemetry</h3>
+        <p class="sub">
+          What the receiver actually measures — and what it decides the message
+          is.
+        </p>
+
+        <div class="reading">
+          <span class="k">Received Strength (RSSI)</span
+          ><span class="v" id="rssiVal">0%</span>
+        </div>
+        <div class="hbar"><div class="fill" id="rssiFill"></div></div>
+        <div class="reading">
+          <span class="k">Noise Floor</span
+          ><span class="v" id="noiseVal">0%</span>
+        </div>
+        <div class="hbar">
+          <div
+            class="fill"
+            id="noiseFill"
+            style="background: linear-gradient(90deg, #fca5a5, #ef4444)"
+          ></div>
+        </div>
+        <div class="reading">
+          <span class="k">Signal-to-Noise</span
+          ><span class="v" id="snrVal">0 dB</span>
+        </div>
+        <div class="reading">
+          <span class="k">Decode Confidence</span
+          ><span class="v" id="confVal">0%</span>
+        </div>
+        <div class="hbar"><div class="fill" id="confFill"></div></div>
+
+        <div class="verdict bad" id="verdictBox">
+          Waiting for a full pulse frame…
+        </div>
+
+        <h3 style="margin-top: 12px">Pulse Frames</h3>
+        <p class="sub">
+          Short pulse = <b>S</b>, long pulse = <b>L</b>. Red cells were flipped
+          by the channel; grey <b>?</b> cells were lost.
+        </p>
+        <canvas id="strip" width="640" height="272"></canvas>
+
+        <div class="statusgrid">
+          <div class="stat">
+            <div class="k">True Distance</div>
+            <div class="v a" id="statDist">0.0 m</div>
+          </div>
+          <div class="stat">
+            <div class="k">Antenna Error</div>
+            <div class="v n" id="statAim">0°</div>
+          </div>
+          <div class="stat">
+            <div class="k">Symbol Error Rate</div>
+            <div class="v w" id="statErr">0%</div>
+          </div>
+          <div class="stat">
+            <div class="k">Frames Voted</div>
+            <div class="v n" id="statFrames">0 / 5</div>
+          </div>
+          <div class="stat">
+            <div class="k">Gibson Is Sending</div>
+            <div class="v u" id="statSent">SOS</div>
+          </div>
+          <div class="stat">
+            <div class="k">Receiver Reads</div>
+            <div class="v d" id="statRead">—</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      (() => {
+        "use strict";
+
+        /* =================== HELPERS =================== */
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const TAU = Math.PI * 2;
+        const $ = (id) => document.getElementById(id);
+
+        /* =================== CANVASES =================== */
+        const zone = $("zone"),
+          zx = zone.getContext("2d");
+        // Live canvas size in CSS pixels. The zone stretches to fill the stage,
+        // so these are re-measured on resize rather than fixed by the attribute.
+        let W = zone.width,
+          H = zone.height;
+        const oled = $("oled"),
+          ox = oled.getContext("2d");
+        const OW = oled.width,
+          OH = oled.height; // 2x backing store for a crisp screen
+        const strip = $("strip"),
+          sx = strip.getContext("2d");
+        const SW = strip.width,
+          SH = strip.height;
+
+        // Offscreen buffers: the face is drawn clean, then blitted back with tear
+        // slices and colour fringing, which is what makes the glitch read as a
+        // broken *screen* rather than a badly drawn face.
+        const faceCv = document.createElement("canvas");
+        faceCv.width = 120;
+        faceCv.height = 84;
+        const fx = faceCv.getContext("2d");
+        const fogCv = document.createElement("canvas");
+        fogCv.width = W;
+        fogCv.height = H;
+        const fgx = fogCv.getContext("2d");
+
+        /* =================== CANVAS SIZING =================== */
+        // The zone fills whatever space the stage has left, so its backing store
+        // is re-cut whenever that changes. Drawing stays in CSS pixels — the
+        // device-pixel-ratio lives in the transform — so PX_PER_M and every
+        // hand-tuned offset keep meaning exactly what they meant before.
+        const dpr = () => Math.min(window.devicePixelRatio || 1, 2);
+        let fitted = false;
+        function fitZone() {
+          const r = zone.getBoundingClientRect();
+          if (!r.width || !r.height) return;
+          const cw = Math.round(r.width),
+            ch = Math.round(r.height);
+          if (fitted && cw === W && ch === H) return;
+          const k = dpr(),
+            fx2 = cw / W,
+            fy2 = ch / H;
+          zone.width = Math.round(cw * k);
+          zone.height = Math.round(ch * k);
+          zx.setTransform(k, 0, 0, k, 0, 0);
+          fogCv.width = zone.width;
+          fogCv.height = zone.height;
+          fgx.setTransform(k, 0, 0, k, 0, 0);
+          W = cw;
+          H = ch;
+          // Rescale the scene rather than re-rolling it, so resizing the window
+          // never teleports Gibson or repaints the sky mid-hunt.
+          gib.x *= fx2;
+          gib.y *= fy2;
+          rx.x *= fx2;
+          rx.y *= fy2;
+          for (const s of stars) {
+            s.x *= fx2;
+            s.y *= fy2;
+          }
+          for (const b of rocks) {
+            b.x *= fx2;
+            b.y *= fy2;
+          }
+          rescaleUnits();
+          fitted = true;
+        }
+        // The OLED keeps drawing in its fixed 700x228 screen space; only the
+        // transform changes, so none of the text layout has to move.
+        function fitOled() {
+          const r = oled.getBoundingClientRect();
+          if (!r.width || !r.height) return;
+          const k = dpr();
+          const bw = Math.max(1, Math.round(r.width * k)),
+            bh = Math.max(1, Math.round(r.height * k));
+          if (oled.width === bw && oled.height === bh) return;
+          oled.width = bw;
+          oled.height = bh;
+          ox.setTransform(bw / OW, 0, 0, bh / OH, 0, 0);
+        }
+        const refit = () => {
+          fitZone();
+          fitOled();
+        };
+
+        /* =================== MODEL CONSTANTS =================== */
+        // These are pixel quantities, so they track the canvas: the zone always
+        // depicts the same patch of ground no matter how big the window is.
+        // A student on a laptop and a student on a projector read the same
+        // metres, the same falloff, and the same ring timing.
+        let PX_PER_M = 10; // canvas pixels per simulated metre
+        let MAX_RANGE = 460; // px at which the beacon has essentially faded out
+        let RING_SPEED = 620; // px/s — how fast a pulse ring crosses the zone
+        const DESIGN_DIAG = Math.hypot(820, 360); // the size the above were tuned at
+        function rescaleUnits() {
+          const k = Math.hypot(W, H) / DESIGN_DIAG;
+          PX_PER_M = 10 * k;
+          MAX_RANGE = 46 * PX_PER_M;
+          RING_SPEED = 62 * PX_PER_M;
+        }
+        const CODE_LEN = 8; // symbols carried in one frame
+        const LOCK_FRAMES = 5; // frames the decoder majority-votes over
+        const LONG_MULT = 2.4; // a long pulse lasts this much longer than a short one
+
+        // Every message is the same length so the receiver always sees 8 slots and has
+        // to decide *which* message it is, rather than being told by the length.
+        // Minimum pairwise difference is 4 symbols, so a single flip is always
+        // recoverable and it takes real damage to lock onto the wrong one.
+        const MESSAGES = {
+          sos: {
+            label: "SOS",
+            code: ["S", "S", "S", "L", "L", "L", "S", "S"],
+            text: "S O S   H E L P",
+            face: "panic",
+            tint: "#ff5470",
+            hint: "A repeating distress call: three short, three long, three short.",
+          },
+          warn: {
+            label: "Warning",
+            code: ["L", "S", "L", "S", "L", "S", "L", "L"],
+            text: "!!  WARNING  !!",
+            face: "alert",
+            tint: "#f7a23b",
+            hint: "An alert beat — long and short alternating, ending on two longs.",
+          },
+          loc: {
+            label: "Location Pulse",
+            code: ["S", "L", "S", "S", "L", "S", "S", "L"],
+            text: "LOC PULSE  OK",
+            face: "calm",
+            tint: "#22c55e",
+            hint: "A calm position ping Gibson repeats so he can be found.",
+          },
+          glitch: {
+            label: "System Glitch",
+            code: ["L", "L", "S", "L", "S", "S", "L", "S"],
+            text: "SY5T3M  3RR0R",
+            face: "broken",
+            tint: "#8b5cf6",
+            hint: "Gibson's own transmitter is failing — it damages pulses before they leave.",
+          },
+        };
+        const MSG_KEYS = Object.keys(MESSAGES);
+
+        const PATTERNS = {
+          short: {
+            label: "Short Burst",
+            unit: 0.085,
+            gap: 0.065,
+            rep: 1,
+            robust: 0.8,
+            hint: "Quick, low-energy pulses. Fast to send, easy to corrupt.",
+          },
+          long: {
+            label: "Long Burst",
+            unit: 0.2,
+            gap: 0.12,
+            rep: 1,
+            robust: 1.55,
+            hint: "Wide, high-energy pulses. Slow, but they punch through noise.",
+          },
+          double: {
+            label: "Double Pulse",
+            unit: 0.09,
+            gap: 0.06,
+            rep: 2,
+            robust: 0.95,
+            hint: "Every symbol is sent twice. If the two copies disagree, the receiver knows that symbol was hit.",
+          },
+          carrier: {
+            label: "Continuous Carrier",
+            unit: 0.13,
+            gap: 0.012,
+            rep: 1,
+            robust: 0.55,
+            hint: "Almost no gaps. The receiver struggles to tell where a pulse ends.",
+          },
+        };
+
+        /* =================== STATE =================== */
+        let msgKey = "sos",
+          patKey = "short",
+          oledMode = "msg";
+        let damage = 10,
+          interference = 15,
+          buzzerOn = true,
+          paused = false;
+
+        let gib = { x: 250, y: 150 };
+        let rx = { x: 560, y: 250 };
+        let rxHeading = Math.PI; // where the antenna points, radians
+
+        let txClock = 0; // transmitter time, seconds
+        let frameIdx = -1; // index of the last frame the receiver logged
+        let frames = []; // last LOCK_FRAMES corrupted receptions
+        let sentCode = MESSAGES[msgKey].code.slice();
+        let voted = null,
+          decodedKey = null,
+          confidence = 0;
+
+        let rssi = 0,
+          noiseFloor = 0,
+          snr = 0,
+          linkQ = 0,
+          distM = 0,
+          aimErr = 0,
+          bars = 0;
+        let pFlip = 0,
+          pDrop = 0,
+          pErr = 0;
+
+        let rings = []; // expanding pulse wavefronts
+        let waveBuf = new Array(260).fill(0); // rolling receiver envelope for PULSE VIEW
+        let buzzTimer = 0,
+          buzzFlash = 0,
+          buzzInterval = Infinity;
+        let stars = [],
+          rocks = [];
+        let tNow = 0;
+
+        /* =================== SCENERY =================== */
+        function seedScenery() {
+          stars = [];
+          rocks = [];
+          for (let i = 0; i < 130; i++)
+            stars.push({
+              x: Math.random() * W,
+              y: Math.random() * H * 0.72,
+              r: Math.random() * 1.3 + 0.3,
+              p: Math.random() * TAU,
+            });
+          for (let i = 0; i < 9; i++) {
+            const bx = Math.random() * W,
+              by = H * 0.66 + Math.random() * H * 0.3;
+            rocks.push({
+              x: bx,
+              y: by,
+              w: 40 + Math.random() * 90,
+              h: 16 + Math.random() * 34,
+            });
+          }
+        }
+
+        /* =================== FRAME TIMELINE =================== */
+        // One transmitted frame: a long sync pulse, then the message symbols spaced by
+        // the chosen pattern's gap, then a short silence so frames stay separable.
+        let frame = { items: [], dur: 1 };
+        function buildFrame() {
+          const p = PATTERNS[patKey],
+            m = MESSAGES[msgKey];
+          const items = [];
+          let t = 0;
+          items.push({ sym: "P", t0: 0, t1: p.unit * 3, slot: -1 });
+          t = p.unit * 3 + p.gap * 3;
+          m.code.forEach((s, i) => {
+            for (let r = 0; r < p.rep; r++) {
+              const d = s === "L" ? p.unit * LONG_MULT : p.unit;
+              items.push({ sym: s, t0: t, t1: t + d, slot: i });
+              t += d + p.gap;
+            }
+          });
+          t += p.gap * 4;
+          frame = { items, dur: t };
+        }
+
+        // Transmitter envelope at an absolute time: is a pulse on the air right now,
+        // and how tall is it. Used both for the ring emitter and the received waveform.
+        function envAt(t) {
+          if (t < 0) return { on: 0, sym: null };
+          const local = t % frame.dur;
+          for (const it of frame.items) {
+            if (local >= it.t0 && local < it.t1) {
+              return {
+                on: it.sym === "P" ? 1.0 : it.sym === "L" ? 0.92 : 0.72,
+                sym: it.sym,
+              };
+            }
+          }
+          return { on: 0, sym: null };
+        }
+
+        /* =================== SIGNAL MODEL =================== */
+        function computeSignal() {
+          const dx = rx.x - gib.x,
+            dy = rx.y - gib.y;
+          const distPx = Math.max(6, Math.hypot(dx, dy));
+          distM = distPx / PX_PER_M;
+
+          // Antenna gain: a forward lobe. Pointed straight at the beacon it collects
+          // everything; pointed away it still hears a little through the back lobe.
+          const bearing = Math.atan2(gib.y - rx.y, gib.x - rx.x);
+          let err = Math.atan2(
+            Math.sin(bearing - rxHeading),
+            Math.cos(bearing - rxHeading),
+          );
+          aimErr = (Math.abs(err) / Math.PI) * 180;
+          const dirGain =
+            0.18 + 0.82 * Math.pow(Math.max(0, Math.cos(err)), 1.7);
+
+          // Path loss: strong near the beacon, dropping off fast — the same shape as
+          // real inverse-square falloff, normalised so MAX_RANGE reads about 10%.
+          const dn = clamp(distPx / MAX_RANGE, 0.02, 3);
+          const path = 1 / (1 + 9 * dn * dn);
+          rssi = clamp(100 * path * dirGain, 0, 100);
+
+          noiseFloor = 4 + interference * 0.62;
+          snr = rssi - noiseFloor;
+          linkQ = clamp((snr + 18) / 58, 0, 1);
+
+          // How badly a single pulse is damaged in flight. A failing transmitter adds
+          // its own damage on top of whatever the channel does.
+          const intrinsic = msgKey === "glitch" ? 0.12 : 0;
+          const raw =
+            ((1 - linkQ) * 0.62 + (damage / 100) * 0.55 + intrinsic) /
+            PATTERNS[patKey].robust;
+
+          // Noise can at worst turn a symbol into a coin flip — it can never make a
+          // pulse *reliably* wrong, or students could just invert the reading to fix
+          // it. Damage past that point stops flipping pulses and starts erasing them.
+          pFlip = clamp(raw, 0, 0.5);
+          pDrop = clamp((raw - 0.45) * 0.75, 0, 0.55);
+          pErr = clamp(pDrop + (1 - pDrop) * pFlip, 0, 0.9); // chance any one pulse arrives bad
+
+          bars =
+            rssi < 8
+              ? 0
+              : rssi < 22
+                ? 1
+                : rssi < 40
+                  ? 2
+                  : rssi < 58
+                    ? 3
+                    : rssi < 76
+                      ? 4
+                      : 5;
+        }
+
+        /* =================== RECEPTION & DECODING =================== */
+        function corruptFrame() {
+          const rep = PATTERNS[patKey].rep;
+          return sentCode.map((s) => {
+            const got = [];
+            for (let r = 0; r < rep; r++) {
+              if (Math.random() < pDrop)
+                got.push("?"); // pulse erased
+              else
+                got.push(Math.random() < pFlip ? (s === "S" ? "L" : "S") : s); // pulse misread
+            }
+            if (rep === 1) return got[0];
+            // Repeated copies are voted inside the frame. When they disagree the
+            // receiver cannot tell which one is right — but it *knows* the symbol was
+            // hit, so it reports an erasure instead of guessing. Erasures are far
+            // cheaper for the outer vote than confident wrong answers.
+            const valid = got.filter((g) => g !== "?");
+            if (!valid.length) return "?";
+            return valid.every((g) => g === valid[0]) ? valid[0] : "?";
+          });
+        }
+
+        // Majority vote across the buffered frames, then match the result against every
+        // known message signature and take the closest. This is why repeating a frame
+        // helps: random flips disagree with each other, the true symbol does not.
+        function decode() {
+          if (!frames.length) {
+            voted = null;
+            decodedKey = null;
+            confidence = 0;
+            return;
+          }
+          const v = [];
+          for (let i = 0; i < CODE_LEN; i++) {
+            let s = 0,
+              l = 0;
+            for (const f of frames) {
+              if (f[i] === "S") s++;
+              else if (f[i] === "L") l++;
+            }
+            v.push(s === 0 && l === 0 ? "?" : s >= l ? "S" : "L");
+          }
+          voted = v;
+          let best = null,
+            bestScore = -1;
+          for (const k of MSG_KEYS) {
+            let sc = 0;
+            MESSAGES[k].code.forEach((c, i) => {
+              if (v[i] === c) sc++;
+            });
+            if (sc > bestScore) {
+              bestScore = sc;
+              best = k;
+            }
+          }
+          decodedKey = best;
+          confidence = bestScore / CODE_LEN;
+        }
+        const lockState = () =>
+          confidence >= 0.875 ? "lock" : confidence >= 0.625 ? "part" : "lost";
+
+        const GLITCH_CHARS = "#%@&*?/\\$8§±¤";
+        function garble(text, amount) {
+          return text
+            .split("")
+            .map((c) => {
+              if (c === " ") return c;
+              return Math.random() < amount
+                ? GLITCH_CHARS[(Math.random() * GLITCH_CHARS.length) | 0]
+                : c;
+            })
+            .join("");
+        }
+
+        function proximity() {
+          if (rssi < 10)
+            return {
+              t: "NO SIGNAL",
+              cls: "lost",
+              note: "Nothing readable. Move the receiver or re-aim the antenna.",
+            };
+          if (rssi < 35)
+            return {
+              t: "FAR",
+              cls: "",
+              note: "A faint carrier is there. Gibson is a long way off.",
+            };
+          if (rssi < 70)
+            return {
+              t: "NEARBY",
+              cls: "near",
+              note: "Getting warmer — the beacon is close now.",
+            };
+          return {
+            t: "GIBSON IS HERE!",
+            cls: "here",
+            note: "Strong lock. You are right on top of the beacon.",
+          };
+        }
+
+        /* =================== SIM STEP =================== */
+        function step(dt) {
+          computeSignal();
+
+          const prevEnv = envAt(txClock);
+          txClock += dt;
+          const env = envAt(txClock);
+
+          // A ring is born on the rising edge of every pulse, so what crosses the zone
+          // is literally the pulse train the transmitter is sending.
+          if (env.on > 0 && prevEnv.on === 0) {
+            rings.push({ r: 0, amp: env.on, sym: env.sym, life: 0 });
+          }
+          const maxLife = Math.hypot(W, H) / RING_SPEED + 0.3;
+          for (const r of rings) {
+            r.r += RING_SPEED * dt;
+            r.life += dt;
+          }
+          rings = rings.filter((r) => r.life < maxLife);
+
+          // Each completed transmitted frame is one reception event at the receiver.
+          const idx = Math.floor(txClock / frame.dur);
+          if (idx !== frameIdx) {
+            frameIdx = idx;
+            frames.push(corruptFrame());
+            while (frames.length > LOCK_FRAMES) frames.shift();
+            decode();
+          }
+
+          // Received envelope, delayed by the flight time of the wave, scaled by how
+          // much signal actually arrives, and buried under the noise floor.
+          const distPx = Math.max(6, Math.hypot(rx.x - gib.x, rx.y - gib.y));
+          const delayed = envAt(txClock - distPx / RING_SPEED);
+          const sig = delayed.on * (rssi / 100);
+          const nz = (Math.random() - 0.5) * 2 * (noiseFloor / 100) * 0.85;
+          waveBuf.push(clamp(sig + nz, -1, 1));
+          waveBuf.shift();
+
+          // Buzzer: interval shrinks as the signal grows, so beeps run together at the
+          // beacon and fall silent when there is nothing to hear.
+          buzzInterval =
+            rssi < 10
+              ? Infinity
+              : lerp(0.95, 0.055, Math.pow(rssi / 100, 0.85));
+          buzzFlash = Math.max(0, buzzFlash - dt);
+          if (isFinite(buzzInterval)) {
+            buzzTimer -= dt;
+            if (buzzTimer <= 0) {
+              buzzTimer = buzzInterval;
+              buzzFlash = Math.min(0.07, buzzInterval * 0.55);
+              beep();
+            }
+          } else buzzTimer = 0;
+        }
+
+        /* =================== AUDIO =================== */
+        let actx = null;
+        function unlockAudio() {
+          if (actx) return;
+          try {
+            actx = new (window.AudioContext || window.webkitAudioContext)();
+          } catch (e) {
+            actx = null;
+          }
+        }
+        function beep() {
+          if (!buzzerOn || !actx || actx.state === "suspended") return;
+          const t = actx.currentTime;
+          const osc = actx.createOscillator(),
+            g = actx.createGain();
+          osc.type = "square";
+          osc.frequency.value = 700 + rssi * 9;
+          const len = Math.min(0.05, Math.max(0.02, buzzInterval * 0.45));
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(0.11, t + 0.004);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+          osc.connect(g);
+          g.connect(actx.destination);
+          osc.start(t);
+          osc.stop(t + len + 0.01);
+        }
+
+        /* =================== ZONE RENDER =================== */
+        function drawZone() {
+          // --- sky & ground ---
+          const sky = zx.createLinearGradient(0, 0, 0, H);
+          sky.addColorStop(0, "#070d1e");
+          sky.addColorStop(0.55, "#0b1430");
+          sky.addColorStop(1, "#141033");
+          zx.fillStyle = sky;
+          zx.fillRect(0, 0, W, H);
+
+          for (const s of stars) {
+            const tw = 0.45 + 0.55 * Math.sin(tNow * 1.6 + s.p);
+            zx.globalAlpha = tw * 0.85;
+            zx.fillStyle = "#cfe4ff";
+            zx.beginPath();
+            zx.arc(s.x, s.y, s.r, 0, TAU);
+            zx.fill();
+          }
+          zx.globalAlpha = 1;
+
+          // distant alien horizon
+          zx.fillStyle = "rgba(90,60,160,.22)";
+          zx.beginPath();
+          zx.moveTo(0, H * 0.62);
+          for (let x = 0; x <= W; x += 40)
+            zx.lineTo(
+              x,
+              H * 0.62 - 24 * Math.sin(x * 0.011) - 14 * Math.sin(x * 0.027),
+            );
+          zx.lineTo(W, H);
+          zx.lineTo(0, H);
+          zx.closePath();
+          zx.fill();
+
+          const gnd = zx.createLinearGradient(0, H * 0.66, 0, H);
+          gnd.addColorStop(0, "#171233");
+          gnd.addColorStop(1, "#0c0a1e");
+          zx.fillStyle = gnd;
+          zx.fillRect(0, H * 0.66, W, H * 0.34);
+          for (const r of rocks) {
+            zx.fillStyle = "rgba(60,48,110,.55)";
+            zx.beginPath();
+            zx.ellipse(r.x, r.y, r.w / 2, r.h / 2, 0, 0, TAU);
+            zx.fill();
+          }
+
+          // --- interference storm ---
+          if (interference > 3) drawInterference();
+
+          // --- pulse rings from the beacon ---
+          for (const r of rings) {
+            const fade = clamp(1 - r.r / (MAX_RANGE * 1.55), 0, 1);
+            if (fade <= 0.02) continue;
+            zx.globalAlpha = fade * 0.55 * r.amp;
+            zx.strokeStyle = r.sym === "P" ? "#a78bfa" : "#22d3ee";
+            zx.lineWidth = r.sym === "L" ? 4.2 : r.sym === "P" ? 5 : 2.2;
+            zx.beginPath();
+            zx.arc(gib.x, gib.y, r.r, 0, TAU);
+            zx.stroke();
+          }
+          zx.globalAlpha = 1;
+
+          drawGibson();
+          drawReceiver();
+          drawFog();
+          drawZoneHUD();
+        }
+
+        function drawInterference() {
+          const k = interference / 100;
+          zx.save();
+          zx.globalAlpha = k * 0.3;
+          zx.strokeStyle = "#f472b6";
+          zx.lineWidth = 1.4;
+          for (let b = 0; b < 3; b++) {
+            zx.beginPath();
+            const y0 = (b * 137 + ((tNow * 90) % H)) % H;
+            for (let x = 0; x <= W; x += 12) {
+              const y =
+                y0 +
+                Math.sin(x * 0.05 + tNow * 5 + b) * 10 * k +
+                Math.sin(x * 0.13 + tNow * 9) * 6 * k;
+              x === 0 ? zx.moveTo(x, y) : zx.lineTo(x, y);
+            }
+            zx.stroke();
+          }
+          zx.globalAlpha = k * 0.5;
+          zx.fillStyle = "#e0e7ff";
+          const specks = Math.floor(k * 220);
+          for (let i = 0; i < specks; i++)
+            zx.fillRect(Math.random() * W, Math.random() * H, 1.6, 1.6);
+          zx.restore();
+        }
+
+        /* ---- Gibson: beacon body + glitching screen face ---- */
+        function drawGibson() {
+          const reveal = clamp(rssi / 70, 0, 1);
+          const m = MESSAGES[msgKey];
+          const g = clamp(
+            damage / 100 +
+              (msgKey === "glitch" ? 0.35 : 0) +
+              (1 - linkQ) * 0.15,
+            0,
+            1,
+          );
+          const bob = Math.sin(tNow * 1.5) * 2.5;
+          const cx = gib.x,
+            cy = gib.y + bob;
+
+          // beacon halo
+          const halo = zx.createRadialGradient(cx, cy, 4, cx, cy, 90);
+          halo.addColorStop(0, `rgba(34,211,238,${0.2 + 0.3 * reveal})`);
+          halo.addColorStop(1, "rgba(34,211,238,0)");
+          zx.fillStyle = halo;
+          zx.beginPath();
+          zx.arc(cx, cy, 90, 0, TAU);
+          zx.fill();
+
+          zx.save();
+          zx.globalAlpha = 0.28 + 0.72 * reveal;
+
+          // antenna mast + blinking tip
+          zx.strokeStyle = "#7dd3fc";
+          zx.lineWidth = 3;
+          zx.lineCap = "round";
+          zx.beginPath();
+          zx.moveTo(cx, cy - 30);
+          zx.lineTo(cx, cy - 52);
+          zx.stroke();
+          const blink = envAt(txClock).on > 0;
+          zx.fillStyle = blink ? "#fef08a" : "#334155";
+          zx.beginPath();
+          zx.arc(cx, cy - 56, 5, 0, TAU);
+          zx.fill();
+          if (blink) {
+            zx.shadowColor = "#fde047";
+            zx.shadowBlur = 16;
+            zx.beginPath();
+            zx.arc(cx, cy - 56, 5, 0, TAU);
+            zx.fill();
+            zx.shadowBlur = 0;
+          }
+
+          // body
+          const bw = 76,
+            bh = 64;
+          zx.fillStyle = "#1e293b";
+          zx.strokeStyle = "#38bdf8";
+          zx.lineWidth = 2.5;
+          roundRect(zx, cx - bw / 2, cy - 30, bw, bh, 12);
+          zx.fill();
+          zx.stroke();
+          zx.fillStyle = "#0f172a";
+          roundRect(zx, cx - bw / 2 + 7, cy - 24, bw - 14, 42, 8);
+          zx.fill();
+
+          // legs
+          zx.strokeStyle = "#38bdf8";
+          zx.lineWidth = 3;
+          zx.beginPath();
+          zx.moveTo(cx - 16, cy + 34);
+          zx.lineTo(cx - 26, cy + 46);
+          zx.moveTo(cx + 16, cy + 34);
+          zx.lineTo(cx + 26, cy + 46);
+          zx.stroke();
+
+          drawFace(m.face, g);
+          // face screen area is 62 x 40 centred inside the body window
+          blitFace(cx, cy - 3, 62, 40, g);
+
+          zx.restore();
+
+          // name plate once the signal is convincing
+          if (reveal > 0.55) {
+            zx.globalAlpha = (reveal - 0.55) / 0.45;
+            zx.fillStyle = "#e0f2fe";
+            zx.font = '700 13px "Orbitron",sans-serif';
+            zx.textAlign = "center";
+            zx.fillText("GIBSON", cx, cy + 62);
+            zx.globalAlpha = 1;
+          }
+        }
+
+        // The face is drawn clean into an offscreen canvas so the glitch pass has
+        // something to tear apart.
+        function drawFace(kind, g) {
+          const w = faceCv.width,
+            h = faceCv.height;
+          fx.clearRect(0, 0, w, h);
+          fx.fillStyle = "#04121a";
+          fx.fillRect(0, 0, w, h);
+
+          const cx = w / 2,
+            cy = h / 2;
+          const jitter = (a) => (g > 0.25 ? (Math.random() - 0.5) * a * g : 0);
+          const eyeCol =
+            kind === "panic"
+              ? "#ff6b8a"
+              : kind === "alert"
+                ? "#fbbf24"
+                : kind === "broken"
+                  ? "#c4b5fd"
+                  : "#5eead4";
+          fx.fillStyle = eyeCol;
+          fx.strokeStyle = eyeCol;
+          fx.lineWidth = 3;
+          fx.lineCap = "round";
+
+          const blinkClosed = kind === "calm" && tNow % 3.4 < 0.14;
+          const ew = kind === "panic" ? 15 : kind === "alert" ? 13 : 12;
+          const eh = blinkClosed
+            ? 2
+            : kind === "panic"
+              ? 17
+              : kind === "broken"
+                ? 9
+                : 12;
+
+          [-1, 1].forEach((s) => {
+            const ex = cx + s * 20 + jitter(5),
+              ey = cy - 9 + jitter(4);
+            if (kind === "broken" && Math.random() < 0.35 * g) {
+              fx.fillRect(ex - ew / 2, ey - eh / 2, ew, eh); // eye drops to a hard block
+            } else {
+              fx.beginPath();
+              fx.ellipse(ex, ey, ew / 2, eh / 2, 0, 0, TAU);
+              fx.fill();
+              if (kind === "panic") {
+                fx.fillStyle = "#04121a";
+                fx.beginPath();
+                fx.ellipse(ex, ey + 2, ew / 6, eh / 6, 0, 0, TAU);
+                fx.fill();
+                fx.fillStyle = eyeCol;
+              }
+            }
+            if (kind === "alert") {
+              // brows angled down toward the nose
+              fx.beginPath();
+              fx.moveTo(ex + s * 9, ey - 16);
+              fx.lineTo(ex - s * 9, ey - 10);
+              fx.stroke();
+            }
+          });
+
+          // mouth
+          const my = cy + 16 + jitter(4);
+          fx.beginPath();
+          if (kind === "panic") {
+            fx.ellipse(cx, my, 13, 9, 0, 0, TAU);
+            fx.fill();
+          } else if (kind === "alert") {
+            fx.moveTo(cx - 16, my + 4);
+            fx.lineTo(cx + 16, my + 4);
+            fx.stroke();
+          } else if (kind === "broken") {
+            for (let i = 0; i < 7; i++) {
+              const x = cx - 18 + i * 6,
+                y = my + (Math.random() - 0.5) * 10;
+              i === 0 ? fx.moveTo(x, y) : fx.lineTo(x, y);
+            }
+            fx.stroke();
+          } else {
+            fx.arc(cx, my - 6, 13, 0.25 * Math.PI, 0.75 * Math.PI);
+            fx.stroke();
+          }
+
+          // scanlines so it reads as a screen
+          fx.globalAlpha = 0.16;
+          fx.fillStyle = "#000";
+          for (let y = 0; y < h; y += 3) fx.fillRect(0, y, w, 1);
+          fx.globalAlpha = 1;
+        }
+
+        // Blit the face with horizontal tear slices and RGB fringing scaled by glitch.
+        function blitFace(cx, cy, dw, dh, g) {
+          const sw = faceCv.width,
+            sh = faceCv.height;
+          const x0 = cx - dw / 2,
+            y0 = cy - dh / 2;
+          const slices = g > 0.15 ? 7 : 1;
+          const sliceH = sh / slices;
+          for (let i = 0; i < slices; i++) {
+            const off =
+              slices > 1
+                ? Math.random() < 0.45 * g
+                  ? (Math.random() - 0.5) * 22 * g
+                  : 0
+                : 0;
+            zx.drawImage(
+              faceCv,
+              0,
+              i * sliceH,
+              sw,
+              sliceH,
+              x0 + off,
+              y0 + i * (dh / slices),
+              dw,
+              dh / slices + 0.6,
+            );
+          }
+          if (g > 0.2) {
+            zx.save();
+            zx.globalCompositeOperation = "lighter";
+            zx.globalAlpha = 0.3 * g;
+            zx.drawImage(faceCv, x0 - 3 * g, y0, dw, dh);
+            zx.drawImage(faceCv, x0 + 3 * g, y0, dw, dh);
+            zx.restore();
+          }
+        }
+
+        /* ---- receiver: handheld unit with a directional antenna ---- */
+        function antennaTip() {
+          return {
+            x: rx.x + Math.cos(rxHeading) * 54,
+            y: rx.y + Math.sin(rxHeading) * 54,
+          };
+        }
+        function drawReceiver() {
+          const { x, y } = rx;
+
+          // reception lobe — the shape the antenna actually listens through
+          zx.save();
+          zx.translate(x, y);
+          zx.rotate(rxHeading);
+          const lobe = zx.createRadialGradient(0, 0, 6, 0, 0, 150);
+          lobe.addColorStop(0, "rgba(34,211,238,.30)");
+          lobe.addColorStop(1, "rgba(34,211,238,0)");
+          zx.fillStyle = lobe;
+          zx.beginPath();
+          zx.moveTo(0, 0);
+          zx.arc(0, 0, 150, -0.62, 0.62);
+          zx.closePath();
+          zx.fill();
+          zx.strokeStyle = "rgba(34,211,238,.45)";
+          zx.lineWidth = 1.5;
+          zx.beginPath();
+          zx.moveTo(0, 0);
+          zx.arc(0, 0, 150, -0.62, 0.62);
+          zx.closePath();
+          zx.stroke();
+
+          // yagi boom + elements
+          zx.strokeStyle = "#e2e8f0";
+          zx.lineWidth = 3;
+          zx.lineCap = "round";
+          zx.beginPath();
+          zx.moveTo(10, 0);
+          zx.lineTo(54, 0);
+          zx.stroke();
+          zx.lineWidth = 2.5;
+          [
+            [20, 15],
+            [32, 12],
+            [44, 9],
+          ].forEach(([ex, len]) => {
+            zx.beginPath();
+            zx.moveTo(ex, -len);
+            zx.lineTo(ex, len);
+            zx.stroke();
+          });
+          zx.restore();
+
+          // body
+          zx.fillStyle = "#0f2233";
+          zx.strokeStyle = "#22d3ee";
+          zx.lineWidth = 2.5;
+          roundRect(zx, x - 19, y - 15, 38, 30, 8);
+          zx.fill();
+          zx.stroke();
+          zx.fillStyle = bars > 0 ? "#22d3ee" : "#334155";
+          for (let i = 0; i < 3; i++) zx.fillRect(x - 11 + i * 8, y + 2, 5, 6);
+          zx.fillStyle = "#0b3d4d";
+          roundRect(zx, x - 13, y - 10, 26, 10, 3);
+          zx.fill();
+          if (buzzFlash > 0) {
+            zx.fillStyle = "#ff5470";
+            zx.beginPath();
+            zx.arc(x + 13, y - 11, 3.4, 0, TAU);
+            zx.fill();
+          }
+
+          // aim knob
+          const tip = antennaTip();
+          zx.fillStyle = "#ffffff";
+          zx.strokeStyle = "#06b6d4";
+          zx.lineWidth = 2.5;
+          zx.beginPath();
+          zx.arc(tip.x, tip.y, 7, 0, TAU);
+          zx.fill();
+          zx.stroke();
+
+          zx.fillStyle = "#7dd3fc";
+          zx.font = '700 10px "Orbitron",sans-serif';
+          zx.textAlign = "center";
+          zx.fillText("RECEIVER", x, y + 30);
+        }
+
+        /* ---- fog of the dark zone ---- */
+        function drawFog() {
+          fgx.clearRect(0, 0, W, H);
+          fgx.fillStyle = "rgba(3,7,18,.74)";
+          fgx.fillRect(0, 0, W, H);
+          fgx.globalCompositeOperation = "destination-out";
+          const punch = (x, y, r) => {
+            const gr = fgx.createRadialGradient(x, y, 0, x, y, r);
+            gr.addColorStop(0, "rgba(0,0,0,1)");
+            gr.addColorStop(0.6, "rgba(0,0,0,.85)");
+            gr.addColorStop(1, "rgba(0,0,0,0)");
+            fgx.fillStyle = gr;
+            fgx.beginPath();
+            fgx.arc(x, y, r, 0, TAU);
+            fgx.fill();
+          };
+          punch(rx.x, rx.y, 105);
+          punch(gib.x, gib.y, 34 + 110 * clamp(rssi / 70, 0, 1));
+          fgx.globalCompositeOperation = "source-over";
+          // Explicit size: the fog buffer is a device-pixel bitmap being drawn
+          // into a CSS-pixel coordinate system.
+          zx.drawImage(fogCv, 0, 0, W, H);
+        }
+
+        function drawZoneHUD() {
+          const p = proximity();
+          zx.font = '700 11px "Orbitron",sans-serif';
+          zx.textAlign = "left";
+          zx.fillStyle = "rgba(125,211,252,.85)";
+          zx.fillText("DARK ZONE · SECTOR 7", 14, 22);
+          zx.fillStyle = "rgba(148,163,184,.75)";
+          zx.font = '600 11px "Rajdhani",sans-serif';
+          zx.fillText(
+            "Click to move the receiver · drag the white knob to aim",
+            14,
+            H - 14,
+          );
+          zx.textAlign = "right";
+          zx.fillStyle =
+            p.cls === "here"
+              ? "#4ade80"
+              : p.cls === "near"
+                ? "#fbbf24"
+                : p.cls === "lost"
+                  ? "#94a3b8"
+                  : "#38bdf8";
+          zx.font = '800 14px "Orbitron",sans-serif';
+          zx.fillText(p.t, W - 14, 24);
+          zx.textAlign = "left";
+        }
+
+        function roundRect(c, x, y, w, h, r) {
+          c.beginPath();
+          c.moveTo(x + r, y);
+          c.arcTo(x + w, y, x + w, y + h, r);
+          c.arcTo(x + w, y + h, x, y + h, r);
+          c.arcTo(x, y + h, x, y, r);
+          c.arcTo(x, y, x + w, y, r);
+          c.closePath();
+        }
+
+        /* =================== OLED RENDER =================== */
+        const OLED_ON = "#3ef2a5",
+          OLED_DIM = "#136b4a";
+        function drawOled() {
+          ox.fillStyle = "#04140d";
+          ox.fillRect(0, 0, OW, OH);
+          ox.save();
+          if (oledMode === "msg") oledMessage();
+          if (oledMode === "bars") oledBars();
+          if (oledMode === "pulse") oledPulse();
+          if (oledMode === "debug") oledDebug();
+          ox.restore();
+          // scanlines + glow
+          ox.globalAlpha = 0.2;
+          ox.fillStyle = "#000";
+          for (let y = 0; y < OH; y += 4) ox.fillRect(0, y, OW, 1.6);
+          ox.globalAlpha = 1;
+          ox.strokeStyle = "rgba(62,242,165,.25)";
+          ox.lineWidth = 2;
+          ox.strokeRect(1, 1, OW - 2, OH - 2);
+        }
+        // The screen is deliberately small on the page, so type is sized against
+        // its physical height rather than its logical box — at ~270 CSS px wide
+        // anything under ~26 units here stops being readable.
+        function oledHeader(label) {
+          ox.fillStyle = OLED_DIM;
+          ox.font = '700 26px "Orbitron",sans-serif';
+          ox.textAlign = "left";
+          ox.fillText(label, 16, 32);
+          ox.fillStyle = OLED_DIM;
+          ox.fillRect(16, 40, OW - 32, 2);
+        }
+        function miniBars(x, y, h) {
+          for (let i = 0; i < 5; i++) {
+            const on = i < bars;
+            ox.fillStyle = on ? OLED_ON : "#0e3a29";
+            const bh = h * (0.36 + i * 0.16);
+            ox.fillRect(x + i * 13, y - bh, 9, bh);
+          }
+        }
+        function oledMessage() {
+          const p = proximity(),
+            st = lockState();
+          oledHeader("LINK");
+          miniBars(OW - 84, 36, 28);
+
+          ox.textAlign = "center";
+          ox.fillStyle = OLED_ON;
+          ox.font = '800 46px "Orbitron",sans-serif';
+          const flash = p.cls === "here" ? Math.sin(tNow * 7) > -0.2 : true;
+          if (flash) ox.fillText(p.t, OW / 2, 102);
+
+          ox.font = '700 36px "Courier New",monospace';
+          let line;
+          if (st === "lock") {
+            ox.fillStyle = OLED_ON;
+            line = MESSAGES[decodedKey].text;
+          } else if (st === "part") {
+            ox.fillStyle = "#e8d44a";
+            line = garble(MESSAGES[decodedKey].text, 0.35);
+          } else {
+            ox.fillStyle = "#e06a6a";
+            line = garble("SIGNAL LOST", 0.55);
+          }
+          ox.fillText(line, OW / 2, 156);
+
+          ox.font = '600 27px "Rajdhani",sans-serif';
+          ox.fillStyle = OLED_DIM;
+          ox.fillText(
+            st === "lock"
+              ? `LOCKED  ${Math.round(confidence * 100)}%`
+              : st === "part"
+                ? `PARTIAL  ${Math.round(confidence * 100)}%`
+                : `NO LOCK  ${Math.round(confidence * 100)}%`,
+            OW / 2,
+            200,
+          );
+          ox.textAlign = "left";
+        }
+        function oledBars() {
+          oledHeader("SIGNAL");
+          const bw = 94,
+            gapw = 14,
+            x0 = (OW - (5 * bw + 4 * gapw)) / 2,
+            base = OH - 38; // leave room for the labels below
+          for (let i = 0; i < 5; i++) {
+            const on = i < bars,
+              h = 26 + i * 25; // tallest bar must clear the header rule
+            ox.fillStyle = on
+              ? bars <= 2
+                ? "#e06a6a"
+                : bars <= 3
+                  ? "#e8d44a"
+                  : OLED_ON
+              : "#0e3a29";
+            ox.fillRect(x0 + i * (bw + gapw), base - h, bw, h);
+          }
+          ox.textAlign = "right";
+          ox.fillStyle = OLED_ON;
+          ox.font = '800 42px "Orbitron",sans-serif';
+          ox.fillText(Math.round(rssi) + "%", OW - 16, 84);
+          ox.textAlign = "left";
+          ox.fillStyle = OLED_DIM;
+          ox.font = '600 27px "Rajdhani",sans-serif';
+          ox.fillText(bars + " / 5 BARS", 16, OH - 11);
+          ox.textAlign = "right";
+          ox.fillText(proximity().t, OW - 16, OH - 11);
+          ox.textAlign = "left";
+        }
+        function oledPulse() {
+          oledHeader("PULSE");
+          const top = 50,
+            bot = OH - 34,
+            mid = (top + bot) / 2,
+            half = (bot - top) / 2;
+          ox.strokeStyle = "#0e3a29";
+          ox.lineWidth = 1.5;
+          ox.beginPath();
+          ox.moveTo(16, mid);
+          ox.lineTo(OW - 16, mid);
+          ox.stroke();
+          ox.strokeStyle = OLED_ON;
+          ox.lineWidth = 2.4;
+          ox.beginPath();
+          const n = waveBuf.length,
+            step = (OW - 32) / (n - 1);
+          for (let i = 0; i < n; i++) {
+            const x = 16 + i * step,
+              y = mid - waveBuf[i] * half * 0.92;
+            i === 0 ? ox.moveTo(x, y) : ox.lineTo(x, y);
+          }
+          ox.stroke();
+          ox.fillStyle = OLED_DIM;
+          ox.font = '600 26px "Rajdhani",sans-serif';
+          ox.fillText(PATTERNS[patKey].label.toUpperCase(), 16, OH - 11);
+          ox.textAlign = "right";
+          ox.fillText("ERR " + Math.round(pErr * 100) + "%", OW - 16, OH - 11);
+          ox.textAlign = "left";
+        }
+        function oledDebug() {
+          oledHeader("DEBUG");
+          ox.font = '700 30px "Courier New",monospace';
+          ox.fillStyle = OLED_ON;
+          const rows = [
+            ["RSSI", Math.round(rssi) + "%"],
+            ["NOISE", Math.round(noiseFloor) + "%"],
+            ["SNR", (snr >= 0 ? "+" : "") + Math.round(snr) + "dB"],
+            ["ERR", Math.round(pErr * 100) + "%"],
+            ["CONF", Math.round(confidence * 100) + "%"],
+            ["AIM", Math.round(aimErr) + "°"],
+          ];
+          rows.forEach((r, i) => {
+            const col = i % 2,
+              row = (i / 2) | 0;
+            const x = 20 + col * (OW / 2 - 10),
+              y = 84 + row * 50;
+            ox.fillStyle = OLED_DIM;
+            ox.fillText(r[0], x, y);
+            ox.fillStyle = OLED_ON;
+            ox.fillText(r[1], x + 108, y); // clear of "NOISE" at 30px monospace
+          });
+        }
+
+        /* =================== PULSE STRIP RENDER =================== */
+        function drawStrip() {
+          sx.clearRect(0, 0, SW, SH);
+          const rows = [
+            { label: "SENT", data: sentCode, kind: "sent" },
+            {
+              label: "RECEIVED",
+              data: frames[frames.length - 1] || null,
+              kind: "rx",
+            },
+            { label: "DECODED", data: voted, kind: "dec" },
+          ];
+          const padL = 104,
+            padR = 14,
+            top = 34,
+            rowH = 64,
+            cellW = (SW - padL - padR) / CODE_LEN;
+
+          sx.font = '700 17px "Orbitron",sans-serif';
+          sx.fillStyle = "#5a6d8c";
+          sx.textAlign = "left";
+          sx.fillText("SLOT", 14, 22);
+          sx.font = '600 16px "Rajdhani",sans-serif';
+          sx.textAlign = "center";
+          for (let i = 0; i < CODE_LEN; i++)
+            sx.fillText(String(i + 1), padL + cellW * (i + 0.5), 22);
+
+          rows.forEach((r, ri) => {
+            const y = top + ri * rowH;
+            sx.textAlign = "left";
+            sx.font = '700 16px "Orbitron",sans-serif';
+            sx.fillStyle = "#18233a";
+            sx.fillText(r.label, 14, y + 34);
+
+            for (let i = 0; i < CODE_LEN; i++) {
+              const x = padL + i * cellW,
+                cw = cellW - 8;
+              sx.fillStyle = "#eaf1fb";
+              sx.strokeStyle = "#dce6f5";
+              sx.lineWidth = 1.5;
+              roundRect(sx, x + 4, y + 8, cw, 44, 7);
+              sx.fill();
+              sx.stroke();
+              if (!r.data) continue;
+
+              const v = r.data[i],
+                truth = sentCode[i];
+              const wrong = r.kind !== "sent" && v !== truth;
+              const col =
+                r.kind === "sent" ? "#06b6d4" : wrong ? "#ff5470" : "#22c55e";
+              if (v === "?") {
+                sx.fillStyle = "#94a3b8";
+                sx.font = '700 22px "Orbitron",sans-serif';
+                sx.textAlign = "center";
+                sx.fillText("?", x + 4 + cw / 2, y + 38);
+                continue;
+              }
+              // a short pulse is a narrow block, a long pulse a wide one
+              const pw = v === "L" ? cw * 0.72 : cw * 0.3;
+              sx.fillStyle = col;
+              roundRect(sx, x + 4 + (cw - pw) / 2, y + 16, pw, 28, 5);
+              sx.fill();
+              sx.fillStyle = "#ffffff";
+              sx.font = '700 15px "Orbitron",sans-serif';
+              sx.textAlign = "center";
+              sx.fillText(v, x + 4 + cw / 2, y + 35);
+            }
+          });
+
+          sx.textAlign = "left";
+          sx.font = '600 15px "Rajdhani",sans-serif';
+          sx.fillStyle = "#95a7c4";
+          sx.fillText(
+            "DECODED = majority vote of the last " +
+              frames.length +
+              " frame(s)",
+            14,
+            SH - 8,
+          );
+        }
+
+        /* =================== DOM SYNC =================== */
+        function setFill(el, pct, color) {
+          el.style.width = clamp(pct, 0, 100) + "%";
+          if (color) el.style.background = color;
+        }
+        function rangeFill(el) {
+          const p = ((el.value - el.min) / (el.max - el.min)) * 100;
+          el.style.setProperty("--fill", p + "%");
+        }
+
+        function updateDOM() {
+          const p = proximity(),
+            st = lockState();
+
+          $("bannerTxt").textContent = p.note;
+          const chip = $("bannerChip");
+          chip.textContent = p.t;
+          chip.className = "chip " + p.cls;
+
+          // signal bars
+          const bcls = bars <= 2 ? "weak" : bars <= 3 ? "mid" : "";
+          [...$("barsBox").children].forEach((el, i) => {
+            el.className = i < bars ? "on " + bcls : "";
+          });
+
+          // buzzer
+          $("buzzLed").className =
+            "led" + (buzzFlash > 0 && buzzerOn ? " hot" : "");
+          $("buzzRate").textContent = !buzzerOn
+            ? "MUTED"
+            : !isFinite(buzzInterval)
+              ? "SILENT"
+              : (1 / buzzInterval).toFixed(1) + " BEEPS/S";
+          $("buzzNote").textContent = !buzzerOn
+            ? "Turn the buzzer on to hear the distance."
+            : !isFinite(buzzInterval)
+              ? "Too weak to trigger a beep."
+              : bars >= 5
+                ? "Almost a solid tone — you are on top of it."
+                : "Beeps faster as you close in.";
+
+          // telemetry
+          $("rssiVal").textContent = Math.round(rssi) + "%";
+          setFill(
+            $("rssiFill"),
+            rssi,
+            bars <= 2
+              ? "linear-gradient(90deg,#fca5a5,#ef4444)"
+              : bars <= 3
+                ? "linear-gradient(90deg,#fcd34d,#f59e0b)"
+                : "linear-gradient(90deg,#6ee7b7,#10b981)",
+          );
+          $("noiseVal").textContent = Math.round(noiseFloor) + "%";
+          setFill($("noiseFill"), noiseFloor);
+          $("snrVal").textContent =
+            (snr >= 0 ? "+" : "") + Math.round(snr) + " dB";
+          $("snrVal").style.color =
+            snr > 25 ? "#22c55e" : snr > 5 ? "#f7a23b" : "#ff5470";
+          $("confVal").textContent = Math.round(confidence * 100) + "%";
+          setFill(
+            $("confFill"),
+            confidence * 100,
+            st === "lock"
+              ? "linear-gradient(90deg,#6ee7b7,#10b981)"
+              : st === "part"
+                ? "linear-gradient(90deg,#fcd34d,#f59e0b)"
+                : "linear-gradient(90deg,#fca5a5,#ef4444)",
+          );
+
+          const vb = $("verdictBox");
+          if (!frames.length) {
+            vb.className = "verdict bad";
+            vb.textContent = "Waiting for a full pulse frame…";
+          } else if (st === "lock") {
+            const right = decodedKey === msgKey;
+            vb.className = "verdict " + (right ? "ok" : "bad");
+            vb.innerHTML = right
+              ? `Locked on <b>${MESSAGES[decodedKey].label}</b> — every symbol agrees. Message is trustworthy.`
+              : `Locked on <b>${MESSAGES[decodedKey].label}</b> — but Gibson sent <b>${MESSAGES[msgKey].label}</b>. The channel corrupted it into a different valid message.`;
+          } else if (st === "part") {
+            vb.className = "verdict part";
+            vb.innerHTML = `Best guess is <b>${MESSAGES[decodedKey].label}</b>, but ${CODE_LEN - Math.round(confidence * CODE_LEN)} of ${CODE_LEN} symbols disagree. Get closer, aim better, or use a tougher pulse pattern.`;
+          } else {
+            vb.className = "verdict bad";
+            vb.textContent =
+              "Too damaged to decode. The receiver cannot tell one message from another.";
+          }
+
+          $("statDist").textContent = distM.toFixed(1) + " m";
+          $("statAim").textContent = Math.round(aimErr) + "°";
+          $("statAim").className =
+            "v " + (aimErr < 25 ? "g" : aimErr < 70 ? "w" : "d");
+          $("statErr").textContent = Math.round(pErr * 100) + "%";
+          $("statErr").className =
+            "v " + (pErr < 0.12 ? "g" : pErr < 0.35 ? "w" : "d");
+          $("statFrames").textContent = frames.length + " / " + LOCK_FRAMES;
+          $("statSent").textContent = MESSAGES[msgKey].label;
+          $("statRead").textContent =
+            decodedKey && st !== "lost" ? MESSAGES[decodedKey].label : "—";
+          $("statRead").className =
+            "v " +
+            (decodedKey === msgKey && st === "lock"
+              ? "g"
+              : st === "part"
+                ? "w"
+                : "d");
+
+          // keep the sliders honest about where the receiver actually is
+          const dEl = $("r_dist");
+          if (document.activeElement !== dEl) {
+            dEl.value = clamp(distM, +dEl.min, +dEl.max).toFixed(1);
+            rangeFill(dEl);
+          }
+          $("v_dist").textContent = distM.toFixed(1) + " m";
+          const aEl = $("r_dir");
+          let degs = ((rxHeading / Math.PI) * 180 + 360) % 360;
+          if (document.activeElement !== aEl) {
+            aEl.value = Math.round(degs);
+            rangeFill(aEl);
+          }
+          $("v_dir").textContent = Math.round(degs) + "°";
+        }
+
+        /* =================== INTERACTION =================== */
+        function zonePos(e) {
+          const r = zone.getBoundingClientRect();
+          return {
+            x: (e.clientX - r.left) * (W / r.width),
+            y: (e.clientY - r.top) * (H / r.height),
+          };
+        }
+        let dragMode = null;
+        zone.addEventListener("pointerdown", (e) => {
+          unlockAudio();
+          const p = zonePos(e),
+            tip = antennaTip();
+          dragMode = Math.hypot(p.x - tip.x, p.y - tip.y) < 20 ? "aim" : "move";
+          zone.setPointerCapture(e.pointerId);
+          applyDrag(p);
+        });
+        zone.addEventListener("pointermove", (e) => {
+          if (dragMode) applyDrag(zonePos(e));
+        });
+        zone.addEventListener("pointerup", () => {
+          dragMode = null;
+        });
+        zone.addEventListener("pointercancel", () => {
+          dragMode = null;
+        });
+        function applyDrag(p) {
+          if (dragMode === "aim") {
+            rxHeading = Math.atan2(p.y - rx.y, p.x - rx.x);
+          } else {
+            rx.x = clamp(p.x, 18, W - 18);
+            rx.y = clamp(p.y, 18, H - 18);
+          }
+          computeSignal();
+        }
+
+        // Moving the distance slider slides the receiver straight in or out along the
+        // line it is already on, so direction is preserved.
+        $("r_dist").addEventListener("input", (e) => {
+          rangeFill(e.target);
+          const target = +e.target.value * PX_PER_M;
+          let dx = rx.x - gib.x,
+            dy = rx.y - gib.y,
+            d = Math.hypot(dx, dy);
+          if (d < 1) {
+            dx = 1;
+            dy = 0;
+            d = 1;
+          }
+          rx.x = clamp(gib.x + (dx / d) * target, 18, W - 18);
+          rx.y = clamp(gib.y + (dy / d) * target, 18, H - 18);
+          computeSignal();
+          $("v_dist").textContent = distM.toFixed(1) + " m";
+        });
+        $("r_dir").addEventListener("input", (e) => {
+          rangeFill(e.target);
+          rxHeading = (+e.target.value * Math.PI) / 180;
+          $("v_dir").textContent = e.target.value + "°";
+        });
+        $("r_damage").addEventListener("input", (e) => {
+          rangeFill(e.target);
+          damage = +e.target.value;
+          $("v_damage").textContent = damage + "%";
+        });
+        $("r_noise").addEventListener("input", (e) => {
+          rangeFill(e.target);
+          interference = +e.target.value;
+          $("v_noise").textContent = interference + "%";
+        });
+
+        function segBind(id, attr, onPick) {
+          const box = $(id);
+          box.addEventListener("click", (e) => {
+            const b = e.target.closest("button");
+            if (!b) return;
+            unlockAudio();
+            [...box.children].forEach((c) => c.classList.remove("on"));
+            b.classList.add("on");
+            onPick(b.dataset[attr]);
+          });
+        }
+        // Changing what or how Gibson transmits invalidates every buffered frame — the
+        // receiver has to start voting again from scratch.
+        function restartLink() {
+          buildFrame();
+          sentCode = MESSAGES[msgKey].code.slice();
+          frames = [];
+          voted = null;
+          decodedKey = null;
+          confidence = 0;
+          txClock = 0;
+          frameIdx = -1;
+          rings = [];
+          waveBuf.fill(0);
+        }
+        segBind("segMsg", "msg", (k) => {
+          msgKey = k;
+          $("msgHint").textContent = MESSAGES[k].hint;
+          restartLink();
+        });
+        segBind("segPat", "pat", (k) => {
+          patKey = k;
+          $("patHint").textContent = PATTERNS[k].hint;
+          restartLink();
+        });
+        segBind("segOled", "oled", (k) => {
+          oledMode = k;
+        });
+
+        $("buzzBtn").addEventListener("click", (e) => {
+          unlockAudio();
+          buzzerOn = !buzzerOn;
+          e.currentTarget.classList.toggle("on", buzzerOn);
+          e.currentTarget.textContent = buzzerOn
+            ? "🔊 Buzzer ON"
+            : "🔇 Buzzer OFF";
+        });
+        $("pauseBtn").addEventListener("click", (e) => {
+          paused = !paused;
+          e.currentTarget.classList.toggle("on", paused);
+          e.currentTarget.textContent = paused ? "▶ Resume" : "⏸ Pause";
+        });
+        $("relocateBtn").addEventListener("click", () => {
+          relocate();
+          restartLink();
+        });
+        $("resetBtn").addEventListener("click", () => {
+          resetAll();
+        });
+
+        function relocate() {
+          for (let i = 0; i < 60; i++) {
+            const nx = 110 + Math.random() * (W - 220),
+              ny = 80 + Math.random() * (H - 190);
+            if (Math.hypot(nx - rx.x, ny - rx.y) > 200) {
+              gib.x = nx;
+              gib.y = ny;
+              return;
+            }
+          }
+          gib.x = W * 0.28;
+          gib.y = H * 0.42;
+        }
+
+        function resetAll() {
+          msgKey = "sos";
+          patKey = "short";
+          oledMode = "msg";
+          damage = 10;
+          interference = 15;
+          buzzerOn = true;
+          paused = false;
+          gib = { x: W * 0.28, y: H * 0.42 };
+          rx = { x: W * 0.73, y: H * 0.69 };
+          rxHeading = Math.PI;
+
+          [...$("segMsg").children].forEach((b) =>
+            b.classList.toggle("on", b.dataset.msg === "sos"),
+          );
+          [...$("segPat").children].forEach((b) =>
+            b.classList.toggle("on", b.dataset.pat === "short"),
+          );
+          [...$("segOled").children].forEach((b) =>
+            b.classList.toggle("on", b.dataset.oled === "msg"),
+          );
+          $("msgHint").textContent = MESSAGES.sos.hint;
+          $("patHint").textContent = PATTERNS.short.hint;
+          $("r_damage").value = 10;
+          $("v_damage").textContent = "10%";
+          $("r_noise").value = 15;
+          $("v_noise").textContent = "15%";
+          $("buzzBtn").classList.add("on");
+          $("buzzBtn").textContent = "🔊 Buzzer ON";
+          $("pauseBtn").classList.remove("on");
+          $("pauseBtn").textContent = "⏸ Pause";
+          ["r_damage", "r_noise", "r_dist", "r_dir"].forEach((id) =>
+            rangeFill($(id)),
+          );
+
+          seedScenery();
+          restartLink();
+          computeSignal();
+        }
+
+        /* help tabs */
+        const helpbar = $("helpbar");
+        document.querySelectorAll(".helpbtn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const tab = btn.dataset.tab;
+            const already = btn.classList.contains("on");
+            document
+              .querySelectorAll(".helpbtn")
+              .forEach((b) => b.classList.remove("on"));
+            document
+              .querySelectorAll(".tabpanel")
+              .forEach((p) => p.classList.remove("on"));
+            if (already) {
+              helpbar.classList.remove("show");
+              return;
+            }
+            btn.classList.add("on");
+            document
+              .querySelector(`.tabpanel[data-panel="${tab}"]`)
+              .classList.add("on");
+            helpbar.classList.add("show");
+          });
+        });
+
+        /* =================== LOOP =================== */
+        let last = performance.now();
+        function loop(now) {
+          let dt = (now - last) / 1000;
+          last = now;
+          dt = Math.min(dt, 0.05); // a backgrounded tab must not fast-forward the link
+          if (!paused) {
+            tNow += dt;
+            step(dt);
+          } else computeSignal(); // still respond to slider moves while paused
+          drawZone();
+          drawOled();
+          drawStrip();
+          updateDOM();
+          requestAnimationFrame(loop);
+        }
+
+        /* =================== BOOT =================== */
+        document.addEventListener("pointerdown", unlockAudio, { once: true });
+        refit();
+        if (typeof ResizeObserver !== "undefined") {
+          const ro = new ResizeObserver(refit);
+          ro.observe(zone);
+          ro.observe(oled);
+        }
+        window.addEventListener("resize", refit);
+        seedScenery();
+        buildFrame();
+        computeSignal();
+        ["r_damage", "r_noise", "r_dist", "r_dir"].forEach((id) =>
+          rangeFill($(id)),
+        );
+        requestAnimationFrame(loop);
+      })();
+    </script>
+  </body>
+</html>
