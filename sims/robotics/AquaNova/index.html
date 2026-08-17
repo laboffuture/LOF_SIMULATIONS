@@ -1,0 +1,2693 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AquaNova Alert Station — IoT Motion &amp; Water Rover</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #eef3fb;
+        --panel: #ffffff;
+        --panel2: #f3f8ff;
+        --line: #dce6f5;
+        --txt: #18233a;
+        --mut: #5a6d8c;
+        --dim: #95a7c4;
+        --accent: #2563eb;
+        --accent2: #38bdf8;
+        --aqua: #06b6d4;
+        --water: #38bdf8;
+        --motion: #f59e0b;
+        --blynk: #2bd97c;
+        --warn: #f7a23b;
+        --danger: #ff5470;
+        --ok: #22c55e;
+        --shadow: 0 12px 34px rgba(40, 70, 140, 0.14);
+        --r: 20px;
+        --head: "Orbitron", sans-serif;
+        --body: "Rajdhani", sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        font-family: var(--body);
+        font-size: 15.5px;
+        font-weight: 500;
+        color: var(--txt);
+        background:
+          radial-gradient(900px 500px at 6% -8%, #e0f4fb 0, transparent 60%),
+          radial-gradient(900px 600px at 102% 0%, #e6f7ee 0, transparent 55%),
+          linear-gradient(180deg, #f3f7fd, #e9f0fb);
+        height: 100vh;
+        overflow: hidden;
+        padding: 10px clamp(10px, 2vw, 26px);
+        display: flex;
+        flex-direction: column;
+      }
+      h1,
+      h3,
+      h4,
+      .chip,
+      .bars-title,
+      .phone-top,
+      .feed-title {
+        font-family: var(--head);
+      }
+      header.top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+        flex: 0 0 auto;
+        position: relative;
+      }
+      .logo {
+        width: 42px;
+        height: 42px;
+        border-radius: 13px;
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+        background: linear-gradient(145deg, #fff, #d9f5ef);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+      }
+      .title h1 {
+        margin: 0;
+        font-size: 19px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: #12213f;
+      }
+      .title p {
+        margin: 2px 0 0;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        color: var(--mut);
+      }
+      .helpbtns {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+      }
+      .helpbtn {
+        cursor: pointer;
+        font-weight: 700;
+        color: #fff;
+        font-family: var(--head);
+        font-size: 12.5px;
+        letter-spacing: 0.3px;
+        background: linear-gradient(145deg, #22d3ee, var(--aqua));
+        border: none;
+        padding: 10px 16px;
+        border-radius: 12px;
+        box-shadow: 0 8px 18px rgba(6, 182, 212, 0.32);
+        transition: 0.15s;
+      }
+      .helpbtn:hover {
+        transform: translateY(-2px);
+      }
+      .helpbtn.on {
+        box-shadow:
+          inset 0 0 0 2px #fff,
+          0 8px 18px rgba(6, 182, 212, 0.32);
+      }
+      .helpbar {
+        display: none;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 14px 16px;
+        font-size: 14.5px;
+        line-height: 1.55;
+        color: var(--txt);
+        position: absolute;
+        right: 0;
+        top: 56px;
+        width: 410px;
+        max-width: min(410px, 90vw);
+        max-height: 75vh;
+        overflow-y: auto;
+        z-index: 40;
+      }
+      .helpbar.show {
+        display: block;
+      }
+      @media (max-width: 1280px) {
+        .helpbar {
+          position: static;
+          width: auto;
+          max-width: none;
+          margin-top: 8px;
+        }
+      }
+      .tabpanel {
+        display: none;
+      }
+      .tabpanel.on {
+        display: block;
+      }
+      .tabpanel ol,
+      .tabpanel ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .tabpanel li {
+        margin-bottom: 5px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 310px 1fr 330px;
+        gap: 12px;
+        align-items: stretch;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      @media (max-width: 1280px) {
+        body {
+          overflow: auto;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+          flex: 0 0 auto;
+        }
+        .stagewrap {
+          flex: 0 0 auto;
+          height: clamp(300px, 52vw, 460px);
+        }
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        box-shadow: var(--shadow);
+        padding: 14px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
+      }
+      .card.stage {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        overflow: hidden;
+        padding: 10px;
+        gap: 8px;
+      }
+      .card h3 {
+        margin: 0 0 3px;
+        font-size: 14.5px;
+        font-weight: 700;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        color: #12213f;
+      }
+      .card .sub {
+        font-size: 12.5px;
+        color: var(--mut);
+        margin: 0 0 8px;
+        line-height: 1.4;
+      }
+
+      .cmdgroup {
+        margin-bottom: 14px;
+      }
+      .cmdgroup h4 {
+        margin: 0 0 6px;
+        font-size: 11px;
+        letter-spacing: 0.6px;
+        color: var(--aqua);
+        text-transform: uppercase;
+      }
+      .cmdgroup.motion h4 {
+        color: var(--motion);
+      }
+      .cmdgroup.blynk h4 {
+        color: #16a34a;
+      }
+      .seg {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-bottom: 6px;
+      }
+      .seg button {
+        cursor: pointer;
+        border: 2px solid var(--line);
+        background: #fff;
+        color: var(--mut);
+        padding: 8px 6px;
+        border-radius: 11px;
+        font-size: 12.5px;
+        font-weight: 700;
+        transition: 0.15s;
+        font-family: var(--body);
+      }
+      .seg button:hover {
+        border-color: var(--accent2);
+      }
+      .seg button.on {
+        color: #fff;
+        border-color: transparent;
+        background: linear-gradient(145deg, #22d3ee, var(--aqua));
+        box-shadow: 0 8px 18px rgba(6, 182, 212, 0.35);
+      }
+      .seg.grn button.on {
+        background: linear-gradient(145deg, #4ade80, #16a34a);
+        box-shadow: 0 8px 18px rgba(34, 197, 94, 0.35);
+      }
+      .toggle {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .toggle button {
+        flex: 1;
+        cursor: pointer;
+        border: 2px solid var(--line);
+        background: #fff;
+        color: var(--mut);
+        padding: 8px 6px;
+        border-radius: 11px;
+        font-size: 12.5px;
+        font-weight: 700;
+        transition: 0.15s;
+        font-family: var(--body);
+      }
+      .toggle button.on {
+        color: #fff;
+        border-color: transparent;
+        background: linear-gradient(145deg, #54c48a, #3fb87a);
+        box-shadow: 0 8px 18px rgba(84, 196, 138, 0.35);
+      }
+
+      .ctrl {
+        margin: 10px 0;
+      }
+      .ctrl .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 5px;
+      }
+      .ctrl label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--txt);
+      }
+      .ctrl .val {
+        font-family: var(--head);
+        font-size: 12px;
+        color: var(--accent);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      input[type="range"] {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 9px;
+        border-radius: 10px;
+        outline: none;
+        background: linear-gradient(90deg, var(--accent2), var(--accent))
+          no-repeat;
+        background-size: var(--fill, 50%) 100%;
+        box-shadow: inset 0 0 0 2px var(--line);
+        cursor: pointer;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 19px;
+        height: 19px;
+        border-radius: 50%;
+        background: #fff;
+        border: 4px solid var(--accent);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+        cursor: grab;
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 17px;
+        height: 17px;
+        border-radius: 50%;
+        background: #fff;
+        border: 4px solid var(--accent);
+        cursor: grab;
+      }
+      .hint {
+        font-size: 11.5px;
+        color: var(--dim);
+        margin-top: 4px;
+        line-height: 1.35;
+      }
+
+      canvas {
+        max-width: 100%;
+        display: block;
+      }
+      .stagewrap {
+        flex: 1 1 auto;
+        width: 100%;
+        min-height: 200px;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      #zone {
+        width: 100%;
+        height: 100%;
+        border-radius: 14px;
+        background: #061a22;
+        cursor: grab;
+        touch-action: none;
+        box-shadow: inset 0 0 0 1px #12303c;
+      }
+      #zone.drag {
+        cursor: grabbing;
+      }
+
+      .modebanner {
+        width: 100%;
+        padding: 9px 14px;
+        border-radius: 14px;
+        background: linear-gradient(145deg, #e9fbf3, #d7f5e8);
+        border: 2px solid #bfeed7;
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        transition: 0.2s;
+      }
+      .modebanner.alarm {
+        background: linear-gradient(145deg, #fff0f3, #ffe0e6);
+        border-color: #ffc7d1;
+      }
+      .modebanner .lab {
+        font-size: 11px;
+        color: #0f9960;
+        letter-spacing: 0.5px;
+        font-weight: 700;
+      }
+      .modebanner.alarm .lab {
+        color: #c31f3d;
+      }
+      .modebanner .txt {
+        font-size: 14px;
+        font-weight: 700;
+        color: #123a2b;
+        margin-top: 2px;
+      }
+      .modebanner.alarm .txt {
+        color: #6d1023;
+      }
+      .modebanner .chip {
+        font-family: var(--head);
+        font-size: 11px;
+        color: #fff;
+        font-weight: 800;
+        white-space: nowrap;
+        padding: 6px 12px;
+        border-radius: 9px;
+        background: linear-gradient(145deg, #4ade80, #16a34a);
+      }
+      .modebanner .chip.alarm {
+        background: linear-gradient(145deg, #ff7a90, #e11d48);
+      }
+
+      /* ---- rover device strip (OLED) ---- */
+      .device {
+        --oledh: clamp(64px, 9vh, 92px);
+        width: 100%;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex: 0 0 auto;
+        background: linear-gradient(160deg, #16303a, #0e202a);
+        border: 2px solid #24505f;
+        border-radius: 14px;
+        padding: 7px 9px;
+      }
+      .device .screenwrap {
+        flex: 0 0 auto;
+        border-radius: 9px;
+        padding: 4px;
+        background: #05100c;
+        border: 2px solid #0f2a20;
+      }
+      #oled {
+        border-radius: 5px;
+        display: block;
+        height: var(--oledh);
+        width: calc(var(--oledh) * 700 / 228);
+        max-width: 100%;
+      }
+      .device .side {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        min-width: 0;
+      }
+      .lampsrow {
+        display: flex;
+        gap: 8px;
+      }
+      .lamp {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        background: #0d222c;
+        border: 1.5px solid #24505f;
+        border-radius: 10px;
+        padding: 5px 8px;
+        min-width: 0;
+      }
+      .lamp .bulb {
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: #22384a;
+        box-shadow: inset 0 0 0 2px #0a1922;
+        flex: 0 0 auto;
+        transition: 0.12s;
+      }
+      .lamp .bulb.hot {
+        background: var(--motion);
+        box-shadow:
+          0 0 12px rgba(245, 158, 11, 0.85),
+          inset 0 0 0 2px #6b3d00;
+      }
+      .lamp .bulb.wet {
+        background: var(--water);
+        box-shadow:
+          0 0 12px rgba(56, 189, 248, 0.85),
+          inset 0 0 0 2px #0c3450;
+      }
+      .lamp .k {
+        font-size: 9.5px;
+        letter-spacing: 0.5px;
+        color: #7fa5b8;
+        font-weight: 700;
+        text-transform: uppercase;
+        line-height: 1.1;
+      }
+      .lamp .v {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: #dff1f8;
+        line-height: 1.15;
+      }
+      .uplink {
+        font-size: 11.5px;
+        color: #7fa5b8;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+      .uplink b {
+        color: #cfeaf5;
+        font-family: var(--head);
+        font-size: 11px;
+      }
+
+      .stage-foot {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+      .btn {
+        cursor: pointer;
+        border: 2px solid var(--line);
+        background: #fff;
+        color: var(--txt);
+        padding: 8px 13px;
+        border-radius: 11px;
+        font-size: 13.5px;
+        font-weight: 600;
+        transition: 0.15s;
+        font-family: var(--body);
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent2);
+      }
+      .btn.pause.on {
+        background: linear-gradient(145deg, #22d3ee, var(--aqua));
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(6, 182, 212, 0.35);
+      }
+
+      /* ---- Blynk phone ---- */
+      .phone {
+        background: #101a24;
+        border: 2px solid #22364a;
+        border-radius: 18px;
+        padding: 8px;
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        position: relative;
+        overflow: hidden;
+      }
+      .phone-top {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 10px;
+        letter-spacing: 0.5px;
+        color: #8fb0c4;
+        font-weight: 700;
+        padding: 2px 2px 6px;
+        border-bottom: 1px solid #22364a;
+      }
+      .phone-top .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--blynk);
+        box-shadow: 0 0 8px var(--blynk);
+        flex: 0 0 auto;
+      }
+      .phone-top .online {
+        margin-left: auto;
+        color: var(--blynk);
+      }
+      .widgets {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+      .w {
+        background: #17242f;
+        border: 1px solid #24384a;
+        border-radius: 10px;
+        padding: 7px 8px;
+      }
+      .w .k {
+        font-size: 9px;
+        letter-spacing: 0.6px;
+        color: #7e9db0;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .w .v {
+        font-size: 14px;
+        font-weight: 700;
+        color: #e6f2f8;
+        margin-top: 3px;
+        font-family: var(--head);
+      }
+      .w .v.safe {
+        color: var(--blynk);
+      }
+      .w .v.alarm {
+        color: #ff6b85;
+      }
+      .w.ledw {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+      }
+      .w .biglamp {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #22384a;
+        box-shadow: inset 0 0 0 2px #0d1720;
+        flex: 0 0 auto;
+        transition: 0.12s;
+      }
+      .w .biglamp.hot {
+        background: var(--motion);
+        box-shadow: 0 0 14px rgba(245, 158, 11, 0.9);
+      }
+      .w .biglamp.wet {
+        background: var(--water);
+        box-shadow: 0 0 14px rgba(56, 189, 248, 0.9);
+      }
+      .gbar {
+        height: 9px;
+        border-radius: 6px;
+        background: #0d1720;
+        border: 1px solid #24384a;
+        overflow: hidden;
+        margin-top: 5px;
+        position: relative;
+      }
+      .gbar i {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0;
+        background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+        border-radius: 5px;
+        transition: width 0.12s;
+      }
+      .gbar .thr {
+        position: absolute;
+        top: -2px;
+        bottom: -2px;
+        width: 2px;
+        background: #ff6b85;
+        border-radius: 2px;
+      }
+      .feed-title {
+        font-size: 9.5px;
+        letter-spacing: 0.6px;
+        color: #7e9db0;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-top: 2px;
+      }
+      .feed {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        overflow-y: auto;
+        max-height: 190px;
+        min-height: 60px;
+        padding-right: 2px;
+      }
+      .feed .n {
+        background: #17242f;
+        border: 1px solid #24384a;
+        border-left: 3px solid var(--blynk);
+        border-radius: 8px;
+        padding: 6px 8px;
+        animation: slidein 0.28s ease;
+      }
+      .feed .n.crit {
+        border-left-color: #ff6b85;
+      }
+      .feed .n.motion {
+        border-left-color: var(--motion);
+      }
+      .feed .n.water {
+        border-left-color: var(--water);
+      }
+      .feed .n .h {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #e6f2f8;
+        line-height: 1.25;
+      }
+      .feed .n .m {
+        font-size: 11px;
+        color: #93b2c4;
+        margin-top: 2px;
+        line-height: 1.3;
+      }
+      .feed .n .t {
+        font-size: 9.5px;
+        color: #5f7d8f;
+        margin-top: 3px;
+        font-weight: 600;
+      }
+      .feed .empty {
+        font-size: 11.5px;
+        color: #5f7d8f;
+        text-align: center;
+        padding: 14px 6px;
+        line-height: 1.4;
+      }
+      @keyframes slidein {
+        from {
+          opacity: 0;
+          transform: translateY(-7px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .toast {
+        position: absolute;
+        left: 8px;
+        right: 8px;
+        top: 8px;
+        background: #1f2f3d;
+        border: 1px solid #3a5568;
+        border-radius: 11px;
+        padding: 8px 10px;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+        z-index: 5;
+        opacity: 0;
+        transform: translateY(-14px);
+        transition: 0.25s;
+        pointer-events: none;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: none;
+      }
+      .toast .h {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .toast .m {
+        font-size: 11px;
+        color: #b9cfdd;
+        margin-top: 2px;
+        line-height: 1.3;
+      }
+
+      .reading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 7px 0;
+        border-bottom: 1.5px dashed var(--line);
+        font-size: 13px;
+      }
+      .reading:last-child {
+        border-bottom: none;
+      }
+      .reading .k {
+        color: var(--mut);
+      }
+      .reading .v {
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .hbar {
+        height: 14px;
+        border-radius: 8px;
+        background: var(--panel2);
+        border: 1.5px solid var(--line);
+        position: relative;
+        overflow: hidden;
+        margin: 4px 0 8px;
+      }
+      .hbar .fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0;
+        border-radius: 7px;
+        transition:
+          width 0.12s,
+          background 0.2s;
+      }
+      .hbar .thr {
+        position: absolute;
+        top: -3px;
+        bottom: -3px;
+        width: 2.5px;
+        background: var(--danger);
+        border-radius: 2px;
+      }
+
+      .verdict {
+        padding: 10px;
+        border-radius: 12px;
+        background: var(--panel2);
+        border: 1.5px solid var(--line);
+        text-align: center;
+        font-weight: 700;
+        font-size: 13.5px;
+        margin: 8px 0;
+        color: var(--txt);
+        line-height: 1.45;
+      }
+      .verdict.ok {
+        background: #e9fbf1;
+        border-color: #bfeed3;
+        color: #12643a;
+      }
+      .verdict.warn {
+        background: #fff6e6;
+        border-color: #fadfb1;
+        color: #8a5a08;
+      }
+      .verdict.bad {
+        background: #ffeef1;
+        border-color: #ffcdd6;
+        color: #8f1e33;
+      }
+
+      .statusgrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .stat {
+        background: var(--panel2);
+        border: 1.5px solid var(--line);
+        border-radius: 10px;
+        padding: 6px 8px;
+      }
+      .stat .k {
+        font-size: 10.5px;
+        color: var(--dim);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        font-weight: 700;
+      }
+      .stat .v {
+        font-size: 14px;
+        font-weight: 700;
+        margin-top: 2px;
+      }
+      .stat .v.g {
+        color: var(--ok);
+      }
+      .stat .v.a {
+        color: var(--accent);
+      }
+      .stat .v.n {
+        color: var(--mut);
+      }
+      .stat .v.w {
+        color: var(--warn);
+      }
+      .stat .v.d {
+        color: var(--danger);
+      }
+      .stat .v.b {
+        color: var(--water);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="logo">🌊</div>
+      <div class="title">
+        <h1>AQUANOVA ALERT STATION</h1>
+        <p>PIR MOTION · WATER LEVEL · BLYNK IoT ALERTS · LOF ROBOTICS</p>
+      </div>
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">
+          What You'll Learn
+        </button>
+      </div>
+      <div class="helpbar" id="helpbar">
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li>
+              The rover patrols the habitat watching for two dangers:
+              <b>movement</b> (PIR sensor) and <b>water</b> (water level
+              sensor).
+            </li>
+            <li>
+              Turn on <b>Creature in Zone</b> and raise <b>Movement</b>. Watch
+              the PIR cone catch it — then drop Movement to <b>0</b> and see the
+              alert die away.
+            </li>
+            <li>
+              Raise <b>Water Drop Level</b> to start the pipe leaking. A puddle
+              spreads across the floor; the rover only reads water it is
+              standing in.
+            </li>
+            <li>
+              <b>Drag the rover</b> along the floor, or leave <b>Patrol</b> on
+              to let it sweep by itself.
+            </li>
+            <li>
+              Change the <b>Emergency Condition</b> to see how
+              <i>motion only</i>, <i>water only</i>, <i>both together</i>, and
+              <i>either one</i> give completely different alarms from identical
+              sensors.
+            </li>
+            <li>
+              Watch the <b>Blynk phone</b> on the right receive alerts on its
+              own — nobody pressed anything.
+            </li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <ul>
+            <li>
+              Why a PIR sensor detects <b>motion</b>, not presence — a creature
+              holding still is invisible to it
+            </li>
+            <li>
+              Why a PIR output stays HIGH for a few seconds after the movement
+              stops
+            </li>
+            <li>
+              How sensor sensitivity trades detection range against false alarms
+            </li>
+            <li>
+              How an analog water sensor is turned into a yes/no answer by a
+              threshold
+            </li>
+            <li>
+              How AND / OR logic over two sensors changes what counts as an
+              emergency
+            </li>
+            <li>
+              Why IoT alerts are rate-limited instead of firing continuously
+            </li>
+            <li>
+              How a device sends remote warnings with no human in the loop
+            </li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- ================= CONTROLS ================= -->
+      <section class="card">
+        <h3>Controls</h3>
+        <p class="sub">
+          Set up the habitat, the leak, the rover, and how Blynk should raise
+          the alarm.
+        </p>
+
+        <div class="cmdgroup motion">
+          <h4>Habitat — Motion Source</h4>
+          <div class="toggle">
+            <button id="creatureBtn" class="on">🦎 Creature in Zone</button>
+          </div>
+          <div class="ctrl">
+            <div class="row">
+              <label>Movement</label><span class="val" id="v_move">55</span>
+            </div>
+            <input
+              type="range"
+              id="r_move"
+              min="0"
+              max="100"
+              step="1"
+              value="55"
+            />
+            <div class="hint">
+              At <b>0</b> the creature is present but perfectly still — a PIR
+              sensor cannot see it.
+            </div>
+          </div>
+        </div>
+
+        <div class="cmdgroup">
+          <h4>Leaking Pipe — Water Source</h4>
+          <div class="ctrl">
+            <div class="row">
+              <label>Water Drop Level</label
+              ><span class="val" id="v_leak">0%</span>
+            </div>
+            <input
+              type="range"
+              id="r_leak"
+              min="0"
+              max="100"
+              step="1"
+              value="0"
+            />
+            <div class="hint">
+              How fast the joint drips. The puddle spreads and drains away when
+              you close it.
+            </div>
+          </div>
+        </div>
+
+        <div class="cmdgroup">
+          <h4>Rover Position</h4>
+          <div class="toggle">
+            <button id="patrolBtn" class="on">▶ Patrol Mode</button>
+          </div>
+          <div class="hint" style="margin-top: -2px">
+            Or drag the rover along the floor to park it exactly where you want.
+          </div>
+        </div>
+
+        <div class="cmdgroup">
+          <h4>Sensor Sensitivity</h4>
+          <div class="ctrl">
+            <div class="row">
+              <label>PIR Sensitivity</label
+              ><span class="val" id="v_pir">55%</span>
+            </div>
+            <input
+              type="range"
+              id="r_pir"
+              min="0"
+              max="100"
+              step="1"
+              value="55"
+            />
+            <div class="hint">
+              Raises detection range and lets slower movement trigger it.
+            </div>
+          </div>
+          <div class="ctrl">
+            <div class="row">
+              <label>Water Threshold</label
+              ><span class="val" id="v_thr">30%</span>
+            </div>
+            <input
+              type="range"
+              id="r_thr"
+              min="5"
+              max="90"
+              step="1"
+              value="30"
+            />
+            <div class="hint">
+              The analog reading must cross this to count as WET.
+            </div>
+          </div>
+        </div>
+
+        <div class="cmdgroup">
+          <h4>OLED Display</h4>
+          <div class="toggle">
+            <button id="oledBtn" class="on">🖥 Display ON</button>
+          </div>
+          <div class="seg" id="segOled">
+            <button data-oled="status" class="on">Status</button>
+            <button data-oled="sensors">Sensors</button>
+            <button data-oled="alert">Alert</button>
+            <button data-oled="net">Network</button>
+          </div>
+        </div>
+
+        <div class="cmdgroup blynk">
+          <h4>Blynk App</h4>
+          <div class="toggle">
+            <button id="notifyBtn" class="on">🔔 Notifications ON</button>
+          </div>
+          <div class="seg grn" id="segAlert">
+            <button data-alert="push" class="on">Push Alert</button>
+            <button data-alert="email">Email</button>
+            <button data-alert="log">Event Log</button>
+            <button data-alert="none">Widgets Only</button>
+          </div>
+        </div>
+
+        <div class="cmdgroup blynk">
+          <h4>Emergency Condition</h4>
+          <div class="seg grn" id="segCond">
+            <button data-cond="motion">Motion Only</button>
+            <button data-cond="water">Water Only</button>
+            <button data-cond="both">Motion + Water</button>
+            <button data-cond="either" class="on">Either One</button>
+          </div>
+          <div class="hint" id="condHint">
+            Alarm if the PIR trips <b>or</b> the water sensor goes wet.
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= STAGE ================= -->
+      <section class="card stage">
+        <div class="stagewrap">
+          <canvas id="zone" width="820" height="360"></canvas>
+        </div>
+
+        <div class="modebanner" id="banner">
+          <div>
+            <div class="lab">STATION STATUS</div>
+            <div class="txt" id="bannerTxt">
+              All clear — patrolling the habitat.
+            </div>
+          </div>
+          <div class="chip" id="bannerChip">SAFE</div>
+        </div>
+
+        <div class="device">
+          <div class="screenwrap">
+            <canvas id="oled" width="700" height="228"></canvas>
+          </div>
+          <div class="side">
+            <div class="lampsrow">
+              <div class="lamp">
+                <div class="bulb" id="lampMotion"></div>
+                <div>
+                  <div class="k">PIR Motion</div>
+                  <div class="v" id="lampMotionV">CLEAR</div>
+                </div>
+              </div>
+              <div class="lamp">
+                <div class="bulb" id="lampWater"></div>
+                <div>
+                  <div class="k">Water Level</div>
+                  <div class="v" id="lampWaterV">DRY</div>
+                </div>
+              </div>
+            </div>
+            <div class="uplink">
+              ☁ UPLINK <b id="uplinkTxt">IDLE</b> ·
+              <span id="uplinkNote">Waiting for a trigger.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-foot">
+          <button class="btn pause" id="pauseBtn">⏸ Pause</button>
+          <button class="btn" id="resetBtn">↺ Reset Simulation</button>
+        </div>
+      </section>
+
+      <!-- ================= BLYNK + TELEMETRY ================= -->
+      <section class="card">
+        <h3>Blynk App</h3>
+        <p class="sub">
+          The rover pushes to the cloud on its own — nobody is pressing anything
+          here.
+        </p>
+
+        <div class="phone">
+          <div class="toast" id="toast">
+            <div class="h">
+              <span id="toastIcon">🔔</span><span id="toastH">AquaNova</span>
+            </div>
+            <div class="m" id="toastM">Alert</div>
+          </div>
+          <div class="phone-top">
+            <span class="dot"></span> AQUANOVA STATION
+            <span class="online" id="phoneOnline">ONLINE</span>
+          </div>
+          <div class="widgets">
+            <div class="w ledw">
+              <div>
+                <div class="k">Motion</div>
+                <div class="v" id="wMotionV">—</div>
+              </div>
+              <div class="biglamp" id="wMotion"></div>
+            </div>
+            <div class="w ledw">
+              <div>
+                <div class="k">Water</div>
+                <div class="v" id="wWaterV">—</div>
+              </div>
+              <div class="biglamp" id="wWater"></div>
+            </div>
+            <div class="w">
+              <div class="k">Water Level</div>
+              <div class="gbar">
+                <i id="wLevel"></i>
+                <div class="thr" id="wThr"></div>
+              </div>
+              <div class="v" id="wLevelV" style="font-size: 12.5px">0%</div>
+            </div>
+            <div class="w">
+              <div class="k">Zone</div>
+              <div class="v safe" id="wZone">SAFE</div>
+            </div>
+          </div>
+          <div class="feed-title">Notifications</div>
+          <div class="feed" id="feed">
+            <div class="empty">
+              No alerts yet.<br />Trigger a sensor to see one arrive.
+            </div>
+          </div>
+        </div>
+
+        <h3 style="margin-top: 12px">Sensor Telemetry</h3>
+        <div class="reading">
+          <span class="k">Water Sensor (analog)</span
+          ><span class="v" id="waterVal">0</span>
+        </div>
+        <div class="hbar">
+          <div
+            class="fill"
+            id="waterFill"
+            style="background: linear-gradient(90deg, #7dd3fc, #0ea5e9)"
+          ></div>
+          <div class="thr" id="waterThr"></div>
+        </div>
+        <div class="reading">
+          <span class="k">Creature Distance</span
+          ><span class="v" id="distVal">—</span>
+        </div>
+        <div class="reading">
+          <span class="k">Creature Speed</span
+          ><span class="v" id="speedVal">0 px/s</span>
+        </div>
+
+        <div class="verdict ok" id="verdictBox">
+          Both sensors quiet. Nothing to report.
+        </div>
+
+        <div class="statusgrid">
+          <div class="stat">
+            <div class="k">PIR Output</div>
+            <div class="v n" id="statPir">LOW</div>
+          </div>
+          <div class="stat">
+            <div class="k">PIR Hold Left</div>
+            <div class="v n" id="statHold">0.0 s</div>
+          </div>
+          <div class="stat">
+            <div class="k">PIR Range</div>
+            <div class="v a" id="statRange">0 px</div>
+          </div>
+          <div class="stat">
+            <div class="k">Alerts Sent</div>
+            <div class="v g" id="statSent">0</div>
+          </div>
+          <div class="stat">
+            <div class="k">Throttled</div>
+            <div class="v w" id="statThrottled">0</div>
+          </div>
+          <div class="stat">
+            <div class="k">Uptime</div>
+            <div class="v n" id="statUptime">0 s</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      (() => {
+        "use strict";
+
+        /* =================== HELPERS =================== */
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const TAU = Math.PI * 2;
+        const $ = (id) => document.getElementById(id);
+
+        /* =================== CANVASES =================== */
+        const zone = $("zone"),
+          zx = zone.getContext("2d");
+        let W = zone.width,
+          H = zone.height; // live CSS-pixel size, updated on resize
+        const oled = $("oled"),
+          ox = oled.getContext("2d");
+        const OW = oled.width,
+          OH = oled.height; // fixed logical screen space
+
+        // The habitat stretches to fill the stage, so the backing store is re-cut on
+        // resize. Drawing stays in CSS pixels (the transform carries devicePixelRatio)
+        // so every hand-tuned offset keeps meaning the same thing.
+        const dprOf = () => Math.min(window.devicePixelRatio || 1, 2);
+        let fitted = false;
+        function fitZone() {
+          const r = zone.getBoundingClientRect();
+          if (!r.width || !r.height) return;
+          const cw = Math.round(r.width),
+            ch = Math.round(r.height);
+          if (fitted && cw === W && ch === H) return;
+          const k = dprOf(),
+            fx = cw / W,
+            fy = ch / H;
+          zone.width = Math.round(cw * k);
+          zone.height = Math.round(ch * k);
+          zx.setTransform(k, 0, 0, k, 0, 0);
+          W = cw;
+          H = ch;
+          // Rescale the scene instead of re-rolling it, so a resize never teleports
+          // the rover or re-grows the puddle somewhere else.
+          rover.x *= fx;
+          creature.x *= fx;
+          creature.tx *= fx;
+          leak.x *= fx;
+          puddle.cx *= fx;
+          for (const p of plants) {
+            p.x *= fx;
+          }
+          for (const d of drops) {
+            d.x *= fx;
+            d.y *= fy;
+          }
+          layout();
+          fitted = true;
+        }
+        function fitOled() {
+          const r = oled.getBoundingClientRect();
+          if (!r.width || !r.height) return;
+          const k = dprOf();
+          const bw = Math.max(1, Math.round(r.width * k)),
+            bh = Math.max(1, Math.round(r.height * k));
+          if (oled.width === bw && oled.height === bh) return;
+          oled.width = bw;
+          oled.height = bh;
+          ox.setTransform(bw / OW, 0, 0, bh / OH, 0, 0); // keep drawing in 700x228 space
+        }
+        const refit = () => {
+          fitZone();
+          fitOled();
+        };
+
+        /* =================== MODEL CONSTANTS =================== */
+        const PIR_HOLD = 3.0; // seconds the PIR output latches after motion stops
+        const ALERT_COOLDOWN = 5.0; // Blynk-style rate limit between notifications
+        const DROP_SPEED = 250; // px/s a falling drop travels
+        const MAX_ANALOG = 1023; // what a real 10-bit ADC would report
+
+        const CONDITIONS = {
+          motion: {
+            label: "Motion Only",
+            hint: "Alarm only when the PIR trips. A flood on its own is ignored.",
+          },
+          water: {
+            label: "Water Only",
+            hint: "Alarm only when the water sensor goes wet. Movement is ignored.",
+          },
+          both: {
+            label: "Motion + Water",
+            hint: "Alarm only when <b>both</b> happen at once — an AND gate. Far fewer alarms.",
+          },
+          either: {
+            label: "Either One",
+            hint: "Alarm if the PIR trips <b>or</b> the water sensor goes wet.",
+          },
+        };
+        const ALERT_TYPES = {
+          push: {
+            label: "Push Alert",
+            icon: "🔔",
+            toast: true,
+            feed: true,
+            note: "Phone buzzes immediately.",
+          },
+          email: {
+            label: "Email",
+            icon: "✉",
+            toast: false,
+            feed: true,
+            note: "Queued to the account inbox.",
+          },
+          log: {
+            label: "Event Log",
+            icon: "📋",
+            toast: false,
+            feed: true,
+            note: "Recorded quietly, no buzz.",
+          },
+          none: {
+            label: "Widgets Only",
+            icon: "📊",
+            toast: false,
+            feed: false,
+            note: "Dashboard updates, nothing sent.",
+          },
+        };
+
+        /* =================== STATE =================== */
+        let creatureOn = true,
+          moveLevel = 55,
+          leakLevel = 0;
+        let patrol = true,
+          pirSens = 55,
+          waterThr = 30;
+        let oledOn = true,
+          oledMode = "status";
+        let notifyOn = true,
+          alertType = "push",
+          condition = "either";
+        let paused = false;
+
+        let floorY = 0,
+          ceilY = 0;
+        let rover = { x: 420, dir: 1, speed: 52 };
+        let creature = {
+          x: 200,
+          tx: 200,
+          dir: 1,
+          speed: 0,
+          wait: 0,
+          legPhase: 0,
+        };
+        let leak = { x: 250, t: 0 };
+        let puddle = { cx: 250, vol: 0 };
+        let drops = [],
+          ripples = [],
+          plants = [];
+
+        let pirRaw = false,
+          pirOut = false,
+          pirHold = 0,
+          pirRange = 0;
+        let waterRaw = 0,
+          waterWet = false,
+          splashBoost = 0;
+        let alarm = false,
+          prevAlarm = false,
+          alarmKind = "none";
+        let cooldown = 0,
+          sentCount = 0,
+          throttledCount = 0,
+          uptime = 0;
+        let lastAlertAt = -999,
+          uplinkFlash = 0;
+        let feedItems = [],
+          toastTimer = 0;
+        let tNow = 0;
+
+        /* =================== LAYOUT / SCENERY =================== */
+        function layout() {
+          floorY = H * 0.8;
+          ceilY = H * 0.13;
+          rover.x = clamp(rover.x, 40, W - 40);
+          creature.x = clamp(creature.x, 30, W - 30);
+          leak.x = clamp(leak.x, 80, W - 140);
+          puddle.cx = clamp(puddle.cx, 20, W - 20);
+        }
+        function seedScenery() {
+          plants = [];
+          for (let i = 0; i < 7; i++)
+            plants.push({
+              x: Math.random() * W,
+              h: 16 + Math.random() * 30,
+              w: 10 + Math.random() * 16,
+              hue: Math.random(),
+            });
+        }
+
+        /* =================== WATER MODEL =================== */
+        // The pipe drips at a rate set by the student. Drops fall, land, and feed a
+        // puddle that spreads outward and drains away when the leak is closed — so the
+        // rover's reading depends on *where it is standing*, not just on the leak.
+        function stepWater(dt) {
+          leak.t -= dt;
+          const rate = leakLevel / 100;
+          if (rate > 0) {
+            const interval = lerp(0.55, 0.045, rate);
+            if (leak.t <= 0) {
+              leak.t = interval;
+              drops.push({
+                x: leak.x + (Math.random() - 0.5) * 3,
+                y: ceilY + 26,
+                vy: 0,
+              });
+            }
+          } else leak.t = 0;
+
+          for (const d of drops) {
+            d.vy += 520 * dt;
+            d.y += d.vy * dt;
+          }
+          const roverTop = floorY - 30;
+          const survivors = [];
+          for (const d of drops) {
+            // A drop landing on the rover's probe gives the sensor a direct spike.
+            const onRover = d.y >= roverTop && Math.abs(d.x - rover.x) < 24;
+            if (onRover) {
+              splashBoost = Math.min(1, splashBoost + 0.42);
+              ripples.push({ x: d.x, y: roverTop, r: 2, life: 0, onBot: true });
+              continue;
+            }
+            if (d.y >= floorY) {
+              puddle.vol += 1.0;
+              puddle.cx = lerp(puddle.cx, d.x, 0.06);
+              ripples.push({ x: d.x, y: floorY, r: 2, life: 0, onBot: false });
+              continue;
+            }
+            survivors.push(d);
+          }
+          drops = survivors;
+
+          puddle.vol = Math.max(0, puddle.vol - dt * 3.2); // drainage / evaporation
+          splashBoost = Math.max(0, splashBoost - dt * 0.85);
+
+          for (const r of ripples) {
+            r.r += 52 * dt;
+            r.life += dt;
+          }
+          ripples = ripples.filter((r) => r.life < 0.85);
+
+          // Depth profile: deepest at the centre, tapering to nothing at the rim.
+          const R = puddleRadius();
+          const d = Math.abs(rover.x - puddle.cx);
+          const depth = R > 0 ? Math.max(0, 1 - d / R) * puddleDepth() : 0;
+          const target = clamp(depth * 100 + splashBoost * 45, 0, 100);
+          waterRaw = lerp(waterRaw, target, 1 - Math.pow(0.02, dt)); // sensors settle, they don't snap
+          waterWet = waterRaw > waterThr;
+        }
+        const puddleRadius = () =>
+          Math.min(W * 0.46, Math.sqrt(puddle.vol) * 7.5);
+        const puddleDepth = () => clamp(puddle.vol / 260, 0, 1);
+
+        /* =================== CREATURE + PIR =================== */
+        function stepCreature(dt) {
+          if (!creatureOn) {
+            creature.speed = 0;
+            return;
+          }
+          const maxSpeed = (moveLevel / 100) * 90;
+          if (maxSpeed < 0.5) {
+            creature.speed = 0;
+            return;
+          } // present, but standing still
+
+          if (creature.wait > 0) {
+            creature.wait -= dt;
+            creature.speed = 0;
+            return;
+          }
+          const dx = creature.tx - creature.x;
+          if (Math.abs(dx) < 6) {
+            creature.tx = 30 + Math.random() * (W - 60);
+            creature.wait = Math.random() * 1.4;
+            creature.speed = 0;
+            return;
+          }
+          creature.dir = Math.sign(dx);
+          creature.speed = maxSpeed;
+          creature.x += creature.dir * maxSpeed * dt;
+          creature.x = clamp(creature.x, 26, W - 26);
+          creature.legPhase += dt * maxSpeed * 0.13;
+        }
+
+        // A PIR does not see warm bodies — it sees *changes* in infrared. Something
+        // inside the cone that is not moving produces no change and no trigger, which
+        // is the single most misunderstood thing about these sensors.
+        function stepPIR(dt) {
+          pirRange = 90 + pirSens * 1.7;
+          const minSpeed = lerp(34, 3, pirSens / 100);
+          const dx = creature.x - rover.x;
+          const inFront = Math.sign(dx) === rover.dir || Math.abs(dx) < 12;
+          const inRange = Math.abs(dx) < pirRange;
+          pirRaw =
+            creatureOn && inRange && inFront && creature.speed > minSpeed;
+
+          // Real modules hold their output HIGH for a set time after the last trigger.
+          if (pirRaw) pirHold = PIR_HOLD;
+          else pirHold = Math.max(0, pirHold - dt);
+          pirOut = pirRaw || pirHold > 0;
+        }
+
+        /* =================== ROVER =================== */
+        function stepRover(dt) {
+          if (!patrol || dragging) return;
+          rover.x += rover.dir * rover.speed * dt;
+          if (rover.x > W - 46) {
+            rover.x = W - 46;
+            rover.dir = -1;
+          }
+          if (rover.x < 46) {
+            rover.x = 46;
+            rover.dir = 1;
+          }
+        }
+
+        /* =================== ALERT ENGINE =================== */
+        function evaluate() {
+          switch (condition) {
+            case "motion":
+              return pirOut;
+            case "water":
+              return waterWet;
+            case "both":
+              return pirOut && waterWet;
+            default:
+              return pirOut || waterWet;
+          }
+        }
+        function alertMessage() {
+          if (pirOut && waterWet)
+            return {
+              kind: "crit",
+              icon: "🚨",
+              head: "CRITICAL — Motion + Water",
+              msg: "Movement detected while the habitat is flooding. Send help to AquaNova.",
+            };
+          if (waterWet)
+            return {
+              kind: "water",
+              icon: "💧",
+              head: "Water leak detected",
+              msg: `Water sensor reads ${Math.round(waterRaw)}% (threshold ${waterThr}%). The rover is standing in water.`,
+            };
+          if (pirOut)
+            return {
+              kind: "motion",
+              icon: "⚠",
+              head: "Motion detected",
+              msg: `Something is moving ${Math.round(Math.abs(creature.x - rover.x))} px from the rover.`,
+            };
+          return {
+            kind: "crit",
+            icon: "🚨",
+            head: "Alert",
+            msg: "Emergency condition met.",
+          };
+        }
+        function stepAlerts(dt) {
+          cooldown = Math.max(0, cooldown - dt);
+          uplinkFlash = Math.max(0, uplinkFlash - dt);
+
+          prevAlarm = alarm;
+          alarm = evaluate();
+          alarmKind = alarm ? alertMessage().kind : "none";
+
+          // Only the *rising edge* dispatches. A sensor sitting HIGH must not spam the
+          // cloud — that is exactly why real IoT platforms rate-limit notifications.
+          if (alarm && !prevAlarm) {
+            if (!notifyOn) return; // muted: nothing leaves the device
+            if (alertType === "none") return; // dashboard-only: widgets update, no delivery
+            if (cooldown > 0) {
+              throttledCount++;
+              return;
+            }
+            dispatch(alertMessage());
+          }
+        }
+        function dispatch(a) {
+          const type = ALERT_TYPES[alertType];
+          cooldown = ALERT_COOLDOWN;
+          lastAlertAt = uptime;
+          uplinkFlash = 0.7;
+          sentCount++;
+          feedItems.unshift({
+            kind: a.kind,
+            head: (alertType === "email" ? "✉ " : "") + a.head,
+            msg: a.msg,
+            t: uptime,
+          });
+          if (feedItems.length > 14) feedItems.pop();
+          renderFeed();
+          if (type.toast) showToast(a);
+        }
+        function showToast(a) {
+          $("toastIcon").textContent = a.icon;
+          $("toastH").textContent = "AquaNova — " + a.head;
+          $("toastM").textContent = a.msg;
+          $("toast").classList.add("show");
+          toastTimer = 2.6;
+        }
+        function renderFeed() {
+          const box = $("feed");
+          if (!feedItems.length) {
+            box.innerHTML =
+              '<div class="empty">No alerts yet.<br>Trigger a sensor to see one arrive.</div>';
+            return;
+          }
+          box.innerHTML = feedItems
+            .map(
+              (f) =>
+                `<div class="n ${f.kind}"><div class="h">${f.head}</div><div class="m">${f.msg}</div>` +
+                `<div class="t">${fmtAgo(uptime - f.t)}</div></div>`,
+            )
+            .join("");
+        }
+        function fmtAgo(s) {
+          if (s < 1.5) return "just now";
+          if (s < 60) return Math.round(s) + " s ago";
+          return Math.floor(s / 60) + " min ago";
+        }
+
+        /* =================== SIM STEP =================== */
+        function step(dt) {
+          uptime += dt;
+          stepCreature(dt);
+          stepRover(dt);
+          stepWater(dt);
+          stepPIR(dt);
+          stepAlerts(dt);
+          if (toastTimer > 0) {
+            toastTimer -= dt;
+            if (toastTimer <= 0) $("toast").classList.remove("show");
+          }
+        }
+
+        /* =================== HABITAT RENDER =================== */
+        function roundRect(c, x, y, w, h, r) {
+          c.beginPath();
+          c.moveTo(x + r, y);
+          c.arcTo(x + w, y, x + w, y + h, r);
+          c.arcTo(x + w, y + h, x, y + h, r);
+          c.arcTo(x, y + h, x, y, r);
+          c.arcTo(x, y, x + w, y, r);
+          c.closePath();
+        }
+        function drawZone() {
+          // --- habitat shell ---
+          const g = zx.createLinearGradient(0, 0, 0, H);
+          g.addColorStop(0, "#07202b");
+          g.addColorStop(0.6, "#0a2733");
+          g.addColorStop(1, "#08202a");
+          zx.fillStyle = g;
+          zx.fillRect(0, 0, W, H);
+
+          // dome glass
+          zx.strokeStyle = "rgba(90,190,220,.20)";
+          zx.lineWidth = 2;
+          zx.beginPath();
+          zx.moveTo(0, ceilY);
+          zx.lineTo(W, ceilY);
+          zx.stroke();
+          zx.fillStyle = "rgba(60,150,180,.07)";
+          zx.fillRect(0, 0, W, ceilY);
+          for (let x = 40; x < W; x += 110) {
+            zx.strokeStyle = "rgba(90,190,220,.13)";
+            zx.lineWidth = 1.4;
+            zx.beginPath();
+            zx.moveTo(x, 0);
+            zx.lineTo(x + 26, ceilY);
+            zx.stroke();
+          }
+
+          // back wall grid
+          zx.strokeStyle = "rgba(70,150,175,.10)";
+          zx.lineWidth = 1;
+          for (let y = ceilY + 30; y < floorY; y += 32) {
+            zx.beginPath();
+            zx.moveTo(0, y);
+            zx.lineTo(W, y);
+            zx.stroke();
+          }
+
+          drawPlants();
+          drawPipe();
+
+          // --- floor ---
+          const fg = zx.createLinearGradient(0, floorY, 0, H);
+          fg.addColorStop(0, "#123340");
+          fg.addColorStop(1, "#0a1f28");
+          zx.fillStyle = fg;
+          zx.fillRect(0, floorY, W, H - floorY);
+          zx.strokeStyle = "rgba(120,210,235,.22)";
+          zx.lineWidth = 2;
+          zx.beginPath();
+          zx.moveTo(0, floorY);
+          zx.lineTo(W, floorY);
+          zx.stroke();
+
+          drawPuddle();
+          drawRipples();
+          drawDrops();
+          if (creatureOn) drawCreature();
+          drawPIRCone();
+          drawRover();
+          drawHUD();
+          if (alarm) drawAlarmVignette();
+        }
+
+        function drawPlants() {
+          for (const p of plants) {
+            const x = p.x,
+              base = floorY;
+            zx.strokeStyle =
+              p.hue > 0.5 ? "rgba(52,180,140,.55)" : "rgba(90,190,120,.45)";
+            zx.lineWidth = 3;
+            zx.lineCap = "round";
+            for (let i = -1; i <= 1; i++) {
+              zx.beginPath();
+              zx.moveTo(x, base);
+              zx.quadraticCurveTo(
+                x + i * p.w,
+                base - p.h * 0.6,
+                x + i * p.w * 1.6,
+                base - p.h,
+              );
+              zx.stroke();
+            }
+          }
+        }
+        function drawPipe() {
+          const y = ceilY + 16;
+          zx.fillStyle = "#2b4a56";
+          zx.strokeStyle = "#54808f";
+          zx.lineWidth = 2;
+          roundRect(zx, 0, y - 9, W, 18, 4);
+          zx.fill();
+          zx.stroke();
+          // the leaking joint
+          zx.fillStyle = "#3d6272";
+          roundRect(zx, leak.x - 15, y - 13, 30, 26, 5);
+          zx.fill();
+          zx.stroke();
+          if (leakLevel > 0) {
+            zx.fillStyle =
+              "rgba(56,189,248," +
+              (0.35 + 0.4 * Math.sin(tNow * 7) * 0.5 + 0.2) +
+              ")";
+            zx.beginPath();
+            zx.arc(leak.x, y + 11, 3.4, 0, TAU);
+            zx.fill();
+          }
+          zx.fillStyle = "rgba(150,205,225,.75)";
+          zx.font = '700 10px "Orbitron",sans-serif';
+          zx.textAlign = "center";
+          zx.fillText("LEAK", leak.x, y - 19);
+          zx.textAlign = "left";
+        }
+        function drawDrops() {
+          zx.fillStyle = "#7dd3fc";
+          for (const d of drops) {
+            zx.beginPath();
+            zx.ellipse(
+              d.x,
+              d.y,
+              2.6,
+              4.6 + Math.min(4, d.vy * 0.012),
+              0,
+              0,
+              TAU,
+            );
+            zx.fill();
+          }
+        }
+        function drawPuddle() {
+          const R = puddleRadius();
+          if (R < 2) return;
+          const depth = puddleDepth();
+          const grd = zx.createLinearGradient(0, floorY - 4, 0, floorY + 12);
+          grd.addColorStop(0, `rgba(56,189,248,${0.3 + 0.45 * depth})`);
+          grd.addColorStop(1, `rgba(14,116,180,${0.2 + 0.4 * depth})`);
+          zx.fillStyle = grd;
+          zx.beginPath();
+          zx.ellipse(puddle.cx, floorY + 3, R, 4 + 9 * depth, 0, 0, TAU);
+          zx.fill();
+          // surface shimmer
+          zx.strokeStyle = `rgba(190,235,255,${0.2 + 0.25 * depth})`;
+          zx.lineWidth = 1.4;
+          zx.beginPath();
+          for (let i = 0; i <= 26; i++) {
+            const t = i / 26,
+              x = puddle.cx - R + 2 * R * t;
+            const y = floorY + 1 + Math.sin(t * 9 + tNow * 2.4) * 1.7;
+            i === 0 ? zx.moveTo(x, y) : zx.lineTo(x, y);
+          }
+          zx.stroke();
+        }
+        function drawRipples() {
+          for (const r of ripples) {
+            const a = 1 - r.life / 0.85;
+            zx.strokeStyle = `rgba(160,225,255,${a * 0.7})`;
+            zx.lineWidth = 1.6;
+            zx.beginPath();
+            zx.ellipse(r.x, r.y + 2, r.r, r.r * 0.32, 0, 0, TAU);
+            zx.stroke();
+          }
+        }
+
+        function drawCreature() {
+          const x = creature.x,
+            y = floorY;
+          const walk = creature.speed > 0.5;
+          const bob = walk ? Math.sin(creature.legPhase * 2) * 1.6 : 0;
+          const bodyY = y - 17 + bob;
+          zx.save();
+          zx.translate(x, 0);
+          zx.scale(creature.dir || 1, 1);
+
+          // legs
+          zx.strokeStyle = "#2f9e6b";
+          zx.lineWidth = 2.6;
+          zx.lineCap = "round";
+          for (let i = -1; i <= 1; i += 2) {
+            const ph = walk
+              ? Math.sin(creature.legPhase + (i > 0 ? 0 : Math.PI)) * 4
+              : 0;
+            zx.beginPath();
+            zx.moveTo(i * 5, bodyY + 7);
+            zx.lineTo(i * 5 + ph, y);
+            zx.stroke();
+          }
+          // body
+          zx.fillStyle = "#37b87d";
+          zx.strokeStyle = "#1f7a52";
+          zx.lineWidth = 2;
+          zx.beginPath();
+          zx.ellipse(0, bodyY, 14, 9, 0, 0, TAU);
+          zx.fill();
+          zx.stroke();
+          // head
+          zx.beginPath();
+          zx.ellipse(12, bodyY - 5, 7.5, 6, 0, 0, TAU);
+          zx.fill();
+          zx.stroke();
+          // eye
+          zx.fillStyle = "#06232a";
+          zx.beginPath();
+          zx.arc(15, bodyY - 6.5, 1.8, 0, TAU);
+          zx.fill();
+          // tail
+          zx.strokeStyle = "#2f9e6b";
+          zx.lineWidth = 3;
+          zx.beginPath();
+          zx.moveTo(-13, bodyY);
+          zx.quadraticCurveTo(
+            -24,
+            bodyY - 4 - (walk ? Math.sin(creature.legPhase * 2) * 3 : 0),
+            -30,
+            bodyY + 3,
+          );
+          zx.stroke();
+          zx.restore();
+
+          // "moving" marker so a still creature is visibly different
+          if (walk) {
+            zx.strokeStyle = "rgba(245,158,11,.75)";
+            zx.lineWidth = 2;
+            for (let i = 1; i <= 2; i++) {
+              const off = -creature.dir * (18 + i * 7);
+              zx.beginPath();
+              zx.moveTo(x + off, bodyY - 6);
+              zx.lineTo(x + off - creature.dir * 5, bodyY);
+              zx.lineTo(x + off, bodyY + 6);
+              zx.stroke();
+            }
+          } else {
+            zx.fillStyle = "rgba(150,190,205,.8)";
+            zx.font = '600 11px "Rajdhani",sans-serif';
+            zx.textAlign = "center";
+            zx.fillText("(still)", x, bodyY - 18);
+            zx.textAlign = "left";
+          }
+        }
+
+        function drawPIRCone() {
+          const x = rover.x,
+            y = floorY - 30;
+          const half = 0.62; // ~70 degrees total, like a real lens
+          zx.save();
+          zx.translate(x, y);
+          zx.scale(rover.dir, 1);
+          const grd = zx.createRadialGradient(0, 0, 6, 0, 0, pirRange);
+          const hot = pirOut;
+          grd.addColorStop(
+            0,
+            hot ? "rgba(245,158,11,.34)" : "rgba(120,200,225,.20)",
+          );
+          grd.addColorStop(1, "rgba(120,200,225,0)");
+          zx.fillStyle = grd;
+          zx.beginPath();
+          zx.moveTo(0, 0);
+          zx.arc(0, 0, pirRange, -half, half);
+          zx.closePath();
+          zx.fill();
+          zx.strokeStyle = hot
+            ? "rgba(245,158,11,.65)"
+            : "rgba(120,200,225,.35)";
+          zx.lineWidth = 1.5;
+          zx.beginPath();
+          zx.moveTo(0, 0);
+          zx.arc(0, 0, pirRange, -half, half);
+          zx.closePath();
+          zx.stroke();
+          zx.restore();
+        }
+
+        function drawRover() {
+          const x = rover.x,
+            y = floorY;
+          const wet = waterWet;
+
+          // wheels
+          zx.fillStyle = "#12333f";
+          zx.strokeStyle = "#4f93a8";
+          zx.lineWidth = 2;
+          for (const wx of [-15, 15]) {
+            zx.beginPath();
+            zx.arc(x + wx, y - 8, 8, 0, TAU);
+            zx.fill();
+            zx.stroke();
+            zx.strokeStyle = "#2b6274";
+            zx.lineWidth = 1.5;
+            zx.beginPath();
+            zx.moveTo(x + wx, y - 8);
+            zx.lineTo(
+              x + wx + Math.cos(rover.x * 0.06) * 5,
+              y - 8 + Math.sin(rover.x * 0.06) * 5,
+            );
+            zx.stroke();
+            zx.strokeStyle = "#4f93a8";
+            zx.lineWidth = 2;
+          }
+          // chassis
+          zx.fillStyle = "#17414f";
+          zx.strokeStyle = "#5cc0d8";
+          zx.lineWidth = 2.5;
+          roundRect(zx, x - 26, y - 34, 52, 24, 7);
+          zx.fill();
+          zx.stroke();
+
+          // PIR dome on top
+          zx.fillStyle = pirOut ? "#f6c76a" : "#cfe6ee";
+          zx.beginPath();
+          zx.arc(x + rover.dir * 8, y - 36, 7, Math.PI, 0);
+          zx.fill();
+          zx.strokeStyle = "#8fb9c6";
+          zx.lineWidth = 1.5;
+          zx.stroke();
+          if (pirOut) {
+            zx.shadowColor = "#f59e0b";
+            zx.shadowBlur = 14;
+            zx.beginPath();
+            zx.arc(x + rover.dir * 8, y - 36, 7, Math.PI, 0);
+            zx.fill();
+            zx.shadowBlur = 0;
+          }
+
+          // status LED
+          zx.fillStyle = alarm
+            ? Math.sin(tNow * 9) > 0
+              ? "#ff5470"
+              : "#4a1526"
+            : "#22c55e";
+          zx.beginPath();
+          zx.arc(x - 16, y - 30, 3, 0, TAU);
+          zx.fill();
+
+          // water probe hanging to the floor
+          zx.strokeStyle = "#8fb9c6";
+          zx.lineWidth = 2;
+          zx.beginPath();
+          zx.moveTo(x - rover.dir * 14, y - 14);
+          zx.lineTo(x - rover.dir * 14, y - 2);
+          zx.stroke();
+          zx.fillStyle = wet ? "#38bdf8" : "#39606e";
+          roundRect(zx, x - rover.dir * 14 - 3.5, y - 6, 7, 7, 2);
+          zx.fill();
+          if (wet) {
+            zx.shadowColor = "#38bdf8";
+            zx.shadowBlur = 12;
+            roundRect(zx, x - rover.dir * 14 - 3.5, y - 6, 7, 7, 2);
+            zx.fill();
+            zx.shadowBlur = 0;
+          }
+
+          zx.fillStyle = "#9fd6e6";
+          zx.font = '700 10px "Orbitron",sans-serif';
+          zx.textAlign = "center";
+          zx.fillText("AQUANOVA", x, y - 42);
+          zx.textAlign = "left";
+        }
+
+        function drawHUD() {
+          zx.font = '700 11px "Orbitron",sans-serif';
+          zx.textAlign = "left";
+          zx.fillStyle = "rgba(140,215,235,.85)";
+          zx.fillText("HABITAT ZONE A · AQUANOVA PATROL", 14, 22);
+          zx.font = '600 11px "Rajdhani",sans-serif';
+          zx.fillStyle = "rgba(150,190,205,.7)";
+          zx.fillText("Drag the rover along the floor to move it", 14, H - 12);
+
+          zx.textAlign = "right";
+          zx.font = '800 13px "Orbitron",sans-serif';
+          zx.fillStyle = alarm ? "#ff8098" : "#4ade80";
+          zx.fillText(alarm ? "ALARM" : "ALL CLEAR", W - 14, 24);
+          zx.textAlign = "left";
+        }
+        function drawAlarmVignette() {
+          const a = 0.1 + 0.1 * Math.sin(tNow * 8);
+          const grd = zx.createRadialGradient(
+            W / 2,
+            H / 2,
+            Math.min(W, H) * 0.28,
+            W / 2,
+            H / 2,
+            Math.max(W, H) * 0.72,
+          );
+          grd.addColorStop(0, "rgba(255,60,90,0)");
+          grd.addColorStop(1, `rgba(255,40,80,${a})`);
+          zx.fillStyle = grd;
+          zx.fillRect(0, 0, W, H);
+        }
+
+        /* =================== OLED RENDER =================== */
+        const ON = "#3ef2a5",
+          DIM = "#136b4a",
+          HOT = "#f2c14e",
+          WET = "#63d3f5",
+          BAD = "#ef6a6a";
+        function drawOled() {
+          ox.fillStyle = "#04140d";
+          ox.fillRect(0, 0, OW, OH);
+          if (!oledOn) {
+            ox.fillStyle = "#0a2018";
+            ox.font = '700 26px "Orbitron",sans-serif';
+            ox.textAlign = "center";
+            ox.fillText("DISPLAY OFF", OW / 2, OH / 2 + 8);
+            ox.textAlign = "left";
+          } else {
+            if (oledMode === "status") oledStatus();
+            if (oledMode === "sensors") oledSensors();
+            if (oledMode === "alert") oledAlert();
+            if (oledMode === "net") oledNet();
+          }
+          ox.globalAlpha = 0.2;
+          ox.fillStyle = "#000";
+          for (let y = 0; y < OH; y += 4) ox.fillRect(0, y, OW, 1.6);
+          ox.globalAlpha = 1;
+          ox.strokeStyle = "rgba(62,242,165,.25)";
+          ox.lineWidth = 2;
+          ox.strokeRect(1, 1, OW - 2, OH - 2);
+        }
+        function oledHeader(label, right) {
+          ox.fillStyle = DIM;
+          ox.font = '700 26px "Orbitron",sans-serif';
+          ox.textAlign = "left";
+          ox.fillText(label, 16, 32);
+          if (right) {
+            ox.textAlign = "right";
+            ox.fillText(right, OW - 16, 32);
+            ox.textAlign = "left";
+          }
+          ox.fillStyle = DIM;
+          ox.fillRect(16, 40, OW - 32, 2);
+        }
+        function oledStatus() {
+          oledHeader("AQUANOVA", alarm ? "! ALARM" : "OK");
+          ox.font = '700 34px "Courier New",monospace';
+          ox.textAlign = "left";
+          ox.fillStyle = DIM;
+          ox.fillText("MOTION", 20, 96);
+          ox.fillStyle = pirOut ? HOT : ON;
+          ox.textAlign = "right";
+          ox.fillText(pirOut ? "DETECTED" : "CLEAR", OW - 20, 96);
+          ox.textAlign = "left";
+          ox.fillStyle = DIM;
+          ox.fillText("WATER", 20, 146);
+          ox.fillStyle = waterWet ? WET : ON;
+          ox.textAlign = "right";
+          ox.fillText(waterWet ? "WET" : "DRY", OW - 20, 146);
+
+          ox.textAlign = "center";
+          ox.font = '700 27px "Rajdhani",sans-serif';
+          ox.fillStyle = alarm ? BAD : DIM;
+          ox.fillText(
+            alarm ? alertMessage().head.toUpperCase() : "ZONE SECURE",
+            OW / 2,
+            196,
+          );
+          ox.textAlign = "left";
+        }
+        function oledSensors() {
+          oledHeader("SENSORS");
+          ox.font = '700 27px "Courier New",monospace';
+          ox.fillStyle = DIM;
+          ox.fillText("PIR", 20, 86);
+          ox.fillStyle = pirOut ? HOT : ON;
+          ox.fillText(pirOut ? "HIGH" : "LOW ", 120, 86);
+          ox.fillStyle = DIM;
+          ox.fillText("HOLD", 300, 86);
+          ox.fillStyle = ON;
+          ox.fillText(pirHold.toFixed(1) + "s", 420, 86);
+
+          ox.fillStyle = DIM;
+          ox.fillText("H2O", 20, 132);
+          ox.fillStyle = WET;
+          ox.fillText(
+            String(Math.round((waterRaw / 100) * MAX_ANALOG)).padStart(4, " "),
+            120,
+            132,
+          );
+          ox.fillStyle = DIM;
+          ox.fillText("THR", 300, 132);
+          ox.fillStyle = ON;
+          ox.fillText(
+            String(Math.round((waterThr / 100) * MAX_ANALOG)),
+            420,
+            132,
+          );
+
+          // analog bar with the threshold marked on it
+          const bx = 20,
+            by = 158,
+            bw = OW - 40,
+            bh = 26;
+          ox.fillStyle = "#0e3a29";
+          ox.fillRect(bx, by, bw, bh);
+          ox.fillStyle = waterWet ? WET : "#1c6f52";
+          ox.fillRect(bx, by, bw * clamp(waterRaw / 100, 0, 1), bh);
+          ox.fillStyle = BAD;
+          ox.fillRect(bx + bw * (waterThr / 100) - 2, by - 4, 4, bh + 8);
+          ox.fillStyle = DIM;
+          ox.font = '600 21px "Rajdhani",sans-serif';
+          ox.fillText("0", bx, by + bh + 20);
+          ox.textAlign = "right";
+          ox.fillText(String(MAX_ANALOG), bx + bw, by + bh + 20);
+          ox.textAlign = "left";
+        }
+        function oledAlert() {
+          oledHeader("ALERT LOG");
+          if (!alarm && !feedItems.length) {
+            ox.textAlign = "center";
+            ox.font = '700 30px "Orbitron",sans-serif';
+            ox.fillStyle = DIM;
+            ox.fillText("NO ALERTS", OW / 2, 120);
+            ox.font = '600 24px "Rajdhani",sans-serif';
+            ox.fillText("Station is quiet", OW / 2, 160);
+            ox.textAlign = "left";
+            return;
+          }
+          const a = alarm
+            ? alertMessage()
+            : { icon: "·", head: feedItems[0].head, kind: feedItems[0].kind };
+          ox.textAlign = "center";
+          ox.font = '800 34px "Orbitron",sans-serif';
+          ox.fillStyle = alarm
+            ? Math.sin(tNow * 6) > -0.3
+              ? BAD
+              : "#7a2030"
+            : DIM;
+          ox.fillText(
+            a.kind === "crit"
+              ? "CRITICAL"
+              : a.kind === "water"
+                ? "WATER LEAK"
+                : "MOTION",
+            OW / 2,
+            100,
+          );
+          ox.font = '700 26px "Rajdhani",sans-serif';
+          ox.fillStyle = ON;
+          ox.fillText(
+            `SENT ${sentCount}   HELD ${throttledCount}`,
+            OW / 2,
+            148,
+          );
+          ox.font = '600 24px "Rajdhani",sans-serif';
+          ox.fillStyle = DIM;
+          ox.fillText(
+            cooldown > 0
+              ? `Next alert in ${cooldown.toFixed(1)}s`
+              : "Ready to send",
+            OW / 2,
+            190,
+          );
+          ox.textAlign = "left";
+        }
+        function oledNet() {
+          oledHeader("NETWORK");
+          ox.font = '700 27px "Courier New",monospace';
+          ox.fillStyle = DIM;
+          ox.fillText("BLYNK", 20, 88);
+          ox.fillStyle = notifyOn ? ON : BAD;
+          ox.textAlign = "right";
+          ox.fillText(notifyOn ? "ONLINE" : "MUTED", OW - 20, 88);
+          ox.textAlign = "left";
+          ox.fillStyle = DIM;
+          ox.fillText("MODE", 20, 132);
+          ox.fillStyle = ON;
+          ox.textAlign = "right";
+          ox.fillText(ALERT_TYPES[alertType].label.toUpperCase(), OW - 20, 132);
+          ox.textAlign = "left";
+          ox.fillStyle = DIM;
+          ox.fillText("RULE", 20, 176);
+          ox.fillStyle = ON;
+          ox.textAlign = "right";
+          ox.fillText(CONDITIONS[condition].label.toUpperCase(), OW - 20, 176);
+          ox.textAlign = "left";
+          ox.font = '600 22px "Rajdhani",sans-serif';
+          ox.fillStyle = uplinkFlash > 0 ? ON : DIM;
+          ox.fillText(
+            uplinkFlash > 0 ? ">> UPLINK SENDING" : "uplink idle",
+            20,
+            214,
+          );
+        }
+
+        /* =================== DOM SYNC =================== */
+        function setFill(el, pct, color) {
+          el.style.width = clamp(pct, 0, 100) + "%";
+          if (color) el.style.background = color;
+        }
+        function rangeFill(el) {
+          const p = ((el.value - el.min) / (el.max - el.min)) * 100;
+          el.style.setProperty("--fill", p + "%");
+        }
+
+        function updateDOM() {
+          // banner
+          const b = $("banner"),
+            chip = $("bannerChip");
+          b.classList.toggle("alarm", alarm);
+          chip.className = "chip" + (alarm ? " alarm" : "");
+          chip.textContent = alarm ? "ALARM" : "SAFE";
+          $("bannerTxt").textContent = alarm
+            ? alertMessage().msg
+            : creatureOn && creature.speed < 0.5
+              ? "All clear — the creature is present but holding still, so the PIR sees nothing."
+              : "All clear — patrolling the habitat.";
+
+          // rover lamps
+          $("lampMotion").className = "bulb" + (pirOut ? " hot" : "");
+          $("lampMotionV").textContent = pirOut ? "DETECTED" : "CLEAR";
+          $("lampWater").className = "bulb" + (waterWet ? " wet" : "");
+          $("lampWaterV").textContent = waterWet ? "WET" : "DRY";
+          $("uplinkTxt").textContent = !notifyOn
+            ? "MUTED"
+            : uplinkFlash > 0
+              ? "SENDING"
+              : cooldown > 0
+                ? "COOLDOWN"
+                : "READY";
+          $("uplinkNote").textContent = !notifyOn
+            ? "Notifications are switched off."
+            : uplinkFlash > 0
+              ? "Pushing an alert to the Blynk cloud."
+              : cooldown > 0
+                ? `Rate limited for ${cooldown.toFixed(1)}s.`
+                : ALERT_TYPES[alertType].note;
+
+          // phone widgets
+          $("wMotion").className = "biglamp" + (pirOut ? " hot" : "");
+          $("wMotionV").textContent = pirOut ? "DETECTED" : "Clear";
+          $("wWater").className = "biglamp" + (waterWet ? " wet" : "");
+          $("wWaterV").textContent = waterWet ? "WET" : "Dry";
+          setFill($("wLevel"), waterRaw);
+          $("wThr").style.left = waterThr + "%";
+          $("wLevelV").textContent =
+            Math.round((waterRaw / 100) * MAX_ANALOG) + " / " + MAX_ANALOG;
+          const z = $("wZone");
+          z.textContent = alarm ? "ALARM" : "SAFE";
+          z.className = "v " + (alarm ? "alarm" : "safe");
+          $("phoneOnline").textContent = notifyOn ? "ONLINE" : "MUTED";
+          $("phoneOnline").style.color = notifyOn ? "var(--blynk)" : "#ff6b85";
+
+          // telemetry
+          $("waterVal").textContent =
+            Math.round((waterRaw / 100) * MAX_ANALOG) +
+            "  (" +
+            Math.round(waterRaw) +
+            "%)";
+          setFill($("waterFill"), waterRaw);
+          $("waterThr").style.left = waterThr + "%";
+          const d = creatureOn ? Math.abs(creature.x - rover.x) : null;
+          $("distVal").textContent =
+            d === null ? "— (no creature)" : Math.round(d) + " px";
+          $("speedVal").textContent = Math.round(creature.speed) + " px/s";
+
+          $("statPir").textContent = pirOut
+            ? pirRaw
+              ? "HIGH"
+              : "HOLD"
+            : "LOW";
+          $("statPir").className = "v " + (pirOut ? "w" : "n");
+          $("statHold").textContent = pirHold.toFixed(1) + " s";
+          $("statRange").textContent = Math.round(pirRange) + " px";
+          $("statSent").textContent = sentCount;
+          $("statThrottled").textContent = throttledCount;
+          $("statUptime").textContent = Math.floor(uptime) + " s";
+
+          // verdict
+          const v = $("verdictBox");
+          if (alarm) {
+            v.className = "verdict bad";
+            v.innerHTML =
+              `<b>${CONDITIONS[condition].label}</b> satisfied — ${alertMessage().head}. ` +
+              (notifyOn
+                ? "Blynk was notified."
+                : "But notifications are OFF, so nothing was sent.");
+          } else if (pirOut || waterWet) {
+            v.className = "verdict warn";
+            const which = pirOut ? "motion" : "water";
+            v.innerHTML = `The <b>${which}</b> sensor is triggered, but <b>${CONDITIONS[condition].label}</b> is not satisfied — no alarm.`;
+          } else if (creatureOn && creature.speed < 0.5) {
+            v.className = "verdict warn";
+            v.innerHTML =
+              "A creature is inside the cone but <b>not moving</b>. A PIR sensor reads change in infrared, so it stays silent.";
+          } else {
+            v.className = "verdict ok";
+            v.textContent = "Both sensors quiet. Nothing to report.";
+          }
+        }
+
+        /* =================== INTERACTION =================== */
+        let dragging = false;
+        function zonePos(e) {
+          const r = zone.getBoundingClientRect();
+          return {
+            x: (e.clientX - r.left) * (W / r.width),
+            y: (e.clientY - r.top) * (H / r.height),
+          };
+        }
+        zone.addEventListener("pointerdown", (e) => {
+          const p = zonePos(e);
+          dragging = true;
+          zone.classList.add("drag");
+          zone.setPointerCapture(e.pointerId);
+          moveRover(p.x);
+        });
+        zone.addEventListener("pointermove", (e) => {
+          if (dragging) moveRover(zonePos(e).x);
+        });
+        zone.addEventListener("pointerup", () => {
+          dragging = false;
+          zone.classList.remove("drag");
+        });
+        zone.addEventListener("pointercancel", () => {
+          dragging = false;
+          zone.classList.remove("drag");
+        });
+        function moveRover(x) {
+          const nx = clamp(x, 46, W - 46);
+          if (Math.abs(nx - rover.x) > 0.6)
+            rover.dir = Math.sign(nx - rover.x) || rover.dir;
+          rover.x = nx;
+        }
+
+        function bindRange(id, valId, fn, fmt) {
+          const el = $(id);
+          el.addEventListener("input", (e) => {
+            rangeFill(el);
+            fn(+el.value);
+            $(valId).textContent = fmt ? fmt(+el.value) : el.value;
+          });
+        }
+        bindRange("r_move", "v_move", (v) => (moveLevel = v));
+        bindRange(
+          "r_leak",
+          "v_leak",
+          (v) => (leakLevel = v),
+          (v) => v + "%",
+        );
+        bindRange(
+          "r_pir",
+          "v_pir",
+          (v) => (pirSens = v),
+          (v) => v + "%",
+        );
+        bindRange(
+          "r_thr",
+          "v_thr",
+          (v) => (waterThr = v),
+          (v) => v + "%",
+        );
+
+        function segBind(id, attr, onPick) {
+          const box = $(id);
+          box.addEventListener("click", (e) => {
+            const b = e.target.closest("button");
+            if (!b) return;
+            [...box.children].forEach((c) => c.classList.remove("on"));
+            b.classList.add("on");
+            onPick(b.dataset[attr]);
+          });
+        }
+        segBind("segOled", "oled", (k) => (oledMode = k));
+        segBind("segAlert", "alert", (k) => (alertType = k));
+        segBind("segCond", "cond", (k) => {
+          condition = k;
+          $("condHint").innerHTML = CONDITIONS[k].hint;
+        });
+
+        function toggleBind(id, get, set, onTxt, offTxt) {
+          $(id).addEventListener("click", (e) => {
+            set(!get());
+            e.currentTarget.classList.toggle("on", get());
+            e.currentTarget.textContent = get() ? onTxt : offTxt;
+          });
+        }
+        toggleBind(
+          "creatureBtn",
+          () => creatureOn,
+          (v) => (creatureOn = v),
+          "🦎 Creature in Zone",
+          "🚫 Zone Empty",
+        );
+        toggleBind(
+          "patrolBtn",
+          () => patrol,
+          (v) => (patrol = v),
+          "▶ Patrol Mode",
+          "⏹ Parked",
+        );
+        toggleBind(
+          "oledBtn",
+          () => oledOn,
+          (v) => (oledOn = v),
+          "🖥 Display ON",
+          "🌑 Display OFF",
+        );
+        toggleBind(
+          "notifyBtn",
+          () => notifyOn,
+          (v) => (notifyOn = v),
+          "🔔 Notifications ON",
+          "🔕 Notifications OFF",
+        );
+
+        $("pauseBtn").addEventListener("click", (e) => {
+          paused = !paused;
+          e.currentTarget.classList.toggle("on", paused);
+          e.currentTarget.textContent = paused ? "▶ Resume" : "⏸ Pause";
+        });
+        $("resetBtn").addEventListener("click", resetAll);
+
+        function resetAll() {
+          creatureOn = true;
+          moveLevel = 55;
+          leakLevel = 0;
+          patrol = true;
+          pirSens = 55;
+          waterThr = 30;
+          oledOn = true;
+          oledMode = "status";
+          notifyOn = true;
+          alertType = "push";
+          condition = "either";
+          paused = false;
+
+          rover = { x: W * 0.55, dir: 1, speed: 52 };
+          creature = {
+            x: W * 0.22,
+            tx: W * 0.22,
+            dir: 1,
+            speed: 0,
+            wait: 0,
+            legPhase: 0,
+          };
+          leak = { x: W * 0.3, t: 0 };
+          puddle = { cx: W * 0.3, vol: 0 };
+          drops = [];
+          ripples = [];
+          pirRaw = false;
+          pirOut = false;
+          pirHold = 0;
+          waterRaw = 0;
+          waterWet = false;
+          splashBoost = 0;
+          alarm = false;
+          prevAlarm = false;
+          cooldown = 0;
+          sentCount = 0;
+          throttledCount = 0;
+          uptime = 0;
+          uplinkFlash = 0;
+          feedItems = [];
+          toastTimer = 0;
+          $("toast").classList.remove("show");
+          renderFeed();
+
+          $("r_move").value = 55;
+          $("v_move").textContent = "55";
+          $("r_leak").value = 0;
+          $("v_leak").textContent = "0%";
+          $("r_pir").value = 55;
+          $("v_pir").textContent = "55%";
+          $("r_thr").value = 30;
+          $("v_thr").textContent = "30%";
+          ["r_move", "r_leak", "r_pir", "r_thr"].forEach((id) =>
+            rangeFill($(id)),
+          );
+          [
+            ["segOled", "oled", "status"],
+            ["segAlert", "alert", "push"],
+            ["segCond", "cond", "either"],
+          ].forEach(([id, attr, val]) =>
+            [...$(id).children].forEach((b) =>
+              b.classList.toggle("on", b.dataset[attr] === val),
+            ),
+          );
+          $("condHint").innerHTML = CONDITIONS.either.hint;
+          $("creatureBtn").classList.add("on");
+          $("creatureBtn").textContent = "🦎 Creature in Zone";
+          $("patrolBtn").classList.add("on");
+          $("patrolBtn").textContent = "▶ Patrol Mode";
+          $("oledBtn").classList.add("on");
+          $("oledBtn").textContent = "🖥 Display ON";
+          $("notifyBtn").classList.add("on");
+          $("notifyBtn").textContent = "🔔 Notifications ON";
+          $("pauseBtn").classList.remove("on");
+          $("pauseBtn").textContent = "⏸ Pause";
+
+          seedScenery();
+          layout();
+        }
+
+        /* help tabs */
+        const helpbar = $("helpbar");
+        document.querySelectorAll(".helpbtn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const tab = btn.dataset.tab,
+              already = btn.classList.contains("on");
+            document
+              .querySelectorAll(".helpbtn")
+              .forEach((b) => b.classList.remove("on"));
+            document
+              .querySelectorAll(".tabpanel")
+              .forEach((p) => p.classList.remove("on"));
+            if (already) {
+              helpbar.classList.remove("show");
+              return;
+            }
+            btn.classList.add("on");
+            document
+              .querySelector(`.tabpanel[data-panel="${tab}"]`)
+              .classList.add("on");
+            helpbar.classList.add("show");
+          });
+        });
+
+        /* =================== LOOP =================== */
+        let last = performance.now(),
+          feedTick = 0;
+        function loop(now) {
+          let dt = (now - last) / 1000;
+          last = now;
+          dt = Math.min(dt, 0.05); // a backgrounded tab must not fast-forward
+          if (!paused) {
+            tNow += dt;
+            step(dt);
+          }
+          // Relative timestamps in the feed only need refreshing about once a second.
+          feedTick += dt;
+          if (feedTick > 1) {
+            feedTick = 0;
+            if (feedItems.length) renderFeed();
+          }
+          drawZone();
+          drawOled();
+          updateDOM();
+          requestAnimationFrame(loop);
+        }
+
+        /* =================== BOOT =================== */
+        layout();
+        seedScenery();
+        refit();
+        if (typeof ResizeObserver !== "undefined") {
+          const ro = new ResizeObserver(refit);
+          ro.observe(zone);
+          ro.observe(oled);
+        }
+        window.addEventListener("resize", refit);
+        rover.x = W * 0.55;
+        creature.x = W * 0.22;
+        creature.tx = W * 0.22;
+        leak.x = W * 0.3;
+        puddle.cx = W * 0.3;
+        ["r_move", "r_leak", "r_pir", "r_thr"].forEach((id) =>
+          rangeFill($(id)),
+        );
+        $("condHint").innerHTML = CONDITIONS.either.hint;
+        requestAnimationFrame(loop);
+      })();
+    </script>
+  </body>
+</html>

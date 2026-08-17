@@ -634,56 +634,6 @@
         color: #8f1e33;
       }
 
-      #strip {
-        width: 100%;
-        height: auto;
-        border-radius: 12px;
-        background: var(--panel2);
-        border: 1.5px solid var(--line);
-      }
-
-      .statusgrid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 6px;
-        margin-top: 8px;
-      }
-      .stat {
-        background: var(--panel2);
-        border: 1.5px solid var(--line);
-        border-radius: 10px;
-        padding: 6px 8px;
-      }
-      .stat .k {
-        font-size: 10.5px;
-        color: var(--dim);
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-        font-weight: 700;
-      }
-      .stat .v {
-        font-size: 14px;
-        font-weight: 700;
-        margin-top: 2px;
-      }
-      .stat .v.g {
-        color: var(--ok);
-      }
-      .stat .v.u {
-        color: var(--alien);
-      }
-      .stat .v.n {
-        color: var(--mut);
-      }
-      .stat .v.a {
-        color: var(--accent);
-      }
-      .stat .v.w {
-        color: var(--warn);
-      }
-      .stat .v.d {
-        color: var(--danger);
-      }
     </style>
   </head>
   <body>
@@ -726,8 +676,9 @@
               the <b>wrong</b> message.
             </li>
             <li>
-              Compare the <b>SENT / RECEIVED / DECODED</b> strips on the right
-              to see damaged pulses being voted back into a readable message.
+              Watch <b>Decode Confidence</b> on the right — it is the share of
+              symbols that survived the trip, and it is what decides whether the
+              OLED shows a locked message, a garbled one, or nothing.
             </li>
           </ol>
         </div>
@@ -872,9 +823,7 @@
           <h4 style="margin-top: 12px">OLED Display Mode</h4>
           <div class="seg rx" id="segOled">
             <button data-oled="msg" class="on">Message</button>
-            <button data-oled="bars">Signal Bars</button>
             <button data-oled="pulse">Pulse View</button>
-            <button data-oled="debug">Debug</button>
           </div>
         </div>
       </section>
@@ -957,39 +906,6 @@
           Waiting for a full pulse frame…
         </div>
 
-        <h3 style="margin-top: 12px">Pulse Frames</h3>
-        <p class="sub">
-          Short pulse = <b>S</b>, long pulse = <b>L</b>. Red cells were flipped
-          by the channel; grey <b>?</b> cells were lost.
-        </p>
-        <canvas id="strip" width="640" height="272"></canvas>
-
-        <div class="statusgrid">
-          <div class="stat">
-            <div class="k">True Distance</div>
-            <div class="v a" id="statDist">0.0 m</div>
-          </div>
-          <div class="stat">
-            <div class="k">Antenna Error</div>
-            <div class="v n" id="statAim">0°</div>
-          </div>
-          <div class="stat">
-            <div class="k">Symbol Error Rate</div>
-            <div class="v w" id="statErr">0%</div>
-          </div>
-          <div class="stat">
-            <div class="k">Frames Voted</div>
-            <div class="v n" id="statFrames">0 / 5</div>
-          </div>
-          <div class="stat">
-            <div class="k">Gibson Is Sending</div>
-            <div class="v u" id="statSent">SOS</div>
-          </div>
-          <div class="stat">
-            <div class="k">Receiver Reads</div>
-            <div class="v d" id="statRead">—</div>
-          </div>
-        </div>
       </section>
     </div>
 
@@ -1014,10 +930,6 @@
           ox = oled.getContext("2d");
         const OW = oled.width,
           OH = oled.height; // 2x backing store for a crisp screen
-        const strip = $("strip"),
-          sx = strip.getContext("2d");
-        const SW = strip.width,
-          SH = strip.height;
 
         // Offscreen buffers: the face is drawn clean, then blitted back with tear
         // slices and colour fringing, which is what makes the glitch read as a
@@ -1201,8 +1113,7 @@
         let frameIdx = -1; // index of the last frame the receiver logged
         let frames = []; // last LOCK_FRAMES corrupted receptions
         let sentCode = MESSAGES[msgKey].code.slice();
-        let voted = null,
-          decodedKey = null,
+        let decodedKey = null,
           confidence = 0;
 
         let rssi = 0,
@@ -1369,7 +1280,6 @@
         // helps: random flips disagree with each other, the true symbol does not.
         function decode() {
           if (!frames.length) {
-            voted = null;
             decodedKey = null;
             confidence = 0;
             return;
@@ -1384,7 +1294,6 @@
             }
             v.push(s === 0 && l === 0 ? "?" : s >= l ? "S" : "L");
           }
-          voted = v;
           let best = null,
             bestScore = -1;
           for (const k of MSG_KEYS) {
@@ -1990,9 +1899,7 @@
           ox.fillRect(0, 0, OW, OH);
           ox.save();
           if (oledMode === "msg") oledMessage();
-          if (oledMode === "bars") oledBars();
           if (oledMode === "pulse") oledPulse();
-          if (oledMode === "debug") oledDebug();
           ox.restore();
           // scanlines + glow
           ox.globalAlpha = 0.2;
@@ -2061,36 +1968,6 @@
           );
           ox.textAlign = "left";
         }
-        function oledBars() {
-          oledHeader("SIGNAL");
-          const bw = 94,
-            gapw = 14,
-            x0 = (OW - (5 * bw + 4 * gapw)) / 2,
-            base = OH - 38; // leave room for the labels below
-          for (let i = 0; i < 5; i++) {
-            const on = i < bars,
-              h = 26 + i * 25; // tallest bar must clear the header rule
-            ox.fillStyle = on
-              ? bars <= 2
-                ? "#e06a6a"
-                : bars <= 3
-                  ? "#e8d44a"
-                  : OLED_ON
-              : "#0e3a29";
-            ox.fillRect(x0 + i * (bw + gapw), base - h, bw, h);
-          }
-          ox.textAlign = "right";
-          ox.fillStyle = OLED_ON;
-          ox.font = '800 42px "Orbitron",sans-serif';
-          ox.fillText(Math.round(rssi) + "%", OW - 16, 84);
-          ox.textAlign = "left";
-          ox.fillStyle = OLED_DIM;
-          ox.font = '600 27px "Rajdhani",sans-serif';
-          ox.fillText(bars + " / 5 BARS", 16, OH - 11);
-          ox.textAlign = "right";
-          ox.fillText(proximity().t, OW - 16, OH - 11);
-          ox.textAlign = "left";
-        }
         function oledPulse() {
           oledHeader("PULSE");
           const top = 50,
@@ -2120,110 +1997,6 @@
           ox.textAlign = "right";
           ox.fillText("ERR " + Math.round(pErr * 100) + "%", OW - 16, OH - 11);
           ox.textAlign = "left";
-        }
-        function oledDebug() {
-          oledHeader("DEBUG");
-          ox.font = '700 30px "Courier New",monospace';
-          ox.fillStyle = OLED_ON;
-          const rows = [
-            ["RSSI", Math.round(rssi) + "%"],
-            ["NOISE", Math.round(noiseFloor) + "%"],
-            ["SNR", (snr >= 0 ? "+" : "") + Math.round(snr) + "dB"],
-            ["ERR", Math.round(pErr * 100) + "%"],
-            ["CONF", Math.round(confidence * 100) + "%"],
-            ["AIM", Math.round(aimErr) + "°"],
-          ];
-          rows.forEach((r, i) => {
-            const col = i % 2,
-              row = (i / 2) | 0;
-            const x = 20 + col * (OW / 2 - 10),
-              y = 84 + row * 50;
-            ox.fillStyle = OLED_DIM;
-            ox.fillText(r[0], x, y);
-            ox.fillStyle = OLED_ON;
-            ox.fillText(r[1], x + 108, y); // clear of "NOISE" at 30px monospace
-          });
-        }
-
-        /* =================== PULSE STRIP RENDER =================== */
-        function drawStrip() {
-          sx.clearRect(0, 0, SW, SH);
-          const rows = [
-            { label: "SENT", data: sentCode, kind: "sent" },
-            {
-              label: "RECEIVED",
-              data: frames[frames.length - 1] || null,
-              kind: "rx",
-            },
-            { label: "DECODED", data: voted, kind: "dec" },
-          ];
-          const padL = 104,
-            padR = 14,
-            top = 34,
-            rowH = 64,
-            cellW = (SW - padL - padR) / CODE_LEN;
-
-          sx.font = '700 17px "Orbitron",sans-serif';
-          sx.fillStyle = "#5a6d8c";
-          sx.textAlign = "left";
-          sx.fillText("SLOT", 14, 22);
-          sx.font = '600 16px "Rajdhani",sans-serif';
-          sx.textAlign = "center";
-          for (let i = 0; i < CODE_LEN; i++)
-            sx.fillText(String(i + 1), padL + cellW * (i + 0.5), 22);
-
-          rows.forEach((r, ri) => {
-            const y = top + ri * rowH;
-            sx.textAlign = "left";
-            sx.font = '700 16px "Orbitron",sans-serif';
-            sx.fillStyle = "#18233a";
-            sx.fillText(r.label, 14, y + 34);
-
-            for (let i = 0; i < CODE_LEN; i++) {
-              const x = padL + i * cellW,
-                cw = cellW - 8;
-              sx.fillStyle = "#eaf1fb";
-              sx.strokeStyle = "#dce6f5";
-              sx.lineWidth = 1.5;
-              roundRect(sx, x + 4, y + 8, cw, 44, 7);
-              sx.fill();
-              sx.stroke();
-              if (!r.data) continue;
-
-              const v = r.data[i],
-                truth = sentCode[i];
-              const wrong = r.kind !== "sent" && v !== truth;
-              const col =
-                r.kind === "sent" ? "#06b6d4" : wrong ? "#ff5470" : "#22c55e";
-              if (v === "?") {
-                sx.fillStyle = "#94a3b8";
-                sx.font = '700 22px "Orbitron",sans-serif';
-                sx.textAlign = "center";
-                sx.fillText("?", x + 4 + cw / 2, y + 38);
-                continue;
-              }
-              // a short pulse is a narrow block, a long pulse a wide one
-              const pw = v === "L" ? cw * 0.72 : cw * 0.3;
-              sx.fillStyle = col;
-              roundRect(sx, x + 4 + (cw - pw) / 2, y + 16, pw, 28, 5);
-              sx.fill();
-              sx.fillStyle = "#ffffff";
-              sx.font = '700 15px "Orbitron",sans-serif';
-              sx.textAlign = "center";
-              sx.fillText(v, x + 4 + cw / 2, y + 35);
-            }
-          });
-
-          sx.textAlign = "left";
-          sx.font = '600 15px "Rajdhani",sans-serif';
-          sx.fillStyle = "#95a7c4";
-          sx.fillText(
-            "DECODED = majority vote of the last " +
-              frames.length +
-              " frame(s)",
-            14,
-            SH - 8,
-          );
         }
 
         /* =================== DOM SYNC =================== */
@@ -2313,25 +2086,6 @@
             vb.textContent =
               "Too damaged to decode. The receiver cannot tell one message from another.";
           }
-
-          $("statDist").textContent = distM.toFixed(1) + " m";
-          $("statAim").textContent = Math.round(aimErr) + "°";
-          $("statAim").className =
-            "v " + (aimErr < 25 ? "g" : aimErr < 70 ? "w" : "d");
-          $("statErr").textContent = Math.round(pErr * 100) + "%";
-          $("statErr").className =
-            "v " + (pErr < 0.12 ? "g" : pErr < 0.35 ? "w" : "d");
-          $("statFrames").textContent = frames.length + " / " + LOCK_FRAMES;
-          $("statSent").textContent = MESSAGES[msgKey].label;
-          $("statRead").textContent =
-            decodedKey && st !== "lost" ? MESSAGES[decodedKey].label : "—";
-          $("statRead").className =
-            "v " +
-            (decodedKey === msgKey && st === "lock"
-              ? "g"
-              : st === "part"
-                ? "w"
-                : "d");
 
           // keep the sliders honest about where the receiver actually is
           const dEl = $("r_dist");
@@ -2436,7 +2190,6 @@
           buildFrame();
           sentCode = MESSAGES[msgKey].code.slice();
           frames = [];
-          voted = null;
           decodedKey = null;
           confidence = 0;
           txClock = 0;
@@ -2569,7 +2322,6 @@
           } else computeSignal(); // still respond to slider moves while paused
           drawZone();
           drawOled();
-          drawStrip();
           updateDOM();
           requestAnimationFrame(loop);
         }

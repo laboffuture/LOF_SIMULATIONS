@@ -427,9 +427,177 @@
         color: var(--txt);
         margin-bottom: 8px;
       }
+
+      .helpwrap {
+        position: fixed;
+        top: 14px;
+        right: clamp(12px, 2.4vw, 30px);
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .helpbtns {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .helpbtn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head);
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #fff;
+        background: var(--sky);
+        border: 1px solid var(--sky);
+        border-radius: 8px;
+        padding: 8px 14px;
+        box-shadow: 0 6px 14px rgba(42, 120, 214, 0.24);
+        transition:
+          transform 0.15s ease,
+          background 0.15s ease;
+      }
+      .helpbtn:hover {
+        transform: translateY(-1px);
+      }
+      .helpbtn:focus-visible {
+        outline: 2px solid var(--txt);
+        outline-offset: 2px;
+      }
+      .helpbtn.on {
+        background: var(--accent);
+        border-color: var(--accent);
+        box-shadow: 0 6px 14px rgba(232, 89, 12, 0.26);
+      }
+      .helpbar {
+        display: none;
+        margin-top: 8px;
+        width: 380px;
+        max-width: min(380px, 88vw);
+        max-height: 72vh;
+        overflow-y: auto;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        box-shadow: 0 14px 30px rgba(23, 41, 59, 0.16);
+        padding: 14px 16px;
+        font-size: 13.5px;
+        line-height: 1.5;
+        color: var(--txt);
+      }
+      .helpbar.show {
+        display: block;
+      }
+      .tabpanel {
+        display: none;
+      }
+      .tabpanel.on {
+        display: block;
+      }
+      .tabpanel ol,
+      .tabpanel ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .tabpanel li {
+        margin-bottom: 6px;
+      }
+      .tabpanel li:last-child {
+        margin-bottom: 0;
+      }
+      .tabpanel b {
+        color: var(--sky);
+      }
+      @media (max-width: 900px) {
+        .helpwrap {
+          position: static;
+          align-items: stretch;
+          margin-bottom: 10px;
+          flex: 0 0 auto;
+        }
+        .helpbar {
+          width: 100%;
+          max-width: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .helpbtn {
+          transition: none;
+        }
+      }
     </style>
   </head>
   <body>
+    <div class="helpwrap">
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">
+          What You'll Learn
+        </button>
+      </div>
+      <div class="helpbar" id="helpbar">
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li>
+              Pick a <b>Blower / Wind Speed</b> — Low, Medium or High. Nothing
+              spins until you choose one.
+            </li>
+            <li>
+              Choose the <b>Number of Blades</b> — 2, 3 or 4 — and read the note
+              under it.
+            </li>
+            <li>
+              Pick a <b>Load Device</b> — LED, Battery or Small Gadget — for the
+              generator to power.
+            </li>
+            <li>Press <b>Start</b> and watch the rotor spin up.</li>
+            <li>
+              Read <b>Live Readings</b> — turbine RPM, generator voltage, load
+              current and charging status.
+            </li>
+            <li>
+              Watch the <b>Energy Flow</b> strip light up: wind → turbine →
+              generator → device.
+            </li>
+            <li>
+              Use the <b>Top View</b> inset on the stage to count the blades as
+              they turn.
+            </li>
+            <li>
+              Press <b>Reset</b>, change <b>one</b> setting, and run again to
+              compare.
+            </li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <ul>
+            <li>
+              Why a curved Darrieus rotor spins the same way whatever direction
+              the wind comes from
+            </li>
+            <li>How wind speed sets turbine RPM, and RPM sets voltage</li>
+            <li>
+              Why fewer blades spin faster but start harder, while more blades
+              start easier and run smoother
+            </li>
+            <li>
+              Why every device needs a minimum voltage before any current flows
+            </li>
+            <li>How a heavier load drags on the shaft and slows the rotor</li>
+            <li>
+              Why current, not voltage alone, decides how fast a battery charges
+            </li>
+            <li>How energy changes form at each step of the chain</li>
+            <li>How to test a design by changing one variable at a time</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
     <header class="top">
       <div class="logo">🌀</div>
       <div class="title">
@@ -441,8 +609,8 @@
       <section class="card controls">
         <h3>Turbine Bench</h3>
         <p class="sub">
-          Choose the wind speed and turbine settings, then press Start to
-          begin the test.
+          Choose the wind speed and turbine settings, then press Start to begin
+          the test.
         </p>
 
         <div class="ctrl">
@@ -465,8 +633,8 @@
           <div class="row"><label>Blade Type</label></div>
           <div class="fixedchip">🌀 Curved Darrieus Blades</div>
           <p class="hint">
-            Curved eggbeater blades capture wind from any direction, making
-            the turbine omnidirectional.
+            Curved eggbeater blades capture wind from any direction, making the
+            turbine omnidirectional.
           </p>
         </div>
 
@@ -480,9 +648,7 @@
             <button data-v="3">3</button>
             <button data-v="4">4</button>
           </div>
-          <p class="hint" id="bladeNote">
-            Balanced speed, smooth, reliable.
-          </p>
+          <p class="hint" id="bladeNote">Balanced speed, smooth, reliable.</p>
         </div>
 
         <div class="ctrl">
@@ -572,6 +738,38 @@
         </div>
       </section>
     </div>
+
+    <script>
+      (function () {
+        var bar = document.getElementById("helpbar");
+        var btns = document.querySelectorAll(".helpbtn");
+        var panels = document.querySelectorAll(".tabpanel");
+        function closeAll() {
+          bar.classList.remove("show");
+          btns.forEach(function (b) {
+            b.classList.remove("on");
+          });
+          panels.forEach(function (p) {
+            p.classList.remove("on");
+          });
+        }
+        btns.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var already = btn.classList.contains("on");
+            closeAll();
+            if (already) return;
+            btn.classList.add("on");
+            document
+              .querySelector('.tabpanel[data-panel="' + btn.dataset.tab + '"]')
+              .classList.add("on");
+            bar.classList.add("show");
+          });
+        });
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && bar.classList.contains("show")) closeAll();
+        });
+      })();
+    </script>
 
     <script>
       (() => {

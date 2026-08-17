@@ -1107,9 +1107,7 @@
             </div>
           </div>
         </section>
-
       </div>
-
     </div>
 
     <noscript
@@ -1508,7 +1506,12 @@
           state.running && state.cellG > 0 ? state.cellG : op.thrustG;
         const status = state.cut
           ? "cut"
-          : classifySafety(op, m, state.temp, state.running || state.throttle > 0);
+          : classifySafety(
+              op,
+              m,
+              state.temp,
+              state.running || state.throttle > 0,
+            );
         const tb = $("logBody");
         $("logEmpty").style.display = "none";
         const tr = document.createElement("tr");
@@ -1563,7 +1566,10 @@
           if (starCell) {
             starCell.textContent = "★";
             starCell.className = "star best";
-            starCell.title = "Most Efficient Setup (" + (parseFloat(best.dataset.eff) || 0).toFixed(1) + " g/W)";
+            starCell.title =
+              "Most Efficient Setup (" +
+              (parseFloat(best.dataset.eff) || 0).toFixed(1) +
+              " g/W)";
           }
         }
       }
@@ -1939,7 +1945,8 @@
         tb.style.width =
           Math.max(0, Math.min(100, ((state.temp - 25) / 85) * 100)) + "%";
         $("tempVal").textContent = state.temp.toFixed(0) + " °C";
-        $("logBtn").disabled = !state.running && !state.cut && state.throttle < 0.03;
+        $("logBtn").disabled =
+          !state.running && !state.cut && state.throttle < 0.03;
       }
 
       /* ---------------- main loop ---------------- */

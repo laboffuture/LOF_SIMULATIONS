@@ -9758,7 +9758,8 @@ Error generating stack: ` +
       const od = {
           dihedral: "Wing tips angled upward — helps self-level.",
           flat: "Straight wing — limited self-correction.",
-          anhedral: "Wing tips angled downward — banks quickly, less stability.",
+          anhedral:
+            "Wing tips angled downward — banks quickly, less stability.",
         },
         ud = {
           nose: "Weight forward — nose drops; glider descends faster.",
@@ -11434,9 +11435,191 @@ Error generating stack: ` +
           transition: none;
         }
       }
+      .helpwrap {
+        position: fixed;
+        top: 14px;
+        right: 24px;
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .helpbtns {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .helpbtn {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--font-heading);
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #fff;
+        background: var(--sky);
+        border: 1px solid var(--sky);
+        border-radius: 8px;
+        padding: 8px 14px;
+        box-shadow: 0 6px 14px rgba(42, 120, 214, 0.24);
+        transition:
+          transform 0.15s ease,
+          background 0.15s ease;
+      }
+      .helpbtn:hover {
+        transform: translateY(-1px);
+      }
+      .helpbtn:focus-visible {
+        outline: 2px solid var(--ink);
+        outline-offset: 2px;
+      }
+      .helpbtn.on {
+        background: var(--accent);
+        border-color: var(--accent);
+        box-shadow: 0 6px 14px rgba(232, 89, 12, 0.26);
+      }
+      .helpbar {
+        display: none;
+        margin-top: 8px;
+        width: 380px;
+        max-width: min(380px, 88vw);
+        max-height: 72vh;
+        overflow-y: auto;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: 0 14px 30px rgba(23, 41, 59, 0.16);
+        padding: 14px 16px;
+        font-size: 13.5px;
+        line-height: 1.5;
+        color: var(--ink);
+      }
+      .helpbar.show {
+        display: block;
+      }
+      .tabpanel {
+        display: none;
+      }
+      .tabpanel.on {
+        display: block;
+      }
+      .tabpanel ol,
+      .tabpanel ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .tabpanel li {
+        margin-bottom: 6px;
+      }
+      .tabpanel li:last-child {
+        margin-bottom: 0;
+      }
+      .tabpanel b {
+        color: var(--sky);
+      }
+      @media (max-width: 900px) {
+        .helpwrap {
+          position: static;
+          padding: 12px 24px 0;
+        }
+        .helpbar {
+          width: 100%;
+          max-width: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .helpbtn {
+          transition: none;
+        }
+      }
     </style>
   </head>
   <body>
+    <div class="helpwrap">
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">
+          What You'll Learn
+        </button>
+      </div>
+      <div class="helpbar" id="helpbar">
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li>Pick a <b>Wing type</b> — dihedral, flat or anhedral.</li>
+            <li>
+              Set the <b>Centre of gravity</b> — nose-heavy, balanced or
+              tail-heavy.
+            </li>
+            <li>
+              Drag <b>Launch force</b> and <b>Launch angle</b> to set how hard
+              and how steep the catapult throws.
+            </li>
+            <li>Choose <b>Wind</b> — none, mild or strong.</li>
+            <li>Hit <b>Launch</b> and watch the glider fly down the range.</li>
+            <li>
+              Read <b>Telemetry</b> — distance, flight time, stability and
+              landing.
+            </li>
+            <li>
+              Press <b>Reset</b>, change <b>one</b> setting, and launch again to
+              compare.
+            </li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <ul>
+            <li>How dihedral wings self-right a glider after a roll</li>
+            <li>Why a nose-heavy glider dives and a tail-heavy one stalls</li>
+            <li>How launch angle trades height against distance</li>
+            <li>Why more launch force alone doesn't mean a longer flight</li>
+            <li>How headwind and gusts bend the glide path</li>
+            <li>Why stability decides a safe landing or a crash</li>
+            <li>How to test a design by changing one variable at a time</li>
+          </ul>
+        </div>
+      </div>
+    </div>
     <div id="root"></div>
+    <script>
+      (function () {
+        var bar = document.getElementById("helpbar");
+        var btns = document.querySelectorAll(".helpbtn");
+        var panels = document.querySelectorAll(".tabpanel");
+        btns.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var already = btn.classList.contains("on");
+            btns.forEach(function (b) {
+              b.classList.remove("on");
+            });
+            panels.forEach(function (p) {
+              p.classList.remove("on");
+            });
+            if (already) {
+              bar.classList.remove("show");
+              return;
+            }
+            btn.classList.add("on");
+            document
+              .querySelector('.tabpanel[data-panel="' + btn.dataset.tab + '"]')
+              .classList.add("on");
+            bar.classList.add("show");
+          });
+        });
+        document.addEventListener("keydown", function (e) {
+          if (e.key !== "Escape" || !bar.classList.contains("show")) return;
+          bar.classList.remove("show");
+          btns.forEach(function (b) {
+            b.classList.remove("on");
+          });
+          panels.forEach(function (p) {
+            p.classList.remove("on");
+          });
+        });
+      })();
+    </script>
   </body>
 </html>

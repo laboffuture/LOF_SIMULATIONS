@@ -433,9 +433,7 @@
       <div class="logo">🐰</div>
       <div class="title">
         <h1>SHADOW TRIGGERED ESCAPE BOT</h1>
-        <p>
-          LDR · MOTION SENSOR · ULTRASONIC · LOF ROBOTICS
-        </p>
+        <p>LDR · MOTION SENSOR · ULTRASONIC · LOF ROBOTICS</p>
       </div>
     </header>
 
@@ -946,10 +944,13 @@
             // toward the horizon or one down in the near foreground, both comfortably clear.
             const useBack = Math.random() < 0.6;
             const laneY = useBack
-              ? 130 + Math.random() * Math.max(20, SENSOR.y - AWAY_MIN_CLEARANCE - 130)
+              ? 130 +
+                Math.random() *
+                  Math.max(20, SENSOR.y - AWAY_MIN_CLEARANCE - 130)
               : SENSOR.y +
                 AWAY_MIN_CLEARANCE +
-                Math.random() * Math.max(4, H - 16 - (SENSOR.y + AWAY_MIN_CLEARANCE));
+                Math.random() *
+                  Math.max(4, H - 16 - (SENSOR.y + AWAY_MIN_CLEARANCE));
             human.x = fromLeft ? -60 : W + 60;
             human.y = laneY;
             human.scale = 1.06;
@@ -1180,7 +1181,11 @@
           const removeIdx = ultraHitObstacle(p.x, p.y);
           ultraHover =
             removeIdx >= 0
-              ? { x: obstacles[removeIdx].x, y: obstacles[removeIdx].y, removeIdx }
+              ? {
+                  x: obstacles[removeIdx].x,
+                  y: obstacles[removeIdx].y,
+                  removeIdx,
+                }
               : { ...ultraPlacementSpot(p.x, p.y), removeIdx: -1 };
         });
         cv.addEventListener("pointerleave", () => {
@@ -1233,7 +1238,8 @@
             if (fwd < -4) continue;
             const onPathX = pathCenterXAt(o.y),
               halfW = pathHalfWidthAt(o.y);
-            if (Math.abs(o.x - onPathX) > halfW + ULTRA_OFFPATH_MARGIN) continue; // truly off the trail — not detected
+            if (Math.abs(o.x - onPathX) > halfW + ULTRA_OFFPATH_MARGIN)
+              continue; // truly off the trail — not detected
             if (fwd < bestFwd) {
               bestFwd = fwd;
               best = o;
@@ -1941,7 +1947,13 @@
           drawCabbageRow(x0 + 10, x1 - 10, rowY[1], s);
           drawTomatoRow(x0 + 14, x1 - 14, rowY[2], s);
           drawFlowerBed((x0 + x1) / 2, rowY[2] + 22, s * 0.9);
-          const pinColors = ["#ff5c5c", "#ffd23f", "#4fd67a", "#4fa0ff", "#c774e8"];
+          const pinColors = [
+            "#ff5c5c",
+            "#ffd23f",
+            "#4fd67a",
+            "#4fa0ff",
+            "#c774e8",
+          ];
           const pinCount = Math.max(4, Math.round((x1 - x0) / 55));
           for (let i = 0; i < pinCount; i++) {
             const px = x0 + 6 + ((x1 - x0 - 12) * i) / (pinCount - 1);
@@ -2593,7 +2605,12 @@
           scale = scale || 1;
           drawRabbitTreeHouse(x, y, scale * 0.95);
           // A little name-board sign staked to the right of the house.
-          drawSignpost(x + 56 * scale, y + 6 * scale, scale * 0.7, "BUNNY'S REST");
+          drawSignpost(
+            x + 56 * scale,
+            y + 6 * scale,
+            scale * 0.7,
+            "BUNNY'S REST",
+          );
         }
         function drawObstacle(x, y, scale) {
           y = y != null ? y : GROUND - 2;
@@ -2655,7 +2672,11 @@
             ultraHover.removeIdx >= 0
               ? "rgba(255,140,155,.95)"
               : "rgba(255,255,255,.95)";
-          g.fillText(ultraHover.removeIdx >= 0 ? "−" : "+", ultraHover.x, ultraHover.y);
+          g.fillText(
+            ultraHover.removeIdx >= 0 ? "−" : "+",
+            ultraHover.x,
+            ultraHover.y,
+          );
           g.textAlign = "left";
           g.textBaseline = "alphabetic";
           g.restore();
@@ -2720,7 +2741,8 @@
             g.restore();
             // a couple of soft trailing arcs behind the leading edge, direction matches travel
             for (let i = 1; i <= 2; i++) {
-              const td = ping.phase === "back" ? ping.dist + i * 9 : ping.dist - i * 9;
+              const td =
+                ping.phase === "back" ? ping.dist + i * 9 : ping.dist - i * 9;
               if (td < 0 || td > maxPx) continue;
               g.globalAlpha = 0.35 / i;
               g.save();

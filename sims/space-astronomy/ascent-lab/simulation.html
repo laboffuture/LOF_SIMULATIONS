@@ -1,682 +1,1690 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ascent Lab</title>
-<link rel="icon" type="image/png" href="../../../assets/logo.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --paper:#E8E6DF; --paper-2:#DEDBD2; --ink:#1B2A33; --ink-2:#4A5A66; --ink-3:#8A9AA6;
-  --rule:#B9BDB4; --signal:#C2410C; --signal-2:#EA580C; --ok:#15803D; --warn:#A16207;
-  --grid:rgba(27,42,51,.07); --mono:'Roboto Mono',ui-monospace,monospace; --sans:'Archivo',system-ui,sans-serif;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{background:var(--paper);color:var(--ink);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
-#app{display:grid;grid-template-columns:1fr 366px;height:100vh}
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Ascent Lab</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --paper: #e8e6df;
+        --paper-2: #dedbd2;
+        --ink: #1b2a33;
+        --ink-2: #4a5a66;
+        --ink-3: #8a9aa6;
+        --rule: #b9bdb4;
+        --signal: #c2410c;
+        --signal-2: #ea580c;
+        --ok: #15803d;
+        --warn: #a16207;
+        --grid: rgba(27, 42, 51, 0.07);
+        --mono: "Roboto Mono", ui-monospace, monospace;
+        --sans: "Archivo", system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--sans);
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+      #app {
+        display: grid;
+        grid-template-columns: 1fr 366px;
+        height: 100vh;
+      }
 
-/* ---- STAGE ---- */
-#stage{position:relative;overflow:hidden;background:var(--paper)}
-#scene{display:block;width:100%;height:100%}
+      /* ---- STAGE ---- */
+      #stage {
+        position: relative;
+        overflow: hidden;
+        background: var(--paper);
+      }
+      #scene {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
 
-#scentabs{position:absolute;top:14px;left:16px;right:16px;z-index:4;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.wtab{background:rgba(232,230,223,.9);border:1px solid var(--rule);backdrop-filter:blur(6px);
-  padding:8px 9px;cursor:pointer;text-align:left;transition:.12s}
-.wtab:hover{border-color:var(--ink)}
-.wtab.on{border-color:var(--ink);background:var(--ink);color:var(--paper)}
-.wtab .wn{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.04em}
-.wtab .wd{display:flex;align-items:center;gap:5px;margin-top:6px}
-.wtab .wd .lab{font-family:var(--mono);font-size:8px;letter-spacing:.03em;color:var(--ink-3)}
-.wtab.on .wd .lab{color:rgba(232,230,223,.7)}
-.difbar{flex:1;height:5px;background:var(--rule);position:relative;overflow:hidden}
-.difbar i{position:absolute;left:0;top:0;bottom:0;background:var(--signal)}
-.wtab.on .difbar{background:rgba(232,230,223,.25)}
-.wtab:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+      #scentabs {
+        position: absolute;
+        top: 14px;
+        left: 16px;
+        right: 16px;
+        z-index: 4;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .wtab {
+        background: rgba(232, 230, 223, 0.9);
+        border: 1px solid var(--rule);
+        backdrop-filter: blur(6px);
+        padding: 8px 9px;
+        cursor: pointer;
+        text-align: left;
+        transition: 0.12s;
+      }
+      .wtab:hover {
+        border-color: var(--ink);
+      }
+      .wtab.on {
+        border-color: var(--ink);
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .wtab .wn {
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      .wtab .wd {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 6px;
+      }
+      .wtab .wd .lab {
+        font-family: var(--mono);
+        font-size: 8px;
+        letter-spacing: 0.03em;
+        color: var(--ink-3);
+      }
+      .wtab.on .wd .lab {
+        color: rgba(232, 230, 223, 0.7);
+      }
+      .difbar {
+        flex: 1;
+        height: 5px;
+        background: var(--rule);
+        position: relative;
+        overflow: hidden;
+      }
+      .difbar i {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        background: var(--signal);
+      }
+      .wtab.on .difbar {
+        background: rgba(232, 230, 223, 0.25);
+      }
+      .wtab:focus-visible {
+        outline: 2px solid var(--signal);
+        outline-offset: 2px;
+      }
 
-#titlecard{position:absolute;top:74px;left:18px;pointer-events:none;z-index:3}
-#titlecard h1{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);text-shadow:0 1px 3px rgba(0,0,0,.18)}
-#titlecard p{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;margin-top:3px;color:var(--ink-3);text-shadow:0 1px 3px rgba(0,0,0,.18)}
+      #titlecard {
+        position: absolute;
+        top: 74px;
+        left: 18px;
+        pointer-events: none;
+        z-index: 3;
+      }
+      #titlecard h1 {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-2);
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+      }
+      #titlecard p {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        letter-spacing: 0.05em;
+        margin-top: 3px;
+        color: var(--ink-3);
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+      }
 
-/* launch bar */
-#launchbar{position:absolute;left:16px;right:16px;bottom:16px;z-index:5;background:rgba(232,230,223,.94);
-  border:1px solid var(--rule);backdrop-filter:blur(6px);padding:10px 12px;display:flex;align-items:center;gap:12px}
-#launchBtn{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.1em;color:var(--paper);
-  background:var(--signal);border:1px solid var(--signal);padding:12px 20px;cursor:pointer;white-space:nowrap;flex:none}
-#launchBtn:hover{background:var(--signal-2);border-color:var(--signal-2)}
-#launchBtn:active{transform:translateY(1px)}
-#launchBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-.minibtn{font-family:var(--mono);font-size:10px;font-weight:700;background:var(--paper);border:1px solid var(--rule);
-  color:var(--ink-2);padding:9px 11px;cursor:pointer;white-space:nowrap;flex:none;letter-spacing:.02em}
-.minibtn:hover{border-color:var(--signal);color:var(--signal)}
-.spacer{flex:1}
-.bmeter{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
-.bmeter .k{font-size:8px;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase;display:block}
-.bmeter .v{font-size:15px;font-weight:700;line-height:1.1}
+      /* launch bar */
+      #launchbar {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        z-index: 5;
+        background: rgba(232, 230, 223, 0.94);
+        border: 1px solid var(--rule);
+        backdrop-filter: blur(6px);
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      #launchBtn {
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        color: var(--paper);
+        background: var(--signal);
+        border: 1px solid var(--signal);
+        padding: 12px 20px;
+        cursor: pointer;
+        white-space: nowrap;
+        flex: none;
+      }
+      #launchBtn:hover {
+        background: var(--signal-2);
+        border-color: var(--signal-2);
+      }
+      #launchBtn:active {
+        transform: translateY(1px);
+      }
+      #launchBtn:focus-visible {
+        outline: 2px solid var(--ink);
+        outline-offset: 2px;
+      }
+      .minibtn {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        color: var(--ink-2);
+        padding: 9px 11px;
+        cursor: pointer;
+        white-space: nowrap;
+        flex: none;
+        letter-spacing: 0.02em;
+      }
+      .minibtn:hover {
+        border-color: var(--signal);
+        color: var(--signal);
+      }
+      .spacer {
+        flex: 1;
+      }
+      .bmeter {
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        text-align: right;
+      }
+      .bmeter .k {
+        font-size: 8px;
+        letter-spacing: 0.1em;
+        color: var(--ink-3);
+        text-transform: uppercase;
+        display: block;
+      }
+      .bmeter .v {
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.1;
+      }
 
-/* ---- PANEL ---- */
-#panel{background:var(--paper-2);border-left:1px solid var(--rule);overflow-y:auto;display:flex;flex-direction:column}
-#panel::-webkit-scrollbar{width:8px}
-#panel::-webkit-scrollbar-track{background:var(--paper-2)}
-#panel::-webkit-scrollbar-thumb{background:var(--rule)}
-.sec{border-bottom:1px solid var(--rule);padding:14px 16px}
-.sec-h{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--ink-3);margin-bottom:11px;display:flex;justify-content:space-between;align-items:baseline}
-.sec-h span{color:var(--signal)}
+      /* ---- PANEL ---- */
+      #panel {
+        background: var(--paper-2);
+        border-left: 1px solid var(--rule);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+      }
+      #panel::-webkit-scrollbar {
+        width: 8px;
+      }
+      #panel::-webkit-scrollbar-track {
+        background: var(--paper-2);
+      }
+      #panel::-webkit-scrollbar-thumb {
+        background: var(--rule);
+      }
+      .sec {
+        border-bottom: 1px solid var(--rule);
+        padding: 14px 16px;
+      }
+      .sec-h {
+        font-family: var(--mono);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-3);
+        margin-bottom: 11px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .sec-h span {
+        color: var(--signal);
+      }
 
-/* telemetry */
-#telem{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
-.row{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:11px;padding:4px 0;border-bottom:1px dotted var(--rule)}
-.row.wide{grid-column:1/-1}
-.row dt{color:var(--ink-3);letter-spacing:.03em}
-.row dd{font-weight:700;font-variant-numeric:tabular-nums}
-.row dd .u{color:var(--ink-3);font-size:9px;font-weight:400;margin-left:1px}
-.flag{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.04em}
-.flag.stable{color:var(--ok)} .flag.marginal{color:var(--warn)} .flag.unstable{color:var(--signal)}
-.smnum{font-size:9px;color:var(--ink-3);font-weight:400;margin-left:4px}
-.resultline{grid-column:1/-1;margin-top:8px;font-family:var(--mono);font-size:10px;letter-spacing:.02em;
-  padding:7px 9px;border:1px solid var(--rule);background:var(--paper);min-height:30px;display:flex;align-items:center}
-.resultline b{font-weight:700}
-.resultline.in{border-left:3px solid var(--ok)} .resultline.near{border-left:3px solid var(--warn)} .resultline.off{border-left:3px solid var(--signal)}
+      /* telemetry */
+      #telem {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 14px;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 4px 0;
+        border-bottom: 1px dotted var(--rule);
+      }
+      .row.wide {
+        grid-column: 1/-1;
+      }
+      .row dt {
+        color: var(--ink-3);
+        letter-spacing: 0.03em;
+      }
+      .row dd {
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .row dd .u {
+        color: var(--ink-3);
+        font-size: 9px;
+        font-weight: 400;
+        margin-left: 1px;
+      }
+      .flag {
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      .flag.stable {
+        color: var(--ok);
+      }
+      .flag.marginal {
+        color: var(--warn);
+      }
+      .flag.unstable {
+        color: var(--signal);
+      }
+      .smnum {
+        font-size: 9px;
+        color: var(--ink-3);
+        font-weight: 400;
+        margin-left: 4px;
+      }
+      .resultline {
+        grid-column: 1/-1;
+        margin-top: 8px;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.02em;
+        padding: 7px 9px;
+        border: 1px solid var(--rule);
+        background: var(--paper);
+        min-height: 30px;
+        display: flex;
+        align-items: center;
+      }
+      .resultline b {
+        font-weight: 700;
+      }
+      .resultline.in {
+        border-left: 3px solid var(--ok);
+      }
+      .resultline.near {
+        border-left: 3px solid var(--warn);
+      }
+      .resultline.off {
+        border-left: 3px solid var(--signal);
+      }
 
-/* controls */
-.ctl{margin-bottom:13px} .ctl:last-child{margin-bottom:0}
-.ctl-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
-.ctl-name{font-family:var(--mono);font-size:10px;color:var(--ink-2);letter-spacing:.05em}
-.ctl-val{font-family:var(--mono);font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
-.ctl-val .num{color:var(--signal)}
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:var(--rule);cursor:pointer}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;background:var(--ink);border-radius:50%;cursor:pointer;border:2px solid var(--paper-2)}
-input[type=range]::-moz-range-thumb{width:13px;height:13px;background:var(--ink);border-radius:50%;cursor:pointer;border:2px solid var(--paper-2)}
-input[type=range]:focus-visible{outline:2px solid var(--signal);outline-offset:4px}
-.seg{display:flex;border:1px solid var(--rule);background:var(--paper)}
-.seg button{flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.02em;background:transparent;border:none;color:var(--ink-2);padding:8px 3px;cursor:pointer}
-.seg button.on{background:var(--ink);color:var(--paper)}
-.seg button:focus-visible{outline:2px solid var(--signal);outline-offset:-2px}
-.steplab{display:flex;justify-content:space-between;font-family:var(--mono);font-size:8.5px;color:var(--ink-3);letter-spacing:.03em;margin-top:3px}
+      /* controls */
+      .ctl {
+        margin-bottom: 13px;
+      }
+      .ctl:last-child {
+        margin-bottom: 0;
+      }
+      .ctl-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 5px;
+      }
+      .ctl-name {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--ink-2);
+        letter-spacing: 0.05em;
+      }
+      .ctl-val {
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .ctl-val .num {
+        color: var(--signal);
+      }
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 2px;
+        background: var(--rule);
+        cursor: pointer;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 13px;
+        height: 13px;
+        background: var(--ink);
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid var(--paper-2);
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 13px;
+        height: 13px;
+        background: var(--ink);
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid var(--paper-2);
+      }
+      input[type="range"]:focus-visible {
+        outline: 2px solid var(--signal);
+        outline-offset: 4px;
+      }
+      .seg {
+        display: flex;
+        border: 1px solid var(--rule);
+        background: var(--paper);
+      }
+      .seg button {
+        flex: 1;
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        background: transparent;
+        border: none;
+        color: var(--ink-2);
+        padding: 8px 3px;
+        cursor: pointer;
+      }
+      .seg button.on {
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .seg button:focus-visible {
+        outline: 2px solid var(--signal);
+        outline-offset: -2px;
+      }
+      .steplab {
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 8.5px;
+        color: var(--ink-3);
+        letter-spacing: 0.03em;
+        margin-top: 3px;
+      }
 
-.tog{display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:10px;padding:5px 0;cursor:pointer;color:var(--ink-2)}
-.tog input{appearance:none;-webkit-appearance:none;width:26px;height:14px;background:var(--rule);position:relative;cursor:pointer;transition:.12s;flex:none}
-.tog input:checked{background:var(--signal)}
-.tog input::after{content:'';position:absolute;top:2px;left:2px;width:10px;height:10px;background:var(--paper);transition:.12s}
-.tog input:checked::after{left:14px}
-.tog input:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+      .tog {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 10px;
+        padding: 5px 0;
+        cursor: pointer;
+        color: var(--ink-2);
+      }
+      .tog input {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 26px;
+        height: 14px;
+        background: var(--rule);
+        position: relative;
+        cursor: pointer;
+        transition: 0.12s;
+        flex: none;
+      }
+      .tog input:checked {
+        background: var(--signal);
+      }
+      .tog input::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 10px;
+        height: 10px;
+        background: var(--paper);
+        transition: 0.12s;
+      }
+      .tog input:checked::after {
+        left: 14px;
+      }
+      .tog input:focus-visible {
+        outline: 2px solid var(--signal);
+        outline-offset: 2px;
+      }
 
-/* math panel */
-.eqbox{font-family:var(--mono);font-size:11px;line-height:1.7;color:var(--ink);background:var(--paper);
-  border:1px solid var(--rule);border-left:3px solid var(--signal);padding:10px 11px;font-variant-numeric:tabular-nums;overflow-x:auto;margin-bottom:10px}
-.eqbox:last-child{margin-bottom:0}
-.eqbox .lbl{color:var(--ink-3)} .eqbox b{color:var(--signal);font-weight:700}
-.eqbox .res{font-size:13px;font-weight:700;margin-top:5px;display:block}
-.eqbox .cap{color:var(--ink-3);font-size:9px;display:block;margin-bottom:5px;letter-spacing:.04em}
-.eqbox .warn{color:var(--signal);font-weight:700}
-#gGraph{width:100%;height:120px;border:1px solid var(--rule);background:var(--paper);margin-top:4px;display:block}
-.graphcap{font-family:var(--mono);font-size:8.5px;color:var(--ink-3);margin-top:4px;letter-spacing:.02em}
+      /* math panel */
+      .eqbox {
+        font-family: var(--mono);
+        font-size: 11px;
+        line-height: 1.7;
+        color: var(--ink);
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        border-left: 3px solid var(--signal);
+        padding: 10px 11px;
+        font-variant-numeric: tabular-nums;
+        overflow-x: auto;
+        margin-bottom: 10px;
+      }
+      .eqbox:last-child {
+        margin-bottom: 0;
+      }
+      .eqbox .lbl {
+        color: var(--ink-3);
+      }
+      .eqbox b {
+        color: var(--signal);
+        font-weight: 700;
+      }
+      .eqbox .res {
+        font-size: 13px;
+        font-weight: 700;
+        margin-top: 5px;
+        display: block;
+      }
+      .eqbox .cap {
+        color: var(--ink-3);
+        font-size: 9px;
+        display: block;
+        margin-bottom: 5px;
+        letter-spacing: 0.04em;
+      }
+      .eqbox .warn {
+        color: var(--signal);
+        font-weight: 700;
+      }
+      #gGraph {
+        width: 100%;
+        height: 120px;
+        border: 1px solid var(--rule);
+        background: var(--paper);
+        margin-top: 4px;
+        display: block;
+      }
+      .graphcap {
+        font-family: var(--mono);
+        font-size: 8.5px;
+        color: var(--ink-3);
+        margin-top: 4px;
+        letter-spacing: 0.02em;
+      }
 
-/* comparison bars */
-.cbars{display:flex;flex-direction:column;gap:9px}
-.cbar{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:8px;font-family:var(--mono);font-size:10px}
-.cbar .cn{color:var(--ink-2);font-weight:700;letter-spacing:.03em}
-.cbar .track{height:14px;background:var(--paper);border:1px solid var(--rule);position:relative;overflow:hidden}
-.cbar .track i{position:absolute;left:0;top:0;bottom:0;transition:width .15s;background:var(--signal-2)}
-.cbar .cv{color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap;font-size:9px}
-.cbar.cur .cn{color:var(--signal)}
-.cbar.cur .track i{background:var(--signal)}
+      /* comparison bars */
+      .cbars {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+      .cbar {
+        display: grid;
+        grid-template-columns: 52px 1fr auto;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--mono);
+        font-size: 10px;
+      }
+      .cbar .cn {
+        color: var(--ink-2);
+        font-weight: 700;
+        letter-spacing: 0.03em;
+      }
+      .cbar .track {
+        height: 14px;
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        position: relative;
+        overflow: hidden;
+      }
+      .cbar .track i {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        transition: width 0.15s;
+        background: var(--signal-2);
+      }
+      .cbar .cv {
+        color: var(--ink-3);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        font-size: 9px;
+      }
+      .cbar.cur .cn {
+        color: var(--signal);
+      }
+      .cbar.cur .track i {
+        background: var(--signal);
+      }
 
-.note{font-family:var(--mono);font-size:9.5px;line-height:1.55;color:var(--ink-3);border-left:2px solid var(--rule);padding-left:8px;margin-top:10px}
-.note b{color:var(--signal);font-weight:700}
-.linkbtn{font-family:var(--mono);font-size:10px;font-weight:700;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:8px 10px;cursor:pointer;letter-spacing:.03em;width:100%}
-.linkbtn:hover{border-color:var(--ink);background:var(--paper)}
+      .note {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        line-height: 1.55;
+        color: var(--ink-3);
+        border-left: 2px solid var(--rule);
+        padding-left: 8px;
+        margin-top: 10px;
+      }
+      .note b {
+        color: var(--signal);
+        font-weight: 700;
+      }
+      .linkbtn {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        background: transparent;
+        border: 1px solid var(--rule);
+        color: var(--ink);
+        padding: 8px 10px;
+        cursor: pointer;
+        letter-spacing: 0.03em;
+        width: 100%;
+      }
+      .linkbtn:hover {
+        border-color: var(--ink);
+        background: var(--paper);
+      }
 
-/* overlay */
-#scrim{position:fixed;inset:0;background:rgba(13,15,18,.55);z-index:20;display:none;align-items:center;justify-content:center;padding:20px}
-#scrim.show{display:flex}
-.ovl{background:var(--paper);border:1px solid var(--ink);max-width:580px;width:100%;max-height:88vh;overflow-y:auto;padding:22px 24px}
-.ovl h2{font-size:15px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
-.ovl .sub{font-family:var(--mono);font-size:10px;color:var(--ink-3);margin-bottom:16px;letter-spacing:.03em}
-.ovl p{font-size:13px;line-height:1.6;color:var(--ink-2);margin-bottom:11px}
-.ovl ol{margin:0 0 12px 18px}
-.ovl li{font-size:12.5px;line-height:1.6;color:var(--ink-2);margin-bottom:6px}
-.ovl b{color:var(--ink)}
-.ovl h3{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--signal);margin:16px 0 5px;text-transform:uppercase}
-.ovl .close{margin-top:8px;font-family:var(--mono);font-size:11px;font-weight:700;background:var(--ink);color:var(--paper);border:none;padding:10px 16px;cursor:pointer;letter-spacing:.04em}
+      /* overlay */
+      #scrim {
+        position: fixed;
+        inset: 0;
+        background: rgba(13, 15, 18, 0.55);
+        z-index: 20;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      #scrim.show {
+        display: flex;
+      }
+      .ovl {
+        background: var(--paper);
+        border: 1px solid var(--ink);
+        max-width: 580px;
+        width: 100%;
+        max-height: 88vh;
+        overflow-y: auto;
+        padding: 22px 24px;
+      }
+      .ovl h2 {
+        font-size: 15px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .ovl .sub {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--ink-3);
+        margin-bottom: 16px;
+        letter-spacing: 0.03em;
+      }
+      .ovl p {
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--ink-2);
+        margin-bottom: 11px;
+      }
+      .ovl ol {
+        margin: 0 0 12px 18px;
+      }
+      .ovl li {
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--ink-2);
+        margin-bottom: 6px;
+      }
+      .ovl b {
+        color: var(--ink);
+      }
+      .ovl h3 {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.05em;
+        color: var(--signal);
+        margin: 16px 0 5px;
+        text-transform: uppercase;
+      }
+      .ovl .close {
+        margin-top: 8px;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+        background: var(--ink);
+        color: var(--paper);
+        border: none;
+        padding: 10px 16px;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+      }
 
-@media(max-width:900px){
-  #app{grid-template-columns:1fr;grid-template-rows:1fr auto}
-  #panel{max-height:46vh}
-}
-</style>
-</head>
-<body>
-<div id="app">
-  <div id="stage">
-    <canvas id="scene"></canvas>
-    <div id="scentabs"></div>
-    <div id="titlecard">
-      <h1>Ascent Lab</h1>
-      <p>build a pressure rocket — launch it — read the flight</p>
-    </div>
-    <div id="launchbar">
-      <button id="launchBtn">&#9650; LAUNCH</button>
-      <button class="minibtn" id="clearBtn">Clear traces</button>
-      <div class="spacer"></div>
-      <div class="bmeter"><span class="k">Altitude</span><span class="v" id="bAlt">0.0<span style="font-size:9px"> m</span></span></div>
-      <div class="bmeter"><span class="k">Velocity</span><span class="v" id="bVel">0.0</span></div>
-      <div class="bmeter"><span class="k">Apogee</span><span class="v" id="bApo">&mdash;</span></div>
-    </div>
-  </div>
-
-  <div id="panel">
-    <!-- TELEMETRY -->
-    <div class="sec">
-      <div class="sec-h">Telemetry <span id="scenName">Open Field Test</span></div>
-      <dl id="telem">
-        <div class="row"><dt>Altitude</dt><dd id="t_alt">0.0<span class="u">m</span></dd></div>
-        <div class="row"><dt>Velocity</dt><dd id="t_vel">0.0<span class="u">m/s</span></dd></div>
-        <div class="row"><dt>Drag</dt><dd id="t_drag">0.00<span class="u">N</span></dd></div>
-        <div class="row"><dt>Apogee</dt><dd id="t_apo">&mdash;</dd></div>
-        <div class="row wide"><dt>Stability</dt><dd><span class="flag stable" id="t_flag">STABLE</span><span class="smnum" id="t_sm"></span></dd></div>
-        <div class="resultline" id="resultLine">Configure the rocket, then press <b>&nbsp;LAUNCH&nbsp;</b>.</div>
-      </dl>
-    </div>
-
-    <!-- ROCKET CONFIG -->
-    <div class="sec">
-      <div class="sec-h">The Rocket <span>build it</span></div>
-      <div class="ctl">
-        <div class="ctl-top"><span class="ctl-name">Nose cone</span></div>
-        <div class="seg" id="noseSeg">
-          <button data-k="pointed" class="on">Pointed</button>
-          <button data-k="rounded">Rounded</button>
-          <button data-k="blunt">Blunt</button>
+      @media (max-width: 900px) {
+        #app {
+          grid-template-columns: 1fr;
+          grid-template-rows: 1fr auto;
+        }
+        #panel {
+          max-height: 46vh;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="stage">
+        <canvas id="scene"></canvas>
+        <div id="scentabs"></div>
+        <div id="titlecard">
+          <h1>Ascent Lab</h1>
+          <p>build a pressure rocket — launch it — read the flight</p>
+        </div>
+        <div id="launchbar">
+          <button id="launchBtn">&#9650; LAUNCH</button>
+          <button class="minibtn" id="clearBtn">Clear traces</button>
+          <div class="spacer"></div>
+          <div class="bmeter">
+            <span class="k">Altitude</span
+            ><span class="v" id="bAlt"
+              >0.0<span style="font-size: 9px"> m</span></span
+            >
+          </div>
+          <div class="bmeter">
+            <span class="k">Velocity</span><span class="v" id="bVel">0.0</span>
+          </div>
+          <div class="bmeter">
+            <span class="k">Apogee</span
+            ><span class="v" id="bApo">&mdash;</span>
+          </div>
         </div>
       </div>
-      <div class="ctl">
-        <div class="ctl-top"><span class="ctl-name">Body length</span><span class="ctl-val" id="bodyVal"></span></div>
-        <div class="seg" id="bodySeg">
-          <button data-k="short">Short</button>
-          <button data-k="medium" class="on">Medium</button>
-          <button data-k="long">Long</button>
+
+      <div id="panel">
+        <!-- TELEMETRY -->
+        <div class="sec">
+          <div class="sec-h">
+            Telemetry <span id="scenName">Open Field Test</span>
+          </div>
+          <dl id="telem">
+            <div class="row">
+              <dt>Altitude</dt>
+              <dd id="t_alt">0.0<span class="u">m</span></dd>
+            </div>
+            <div class="row">
+              <dt>Velocity</dt>
+              <dd id="t_vel">0.0<span class="u">m/s</span></dd>
+            </div>
+            <div class="row">
+              <dt>Drag</dt>
+              <dd id="t_drag">0.00<span class="u">N</span></dd>
+            </div>
+            <div class="row">
+              <dt>Apogee</dt>
+              <dd id="t_apo">&mdash;</dd>
+            </div>
+            <div class="row wide">
+              <dt>Stability</dt>
+              <dd>
+                <span class="flag stable" id="t_flag">STABLE</span
+                ><span class="smnum" id="t_sm"></span>
+              </dd>
+            </div>
+            <div class="resultline" id="resultLine">
+              Configure the rocket, then press <b>&nbsp;LAUNCH&nbsp;</b>.
+            </div>
+          </dl>
+        </div>
+
+        <!-- ROCKET CONFIG -->
+        <div class="sec">
+          <div class="sec-h">The Rocket <span>build it</span></div>
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Nose cone</span></div>
+            <div class="seg" id="noseSeg">
+              <button data-k="pointed" class="on">Pointed</button>
+              <button data-k="rounded">Rounded</button>
+              <button data-k="blunt">Blunt</button>
+            </div>
+          </div>
+          <div class="ctl">
+            <div class="ctl-top">
+              <span class="ctl-name">Body length</span
+              ><span class="ctl-val" id="bodyVal"></span>
+            </div>
+            <div class="seg" id="bodySeg">
+              <button data-k="short">Short</button>
+              <button data-k="medium" class="on">Medium</button>
+              <button data-k="long">Long</button>
+            </div>
+          </div>
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Fin shape</span></div>
+            <div class="seg" id="finSeg">
+              <button data-k="swept" class="on">Swept</button>
+              <button data-k="straight">Straight</button>
+              <button data-k="none">None</button>
+            </div>
+          </div>
+          <div class="ctl">
+            <div class="ctl-top">
+              <span class="ctl-name">Launch pressure</span
+              ><span class="ctl-val" id="pressVal"></span>
+            </div>
+            <input type="range" id="press" min="0" max="2" step="1" value="1" />
+            <div class="steplab">
+              <span>low</span><span>medium</span><span>high</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONDITIONS + VIEW -->
+        <div class="sec">
+          <div class="sec-h">Conditions <span>always live</span></div>
+          <div class="ctl">
+            <div class="ctl-top">
+              <span class="ctl-name">Wind speed</span
+              ><span class="ctl-val" id="windVal">0.0 m/s</span>
+            </div>
+            <input
+              type="range"
+              id="wind"
+              min="0"
+              max="10"
+              step="0.5"
+              value="0"
+            />
+          </div>
+          <label class="tog"
+            ><span>Show the math</span><input type="checkbox" id="mathTog"
+          /></label>
+        </div>
+
+        <!-- MATH PANEL -->
+        <div class="sec" id="mathSec" style="display: none">
+          <div class="sec-h">The Math <span>plugged in live</span></div>
+          <div class="eqbox" id="eqBoost"></div>
+          <div class="eqbox" id="eqCoast"></div>
+          <div class="eqbox" id="eqStab"></div>
+          <canvas id="gGraph"></canvas>
+          <div class="graphcap">
+            Predicted apogee vs launch pressure, for this exact rocket. The dot
+            is your current setting.
+          </div>
+        </div>
+
+        <!-- COMPARISON -->
+        <div class="sec">
+          <div class="sec-h">Pressure vs Apogee <span>predicted</span></div>
+          <div class="cbars" id="cbars"></div>
+          <div class="note">
+            Taller bar = higher predicted apogee at that pressure, for
+            <b>this exact rocket</b>. Change nose, body, or fins and every bar
+            moves.
+          </div>
+        </div>
+
+        <!-- REFERENCES -->
+        <div class="sec">
+          <button class="linkbtn" id="helpBtn">
+            ? How it works &amp; real missions
+          </button>
         </div>
       </div>
-      <div class="ctl">
-        <div class="ctl-top"><span class="ctl-name">Fin shape</span></div>
-        <div class="seg" id="finSeg">
-          <button data-k="swept" class="on">Swept</button>
-          <button data-k="straight">Straight</button>
-          <button data-k="none">None</button>
+    </div>
+
+    <div id="scrim">
+      <div class="ovl">
+        <h2>Ascent Lab</h2>
+        <div class="sub">
+          A pressure-launched model rocket. Build it, launch it, read the same
+          numbers a real flight review uses.
         </div>
+        <p>
+          This is a <b>compressed-air / water rocket</b> — the kind you build in
+          a kit. It flies straight up a few tens of metres, so the goals are
+          <b>target altitude bands</b>, not orbit. Every launch is a fresh
+          flight; the old path stays as a faded trace so you can compare.
+        </p>
+        <ol>
+          <li>
+            Pick a <b>nose cone</b>, <b>body length</b>, <b>fins</b>, and a
+            <b>launch pressure</b> on the right.
+          </li>
+          <li>
+            Press <b>LAUNCH</b>. Watch the altitude, velocity, drag, and
+            stability update live.
+          </li>
+          <li>
+            Try the scenarios up top: <b>Open Field Test</b> (big target, no
+            wind), <b>Crosswind Range</b> (wind, fins matter),
+            <b>Precision Pad</b> (small target, everything matters).
+          </li>
+          <li>
+            Remove the fins and launch: the rocket goes <b>unstable</b> and
+            tumbles &mdash; that's the stability margin dropping below&nbsp;1.
+          </li>
+          <li>
+            Flip <b>Show the math</b> to see the boost, coast, and stability
+            equations, each with every number plugged in.
+          </li>
+        </ol>
+        <h3>The physics (simplified on purpose)</h3>
+        <p>
+          <b>Boost</b> is a single impulse J = k&middot;P&middot;V, giving
+          burnout speed v&#8320; = J/m &mdash; the same way real motors are
+          rated by total impulse. <b>Coast</b> uses the exact closed-form
+          solution for vertical flight against v&sup2; drag.
+          <b>Stability</b> uses the model-rocket margin SM =
+          (X<sub>cp</sub>&minus;X<sub>cg</sub>)/d in calibers.
+        </p>
+        <h3>Real missions</h3>
+        <p>
+          <b>ISRO PSLV:</b> India's workhorse rocket separates into stages,
+          dropping empty mass so the climb keeps accelerating &mdash; a real
+          version of "lighter rockets go higher."
+        </p>
+        <p>
+          <b>NASA sounding rockets:</b> sub-orbital science rockets that, like
+          this one, go up and come straight back down &mdash; used to carry
+          experiments briefly above the atmosphere.
+        </p>
+        <p class="sub" style="margin: 12px 0 0">
+          Note: the impulse constant k must be calibrated to your real launcher
+          hardware; nose-cone drag values here are standard approximations until
+          measured.
+        </p>
+        <button class="close" id="helpClose">Start building</button>
       </div>
-      <div class="ctl">
-        <div class="ctl-top"><span class="ctl-name">Launch pressure</span><span class="ctl-val" id="pressVal"></span></div>
-        <input type="range" id="press" min="0" max="2" step="1" value="1">
-        <div class="steplab"><span>low</span><span>medium</span><span>high</span></div>
-      </div>
     </div>
 
-    <!-- CONDITIONS + VIEW -->
-    <div class="sec">
-      <div class="sec-h">Conditions <span>always live</span></div>
-      <div class="ctl">
-        <div class="ctl-top"><span class="ctl-name">Wind speed</span><span class="ctl-val" id="windVal">0.0 m/s</span></div>
-        <input type="range" id="wind" min="0" max="10" step="0.5" value="0">
-      </div>
-      <label class="tog"><span>Show the math</span><input type="checkbox" id="mathTog"></label>
-    </div>
+    <script>
+      "use strict";
+      const $ = (id) => document.getElementById(id);
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-    <!-- MATH PANEL -->
-    <div class="sec" id="mathSec" style="display:none">
-      <div class="sec-h">The Math <span>plugged in live</span></div>
-      <div class="eqbox" id="eqBoost"></div>
-      <div class="eqbox" id="eqCoast"></div>
-      <div class="eqbox" id="eqStab"></div>
-      <canvas id="gGraph"></canvas>
-      <div class="graphcap">Predicted apogee vs launch pressure, for this exact rocket. The dot is your current setting.</div>
-    </div>
+      /* ================= physics constants ================= */
+      const RHO = 1.225; // air density kg/m^3 (one atmosphere, fixed — spec 2)
+      const G = 9.81; // m/s^2
+      const DIAM = 0.075; // body diameter (caliber), m
+      const AREA = Math.PI * (DIAM / 2) * (DIAM / 2); // frontal area, m^2
+      const K_IMPULSE = 0.9; // N·s per (bar·L) — CALIBRATION constant, must come from real launcher
+      const TB = 0.12; // boost burn time (s), for the small boost-phase altitude
 
-    <!-- COMPARISON -->
-    <div class="sec">
-      <div class="sec-h">Pressure vs Apogee <span>predicted</span></div>
-      <div class="cbars" id="cbars"></div>
-      <div class="note">Taller bar = higher predicted apogee at that pressure, for <b>this exact rocket</b>. Change nose, body, or fins and every bar moves.</div>
-    </div>
+      /* config option tables (qualitative labels → physics) */
+      const NOSE = {
+        pointed: { label: "Pointed", cd: 0.35 },
+        rounded: { label: "Rounded", cd: 0.45 },
+        blunt: { label: "Blunt", cd: 0.75 },
+      };
+      const NOSECG = { pointed: +0.004, rounded: 0, blunt: -0.012 }; // heavier blunt nose pulls Xcg forward
+      const BODY = {
+        short: { label: "Short", len: 0.25, mass: 0.09, vprop: 0.6 },
+        medium: { label: "Medium", len: 0.33, mass: 0.12, vprop: 0.9 },
+        long: { label: "Long", len: 0.42, mass: 0.16, vprop: 1.2 },
+      };
+      const FIN = {
+        swept: { label: "Swept", cpBonus: 0.14 },
+        straight: { label: "Straight", cpBonus: 0.11 },
+        none: { label: "None", cpBonus: 0.0 },
+      };
+      const PRESSURE = [
+        { label: "Low", p: 3 },
+        { label: "Medium", p: 5 },
+        { label: "High", p: 8 },
+      ]; // bar (gauge)
 
-    <!-- REFERENCES -->
-    <div class="sec">
-      <button class="linkbtn" id="helpBtn">? How it works &amp; real missions</button>
-    </div>
-  </div>
-</div>
+      /* scenarios (spec 6) — target band in metres + wind */
+      const SCEN = {
+        open: { name: "Open Field Test", lo: 35, hi: 65, wind: 0, diff: 0.3 },
+        cross: { name: "Crosswind Range", lo: 42, hi: 58, wind: 4, diff: 0.65 },
+        prec: { name: "Precision Pad", lo: 47, hi: 53, wind: 3, diff: 1.0 },
+      };
+      const SORDER = ["open", "cross", "prec"];
 
-<div id="scrim">
-  <div class="ovl">
-    <h2>Ascent Lab</h2>
-    <div class="sub">A pressure-launched model rocket. Build it, launch it, read the same numbers a real flight review uses.</div>
-    <p>This is a <b>compressed-air / water rocket</b> — the kind you build in a kit. It flies straight up a few tens of metres, so the goals are <b>target altitude bands</b>, not orbit. Every launch is a fresh flight; the old path stays as a faded trace so you can compare.</p>
-    <ol>
-      <li>Pick a <b>nose cone</b>, <b>body length</b>, <b>fins</b>, and a <b>launch pressure</b> on the right.</li>
-      <li>Press <b>LAUNCH</b>. Watch the altitude, velocity, drag, and stability update live.</li>
-      <li>Try the scenarios up top: <b>Open Field Test</b> (big target, no wind), <b>Crosswind Range</b> (wind, fins matter), <b>Precision Pad</b> (small target, everything matters).</li>
-      <li>Remove the fins and launch: the rocket goes <b>unstable</b> and tumbles &mdash; that's the stability margin dropping below&nbsp;1.</li>
-      <li>Flip <b>Show the math</b> to see the boost, coast, and stability equations, each with every number plugged in.</li>
-    </ol>
-    <h3>The physics (simplified on purpose)</h3>
-    <p><b>Boost</b> is a single impulse J = k&middot;P&middot;V, giving burnout speed v&#8320; = J/m &mdash; the same way real motors are rated by total impulse. <b>Coast</b> uses the exact closed-form solution for vertical flight against v&sup2; drag. <b>Stability</b> uses the model-rocket margin SM = (X<sub>cp</sub>&minus;X<sub>cg</sub>)/d in calibers.</p>
-    <h3>Real missions</h3>
-    <p><b>ISRO PSLV:</b> India's workhorse rocket separates into stages, dropping empty mass so the climb keeps accelerating &mdash; a real version of "lighter rockets go higher."</p>
-    <p><b>NASA sounding rockets:</b> sub-orbital science rockets that, like this one, go up and come straight back down &mdash; used to carry experiments briefly above the atmosphere.</p>
-    <p class="sub" style="margin:12px 0 0">Note: the impulse constant k must be calibrated to your real launcher hardware; nose-cone drag values here are standard approximations until measured.</p>
-    <button class="close" id="helpClose">Start building</button>
-  </div>
-</div>
+      /* ================= state ================= */
+      const S = {
+        nose: "pointed",
+        body: "medium",
+        fin: "swept",
+        pressIdx: 1,
+        scen: "open",
+        wind: 0,
+        mathOn: false,
+        viewMax: 60,
+        trace: [[0, 0]],
+        history: [],
+        flight: null, // active flight snapshot or null
+        lastResult: null,
+        predApogee: 0,
+      };
 
-<script>
-"use strict";
-const $=id=>document.getElementById(id);
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+      /* ================= physics (single source of truth) ================= */
+      function cfg() {
+        const b = BODY[S.body];
+        return {
+          nose: S.nose,
+          body: S.body,
+          fin: S.fin,
+          cd: NOSE[S.nose].cd,
+          len: b.len,
+          mass: b.mass,
+          vprop: b.vprop,
+          p: PRESSURE[S.pressIdx].p,
+          cpBonus: FIN[S.fin].cpBonus,
+          noseCg: NOSECG[S.nose],
+        };
+      }
+      const xcg = (c) => 0.5 * c.len + c.noseCg; // m from nose
+      const xcp = (c) => 0.45 * c.len + c.cpBonus; // m from nose
+      const stab = (c) => (xcp(c) - xcg(c)) / DIAM; // calibers (SM)
+      const impulse = (c) => K_IMPULSE * c.p * c.vprop; // J, N·s
+      const v0 = (c) => impulse(c) / c.mass; // burnout velocity, m/s
+      const dragB = (cd) => 0.5 * RHO * cd * AREA; // ½ρCdA
+      const boostH = (vv) => 0.5 * vv * TB; // small boost-phase gain
+      function coastDh(c, vv) {
+        // closed-form coast apogee (spec 2)
+        const b = dragB(c.cd),
+          t = (b * vv * vv) / (c.mass * G);
+        return (c.mass / (2 * b)) * Math.log(1 + t);
+      }
+      const apogeeIdeal = (c) => {
+        const vv = v0(c);
+        return boostH(vv) + coastDh(c, vv);
+      };
+      function stabFactor(sm) {
+        if (sm >= 1) return 1;
+        if (sm >= 0) return 0.6 + 0.4 * sm;
+        return 0.5;
+      } // energy lost when it veers/tumbles
+      function stabWord(sm) {
+        return sm >= 1 ? "STABLE" : sm >= 0.5 ? "MARGINAL" : "UNSTABLE";
+      }
 
-/* ================= physics constants ================= */
-const RHO=1.225;          // air density kg/m^3 (one atmosphere, fixed — spec 2)
-const G=9.81;             // m/s^2
-const DIAM=0.075;         // body diameter (caliber), m
-const AREA=Math.PI*(DIAM/2)*(DIAM/2);   // frontal area, m^2
-const K_IMPULSE=0.9;      // N·s per (bar·L) — CALIBRATION constant, must come from real launcher
-const TB=0.12;            // boost burn time (s), for the small boost-phase altitude
+      /* ================= canvas ================= */
+      const cv = $("scene"),
+        ctx = cv.getContext("2d");
+      let DPR = Math.max(1, window.devicePixelRatio || 1),
+        CW = 0,
+        CH = 0;
+      function fit() {
+        DPR = Math.max(1, window.devicePixelRatio || 1);
+        const r = cv.parentElement.getBoundingClientRect();
+        cv.width = Math.max(1, r.width * DPR);
+        cv.height = Math.max(1, r.height * DPR);
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        CW = r.width;
+        CH = r.height;
+        if (S.mathOn) drawGraph();
+      }
+      window.addEventListener("resize", fit);
 
-/* config option tables (qualitative labels → physics) */
-const NOSE={ pointed:{label:'Pointed',cd:0.35}, rounded:{label:'Rounded',cd:0.45}, blunt:{label:'Blunt',cd:0.75} };
-const NOSECG={ pointed:+0.004, rounded:0, blunt:-0.012 };   // heavier blunt nose pulls Xcg forward
-const BODY={ short:{label:'Short',len:0.25,mass:0.09,vprop:0.6},
-             medium:{label:'Medium',len:0.33,mass:0.12,vprop:0.9},
-             long:{label:'Long',len:0.42,mass:0.16,vprop:1.2} };
-const FIN={ swept:{label:'Swept',cpBonus:0.14}, straight:{label:'Straight',cpBonus:0.11}, none:{label:'None',cpBonus:0.0} };
-const PRESSURE=[ {label:'Low',p:3}, {label:'Medium',p:5}, {label:'High',p:8} ]; // bar (gauge)
+      const PAD_FX = 0.3,
+        TOP_FY = 0.08,
+        GROUND_FY = 0.86;
+      const HALF_RANGE = 30; // metres of downrange mapped to half the stage width
+      function groundY() {
+        return CH * GROUND_FY;
+      }
+      function padX() {
+        return CW * PAD_FX;
+      }
+      function AY(alt) {
+        const gY = groundY();
+        return gY - (alt / S.viewMax) * (gY - CH * TOP_FY);
+      }
+      function AX(xm) {
+        return padX() + (xm / HALF_RANGE) * (CW * 0.5);
+      }
 
-/* scenarios (spec 6) — target band in metres + wind */
-const SCEN={
-  open: {name:'Open Field Test', lo:35, hi:65, wind:0,   diff:0.30},
-  cross:{name:'Crosswind Range',  lo:42, hi:58, wind:4,   diff:0.65},
-  prec: {name:'Precision Pad',    lo:47, hi:53, wind:3,   diff:1.00}
-};
-const SORDER=['open','cross','prec'];
+      function niceStep(v) {
+        const c = [5, 10, 20, 25, 50, 100, 200];
+        for (const s of c) {
+          if (v / s <= 8) return s;
+        }
+        return 250;
+      }
 
-/* ================= state ================= */
-const S={
-  nose:'pointed', body:'medium', fin:'swept', pressIdx:1,
-  scen:'open', wind:0, mathOn:false,
-  viewMax:60,
-  trace:[[0,0]], history:[],
-  flight:null,          // active flight snapshot or null
-  lastResult:null,
-  predApogee:0
-};
+      function drawScene() {
+        const gY = groundY();
+        // sky
+        const sky = ctx.createLinearGradient(0, 0, 0, gY);
+        sky.addColorStop(0, "#6ba4d4");
+        sky.addColorStop(1, "#c9e2f2");
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, CW, gY);
+        // ground
+        ctx.fillStyle = "#4f7a3a";
+        ctx.fillRect(0, gY, CW, CH - gY);
+        ctx.fillStyle = "#3f6630";
+        for (let i = 0; i < CW; i += 24) {
+          ctx.fillRect(i + (i % 3) * 3, gY + 7 + (i % 4) * 3, 9, 2);
+        }
 
-/* ================= physics (single source of truth) ================= */
-function cfg(){
-  const b=BODY[S.body];
-  return { nose:S.nose, body:S.body, fin:S.fin,
-    cd:NOSE[S.nose].cd, len:b.len, mass:b.mass, vprop:b.vprop,
-    p:PRESSURE[S.pressIdx].p, cpBonus:FIN[S.fin].cpBonus, noseCg:NOSECG[S.nose] };
-}
-const xcg=c=>0.50*c.len + c.noseCg;               // m from nose
-const xcp=c=>0.45*c.len + c.cpBonus;              // m from nose
-const stab=c=>(xcp(c)-xcg(c))/DIAM;               // calibers (SM)
-const impulse=c=>K_IMPULSE*c.p*c.vprop;           // J, N·s
-const v0=c=>impulse(c)/c.mass;                    // burnout velocity, m/s
-const dragB=cd=>0.5*RHO*cd*AREA;                  // ½ρCdA
-const boostH=vv=>0.5*vv*TB;                       // small boost-phase gain
-function coastDh(c,vv){                            // closed-form coast apogee (spec 2)
-  const b=dragB(c.cd), t=b*vv*vv/(c.mass*G);
-  return (c.mass/(2*b))*Math.log(1+t);
-}
-const apogeeIdeal=c=>{ const vv=v0(c); return boostH(vv)+coastDh(c,vv); };
-function stabFactor(sm){ if(sm>=1) return 1; if(sm>=0) return 0.6+0.4*sm; return 0.5; } // energy lost when it veers/tumbles
-function stabWord(sm){ return sm>=1?'STABLE':sm>=0.5?'MARGINAL':'UNSTABLE'; }
+        // altitude ruler
+        const step = niceStep(S.viewMax);
+        ctx.textAlign = "left";
+        ctx.font = '9px "Roboto Mono",monospace';
+        for (let a = 0; a <= S.viewMax + 0.5; a += step) {
+          const y = AY(a);
+          ctx.strokeStyle = "rgba(27,42,51,.10)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(CW, y);
+          ctx.stroke();
+          ctx.fillStyle = "rgba(27,42,51,.45)";
+          ctx.fillText(a + " m", 6, y - 3);
+        }
 
-/* ================= canvas ================= */
-const cv=$('scene'), ctx=cv.getContext('2d');
-let DPR=Math.max(1,window.devicePixelRatio||1), CW=0, CH=0;
-function fit(){
-  DPR=Math.max(1,window.devicePixelRatio||1);
-  const r=cv.parentElement.getBoundingClientRect();
-  cv.width=Math.max(1,r.width*DPR); cv.height=Math.max(1,r.height*DPR);
-  ctx.setTransform(DPR,0,0,DPR,0,0); CW=r.width; CH=r.height;
-  if(S.mathOn) drawGraph();
-}
-window.addEventListener('resize',fit);
+        // target band (spec 6 — informational)
+        const sc = SCEN[S.scen];
+        const yHi = AY(sc.hi),
+          yLo = AY(sc.lo);
+        ctx.fillStyle = "rgba(194,65,12,.12)";
+        ctx.fillRect(0, yHi, CW, yLo - yHi);
+        ctx.strokeStyle = "rgba(194,65,12,.5)";
+        ctx.setLineDash([6, 4]);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, yHi);
+        ctx.lineTo(CW, yHi);
+        ctx.moveTo(0, yLo);
+        ctx.lineTo(CW, yLo);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = "rgba(194,65,12,.85)";
+        ctx.font = '700 9px "Roboto Mono",monospace';
+        ctx.textAlign = "right";
+        ctx.fillText("TARGET " + sc.lo + "–" + sc.hi + " m", CW - 8, yHi + 12);
 
-const PAD_FX=0.30, TOP_FY=0.08, GROUND_FY=0.86;
-const HALF_RANGE=30;   // metres of downrange mapped to half the stage width
-function groundY(){ return CH*GROUND_FY; }
-function padX(){ return CW*PAD_FX; }
-function AY(alt){ const gY=groundY(); return gY-(alt/S.viewMax)*(gY-CH*TOP_FY); }
-function AX(xm){ return padX()+(xm/HALF_RANGE)*(CW*0.5); }
+        // wind streaks
+        if (S.wind > 0.2) {
+          ctx.strokeStyle = "rgba(255,255,255,.32)";
+          ctx.lineWidth = 1.4;
+          const n = Math.round(S.wind),
+            t = performance.now() / 1000;
+          for (let i = 0; i < n; i++) {
+            const yy = gY * 0.15 + (i * gY * 0.75) / Math.max(1, n);
+            const xx = ((t * S.wind * 24 + i * 130) % (CW + 120)) - 60;
+            ctx.beginPath();
+            ctx.moveTo(xx, yy);
+            ctx.lineTo(xx + 20 + S.wind, yy);
+            ctx.stroke();
+          }
+          ctx.fillStyle = "rgba(255,255,255,.7)";
+          ctx.font = '700 9px "Roboto Mono",monospace';
+          ctx.textAlign = "left";
+          ctx.fillText("wind " + S.wind.toFixed(1) + " m/s →", 10, gY * 0.12);
+        }
 
-function niceStep(v){ const c=[5,10,20,25,50,100,200]; for(const s of c){ if(v/s<=8) return s; } return 250; }
+        // launch pad
+        ctx.fillStyle = "#3a3a3a";
+        ctx.fillRect(padX() - 16, gY - 4, 32, 5);
+        ctx.strokeStyle = "#2a2a2a";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(padX(), gY - 4);
+        ctx.lineTo(padX(), gY - 30);
+        ctx.stroke();
 
-function drawScene(){
-  const gY=groundY();
-  // sky
-  const sky=ctx.createLinearGradient(0,0,0,gY);
-  sky.addColorStop(0,'#6ba4d4'); sky.addColorStop(1,'#c9e2f2');
-  ctx.fillStyle=sky; ctx.fillRect(0,0,CW,gY);
-  // ground
-  ctx.fillStyle='#4f7a3a'; ctx.fillRect(0,gY,CW,CH-gY);
-  ctx.fillStyle='#3f6630'; for(let i=0;i<CW;i+=24){ ctx.fillRect(i+(i%3)*3,gY+7+(i%4)*3,9,2); }
+        // history traces (faded)
+        S.history.forEach((tr) => drawTrace(tr, "rgba(27,42,51,.22)", 1.5));
+        // active trace
+        drawTrace(S.trace, "rgba(194,65,12,.7)", 2);
 
-  // altitude ruler
-  const step=niceStep(S.viewMax);
-  ctx.textAlign='left'; ctx.font='9px "Roboto Mono",monospace';
-  for(let a=0;a<=S.viewMax+0.5;a+=step){
-    const y=AY(a);
-    ctx.strokeStyle='rgba(27,42,51,.10)'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(CW,y); ctx.stroke();
-    ctx.fillStyle='rgba(27,42,51,.45)'; ctx.fillText(a+' m',6,y-3);
-  }
+        // rocket
+        const F = S.flight;
+        if (F && (F.active || F.landed)) {
+          drawRocket(AX(F.x), AY(F.y), F.tilt, F.c, 1, F);
+          if (F.y / S.viewMax > 1.02) {
+            ctx.fillStyle = "#C2410C";
+            ctx.font = '700 11px "Roboto Mono",monospace';
+            ctx.textAlign = "center";
+            ctx.fillText("↑ above view", AX(F.x), 40);
+          }
+        } else {
+          drawRocket(padX(), gY - 4, 0, cfg(), 1, null); // on the pad
+        }
+      }
 
-  // target band (spec 6 — informational)
-  const sc=SCEN[S.scen];
-  const yHi=AY(sc.hi), yLo=AY(sc.lo);
-  ctx.fillStyle='rgba(194,65,12,.12)'; ctx.fillRect(0,yHi,CW,yLo-yHi);
-  ctx.strokeStyle='rgba(194,65,12,.5)'; ctx.setLineDash([6,4]); ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(0,yHi); ctx.lineTo(CW,yHi); ctx.moveTo(0,yLo); ctx.lineTo(CW,yLo); ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle='rgba(194,65,12,.85)'; ctx.font='700 9px "Roboto Mono",monospace'; ctx.textAlign='right';
-  ctx.fillText('TARGET '+sc.lo+'–'+sc.hi+' m', CW-8, yHi+12);
+      function drawTrace(tr, color, w) {
+        if (!tr || tr.length < 2) return;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = w;
+        ctx.beginPath();
+        for (let i = 0; i < tr.length; i++) {
+          const X = AX(tr[i][0]),
+            Y = AY(tr[i][1]);
+          if (i === 0) ctx.moveTo(X, Y);
+          else ctx.lineTo(X, Y);
+        }
+        ctx.stroke();
+      }
 
-  // wind streaks
-  if(S.wind>0.2){
-    ctx.strokeStyle='rgba(255,255,255,.32)'; ctx.lineWidth=1.4;
-    const n=Math.round(S.wind), t=performance.now()/1000;
-    for(let i=0;i<n;i++){ const yy=(gY*0.15)+(i*gY*0.75/Math.max(1,n));
-      const xx=((t*S.wind*24 + i*130)%(CW+120))-60;
-      ctx.beginPath(); ctx.moveTo(xx,yy); ctx.lineTo(xx+20+S.wind,yy); ctx.stroke(); }
-    ctx.fillStyle='rgba(255,255,255,.7)'; ctx.font='700 9px "Roboto Mono",monospace'; ctx.textAlign='left';
-    ctx.fillText('wind '+S.wind.toFixed(1)+' m/s →', 10, gY*0.12);
-  }
+      function drawRocket(cx, cy, tilt, c, alpha, F) {
+        const bodyLen = 26 + ((c.len - 0.25) / 0.17) * 22; // px
+        const bw = 9;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(cx, cy - bodyLen * 0.0);
+        ctx.rotate(tilt);
+        // fins first (behind body)
+        ctx.fillStyle = "#20303a";
+        if (c.fin === "swept") {
+          ctx.beginPath();
+          ctx.moveTo(-bw / 2, bodyLen * 0.0);
+          ctx.lineTo(-bw / 2 - 9, bodyLen * 0.16);
+          ctx.lineTo(-bw / 2, bodyLen * 0.02);
+          ctx.closePath();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(bw / 2, bodyLen * 0.0);
+          ctx.lineTo(bw / 2 + 9, bodyLen * 0.16);
+          ctx.lineTo(bw / 2, bodyLen * 0.02);
+          ctx.closePath();
+          ctx.fill();
+        } else if (c.fin === "straight") {
+          ctx.fillRect(-bw / 2 - 7, -2, 7, bodyLen * 0.16);
+          ctx.fillRect(bw / 2, -2, 7, bodyLen * 0.16);
+        }
+        // body (nose at top: y negative up)
+        ctx.fillStyle = "#e9e6df";
+        ctx.strokeStyle = "#20303a";
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.rect(-bw / 2, -bodyLen, bw, bodyLen);
+        ctx.fill();
+        ctx.stroke();
+        // nose cone
+        ctx.fillStyle = "#C2410C";
+        if (c.nose === "pointed") {
+          ctx.beginPath();
+          ctx.moveTo(-bw / 2, -bodyLen);
+          ctx.lineTo(0, -bodyLen - 16);
+          ctx.lineTo(bw / 2, -bodyLen);
+          ctx.closePath();
+          ctx.fill();
+        } else if (c.nose === "rounded") {
+          ctx.beginPath();
+          ctx.moveTo(-bw / 2, -bodyLen);
+          ctx.quadraticCurveTo(0, -bodyLen - 13, bw / 2, -bodyLen);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(-bw / 2, -bodyLen);
+          ctx.lineTo(-bw / 2 + 1, -bodyLen - 5);
+          ctx.lineTo(bw / 2 - 1, -bodyLen - 5);
+          ctx.lineTo(bw / 2, -bodyLen);
+          ctx.closePath();
+          ctx.fill();
+        }
+        // exhaust during boost
+        if (F && F.active && F.t < TB * 3 && F.vy > 0) {
+          ctx.fillStyle = "rgba(234,88,12,.8)";
+          ctx.beginPath();
+          ctx.moveTo(-bw / 2 + 1, 0);
+          ctx.lineTo(0, 10 + Math.random() * 8);
+          ctx.lineTo(bw / 2 - 1, 0);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+      }
 
-  // launch pad
-  ctx.fillStyle='#3a3a3a'; ctx.fillRect(padX()-16,gY-4,32,5);
-  ctx.strokeStyle='#2a2a2a'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(padX(),gY-4); ctx.lineTo(padX(),gY-30); ctx.stroke();
+      /* ================= flight ================= */
+      function launch() {
+        const c = cfg();
+        const sm = stab(c);
+        const vv = v0(c) * stabFactor(sm);
+        if (S.trace.length > 1) {
+          S.history.push(S.trace);
+          if (S.history.length > 4) S.history.shift();
+        }
+        S.trace = [[0, boostH(v0(c))]];
+        S.flight = {
+          active: true,
+          landed: false,
+          apogeeSet: false,
+          apogee: 0,
+          t: 0,
+          acc: 0,
+          x: 0,
+          y: boostH(v0(c)),
+          vx: 0,
+          vy: vv,
+          tilt: 0,
+          b: dragB(c.cd),
+          mass: c.mass,
+          cd: c.cd,
+          sm: sm,
+          c: c,
+          drag: 0,
+          spin: 0,
+        };
+        S.lastResult = null;
+        setResult("&#9650; Launched — climbing…", "");
+      }
 
-  // history traces (faded)
-  S.history.forEach(tr=>drawTrace(tr,'rgba(27,42,51,.22)',1.5));
-  // active trace
-  drawTrace(S.trace,'rgba(194,65,12,.7)',2);
+      function stepFlight(dt) {
+        const F = S.flight;
+        if (!F || !F.active) return;
+        const m = F.mass,
+          b = F.b,
+          windX = S.wind; // wind blows toward +x (downrange)
+        const relx = F.vx - windX,
+          rely = F.vy,
+          spd = Math.hypot(relx, rely);
+        let ax = -(b / m) * spd * relx;
+        let ay = -G - (b / m) * spd * rely;
+        // instability: corkscrew veer while it still has airspeed (spec: flip mechanism)
+        if (F.sm < 1) {
+          const instab = clamp(1 - F.sm, 0, 1.6);
+          ax += instab * 7 * Math.sin(F.t * 8) * (F.vy > 0 ? 1 : 0.4);
+          F.spin += instab * dt * 6;
+        }
+        F.vx += ax * dt;
+        F.vy += ay * dt;
+        F.x += F.vx * dt;
+        F.y += F.vy * dt;
+        F.t += dt;
+        F.drag = 0.5 * RHO * F.cd * AREA * spd * spd;
+        // tilt: point along velocity, plus tumble when unstable
+        const base =
+          Math.atan2(F.vx - windX * 0.0, Math.max(0.5, Math.abs(F.vy))) *
+          (F.vy >= 0 ? 1 : -1);
+        F.tilt = clamp(base, -1.2, 1.2) + F.spin;
+        // apogee freeze (spec 4)
+        if (!F.apogeeSet && F.vy <= 0 && F.t > 0.05) {
+          F.apogeeSet = true;
+          F.apogee = F.y;
+          onApogee();
+        }
+        // trace sampling
+        F.acc += dt;
+        if (F.acc >= 0.02) {
+          F.acc = 0;
+          S.trace.push([F.x, F.y]);
+          if (S.trace.length > 1200) S.trace.shift();
+        }
+        // touchdown
+        if (F.y <= 0 && F.t > 0.15) {
+          F.y = 0;
+          F.active = false;
+          F.landed = true;
+          S.trace.push([F.x, 0]);
+        }
+      }
 
-  // rocket
-  const F=S.flight;
-  if(F && (F.active||F.landed)){
-    drawRocket(AX(F.x), AY(F.y), F.tilt, F.c, 1, F);
-    if(F.y/S.viewMax>1.02){ ctx.fillStyle='#C2410C'; ctx.font='700 11px "Roboto Mono",monospace'; ctx.textAlign='center';
-      ctx.fillText('↑ above view', AX(F.x), 40); }
-  } else {
-    drawRocket(padX(), gY-4, 0, cfg(), 1, null);   // on the pad
-  }
-}
+      function onApogee() {
+        const F = S.flight,
+          sc = SCEN[S.scen],
+          a = F.apogee;
+        let cls, txt;
+        if (a >= sc.lo && a <= sc.hi) {
+          cls = "in";
+          txt = `Apogee <b>${a.toFixed(1)} m</b> — inside the ${sc.lo}–${sc.hi} m target band.`;
+        } else {
+          const miss = a < sc.lo ? sc.lo - a : a - sc.hi;
+          cls = miss <= 8 ? "near" : "off";
+          txt = `Apogee <b>${a.toFixed(1)} m</b> — ${a < sc.lo ? "short of" : "over"} the band by ${miss.toFixed(1)} m.`;
+        }
+        if (F.sm < 1)
+          txt += ` <span style="color:var(--signal)">(${stabWord(F.sm).toLowerCase()} — it veered, losing height)</span>`;
+        setResult(txt, cls);
+      }
+      function setResult(html, cls) {
+        const el = $("resultLine");
+        el.innerHTML = html;
+        el.className = "resultline" + (cls ? " " + cls : "");
+      }
 
-function drawTrace(tr,color,w){
-  if(!tr||tr.length<2) return;
-  ctx.strokeStyle=color; ctx.lineWidth=w; ctx.beginPath();
-  for(let i=0;i<tr.length;i++){ const X=AX(tr[i][0]), Y=AY(tr[i][1]);
-    if(i===0) ctx.moveTo(X,Y); else ctx.lineTo(X,Y); }
-  ctx.stroke();
-}
+      /* ================= math panel ================= */
+      function drawGraph() {
+        const g = $("gGraph");
+        const r = g.getBoundingClientRect();
+        g.width = r.width * DPR;
+        g.height = r.height * DPR;
+        const gx = g.getContext("2d");
+        gx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        const W = r.width,
+          H = r.height,
+          pad = 6,
+          x0 = pad + 16,
+          y0 = H - 16,
+          x1 = W - pad,
+          y1 = pad + 2;
+        gx.clearRect(0, 0, W, H);
+        const c = cfg();
+        const Pmin = 2,
+          Pmax = 9;
+        const pts = [];
+        let ymax = 0;
+        for (let i = 0; i <= 60; i++) {
+          const P = Pmin + ((Pmax - Pmin) * i) / 60;
+          const cc = Object.assign({}, c, { p: P });
+          const a = apogeeIdeal(cc);
+          pts.push([P, a]);
+          ymax = Math.max(ymax, a);
+        }
+        ymax = Math.max(ymax, 20) * 1.1;
+        const sx = (P) => x0 + ((P - Pmin) / (Pmax - Pmin)) * (x1 - x0);
+        const sy = (v) => y0 - clamp(v / ymax, 0, 1) * (y0 - y1);
+        // curve
+        gx.strokeStyle = "#1B2A33";
+        gx.lineWidth = 2;
+        gx.beginPath();
+        pts.forEach(([P, a], i) => {
+          const X = sx(P),
+            Y = sy(a);
+          i ? gx.lineTo(X, Y) : gx.moveTo(X, Y);
+        });
+        gx.stroke();
+        // low/med/high markers
+        gx.fillStyle = "rgba(27,42,51,.35)";
+        PRESSURE.forEach((pr) => {
+          const cc = Object.assign({}, c, { p: pr.p });
+          const X = sx(pr.p),
+            Y = sy(apogeeIdeal(cc));
+          gx.beginPath();
+          gx.arc(X, Y, 2.5, 0, Math.PI * 2);
+          gx.fill();
+        });
+        // current
+        const curP = PRESSURE[S.pressIdx].p;
+        const CX = sx(curP),
+          CY = sy(apogeeIdeal(c));
+        gx.fillStyle = "#C2410C";
+        gx.beginPath();
+        gx.arc(CX, CY, 4.5, 0, Math.PI * 2);
+        gx.fill();
+        // axes
+        gx.fillStyle = "#8A9AA6";
+        gx.font = '7.5px "Roboto Mono",monospace';
+        gx.textAlign = "left";
+        gx.fillText("m", x0 - 14, y1 + 6);
+        gx.fillText("apogee", x0 - 14, y1 + 15);
+        gx.textAlign = "center";
+        gx.fillText("low P", sx(3), H - 4);
+        gx.fillText("high P", sx(8), H - 4);
+      }
 
-function drawRocket(cx,cy,tilt,c,alpha,F){
-  const bodyLen=26+(c.len-0.25)/0.17*22;   // px
-  const bw=9;
-  ctx.save(); ctx.globalAlpha=alpha; ctx.translate(cx,cy-bodyLen*0.0); ctx.rotate(tilt);
-  // fins first (behind body)
-  ctx.fillStyle='#20303a';
-  if(c.fin==='swept'){
-    ctx.beginPath(); ctx.moveTo(-bw/2,bodyLen*0.0); ctx.lineTo(-bw/2-9,bodyLen*0.16); ctx.lineTo(-bw/2,bodyLen*0.02); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(bw/2,bodyLen*0.0); ctx.lineTo(bw/2+9,bodyLen*0.16); ctx.lineTo(bw/2,bodyLen*0.02); ctx.closePath(); ctx.fill();
-  } else if(c.fin==='straight'){
-    ctx.fillRect(-bw/2-7,-2,7,bodyLen*0.16);
-    ctx.fillRect(bw/2,-2,7,bodyLen*0.16);
-  }
-  // body (nose at top: y negative up)
-  ctx.fillStyle='#e9e6df'; ctx.strokeStyle='#20303a'; ctx.lineWidth=1.6;
-  ctx.beginPath(); ctx.rect(-bw/2,-bodyLen,bw,bodyLen); ctx.fill(); ctx.stroke();
-  // nose cone
-  ctx.fillStyle='#C2410C';
-  if(c.nose==='pointed'){ ctx.beginPath(); ctx.moveTo(-bw/2,-bodyLen); ctx.lineTo(0,-bodyLen-16); ctx.lineTo(bw/2,-bodyLen); ctx.closePath(); ctx.fill(); }
-  else if(c.nose==='rounded'){ ctx.beginPath(); ctx.moveTo(-bw/2,-bodyLen); ctx.quadraticCurveTo(0,-bodyLen-13,bw/2,-bodyLen); ctx.closePath(); ctx.fill(); }
-  else { ctx.beginPath(); ctx.moveTo(-bw/2,-bodyLen); ctx.lineTo(-bw/2+1,-bodyLen-5); ctx.lineTo(bw/2-1,-bodyLen-5); ctx.lineTo(bw/2,-bodyLen); ctx.closePath(); ctx.fill(); }
-  // exhaust during boost
-  if(F && F.active && F.t<TB*3 && F.vy>0){
-    ctx.fillStyle='rgba(234,88,12,.8)'; ctx.beginPath();
-    ctx.moveTo(-bw/2+1,0); ctx.lineTo(0,10+Math.random()*8); ctx.lineTo(bw/2-1,0); ctx.closePath(); ctx.fill();
-  }
-  ctx.restore();
-}
+      function updateEquation() {
+        const c = cfg(),
+          vv = v0(c),
+          J = impulse(c),
+          b = dragB(c.cd);
+        const bh = boostH(vv),
+          dh = coastDh(c, vv),
+          apo = bh + dh;
+        // boost
+        $("eqBoost").innerHTML =
+          `<span class="cap">BOOST — single impulse</span>` +
+          `<span class="lbl">J = k&middot;P&middot;V &nbsp;→&nbsp; v&#8320; = J &divide; m</span><br>` +
+          `J = ${K_IMPULSE}&middot;<b>${c.p}</b>&middot;${c.vprop} = <b>${J.toFixed(2)}</b> N&middot;s<br>` +
+          `v&#8320; = ${J.toFixed(2)} &divide; ${c.mass} = <b>${vv.toFixed(1)}</b> m/s` +
+          `<span class="cap" style="margin-top:5px">k=impulse const, P=pressure, V=propellant vol, m=mass</span>`;
+        // coast — every term shown (spec 10.6)
+        $("eqCoast").innerHTML =
+          `<span class="cap">COAST — closed form, v&sup2; drag</span>` +
+          `<span class="lbl">&Delta;h = (m &divide; C<sub>d</sub>&rho;A)&middot;ln( 1 + C<sub>d</sub>&rho;A&middot;v&#8320;&sup2; &divide; 2mg )</span><br>` +
+          `C<sub>d</sub>=<b>${c.cd}</b> &nbsp;&rho;=${RHO} &nbsp;A=${AREA.toFixed(5)}<br>` +
+          `m=${c.mass} &nbsp;v&#8320;=${vv.toFixed(1)} &nbsp;g=${G}<br>` +
+          `&Delta;h = <b>${dh.toFixed(1)}</b> m &nbsp;+ boost ${bh.toFixed(1)} m` +
+          `<span class="res">apogee &asymp; <b>${apo.toFixed(1)}</b> m</span>` +
+          `<span class="cap">assumes a straight, stable climb</span>`;
+        // stability
+        const sm = stab(c),
+          xg = xcg(c),
+          xp = xcp(c);
+        $("eqStab").innerHTML =
+          `<span class="cap">STABILITY — margin in calibers</span>` +
+          `<span class="lbl">SM = (X<sub>cp</sub> &minus; X<sub>cg</sub>) &divide; d</span><br>` +
+          `X<sub>cp</sub>=${(xp * 100).toFixed(1)} cm &nbsp;X<sub>cg</sub>=${(xg * 100).toFixed(1)} cm &nbsp;d=${(DIAM * 100).toFixed(1)} cm<br>` +
+          `SM = <b>${sm.toFixed(2)}</b> cal &nbsp;<span class="${sm >= 1 ? "" : "warn"}">→ ${stabWord(sm).toLowerCase()}</span>` +
+          (sm < 1
+            ? `<span class="cap warn" style="margin-top:4px">SM &lt; 1 → tends to tumble / corkscrew</span>`
+            : "");
+      }
 
-/* ================= flight ================= */
-function launch(){
-  const c=cfg();
-  const sm=stab(c);
-  const vv=v0(c)*stabFactor(sm);
-  if(S.trace.length>1){ S.history.push(S.trace); if(S.history.length>4) S.history.shift(); }
-  S.trace=[[0,boostH(v0(c))]];
-  S.flight={ active:true, landed:false, apogeeSet:false, apogee:0, t:0, acc:0,
-    x:0, y:boostH(v0(c)), vx:0, vy:vv, tilt:0,
-    b:dragB(c.cd), mass:c.mass, cd:c.cd, sm:sm, c:c, drag:0, spin:0 };
-  S.lastResult=null;
-  setResult('&#9650; Launched — climbing…','');
-}
+      /* ================= comparison bars (pressure vs apogee) ================= */
+      function buildBars() {
+        const el = $("cbars");
+        el.innerHTML = "";
+        PRESSURE.forEach((pr, i) => {
+          const d = document.createElement("div");
+          d.className = "cbar" + (i === S.pressIdx ? " cur" : "");
+          d.innerHTML = `<span class="cn">${pr.label}</span><div class="track"><i id="bar_${i}"></i></div><span class="cv" id="barv_${i}"></span>`;
+          el.appendChild(d);
+        });
+      }
+      function updateBars() {
+        const c = cfg();
+        let mx = 0;
+        const vals = PRESSURE.map((pr) => {
+          const a = apogeeIdeal(Object.assign({}, c, { p: pr.p }));
+          mx = Math.max(mx, a);
+          return a;
+        });
+        mx = Math.max(mx, 10);
+        PRESSURE.forEach((pr, i) => {
+          const bar = $("bar_" + i),
+            lab = $("barv_" + i);
+          if (!bar) return;
+          bar.style.width = (vals[i] / mx) * 100 + "%";
+          lab.textContent = vals[i].toFixed(0) + " m";
+          $("cbars").children[i].classList.toggle("cur", i === S.pressIdx);
+        });
+      }
 
-function stepFlight(dt){
-  const F=S.flight; if(!F||!F.active) return;
-  const m=F.mass, b=F.b, windX=S.wind;   // wind blows toward +x (downrange)
-  const relx=F.vx-windX, rely=F.vy, spd=Math.hypot(relx,rely);
-  let ax=-(b/m)*spd*relx;
-  let ay=-G-(b/m)*spd*rely;
-  // instability: corkscrew veer while it still has airspeed (spec: flip mechanism)
-  if(F.sm<1){ const instab=clamp(1-F.sm,0,1.6);
-    ax += instab*7*Math.sin(F.t*8)*(F.vy>0?1:0.4);
-    F.spin += instab*dt*6;
-  }
-  F.vx+=ax*dt; F.vy+=ay*dt;
-  F.x+=F.vx*dt; F.y+=F.vy*dt; F.t+=dt;
-  F.drag=0.5*RHO*F.cd*AREA*spd*spd;
-  // tilt: point along velocity, plus tumble when unstable
-  const base=Math.atan2(F.vx-windX*0.0, Math.max(0.5,Math.abs(F.vy))) * (F.vy>=0?1:-1);
-  F.tilt = clamp(base,-1.2,1.2) + F.spin;
-  // apogee freeze (spec 4)
-  if(!F.apogeeSet && F.vy<=0 && F.t>0.05){ F.apogeeSet=true; F.apogee=F.y; onApogee(); }
-  // trace sampling
-  F.acc+=dt; if(F.acc>=0.02){ F.acc=0; S.trace.push([F.x,F.y]); if(S.trace.length>1200) S.trace.shift(); }
-  // touchdown
-  if(F.y<=0 && F.t>0.15){ F.y=0; F.active=false; F.landed=true; S.trace.push([F.x,0]); }
-}
+      /* ================= scenario tabs ================= */
+      function buildTabs() {
+        const t = $("scentabs");
+        t.innerHTML = "";
+        SORDER.forEach((k) => {
+          const sc = SCEN[k];
+          const b = document.createElement("button");
+          b.className = "wtab" + (k === S.scen ? " on" : "");
+          b.dataset.k = k;
+          b.innerHTML = `<div class="wn">${sc.name}</div><div class="wd"><span class="lab">precision</span><div class="difbar"><i style="width:${sc.diff * 100}%"></i></div></div>`;
+          b.onclick = () => setScenario(k);
+          t.appendChild(b);
+        });
+      }
+      function setScenario(k) {
+        S.scen = k;
+        const sc = SCEN[k];
+        S.wind = sc.wind;
+        $("wind").value = sc.wind;
+        $("windVal").textContent = sc.wind.toFixed(1) + " m/s";
+        $("scenName").textContent = sc.name;
+        document
+          .querySelectorAll(".wtab")
+          .forEach((b) => b.classList.toggle("on", b.dataset.k === k));
+      }
 
-function onApogee(){
-  const F=S.flight, sc=SCEN[S.scen], a=F.apogee;
-  let cls,txt;
-  if(a>=sc.lo&&a<=sc.hi){ cls='in'; txt=`Apogee <b>${a.toFixed(1)} m</b> — inside the ${sc.lo}–${sc.hi} m target band.`; }
-  else { const miss=a<sc.lo?(sc.lo-a):(a-sc.hi);
-    cls=miss<=8?'near':'off';
-    txt=`Apogee <b>${a.toFixed(1)} m</b> — ${a<sc.lo?'short of':'over'} the band by ${miss.toFixed(1)} m.`; }
-  if(F.sm<1) txt+=` <span style="color:var(--signal)">(${stabWord(F.sm).toLowerCase()} — it veered, losing height)</span>`;
-  setResult(txt,cls);
-}
-function setResult(html,cls){ const el=$('resultLine'); el.innerHTML=html; el.className='resultline'+(cls?' '+cls:''); }
+      /* ================= telemetry ================= */
+      function updateTelemetry() {
+        const F = S.flight;
+        const alt = F ? F.y : 0,
+          vel = F ? F.vy : 0,
+          drag = F ? F.drag : 0;
+        $("t_alt").innerHTML =
+          Math.max(0, alt).toFixed(1) + '<span class="u">m</span>';
+        $("t_vel").innerHTML =
+          (vel >= 0 ? "+" : "") + vel.toFixed(1) + '<span class="u">m/s</span>';
+        $("t_drag").innerHTML = drag.toFixed(2) + '<span class="u">N</span>';
+        const apoTxt = F && F.apogeeSet ? F.apogee.toFixed(1) + " m" : "—";
+        $("t_apo").textContent = apoTxt;
+        // stability from the live pre-launch config (or the flying rocket)
+        const sm = F && F.active ? F.sm : stab(cfg());
+        const f = $("t_flag");
+        const w = stabWord(sm);
+        f.textContent = w;
+        f.className =
+          "flag " + (sm >= 1 ? "stable" : sm >= 0.5 ? "marginal" : "unstable");
+        $("t_sm").textContent = S.mathOn ? "SM " + sm.toFixed(2) : "";
+        // launch bar
+        $("bAlt").innerHTML =
+          Math.max(0, alt).toFixed(1) + '<span style="font-size:9px"> m</span>';
+        $("bVel").textContent = (vel >= 0 ? "+" : "") + vel.toFixed(1);
+        $("bApo").textContent = apoTxt;
+      }
 
-/* ================= math panel ================= */
-function drawGraph(){
-  const g=$('gGraph'); const r=g.getBoundingClientRect();
-  g.width=r.width*DPR; g.height=r.height*DPR; const gx=g.getContext('2d'); gx.setTransform(DPR,0,0,DPR,0,0);
-  const W=r.width,H=r.height,pad=6,x0=pad+16,y0=H-16,x1=W-pad,y1=pad+2;
-  gx.clearRect(0,0,W,H);
-  const c=cfg(); const Pmin=2,Pmax=9;
-  const pts=[]; let ymax=0;
-  for(let i=0;i<=60;i++){ const P=Pmin+(Pmax-Pmin)*i/60;
-    const cc=Object.assign({},c,{p:P}); const a=apogeeIdeal(cc); pts.push([P,a]); ymax=Math.max(ymax,a); }
-  ymax=Math.max(ymax,20)*1.1;
-  const sx=P=>x0+(P-Pmin)/(Pmax-Pmin)*(x1-x0);
-  const sy=v=>y0-clamp(v/ymax,0,1)*(y0-y1);
-  // curve
-  gx.strokeStyle='#1B2A33'; gx.lineWidth=2; gx.beginPath();
-  pts.forEach(([P,a],i)=>{ const X=sx(P),Y=sy(a); i?gx.lineTo(X,Y):gx.moveTo(X,Y); }); gx.stroke();
-  // low/med/high markers
-  gx.fillStyle='rgba(27,42,51,.35)';
-  PRESSURE.forEach(pr=>{ const cc=Object.assign({},c,{p:pr.p}); const X=sx(pr.p),Y=sy(apogeeIdeal(cc));
-    gx.beginPath(); gx.arc(X,Y,2.5,0,Math.PI*2); gx.fill(); });
-  // current
-  const curP=PRESSURE[S.pressIdx].p; const CX=sx(curP),CY=sy(apogeeIdeal(c));
-  gx.fillStyle='#C2410C'; gx.beginPath(); gx.arc(CX,CY,4.5,0,Math.PI*2); gx.fill();
-  // axes
-  gx.fillStyle='#8A9AA6'; gx.font='7.5px "Roboto Mono",monospace'; gx.textAlign='left';
-  gx.fillText('m',x0-14,y1+6); gx.fillText('apogee',x0-14,y1+15);
-  gx.textAlign='center'; gx.fillText('low P',sx(3),H-4); gx.fillText('high P',sx(8),H-4);
-}
+      /* ================= refresh on every change (spec 10.5) ================= */
+      function refreshStatic() {
+        S.predApogee = apogeeIdeal(cfg());
+        $("bodyVal").textContent = S.mathOn
+          ? BODY[S.body].mass.toFixed(2) + " kg"
+          : "";
+        $("pressVal").innerHTML =
+          PRESSURE[S.pressIdx].label +
+          (S.mathOn
+            ? ` <span class="num">${PRESSURE[S.pressIdx].p} bar</span>`
+            : "");
+        updateBars();
+        if (S.mathOn) {
+          updateEquation();
+          drawGraph();
+        }
+      }
 
-function updateEquation(){
-  const c=cfg(), vv=v0(c), J=impulse(c), b=dragB(c.cd);
-  const bh=boostH(vv), dh=coastDh(c,vv), apo=bh+dh;
-  // boost
-  $('eqBoost').innerHTML=
-    `<span class="cap">BOOST — single impulse</span>`
-    +`<span class="lbl">J = k&middot;P&middot;V &nbsp;→&nbsp; v&#8320; = J &divide; m</span><br>`
-    +`J = ${K_IMPULSE}&middot;<b>${c.p}</b>&middot;${c.vprop} = <b>${J.toFixed(2)}</b> N&middot;s<br>`
-    +`v&#8320; = ${J.toFixed(2)} &divide; ${c.mass} = <b>${vv.toFixed(1)}</b> m/s`
-    +`<span class="cap" style="margin-top:5px">k=impulse const, P=pressure, V=propellant vol, m=mass</span>`;
-  // coast — every term shown (spec 10.6)
-  $('eqCoast').innerHTML=
-    `<span class="cap">COAST — closed form, v&sup2; drag</span>`
-    +`<span class="lbl">&Delta;h = (m &divide; C<sub>d</sub>&rho;A)&middot;ln( 1 + C<sub>d</sub>&rho;A&middot;v&#8320;&sup2; &divide; 2mg )</span><br>`
-    +`C<sub>d</sub>=<b>${c.cd}</b> &nbsp;&rho;=${RHO} &nbsp;A=${AREA.toFixed(5)}<br>`
-    +`m=${c.mass} &nbsp;v&#8320;=${vv.toFixed(1)} &nbsp;g=${G}<br>`
-    +`&Delta;h = <b>${dh.toFixed(1)}</b> m &nbsp;+ boost ${bh.toFixed(1)} m`
-    +`<span class="res">apogee &asymp; <b>${apo.toFixed(1)}</b> m</span>`
-    +`<span class="cap">assumes a straight, stable climb</span>`;
-  // stability
-  const sm=stab(c), xg=xcg(c), xp=xcp(c);
-  $('eqStab').innerHTML=
-    `<span class="cap">STABILITY — margin in calibers</span>`
-    +`<span class="lbl">SM = (X<sub>cp</sub> &minus; X<sub>cg</sub>) &divide; d</span><br>`
-    +`X<sub>cp</sub>=${(xp*100).toFixed(1)} cm &nbsp;X<sub>cg</sub>=${(xg*100).toFixed(1)} cm &nbsp;d=${(DIAM*100).toFixed(1)} cm<br>`
-    +`SM = <b>${sm.toFixed(2)}</b> cal &nbsp;<span class="${sm>=1?'':'warn'}">→ ${stabWord(sm).toLowerCase()}</span>`
-    +(sm<1?`<span class="cap warn" style="margin-top:4px">SM &lt; 1 → tends to tumble / corkscrew</span>`:'');
-}
+      /* ================= controls ================= */
+      function segHandler(segId, apply) {
+        $(segId)
+          .querySelectorAll("button")
+          .forEach(
+            (b) =>
+              (b.onclick = () => {
+                $(segId)
+                  .querySelectorAll("button")
+                  .forEach((x) => x.classList.remove("on"));
+                b.classList.add("on");
+                apply(b.dataset.k);
+                refreshStatic();
+              }),
+          );
+      }
+      segHandler("noseSeg", (k) => (S.nose = k));
+      segHandler("bodySeg", (k) => (S.body = k));
+      segHandler("finSeg", (k) => (S.fin = k));
 
-/* ================= comparison bars (pressure vs apogee) ================= */
-function buildBars(){
-  const el=$('cbars'); el.innerHTML='';
-  PRESSURE.forEach((pr,i)=>{
-    const d=document.createElement('div'); d.className='cbar'+(i===S.pressIdx?' cur':'');
-    d.innerHTML=`<span class="cn">${pr.label}</span><div class="track"><i id="bar_${i}"></i></div><span class="cv" id="barv_${i}"></span>`;
-    el.appendChild(d);
-  });
-}
-function updateBars(){
-  const c=cfg(); let mx=0; const vals=PRESSURE.map(pr=>{ const a=apogeeIdeal(Object.assign({},c,{p:pr.p})); mx=Math.max(mx,a); return a; });
-  mx=Math.max(mx,10);
-  PRESSURE.forEach((pr,i)=>{ const bar=$('bar_'+i), lab=$('barv_'+i); if(!bar) return;
-    bar.style.width=(vals[i]/mx*100)+'%'; lab.textContent=vals[i].toFixed(0)+' m';
-    $('cbars').children[i].classList.toggle('cur',i===S.pressIdx);
-  });
-}
+      $("press").oninput = (e) => {
+        S.pressIdx = +e.target.value;
+        refreshStatic();
+      };
+      $("wind").oninput = (e) => {
+        S.wind = +e.target.value;
+        $("windVal").textContent = S.wind.toFixed(1) + " m/s";
+      };
 
-/* ================= scenario tabs ================= */
-function buildTabs(){
-  const t=$('scentabs'); t.innerHTML='';
-  SORDER.forEach(k=>{ const sc=SCEN[k];
-    const b=document.createElement('button'); b.className='wtab'+(k===S.scen?' on':''); b.dataset.k=k;
-    b.innerHTML=`<div class="wn">${sc.name}</div><div class="wd"><span class="lab">precision</span><div class="difbar"><i style="width:${sc.diff*100}%"></i></div></div>`;
-    b.onclick=()=>setScenario(k);
-    t.appendChild(b);
-  });
-}
-function setScenario(k){
-  S.scen=k; const sc=SCEN[k];
-  S.wind=sc.wind; $('wind').value=sc.wind; $('windVal').textContent=sc.wind.toFixed(1)+' m/s';
-  $('scenName').textContent=sc.name;
-  document.querySelectorAll('.wtab').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
-}
+      $("mathTog").onchange = (e) => {
+        S.mathOn = e.target.checked;
+        $("mathSec").style.display = S.mathOn ? "block" : "none";
+        refreshStatic();
+        if (S.mathOn) requestAnimationFrame(drawGraph);
+        try {
+          localStorage.setItem("ascent_math", S.mathOn ? "1" : "0");
+        } catch (_) {}
+      };
 
-/* ================= telemetry ================= */
-function updateTelemetry(){
-  const F=S.flight;
-  const alt=F?F.y:0, vel=F?F.vy:0, drag=F?F.drag:0;
-  $('t_alt').innerHTML=Math.max(0,alt).toFixed(1)+'<span class="u">m</span>';
-  $('t_vel').innerHTML=(vel>=0?'+':'')+vel.toFixed(1)+'<span class="u">m/s</span>';
-  $('t_drag').innerHTML=drag.toFixed(2)+'<span class="u">N</span>';
-  const apoTxt = (F&&F.apogeeSet)?F.apogee.toFixed(1)+' m':'—';
-  $('t_apo').textContent=apoTxt;
-  // stability from the live pre-launch config (or the flying rocket)
-  const sm = F&&F.active? F.sm : stab(cfg());
-  const f=$('t_flag'); const w=stabWord(sm);
-  f.textContent=w; f.className='flag '+(sm>=1?'stable':sm>=0.5?'marginal':'unstable');
-  $('t_sm').textContent = S.mathOn ? 'SM '+sm.toFixed(2) : '';
-  // launch bar
-  $('bAlt').innerHTML=Math.max(0,alt).toFixed(1)+'<span style="font-size:9px"> m</span>';
-  $('bVel').textContent=(vel>=0?'+':'')+vel.toFixed(1);
-  $('bApo').textContent=apoTxt;
-}
+      $("launchBtn").onclick = launch;
+      $("clearBtn").onclick = () => {
+        S.history = [];
+        S.trace = [[0, 0]];
+        S.flight = null;
+        setResult("Traces cleared. Press <b>&nbsp;LAUNCH&nbsp;</b>.", "");
+      };
 
-/* ================= refresh on every change (spec 10.5) ================= */
-function refreshStatic(){
-  S.predApogee=apogeeIdeal(cfg());
-  $('bodyVal').textContent = S.mathOn ? BODY[S.body].mass.toFixed(2)+' kg' : '';
-  $('pressVal').innerHTML = PRESSURE[S.pressIdx].label + (S.mathOn?` <span class="num">${PRESSURE[S.pressIdx].p} bar</span>`:'');
-  updateBars();
-  if(S.mathOn){ updateEquation(); drawGraph(); }
-}
+      $("helpBtn").onclick = () => $("scrim").classList.add("show");
+      $("helpClose").onclick = () => $("scrim").classList.remove("show");
+      $("scrim").addEventListener("click", (e) => {
+        if (e.target === $("scrim")) $("scrim").classList.remove("show");
+      });
 
-/* ================= controls ================= */
-function segHandler(segId,apply){
-  $(segId).querySelectorAll('button').forEach(b=>b.onclick=()=>{
-    $(segId).querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
-    apply(b.dataset.k); refreshStatic();
-  });
-}
-segHandler('noseSeg',k=>S.nose=k);
-segHandler('bodySeg',k=>S.body=k);
-segHandler('finSeg',k=>S.fin=k);
+      /* ================= main loop (fixed step, clamped dt — spec 10.7) ================= */
+      let last = performance.now(),
+        acc = 0;
+      const FIXED = 1 / 120;
+      function loop(now) {
+        let dt = (now - last) / 1000;
+        last = now;
+        dt = clamp(dt, 0, 0.1); // clamp so a backgrounded tab can't teleport the rocket
+        acc += dt;
+        let guard = 0;
+        while (acc >= FIXED && guard < 40) {
+          stepFlight(FIXED);
+          acc -= FIXED;
+          guard++;
+        }
+        // ease the vertical view to fit target + prediction + live flight
+        const F = S.flight;
+        const need = Math.max(
+          SCEN[S.scen].hi * 1.3,
+          S.predApogee * 1.18,
+          F ? F.y * 1.12 : 0,
+          45,
+        );
+        S.viewMax += (need - S.viewMax) * clamp(dt * 1.5, 0, 1);
+        drawScene();
+        updateTelemetry();
+        requestAnimationFrame(loop);
+      }
 
-$('press').oninput=e=>{ S.pressIdx=+e.target.value; refreshStatic(); };
-$('wind').oninput=e=>{ S.wind=+e.target.value; $('windVal').textContent=S.wind.toFixed(1)+' m/s'; };
-
-$('mathTog').onchange=e=>{ S.mathOn=e.target.checked; $('mathSec').style.display=S.mathOn?'block':'none';
-  refreshStatic(); if(S.mathOn) requestAnimationFrame(drawGraph);
-  try{ localStorage.setItem('ascent_math',S.mathOn?'1':'0'); }catch(_){}
-};
-
-$('launchBtn').onclick=launch;
-$('clearBtn').onclick=()=>{ S.history=[]; S.trace=[[0,0]]; S.flight=null; setResult('Traces cleared. Press <b>&nbsp;LAUNCH&nbsp;</b>.',''); };
-
-$('helpBtn').onclick=()=>$('scrim').classList.add('show');
-$('helpClose').onclick=()=>$('scrim').classList.remove('show');
-$('scrim').addEventListener('click',e=>{ if(e.target===$('scrim')) $('scrim').classList.remove('show'); });
-
-/* ================= main loop (fixed step, clamped dt — spec 10.7) ================= */
-let last=performance.now(), acc=0; const FIXED=1/120;
-function loop(now){
-  let dt=(now-last)/1000; last=now;
-  dt=clamp(dt,0,0.1);                 // clamp so a backgrounded tab can't teleport the rocket
-  acc+=dt; let guard=0;
-  while(acc>=FIXED && guard<40){ stepFlight(FIXED); acc-=FIXED; guard++; }
-  // ease the vertical view to fit target + prediction + live flight
-  const F=S.flight;
-  const need=Math.max(SCEN[S.scen].hi*1.3, S.predApogee*1.18, F?F.y*1.12:0, 45);
-  S.viewMax+=(need-S.viewMax)*clamp(dt*1.5,0,1);
-  drawScene();
-  updateTelemetry();
-  requestAnimationFrame(loop);
-}
-
-/* ================= init ================= */
-buildTabs(); buildBars(); setScenario('open');
-refreshStatic();
-try{ if(localStorage.getItem('ascent_math')==='1'){ S.mathOn=true; $('mathTog').checked=true; $('mathSec').style.display='block'; refreshStatic(); } }catch(_){}
-fit();
-requestAnimationFrame(loop);
-try{ if(!localStorage.getItem('ascent_seen')){ $('scrim').classList.add('show'); localStorage.setItem('ascent_seen','1'); } }catch(_){}
-</script>
-</body>
+      /* ================= init ================= */
+      buildTabs();
+      buildBars();
+      setScenario("open");
+      refreshStatic();
+      try {
+        if (localStorage.getItem("ascent_math") === "1") {
+          S.mathOn = true;
+          $("mathTog").checked = true;
+          $("mathSec").style.display = "block";
+          refreshStatic();
+        }
+      } catch (_) {}
+      fit();
+      requestAnimationFrame(loop);
+      try {
+        if (!localStorage.getItem("ascent_seen")) {
+          $("scrim").classList.add("show");
+          localStorage.setItem("ascent_seen", "1");
+        }
+      } catch (_) {}
+    </script>
+  </body>
 </html>
