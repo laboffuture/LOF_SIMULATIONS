@@ -825,6 +825,7 @@
           chargePct: 0,
           ledBrightness: 0,
           fanAngle: 0,
+          fanSpin: 0, // deg/sec — only leaves 0 once Start is pressed
           wireFlow: 0,
           particles: [],
         };
@@ -881,6 +882,7 @@
           S.charging = false;
           S.chargePct = 0;
           S.ledBrightness = 0;
+          S.fanSpin = 0;
           S.particles = [];
           startBtn.classList.remove("on");
           startBtn.textContent = "▶ Start";
@@ -931,7 +933,13 @@
             S.ledBrightness += (0 - S.ledBrightness) * Math.min(1, dt * 3);
           }
 
-          S.fanAngle = (S.fanAngle + WIND[S.wind].base * 0.35 * dt) % 360;
+          // Picking a wind speed only arms the blower; it spins up on Start and
+          // coasts back down on Stop, the same way the rotor eases into its RPM.
+          const fanTarget =
+            S.running && S.wind !== "off" ? WIND[S.wind].base * 0.35 : 0;
+          S.fanSpin += (fanTarget - S.fanSpin) * smooth;
+          if (Math.abs(S.fanSpin) < 0.5) S.fanSpin = 0;
+          S.fanAngle = (S.fanAngle + S.fanSpin * dt) % 360;
           if (S.running && S.wind !== "off")
             S.wireFlow = (S.wireFlow + S.current * dt * 60) % 40;
 
