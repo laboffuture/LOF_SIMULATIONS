@@ -70,25 +70,22 @@
       .frame {
         font-family: var(--head);
       }
+      /* Title dead centre, help buttons right. Column 1 is an empty 1fr that
+         mirrors column 3, so the middle column stays on the header's true
+         midpoint instead of being pushed left by the buttons. */
       header.top {
-        display: flex;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
         align-items: center;
         gap: 12px;
-        flex-wrap: wrap;
         margin-bottom: 6px;
         flex: 0 0 auto;
         position: relative;
       }
-      .logo {
-        width: 42px;
-        height: 42px;
-        border-radius: 13px;
-        display: grid;
-        place-items: center;
-        font-size: 22px;
-        background: linear-gradient(145deg, #fff, #ffe4ea);
-        border: 1px solid var(--line);
-        box-shadow: var(--shadow);
+      .title {
+        grid-column: 2;
+        text-align: center;
+        min-width: 0;
       }
       .title h1 {
         margin: 0;
@@ -97,17 +94,25 @@
         letter-spacing: 1px;
         color: #12213f;
       }
-      .title p {
-        margin: 2px 0 0;
-        font-size: 11px;
-        font-weight: 500;
-        letter-spacing: 0.5px;
-        color: var(--mut);
-      }
       .helpbtns {
-        margin-left: auto;
+        grid-column: 3;
+        justify-self: end;
         display: flex;
         gap: 8px;
+      }
+      /* Narrow: buttons on their own row, title centred beneath them. */
+      @media (max-width: 760px) {
+        header.top {
+          grid-template-columns: 1fr;
+        }
+        .helpbtns {
+          grid-row: 1;
+          grid-column: 1;
+        }
+        .title {
+          grid-row: 2;
+          grid-column: 1;
+        }
       }
       .helpbtn {
         cursor: pointer;
@@ -159,6 +164,9 @@
           width: auto;
           max-width: none;
           margin-top: 8px;
+          /* No longer absolutely positioned, so it is a grid item now and has
+             to span the full header instead of dropping into a side column. */
+          grid-column: 1 / -1;
         }
       }
       .tabpanel {
@@ -866,10 +874,8 @@
   </head>
   <body>
     <header class="top">
-      <div class="logo">🎧</div>
       <div class="title">
         <h1>HEARTBEAT DJ BOT — CREW CALMNESS MUSIC SIMULATION</h1>
-        <p>MAX30102 · SOUND SENSOR · DFPLAYER MINI · LOF ROBOTICS</p>
       </div>
       <div class="helpbtns">
         <button type="button" class="helpbtn" data-tab="use">How To Use</button>
@@ -1030,71 +1036,6 @@
           </div>
         </div>
 
-        <div class="cmdgroup sn">
-          <h4>Sound Sensor — Ambient Noise</h4>
-          <div class="seg sn three" id="segSound">
-            <button data-snd="silence" class="on">Silence</button>
-            <button data-snd="conv">Talking</button>
-            <button data-snd="alarm">Alarm</button>
-            <button data-snd="crowd">Crowd</button>
-            <button data-snd="machinery">Machinery</button>
-            <button data-snd="vent">Vent Hum</button>
-          </div>
-          <div class="hint" id="sndHint">
-            Near-silent cabin. Only the faint electrical floor of the sensor.
-          </div>
-          <div class="ctrl">
-            <div class="row">
-              <label>Ambient Level</label
-              ><span class="val" id="v_amb">15%</span>
-            </div>
-            <input
-              type="range"
-              class="snr"
-              id="r_amb"
-              min="0"
-              max="100"
-              step="1"
-              value="15"
-            />
-            <div class="hint">How loud that sound actually is in the room.</div>
-          </div>
-          <div class="ctrl">
-            <div class="row">
-              <label>Noise Threshold</label
-              ><span class="val" id="v_snth">650</span>
-            </div>
-            <input
-              type="range"
-              class="snr"
-              id="r_snth"
-              min="100"
-              max="950"
-              step="5"
-              value="650"
-            />
-            <div class="hint">Above this reading, the bot calls it loud.</div>
-          </div>
-          <div class="ctrl">
-            <div class="row">
-              <label>Sensor Sensitivity</label
-              ><span class="val" id="v_sens">1.00×</span>
-            </div>
-            <input
-              type="range"
-              class="snr"
-              id="r_sens"
-              min="40"
-              max="200"
-              step="5"
-              value="100"
-            />
-            <div class="hint">
-              Gain on the microphone. Same room, different number.
-            </div>
-          </div>
-        </div>
-
         <div class="cmdgroup mu">
           <h4>Bot Response</h4>
           <div class="ctrl" style="margin-top: 0">
@@ -1179,11 +1120,6 @@
             <canvas id="trend" width="760" height="150"></canvas>
           </div>
         </div>
-        <div class="gcard">
-          <span class="glab">Sound Sensor · Ambient Envelope (0–1023)</span>
-          <canvas id="snd" width="1540" height="150"></canvas>
-        </div>
-
         <div class="stage-foot">
           <button type="button" class="btn pause" id="btnPause">Pause</button>
           <button type="button" class="btn" id="btnReset">Reset</button>
@@ -1400,8 +1336,6 @@
           gx = ppg.getContext("2d");
         const trend = $("trend"),
           tx = trend.getContext("2d");
-        const sndC = $("snd"),
-          sx = sndC.getContext("2d");
         const cone = $("spkCone"),
           cx2 = cone.getContext("2d");
         const swave = $("spkWave"),
@@ -1424,7 +1358,6 @@
         const D = {
           ppg: [760, 150],
           trend: [760, 150],
-          snd: [1540, 150],
           cone: [144, 144],
           swave: [560, 92],
         };
@@ -1453,7 +1386,6 @@
           fitPod();
           fitFixed(ppg, gx, D.ppg[0], D.ppg[1]);
           fitFixed(trend, tx, D.trend[0], D.trend[1]);
-          fitFixed(sndC, sx, D.snd[0], D.snd[1]);
           fitFixed(cone, cx2, D.cone[0], D.cone[1]);
           fitFixed(swave, wx, D.swave[0], D.swave[1]);
         }
@@ -1707,7 +1639,6 @@
         let bpmHist = []; // {t, bpm} for slope + trend graph
         let ppgBuf = new Array(420).fill(0);
         let beatMarks = new Array(420).fill(0);
-        let sndBuf = new Array(520).fill(0);
         let trendBuf = []; // {t, bpm}
         let trendClock = 0;
         const stars = [];
@@ -2030,8 +1961,6 @@
             S.sndRaw > S.sndDisp ? 0.05 : 0.55,
             dt,
           );
-          sndBuf.push(S.sndRaw);
-          sndBuf.shift();
 
           // --- mode selection, with a short commit delay so the DFPlayer is not
           //     asked to restart a track sixty times a second ---
@@ -2884,71 +2813,6 @@
           tx.fillText("last 30 s", w - 8, h - 6);
         }
 
-        function drawSound() {
-          const [w, h] = D.snd;
-          gridBg(sx, w, h);
-          const yOf = (v) => h - 10 - (clamp(v, 0, 1023) / 1023) * (h - 22);
-          const n = sndBuf.length;
-
-          // Envelope, filled to the floor
-          sx.beginPath();
-          sx.moveTo(0, h);
-          for (let i = 0; i < n; i++)
-            sx.lineTo((i / (n - 1)) * w, yOf(sndBuf[i]));
-          sx.lineTo(w, h);
-          sx.closePath();
-          const gsn = sx.createLinearGradient(0, 0, 0, h);
-          gsn.addColorStop(0, "rgba(245,158,11,0.55)");
-          gsn.addColorStop(1, "rgba(245,158,11,0.05)");
-          sx.fillStyle = gsn;
-          sx.fill();
-          sx.strokeStyle = "#fcd34d";
-          sx.lineWidth = 1.8;
-          sx.beginPath();
-          for (let i = 0; i < n; i++) {
-            const x = (i / (n - 1)) * w,
-              y = yOf(sndBuf[i]);
-            i ? sx.lineTo(x, y) : sx.moveTo(x, y);
-          }
-          sx.stroke();
-
-          // Smoothed reading the bot decides on
-          const ys = yOf(S.sndDisp);
-          sx.strokeStyle = "rgba(255,255,255,0.5)";
-          sx.lineWidth = 1.4;
-          sx.setLineDash([4, 4]);
-          sx.beginPath();
-          sx.moveTo(0, ys);
-          sx.lineTo(w, ys);
-          sx.stroke();
-          sx.setLineDash([]);
-
-          // Threshold
-          const yt = yOf(S.snTh);
-          sx.strokeStyle = "#ff8fa6";
-          sx.lineWidth = 2;
-          sx.setLineDash([9, 6]);
-          sx.beginPath();
-          sx.moveTo(0, yt);
-          sx.lineTo(w, yt);
-          sx.stroke();
-          sx.setLineDash([]);
-          sx.fillStyle = "#ff8fa6";
-          sx.font = "700 12px Orbitron, sans-serif";
-          sx.textAlign = "left";
-          sx.fillText("NOISE THRESHOLD " + S.snTh, 10, yt - 6);
-
-          const [ss2] = sndStatus();
-          sx.fillStyle = S.sndDisp > S.snTh ? "#ff5470" : "#fcd34d";
-          sx.font = "700 16px Orbitron, sans-serif";
-          sx.textAlign = "right";
-          sx.fillText(
-            Math.round(S.sndDisp) + " · " + ss2.toUpperCase(),
-            w - 10,
-            22,
-          );
-        }
-
         function drawSpeaker() {
           const m = MODES[playingMode()];
           // Cone
@@ -3048,10 +2912,7 @@
           S.bpmTarget = s.bpm;
           setRange("r_bpm", s.bpm, (v) => v + " BPM", "v_bpm");
           S.amb = s.amb;
-          setRange("r_amb", s.amb, (v) => v + "%", "v_amb");
           S.sndType = s.snd;
-          pickSeg("segSound", "snd", s.snd);
-          $("sndHint").textContent = SOUNDS[s.snd].hint;
           S.decayTo = s.decayTo === undefined ? null : s.decayTo;
           S.decayRate = s.decayRate || 0;
           // A scenario loads a situation, so the body is already there — the
@@ -3060,10 +2921,6 @@
         }
 
         bindGroup("segScenario", "sc", (k) => applyScenario(k));
-        bindGroup("segSound", "snd", (k) => {
-          S.sndType = k;
-          $("sndHint").textContent = SOUNDS[k].hint;
-        });
         bindGroup("tgBio", "bio", (v) => {
           S.bio = v === "on";
           log(
@@ -3115,24 +2972,6 @@
           (v) => (S.avgN = v),
         );
         bindRange(
-          "r_amb",
-          "v_amb",
-          (v) => v + "%",
-          (v) => (S.amb = v),
-        );
-        bindRange(
-          "r_snth",
-          "v_snth",
-          (v) => String(v),
-          (v) => (S.snTh = v),
-        );
-        bindRange(
-          "r_sens",
-          "v_sens",
-          (v) => (v / 100).toFixed(2) + "×",
-          (v) => (S.sens = v / 100),
-        );
-        bindRange(
           "r_vol",
           "v_vol",
           (v) => v + " / 30",
@@ -3155,9 +2994,7 @@
           S.avgN = 6;
           setRange("r_avg", 6, (v) => v + " samples", "v_avg");
           S.snTh = 650;
-          setRange("r_snth", 650, (v) => String(v), "v_snth");
           S.sens = 1;
-          setRange("r_sens", 100, (v) => (v / 100).toFixed(2) + "×", "v_sens");
           S.vol = 18;
           setRange("r_vol", 18, (v) => v + " / 30", "v_vol");
           S.bio = true;
@@ -3192,7 +3029,6 @@
           trendBuf = [];
           ppgBuf.fill(0);
           beatMarks.fill(0);
-          sndBuf.fill(0);
           tNow = 0;
           trendClock = 0;
           lastBeatT = 0;
@@ -3250,7 +3086,6 @@
           drawPod();
           drawPPG();
           drawTrend();
-          drawSound();
           drawSpeaker();
           updateDOM();
           requestAnimationFrame(loop);
@@ -3263,18 +3098,12 @@
         seedStars();
         if (typeof ResizeObserver !== "undefined") {
           const ro = new ResizeObserver(refit);
-          [pod, ppg, trend, sndC, cone, swave].forEach((c) => ro.observe(c));
+          [pod, ppg, trend, cone, swave].forEach((c) => ro.observe(c));
         }
         window.addEventListener("resize", refit);
-        [
-          "r_bpm",
-          "r_hrth",
-          "r_avg",
-          "r_amb",
-          "r_snth",
-          "r_sens",
-          "r_vol",
-        ].forEach((id) => rangeFill($(id)));
+        ["r_bpm", "r_hrth", "r_avg", "r_vol"].forEach((id) =>
+          rangeFill($(id)),
+        );
         applyScenario("rest");
         S.bpmActual = S.bpmTarget;
         S.bpmDisp = S.bpmTarget;
