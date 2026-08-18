@@ -25,7 +25,7 @@ const PROJECTS = [
   { id: "airfoil-tester", title: "Airfoil Tester", category: "aerospace", status: "live", url: "../sims/aerospace/AirfoilTester/AirfoilTester.html", description: "Test airfoil shapes and see how they generate lift." },
   { id: "catapult-glider", title: "Catapult Glider", category: "aerospace", status: "live", url: "../sims/aerospace/CatapultGlider/CatapultGlider.html", description: "Launch a glider from a catapult and study its flight path." },
   { id: "uttm", title: "UTTM — Universal Thrust Testing Machine", category: "aerospace", status: "live", url: "../sims/aerospace/UTTM/UTTM.html", description: "Bench-test motor and propeller combinations to find the best safe thrust setup." },
-  { id: "darrieus-turbine", title: "Darrieus Turbine", category: "aerospace", status: "live", url: "../sims/aerospace/DarrieusTurbine/DarrieusTurbine.html", description: "Spin up a vertical-axis wind turbine and charge a device with the power it generates." },
+  { id: "darrieus-turbine", title: "Darrieus Turbine", category: "aerospace", status: "live", url: "../sims/aerospace/DarrieusTurbine/DarrieusTurbine.html", description: "Spin up a helical vertical-axis wind turbine and charge a device with the power it generates." },
   ...Array.from({ length: 26 }, (_, i) => ({
     id: `aerospace-coming-soon-${i + 2}`,
     title: `Aerospace Project ${String(i + 2).padStart(2, "0")}`,

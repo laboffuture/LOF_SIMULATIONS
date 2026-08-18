@@ -364,6 +364,24 @@
         color: var(--ok-ink);
         border: 1px solid #bfe3bb;
       }
+      /* An LED does not charge — it just glows, so its three states escalate
+         through the amber the lamp itself is drawn in rather than the green
+         used for a device that is filling up. */
+      .b-dim {
+        background: #fdf6e8;
+        color: #9a7008;
+        border: 1px solid #f2e0b8;
+      }
+      .b-lit {
+        background: #fdeecb;
+        color: #7d5a04;
+        border: 1px solid #e9cd8a;
+      }
+      .b-bright {
+        background: var(--volt);
+        color: #3d2c00;
+        border: 1px solid #d99a0a;
+      }
       .devnote {
         font-size: 11.5px;
         color: var(--mut);
@@ -557,15 +575,16 @@
             <li>Press <b>Start</b> and watch the rotor spin up.</li>
             <li>
               Read <b>Live Readings</b> — turbine RPM, generator voltage, load
-              current and charging status.
+              current, and how the device is doing: an LED reports Off, Dim, On
+              or Bright, while a battery or gadget reports its charging status.
             </li>
             <li>
               Watch the <b>Energy Flow</b> strip light up: wind → turbine →
               generator → device.
             </li>
             <li>
-              Use the <b>Top View</b> inset on the stage to count the blades as
-              they turn.
+              Use the <b>Top View</b> inset on the stage to see the curved blade
+              cross-section and count the blades as they turn.
             </li>
             <li>
               Press <b>Reset</b>, change <b>one</b> setting, and run again to
@@ -576,10 +595,14 @@
         <div class="tabpanel" data-panel="learn">
           <ul>
             <li>
-              Why a curved Darrieus rotor spins the same way whatever direction
+              Why a curved Darrieus rotor turns the same way whatever direction
               the wind comes from
             </li>
             <li>How wind speed sets turbine RPM, and RPM sets voltage</li>
+            <li>
+              Why twisting the blades into a helix spreads the pull evenly over
+              the turn instead of letting it arrive in jolts
+            </li>
             <li>
               Why fewer blades spin faster but start harder, while more blades
               start easier and run smoother
@@ -630,11 +653,11 @@
         </div>
 
         <div class="ctrl">
-          <div class="row"><label>Blade Type</label></div>
-          <div class="fixedchip">🌀 Curved Darrieus Blades</div>
+          <div class="row"><label>Rotor Type</label></div>
+          <div class="fixedchip">🌀 Helical Darrieus Blades</div>
           <p class="hint">
-            Curved eggbeater blades capture wind from any direction, making the
-            turbine omnidirectional.
+            Twisted blades wrap around the shaft, so some part of every blade is
+            always facing the wind — from any direction, with an even pull.
           </p>
         </div>
 
@@ -648,7 +671,9 @@
             <button data-v="3">3</button>
             <button data-v="4">4</button>
           </div>
-          <p class="hint" id="bladeNote">Balanced speed, smooth, reliable.</p>
+          <p class="hint" id="bladeNote">
+            Balanced speed with a much smoother pull.
+          </p>
         </div>
 
         <div class="ctrl">
@@ -709,8 +734,8 @@
         </div>
 
         <div class="sect">
-          <label class="sect-label">Charging Status</label>
-          <div class="badge b-off" id="chargeBadge">Not Charging</div>
+          <label class="sect-label" id="statusLabel">LED Status</label>
+          <div class="badge b-off" id="chargeBadge">LED Off</div>
           <p class="devnote" id="devNote">
             Select a wind speed and press Start.
           </p>
@@ -775,24 +800,26 @@
       (() => {
         "use strict";
 
+        // Tuned for a slow, high-torque helical rotor: lower RPM than a straight
+        // -bladed rotor of the same size, but enough pull to spin up on Low wind.
         const WIND = {
           off: { label: "Off", base: 0 },
-          low: { label: "Low", base: 170 },
-          medium: { label: "Medium", base: 430 },
-          high: { label: "High", base: 760 },
+          low: { label: "Low", base: 110 },
+          medium: { label: "Medium", base: 260 },
+          high: { label: "High", base: 450 },
         };
         const BLADE_MOD = {
           2: {
-            speed: 1.12,
-            note: "Fastest, high variation, poor starting.",
+            speed: 1.08,
+            note: "Fastest spin, but the pull arrives in pulses.",
           },
           3: {
             speed: 1.0,
-            note: "Balanced speed, smooth, reliable.",
+            note: "Balanced speed with a much smoother pull.",
           },
           4: {
-            speed: 0.88,
-            note: "Slower, smoothest, best starting.",
+            speed: 0.93,
+            note: "Slowest, steadiest, easiest to get turning.",
           },
         };
         const DEVICES = {
@@ -805,7 +832,9 @@
             iFactor: 0.22,
           },
         };
-        const K_V = 0.017; // volts generated per RPM of the shaft
+        // A slow, high-torque rotor is geared up (or wound with more poles) to
+        // reach a useful voltage, so each RPM buys more volts than on a fast rotor.
+        const K_V = 0.029; // volts generated per RPM of the shaft
 
         const S = {
           wind: "off",
@@ -814,10 +843,8 @@
           running: false,
           rpm: 0,
           targetRpm: 0,
-          // Starting at a round angle (0) puts every blade count through the same
-          // degenerate symmetry at rest — e.g. two of a 4-blade rotor land exactly
-          // edge-on (invisible) and two of a 3-blade rotor land on the same curve.
-          // An off-axis start keeps every blade visually distinct while idle.
+          // An off-axis start angle keeps the idle rotor from resting in a
+          // symmetric pose where the blades read as a flat, ambiguous outline.
           angle: 20,
           voltage: 0,
           current: 0,
@@ -900,10 +927,40 @@
 
         function rpmWord(r) {
           if (r < 1) return "Stopped";
-          if (r < 250) return "Slow";
-          if (r < 550) return "Medium";
+          if (r < 150) return "Slow";
+          if (r < 330) return "Medium";
           return "Fast";
         }
+        // An LED does not fill up like a battery, so it reports how hard it is
+        // glowing instead of a charge state. The 5V and 10V cuts sit in the gaps
+        // between the low, medium and high wind bands at every blade count, so
+        // each wind speed lands on its own rung while blade count still counts.
+        function ledState(v) {
+          if (v < DEVICES.led.minV)
+            return {
+              text: "LED Off",
+              cls: "b-off",
+              note: "Not enough voltage to light the LED yet (needs 2.5V+). Try more wind, fewer blades, or a lighter load.",
+            };
+          if (v < 5)
+            return {
+              text: "LED Dim",
+              cls: "b-dim",
+              note: "Low wind produces slow rotation and low power, so the LED glows dimly.",
+            };
+          if (v < 10)
+            return {
+              text: "LED On",
+              cls: "b-lit",
+              note: "Medium wind produces enough voltage to power the LED steadily.",
+            };
+          return {
+            text: "LED Bright",
+            cls: "b-bright",
+            note: "High wind produces faster rotation and higher voltage, so the LED glows brightly.",
+          };
+        }
+
         function voltWord(v) {
           if (v < 0.2) return "—";
           if (v < 4) return "Low";
@@ -927,7 +984,11 @@
             if (S.device === "battery" || S.device === "gadget") {
               S.chargePct = Math.min(100, S.chargePct + S.current * dt * 6);
             } else {
-              S.ledBrightness += (1 - S.ledBrightness) * Math.min(1, dt * 3);
+              // The lamp has to visibly match the Dim / On / Bright readout, so
+              // it tracks voltage rather than snapping to full the moment it lights.
+              const over = (S.voltage - dev.minV) / 9.5;
+              const target = 0.3 + 0.7 * Math.min(1, Math.max(0, over));
+              S.ledBrightness += (target - S.ledBrightness) * Math.min(1, dt * 3);
             }
           } else if (S.device === "led") {
             S.ledBrightness += (0 - S.ledBrightness) * Math.min(1, dt * 3);
@@ -936,7 +997,7 @@
           // Picking a wind speed only arms the blower; it spins up on Start and
           // coasts back down on Stop, the same way the rotor eases into its RPM.
           const fanTarget =
-            S.running && S.wind !== "off" ? WIND[S.wind].base * 0.35 : 0;
+            S.running && S.wind !== "off" ? WIND[S.wind].base * 0.6 : 0;
           S.fanSpin += (fanTarget - S.fanSpin) * smooth;
           if (Math.abs(S.fanSpin) < 0.5) S.fanSpin = 0;
           S.fanAngle = (S.fanAngle + S.fanSpin * dt) % 360;
@@ -950,14 +1011,14 @@
         function updateParticles(dt) {
           const level = WIND[S.wind];
           if (S.running && level.base > 0) {
-            const spawnRate = level.base / 260; // particles/sec-ish
+            const spawnRate = level.base / 155; // particles/sec-ish
             S._spawnAcc = (S._spawnAcc || 0) + spawnRate * dt;
             while (S._spawnAcc >= 1) {
               S._spawnAcc -= 1;
               S.particles.push({
                 x: 118,
                 y: 250 + Math.random() * 90,
-                v: 90 + level.base * 0.25 + Math.random() * 30,
+                v: 90 + level.base * 0.42 + Math.random() * 30,
               });
             }
           }
@@ -980,26 +1041,36 @@
           document.getElementById("currFill").style.width =
             `${Math.min(100, (S.current / 3) * 100)}%`;
 
-          const badge = document.getElementById("chargeBadge");
-          badge.textContent = S.charging ? "Charging" : "Not Charging";
-          badge.className = "badge " + (S.charging ? "b-on" : "b-off");
-
           const dev = DEVICES[S.device];
+          const isLed = S.device === "led";
+          const led = isLed ? ledState(S.voltage) : null;
+          document.getElementById("statusLabel").textContent = isLed
+            ? "LED Status"
+            : "Charging Status";
+
+          const badge = document.getElementById("chargeBadge");
+          if (isLed) {
+            badge.textContent = led.text;
+            badge.className = "badge " + led.cls;
+          } else {
+            badge.textContent = S.charging ? "Charging" : "Not Charging";
+            badge.className = "badge " + (S.charging ? "b-on" : "b-off");
+          }
+
           const note = document.getElementById("devNote");
           if (!S.running) {
             note.textContent = "Select a wind speed and press Start.";
           } else if (S.wind === "off") {
             note.textContent =
               "Choose Low, Medium or High to turn the blower on.";
+          } else if (isLed) {
+            note.textContent = led.note;
           } else if (!S.charging) {
             note.textContent = `Not enough voltage for the ${dev.label} yet (needs ${dev.minV.toFixed(1)}V+). Try more wind, fewer blades, or a lighter load.`;
           } else {
             const slowCut = dev.minV * dev.iFactor * 0.65;
             if (S.current < slowCut) {
               note.textContent = `Charging, but slowly — the ${dev.label} is a heavy load for this wind speed.`;
-            } else if (S.device === "led") {
-              note.textContent =
-                "LED lit and holding steady on generator power.";
             } else {
               note.textContent = `${dev.label} charging at ${Math.round(S.chargePct)}%.`;
             }
@@ -1013,6 +1084,8 @@
               "Blower armed — choose Low, Medium or High.";
           } else if (!S.charging) {
             statusHint.textContent = `Spinning up on ${WIND[S.wind].label.toLowerCase()} wind — waiting for enough voltage.`;
+          } else if (isLed) {
+            statusHint.textContent = `Lighting the LED on ${WIND[S.wind].label.toLowerCase()} wind.`;
           } else {
             statusHint.textContent = `Charging the ${dev.label} on ${WIND[S.wind].label.toLowerCase()} wind.`;
           }
@@ -1145,40 +1218,97 @@
           c.closePath();
         }
 
+        // Each blade is a half-cylinder: seen from above its cross-section is a
+        // semicircle of radius R/2 whose centre sits R/2 off the axis, so the
+        // blade's tip reaches R while its root meets the shaft. Sweeping that
+        // cross-section up the rotor while rotating it by TWIST is what wraps the
+        // blade into the helix — and what lets the rotor bite wind from any side.
+        const TWIST = Math.PI; // helix turn from bottom cap to top cap
+        const ARC_STEPS = 7; // samples across one blade's curve
+        const LIFT_STEPS = 24; // samples up the rotor
+
+        function bladePoint(phase, psi) {
+          const a = R / 2;
+          return {
+            x: a * Math.cos(phase) + a * Math.cos(phase + psi),
+            d: a * Math.sin(phase) + a * Math.sin(phase + psi), // + is toward the viewer
+            nd: Math.sin(phase + psi), // depth part of the surface normal
+          };
+        }
+
+        // Opaque shading, not alpha: the patches are painted back-to-front and
+        // overlap heavily, so translucent fills would compound into mud.
+        function shade(r, g, b, k) {
+          return `rgb(${Math.round(r * k)},${Math.round(g * k)},${Math.round(b * k)})`;
+        }
+
         function drawTurbine() {
           const n = S.blades;
           const angleRad = (S.angle * Math.PI) / 180;
-          const mid = (SHAFT_TOP + SHAFT_BOT) / 2;
-          // A pure side-on silhouette makes blades with equal cos(angle) land on the
-          // exact same curve (e.g. two of a 3-blade rotor, or the "edge-on" pair of a
-          // 4-blade rotor going fully invisible) — nudging each blade's midpoint by its
-          // own depth keeps every blade visually distinct no matter the rotation angle.
-          const MID_SPREAD = 26;
-          const blades = [];
-          for (let i = 0; i < n; i++) {
-            const a = angleRad + (i * 2 * Math.PI) / n;
-            blades.push({ bulge: R * Math.cos(a), depth: Math.sin(a) });
-          }
-          blades.sort((a, b) => a.depth - b.depth); // paint back-swinging blades before the shaft, front ones after
+          const span = SHAFT_BOT - SHAFT_TOP;
 
-          const drawBlade = (b) => {
-            const outer = b.bulge,
-              inner = b.bulge * 0.72;
-            const midY = mid + MID_SPREAD * b.depth;
-            const alpha = 0.55 + 0.45 * ((b.depth + 1) / 2);
+          // Once a blade twists it is both in front of and behind the shaft at the
+          // same time, so depth-sorting whole blades (which a straight rotor allows)
+          // would tear. Sort the individual surface patches instead.
+          const patches = [];
+          for (let i = 0; i < n; i++) {
+            const base = angleRad + (i * 2 * Math.PI) / n;
+            for (let h = 0; h < LIFT_STEPS; h++) {
+              const t0 = h / LIFT_STEPS,
+                t1 = (h + 1) / LIFT_STEPS;
+              const p0 = base + TWIST * t0,
+                p1 = base + TWIST * t1;
+              const y0 = SHAFT_BOT - t0 * span,
+                y1 = SHAFT_BOT - t1 * span;
+              for (let s = 0; s < ARC_STEPS; s++) {
+                const u0 = (s / ARC_STEPS) * Math.PI,
+                  u1 = ((s + 1) / ARC_STEPS) * Math.PI;
+                const q0 = bladePoint(p0, u0),
+                  q1 = bladePoint(p0, u1),
+                  q2 = bladePoint(p1, u1),
+                  q3 = bladePoint(p1, u0);
+                patches.push({
+                  pts: [
+                    [SHAFT_X + q0.x, y0],
+                    [SHAFT_X + q1.x, y0],
+                    [SHAFT_X + q2.x, y1],
+                    [SHAFT_X + q3.x, y1],
+                  ],
+                  depth: (q0.d + q1.d + q2.d + q3.d) / 4,
+                  face: q0.nd + q1.nd + q2.nd + q3.nd,
+                  tip: s === 0,
+                });
+              }
+            }
+          }
+          patches.sort((p, q) => p.depth - q.depth);
+
+          const paint = (p) => {
+            const k = 0.62 + 0.38 * ((p.depth / R + 1) / 2);
+            // the convex skin catches the light; the concave blade face stays in shade
+            const fill =
+              p.face >= 0 ? shade(244, 248, 252, k) : shade(42, 120, 214, k);
             ctx.beginPath();
-            ctx.moveTo(SHAFT_X, SHAFT_TOP);
-            ctx.quadraticCurveTo(SHAFT_X + outer, midY, SHAFT_X, SHAFT_BOT);
-            ctx.quadraticCurveTo(SHAFT_X + inner, midY, SHAFT_X, SHAFT_TOP);
+            ctx.moveTo(p.pts[0][0], p.pts[0][1]);
+            for (let j = 1; j < 4; j++) ctx.lineTo(p.pts[j][0], p.pts[j][1]);
             ctx.closePath();
-            ctx.fillStyle = `rgba(42,120,214,${alpha})`;
+            ctx.fillStyle = fill;
             ctx.fill();
-            ctx.strokeStyle = `rgba(23,41,59,${alpha})`;
-            ctx.lineWidth = 1.5;
+            // hairline in the fill colour closes the antialiasing seams between patches
+            ctx.strokeStyle = fill;
+            ctx.lineWidth = 1;
             ctx.stroke();
+            if (p.tip) {
+              ctx.beginPath();
+              ctx.moveTo(p.pts[0][0], p.pts[0][1]);
+              ctx.lineTo(p.pts[3][0], p.pts[3][1]);
+              ctx.strokeStyle = "rgba(23,41,59,.5)";
+              ctx.lineWidth = 1.5;
+              ctx.stroke();
+            }
           };
 
-          blades.filter((b) => b.depth < 0).forEach(drawBlade);
+          patches.filter((p) => p.depth < 0).forEach(paint);
           ctx.strokeStyle = "#4c5c6b";
           ctx.lineWidth = 6;
           ctx.lineCap = "round";
@@ -1186,7 +1316,7 @@
           ctx.moveTo(SHAFT_X, SHAFT_TOP);
           ctx.lineTo(SHAFT_X, SHAFT_BOT);
           ctx.stroke();
-          blades.filter((b) => b.depth >= 0).forEach(drawBlade);
+          patches.filter((p) => p.depth >= 0).forEach(paint);
 
           [SHAFT_TOP, SHAFT_BOT].forEach((y) => {
             ctx.beginPath();
@@ -1204,9 +1334,9 @@
           ctx.stroke();
         }
 
-        // Side-on blade curves can overlap in silhouette (two blades can share
-        // the same horizontal projection at once) — this top-down inset is what
-        // actually shows the blade count unambiguously.
+        // A twisted blade wraps around the shaft, so the side view alone never
+        // states the blade count plainly — this top-down inset draws the same
+        // semicircular cross-section the rotor is built from, which does.
         function drawTopView() {
           const cx = 580,
             cy = 66,
@@ -1224,23 +1354,24 @@
           ctx.fillStyle = "#17293b";
           ctx.fill();
 
-          const angleRad = (S.angle * Math.PI) / 180;
+          // The top cap is the rotor's most-twisted slice, hence the TWIST offset.
+          const angleRad = (S.angle * Math.PI) / 180 + TWIST;
           const n = S.blades;
+          const a = ring / 2;
+          ctx.strokeStyle = "#2a78d6";
+          ctx.lineWidth = 4;
+          ctx.lineCap = "round";
           for (let i = 0; i < n; i++) {
-            const a = angleRad + (i * 2 * Math.PI) / n;
-            const bx = cx + ring * Math.cos(a),
-              by = cy + ring * Math.sin(a);
-            ctx.strokeStyle = "#2a78d6";
-            ctx.lineWidth = 4;
-            ctx.lineCap = "round";
+            const phase = angleRad + (i * 2 * Math.PI) / n;
             ctx.beginPath();
-            ctx.moveTo(cx + 6 * Math.cos(a), cy + 6 * Math.sin(a));
-            ctx.lineTo(bx, by);
+            ctx.arc(
+              cx + a * Math.cos(phase),
+              cy + a * Math.sin(phase),
+              a,
+              phase,
+              phase + Math.PI,
+            );
             ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(bx, by, 3, 0, Math.PI * 2);
-            ctx.fillStyle = "#2a78d6";
-            ctx.fill();
           }
           ctx.fillStyle = "#4c5c6b";
           ctx.font = "700 9px Rajdhani, sans-serif";
