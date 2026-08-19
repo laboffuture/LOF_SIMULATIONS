@@ -1221,14 +1221,28 @@
         // Each blade is a half-cylinder: seen from above its cross-section is a
         // semicircle of radius R/2 whose centre sits R/2 off the axis, so the
         // blade's tip reaches R while its root meets the shaft. Sweeping that
-        // cross-section up the rotor while rotating it by TWIST is what wraps the
+        // cross-section up the rotor while rotating it is what wraps the
         // blade into the helix — and what lets the rotor bite wind from any side.
-        const TWIST = Math.PI; // helix turn from bottom cap to top cap
-        const ARC_STEPS = 7; // samples across one blade's curve
-        const LIFT_STEPS = 24; // samples up the rotor
+        // The rotor always carries BLADE_COUNT blades. The "Number of Blades"
+        // control does not add blades — it stacks stages: one stage is a single
+        // wrap capped top and bottom by an end plate, so 2 draws a wrap, a plate,
+        // then another wrap. Every stage restarts from the same phase, which is
+        // what makes each one read as a repeat of the last rather than letting
+        // one long twist run on into a rope with no countable divisions.
+        const BLADE_COUNT = 2;
+        const TWIST_PER_STAGE = (2 * Math.PI) / BLADE_COUNT; // one wrap
+        const ARC_STEPS = 9; // samples across one blade's curve
+        const FACET_DEG = 9; // height sampling, held constant across settings
 
-        function bladePoint(phase, psi) {
-          const a = R / 2;
+        // Real helical rotors are not barrels — they pinch in at both caps and
+        // carry their full width across the middle, which is what gives them
+        // the spindle outline. t is the height fraction, 0 at the foot.
+        function spindle(t) {
+          return 0.28 + 0.72 * Math.pow(Math.sin(Math.PI * t), 0.7);
+        }
+
+        function bladePoint(phase, psi, prof) {
+          const a = (R * prof) / 2;
           return {
             x: a * Math.cos(phase) + a * Math.cos(phase + psi),
             d: a * Math.sin(phase) + a * Math.sin(phase + psi), // + is toward the viewer
@@ -1243,30 +1257,43 @@
         }
 
         function drawTurbine() {
-          const n = S.blades;
+          const stages = S.blades;
           const angleRad = (S.angle * Math.PI) / 180;
           const span = SHAFT_BOT - SHAFT_TOP;
+          const stageSpan = span / stages;
+          const lifts = Math.round(
+            (TWIST_PER_STAGE * 180) / Math.PI / FACET_DEG,
+          );
+
+          // One strand is one blade of one stage. Flattening the pair keeps the
+          // patch loop a single level deep no matter how many stages are stacked.
+          const strands = [];
+          for (let st = 0; st < stages; st++)
+            for (let i = 0; i < BLADE_COUNT; i++) strands.push([st, i]);
 
           // Once a blade twists it is both in front of and behind the shaft at the
           // same time, so depth-sorting whole blades (which a straight rotor allows)
           // would tear. Sort the individual surface patches instead.
           const patches = [];
-          for (let i = 0; i < n; i++) {
-            const base = angleRad + (i * 2 * Math.PI) / n;
-            for (let h = 0; h < LIFT_STEPS; h++) {
-              const t0 = h / LIFT_STEPS,
-                t1 = (h + 1) / LIFT_STEPS;
-              const p0 = base + TWIST * t0,
-                p1 = base + TWIST * t1;
-              const y0 = SHAFT_BOT - t0 * span,
-                y1 = SHAFT_BOT - t1 * span;
+          for (const [st, i] of strands) {
+            const stageBot = SHAFT_BOT - st * stageSpan;
+            const base = angleRad + (i * 2 * Math.PI) / BLADE_COUNT;
+            for (let h = 0; h < lifts; h++) {
+              const t0 = h / lifts,
+                t1 = (h + 1) / lifts;
+              const p0 = base + TWIST_PER_STAGE * t0,
+                p1 = base + TWIST_PER_STAGE * t1;
+              const y0 = stageBot - t0 * stageSpan,
+                y1 = stageBot - t1 * stageSpan;
+              const w0 = spindle(t0),
+                w1 = spindle(t1);
               for (let s = 0; s < ARC_STEPS; s++) {
                 const u0 = (s / ARC_STEPS) * Math.PI,
                   u1 = ((s + 1) / ARC_STEPS) * Math.PI;
-                const q0 = bladePoint(p0, u0),
-                  q1 = bladePoint(p0, u1),
-                  q2 = bladePoint(p1, u1),
-                  q3 = bladePoint(p1, u0);
+                const q0 = bladePoint(p0, u0, w0),
+                  q1 = bladePoint(p0, u1, w0),
+                  q2 = bladePoint(p1, u1, w1),
+                  q3 = bladePoint(p1, u0, w1);
                 patches.push({
                   pts: [
                     [SHAFT_X + q0.x, y0],
@@ -1318,12 +1345,24 @@
           ctx.stroke();
           patches.filter((p) => p.depth >= 0).forEach(paint);
 
-          [SHAFT_TOP, SHAFT_BOT].forEach((y) => {
+          // End plates: one at every stage joint, plus the two outer caps. They
+          // sit at the pinch points where the blades have narrowed to their
+          // smallest, so painting them last covers the seam without hiding blade.
+          const plateR = R * spindle(0) + 2;
+          for (let st = 0; st <= stages; st++) {
             ctx.beginPath();
-            ctx.ellipse(SHAFT_X, y, 15, 5, 0, 0, Math.PI * 2);
+            ctx.ellipse(
+              SHAFT_X,
+              SHAFT_BOT - st * stageSpan,
+              plateR,
+              plateR * 0.3,
+              0,
+              0,
+              Math.PI * 2,
+            );
             ctx.fillStyle = "#17293b";
             ctx.fill();
-          });
+          }
 
           // support struts down to the mast base
           ctx.strokeStyle = "#8a949d";
@@ -1354,9 +1393,9 @@
           ctx.fillStyle = "#17293b";
           ctx.fill();
 
-          // The top cap is the rotor's most-twisted slice, hence the TWIST offset.
-          const angleRad = (S.angle * Math.PI) / 180 + TWIST;
-          const n = S.blades;
+          // The top cap is the rotor's most-twisted slice, hence the twist offset.
+          const angleRad = (S.angle * Math.PI) / 180 + TWIST_PER_STAGE;
+          const n = BLADE_COUNT;
           const a = ring / 2;
           ctx.strokeStyle = "#2a78d6";
           ctx.lineWidth = 4;
