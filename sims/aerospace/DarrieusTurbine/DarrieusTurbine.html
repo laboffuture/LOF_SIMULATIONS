@@ -583,8 +583,9 @@
               generator → device.
             </li>
             <li>
-              Use the <b>Top View</b> inset on the stage to see the curved blade
-              cross-section and count the blades as they turn.
+              Count the <b>cuts</b> across the rotor to read the blade setting —
+              3 blades is one body cut twice. The <b>Top View</b> inset shows the
+              curved cross-section those blades are built from.
             </li>
             <li>
               Press <b>Reset</b>, change <b>one</b> setting, and run again to
@@ -1224,11 +1225,13 @@
         // cross-section up the rotor while rotating it is what wraps the
         // blade into the helix — and what lets the rotor bite wind from any side.
         // The rotor always carries BLADE_COUNT blades. The "Number of Blades"
-        // control does not add blades — it stacks stages: one stage is a single
-        // wrap capped top and bottom by an end plate, so 2 draws a wrap, a plate,
-        // then another wrap. Every stage restarts from the same phase, which is
-        // what makes each one read as a repeat of the last rather than letting
-        // one long twist run on into a rope with no countable divisions.
+        // control does not add blades — it divides one rotor into that many
+        // stacked segments, so 3 is a single body cut twice. Every segment
+        // restarts from the same phase, and because a wrap is half a turn while
+        // the blades sit half a turn apart, the segment above opens on exactly
+        // the cross-section the one below closed on. The join is continuous —
+        // which is why a joint can be drawn as a cut in the skin rather than
+        // hidden behind a plate.
         const BLADE_COUNT = 2;
         const TWIST_PER_STAGE = (2 * Math.PI) / BLADE_COUNT; // one wrap
         const ARC_STEPS = 9; // samples across one blade's curve
@@ -1236,9 +1239,59 @@
 
         // Real helical rotors are not barrels — they pinch in at both caps and
         // carry their full width across the middle, which is what gives them
-        // the spindle outline. t is the height fraction, 0 at the foot.
+        // the spindle outline. t is the height fraction over the WHOLE rotor,
+        // 0 at the foot — running the profile per segment instead would pinch
+        // every joint and break the body into a stack of separate beads.
         function spindle(t) {
           return 0.28 + 0.72 * Math.pow(Math.sin(Math.PI * t), 0.7);
+        }
+
+        // A joint is cut square to the blade rather than flat across the rotor,
+        // so the seam rides the helix: it climbs as it crosses the blade's
+        // cross-section, and the two blades — half a turn apart — never line
+        // their cuts up into one straight bar. SLANT is that climb, as a share of
+        // the segment's height. The cut is a band of the skin shaded dark rather
+        // than a line stroked afterwards; real geometry stays inside the same
+        // depth sort as the rest of the body, where a stroke gets chewed up by
+        // whichever patch paints next and comes out blocky.
+        const CUT_PX = 3;
+        const LIP_PX = 2;
+        const SLANT = 0.26;
+
+        // The rows of one segment, given as boundary curves t(u) rather than
+        // plain heights — a slanted cut needs its edges to bend with u. Every
+        // other row is expressed as a share of the cut's own curve, so no two
+        // boundaries can cross and neighbouring quads still tile without gaps.
+        function stageBands(st, stages, lifts, stageSpan) {
+          const rows = [];
+          if (st === 0) {
+            // the bottom segment sits on the base plate, so it carries no cut
+            for (let h = 0; h <= lifts; h++) {
+              const t = h / lifts;
+              rows.push({ t: () => t, tone: null });
+            }
+            return rows;
+          }
+          const cutT = Math.min(CUT_PX / stageSpan, 0.06);
+          const lipT = Math.min(LIP_PX / stageSpan, 0.04);
+          const lip = (u) => (SLANT * u) / Math.PI;
+          const cut = (u) => lip(u) + lipT;
+          const top = (u) => cut(u) + cutT;
+          const below = Math.max(1, Math.round(lifts * SLANT * 0.5));
+          const above = Math.max(1, lifts - below);
+          for (let j = 0; j < below; j++) {
+            const f = j / below;
+            rows.push({ t: (u) => f * lip(u), tone: null });
+          }
+          // a tone belongs to the band between this boundary and the next
+          rows.push({ t: lip, tone: "lip" });
+          rows.push({ t: cut, tone: "cut" });
+          rows.push({ t: top, tone: null });
+          for (let j = 1; j <= above; j++) {
+            const f = j / above;
+            rows.push({ t: (u) => top(u) + f * (1 - top(u)), tone: null });
+          }
+          return rows;
         }
 
         function bladePoint(phase, psi, prof) {
@@ -1278,32 +1331,41 @@
           for (const [st, i] of strands) {
             const stageBot = SHAFT_BOT - st * stageSpan;
             const base = angleRad + (i * 2 * Math.PI) / BLADE_COUNT;
-            for (let h = 0; h < lifts; h++) {
-              const t0 = h / lifts,
-                t1 = (h + 1) / lifts;
-              const p0 = base + TWIST_PER_STAGE * t0,
-                p1 = base + TWIST_PER_STAGE * t1;
-              const y0 = stageBot - t0 * stageSpan,
-                y1 = stageBot - t1 * stageSpan;
-              const w0 = spindle(t0),
-                w1 = spindle(t1);
+            const rows = stageBands(st, stages, lifts, stageSpan);
+            // Every corner carries its own height now, so it has to be projected
+            // on its own rather than a row at a time.
+            const at = (t, u) => {
+              const q = bladePoint(
+                base + TWIST_PER_STAGE * t,
+                u,
+                spindle((st + t) / stages),
+              );
+              return {
+                x: SHAFT_X + q.x,
+                y: stageBot - t * stageSpan,
+                d: q.d,
+                nd: q.nd,
+              };
+            };
+            for (let r = 0; r < rows.length - 1; r++) {
               for (let s = 0; s < ARC_STEPS; s++) {
                 const u0 = (s / ARC_STEPS) * Math.PI,
                   u1 = ((s + 1) / ARC_STEPS) * Math.PI;
-                const q0 = bladePoint(p0, u0, w0),
-                  q1 = bladePoint(p0, u1, w0),
-                  q2 = bladePoint(p1, u1, w1),
-                  q3 = bladePoint(p1, u0, w1);
+                const q0 = at(rows[r].t(u0), u0),
+                  q1 = at(rows[r].t(u1), u1),
+                  q2 = at(rows[r + 1].t(u1), u1),
+                  q3 = at(rows[r + 1].t(u0), u0);
                 patches.push({
                   pts: [
-                    [SHAFT_X + q0.x, y0],
-                    [SHAFT_X + q1.x, y0],
-                    [SHAFT_X + q2.x, y1],
-                    [SHAFT_X + q3.x, y1],
+                    [q0.x, q0.y],
+                    [q1.x, q1.y],
+                    [q2.x, q2.y],
+                    [q3.x, q3.y],
                   ],
                   depth: (q0.d + q1.d + q2.d + q3.d) / 4,
                   face: q0.nd + q1.nd + q2.nd + q3.nd,
                   tip: s === 0,
+                  tone: rows[r].tone,
                 });
               }
             }
@@ -1312,9 +1374,18 @@
 
           const paint = (p) => {
             const k = 0.62 + 0.38 * ((p.depth / R + 1) / 2);
-            // the convex skin catches the light; the concave blade face stays in shade
+            // the convex skin catches the light; the concave blade face stays in
+            // shade; the cut band goes dark and its lower lip catches a highlight
             const fill =
-              p.face >= 0 ? shade(244, 248, 252, k) : shade(42, 120, 214, k);
+              p.tone === "cut"
+                ? shade(18, 32, 46, k)
+                : p.tone === "lip"
+                  ? p.face >= 0
+                    ? shade(255, 255, 255, k)
+                    : shade(120, 175, 235, k)
+                  : p.face >= 0
+                    ? shade(244, 248, 252, k)
+                    : shade(42, 120, 214, k);
             ctx.beginPath();
             ctx.moveTo(p.pts[0][0], p.pts[0][1]);
             for (let j = 1; j < 4; j++) ctx.lineTo(p.pts[j][0], p.pts[j][1]);
@@ -1345,21 +1416,14 @@
           ctx.stroke();
           patches.filter((p) => p.depth >= 0).forEach(paint);
 
-          // End plates: one at every stage joint, plus the two outer caps. They
-          // sit at the pinch points where the blades have narrowed to their
-          // smallest, so painting them last covers the seam without hiding blade.
+          // End plates: the two outer caps only. Internal joints get a cut
+          // instead, so nothing sits between the segments to break the body up.
+          // The caps land where the spindle has pinched to its smallest, so they
+          // close the rotor off without covering blade.
           const plateR = R * spindle(0) + 2;
-          for (let st = 0; st <= stages; st++) {
+          for (const y of [SHAFT_BOT, SHAFT_TOP]) {
             ctx.beginPath();
-            ctx.ellipse(
-              SHAFT_X,
-              SHAFT_BOT - st * stageSpan,
-              plateR,
-              plateR * 0.3,
-              0,
-              0,
-              Math.PI * 2,
-            );
+            ctx.ellipse(SHAFT_X, y, plateR, plateR * 0.3, 0, 0, Math.PI * 2);
             ctx.fillStyle = "#17293b";
             ctx.fill();
           }
