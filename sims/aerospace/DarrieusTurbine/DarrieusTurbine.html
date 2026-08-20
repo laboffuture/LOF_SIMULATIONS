@@ -1233,6 +1233,11 @@
         // which is why a joint can be drawn as a cut in the skin rather than
         // hidden behind a plate.
         const BLADE_COUNT = 2;
+        // Bolting on another segment builds a taller machine, not a fatter one,
+        // so the blade count drives height alone and the rotor keeps its
+        // diameter: 2 reads as a stubby rotor, 4 as a tall one. SHAFT_TOP is the
+        // top at the middle setting; the others work out from it.
+        const HEIGHT_MOD = { 2: 0.82, 3: 1, 4: 1.18 };
         const TWIST_PER_STAGE = (2 * Math.PI) / BLADE_COUNT; // one wrap
         const ARC_STEPS = 9; // samples across one blade's curve
         const FACET_DEG = 9; // height sampling, held constant across settings
@@ -1247,9 +1252,10 @@
         }
 
         // A joint is cut square to the blade rather than flat across the rotor,
-        // so the seam rides the helix: it climbs as it crosses the blade's
-        // cross-section, and the two blades — half a turn apart — never line
-        // their cuts up into one straight bar. SLANT is that climb, as a share of
+        // so the seam rides the helix: it sits at the top of a segment, and
+        // climbs to meet that edge as it crosses the blade's
+        // cross-section. The two blades — half a turn apart — never line their
+        // cuts up into one straight bar. SLANT is that climb, as a share of
         // the segment's height. The cut is a band of the skin shaded dark rather
         // than a line stroked afterwards; real geometry stays inside the same
         // depth sort as the rest of the body, where a stroke gets chewed up by
@@ -1264,8 +1270,8 @@
         // boundaries can cross and neighbouring quads still tile without gaps.
         function stageBands(st, stages, lifts, stageSpan) {
           const rows = [];
-          if (st === 0) {
-            // the bottom segment sits on the base plate, so it carries no cut
+          if (st === stages - 1) {
+            // the top segment ends at the open tip, not a joint, so no cut
             for (let h = 0; h <= lifts; h++) {
               const t = h / lifts;
               rows.push({ t: () => t, tone: null });
@@ -1274,11 +1280,15 @@
           }
           const cutT = Math.min(CUT_PX / stageSpan, 0.06);
           const lipT = Math.min(LIP_PX / stageSpan, 0.04);
-          const lip = (u) => (SLANT * u) / Math.PI;
+          // The cut runs out at the segment's top edge and drops away from it
+          // across the blade, so it still climbs by SLANT from one side of the
+          // cross-section to the other.
+          const lip = (u) =>
+            1 - cutT - lipT - SLANT * (1 - u / Math.PI);
           const cut = (u) => lip(u) + lipT;
           const top = (u) => cut(u) + cutT;
-          const below = Math.max(1, Math.round(lifts * SLANT * 0.5));
-          const above = Math.max(1, lifts - below);
+          const above = Math.max(1, Math.round(lifts * SLANT * 0.5));
+          const below = Math.max(1, lifts - above);
           for (let j = 0; j < below; j++) {
             const f = j / below;
             rows.push({ t: (u) => f * lip(u), tone: null });
@@ -1312,7 +1322,9 @@
         function drawTurbine() {
           const stages = S.blades;
           const angleRad = (S.angle * Math.PI) / 180;
-          const span = SHAFT_BOT - SHAFT_TOP;
+          // grown off the base plate, so the foot stays put on the mast
+          const span = (SHAFT_BOT - SHAFT_TOP) * HEIGHT_MOD[stages];
+          const topY = SHAFT_BOT - span;
           const stageSpan = span / stages;
           const lifts = Math.round(
             (TWIST_PER_STAGE * 180) / Math.PI / FACET_DEG,
@@ -1411,22 +1423,27 @@
           ctx.lineWidth = 6;
           ctx.lineCap = "round";
           ctx.beginPath();
-          ctx.moveTo(SHAFT_X, SHAFT_TOP);
+          ctx.moveTo(SHAFT_X, topY);
           ctx.lineTo(SHAFT_X, SHAFT_BOT);
           ctx.stroke();
           patches.filter((p) => p.depth >= 0).forEach(paint);
 
-          // End plates: the two outer caps only. Internal joints get a cut
-          // instead, so nothing sits between the segments to break the body up.
-          // The caps land where the spindle has pinched to its smallest, so they
-          // close the rotor off without covering blade.
+          // Base plate: the foot only. It is what the rotor bolts down onto,
+          // and it lands where the spindle has pinched to its smallest, so it
+          // closes the rotor off without covering blade. Drawn edge-on as a flat
+          // bar rather than a tilted disc, so the rotor stays a straight side
+          // view. Nothing caps the top — the blades just run out at their tips,
+          // and internal joints get a cut rather than a plate, so no disc sits
+          // anywhere on the body to break it up.
           const plateR = R * spindle(0) + 2;
-          for (const y of [SHAFT_BOT, SHAFT_TOP]) {
-            ctx.beginPath();
-            ctx.ellipse(SHAFT_X, y, plateR, plateR * 0.3, 0, 0, Math.PI * 2);
-            ctx.fillStyle = "#17293b";
-            ctx.fill();
-          }
+          const plateH = 4;
+          ctx.fillStyle = "#17293b";
+          ctx.fillRect(
+            SHAFT_X - plateR,
+            SHAFT_BOT - plateH / 2,
+            plateR * 2,
+            plateH,
+          );
 
           // support struts down to the mast base
           ctx.strokeStyle = "#8a949d";
