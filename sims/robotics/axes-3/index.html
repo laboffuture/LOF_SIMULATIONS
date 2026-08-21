@@ -166,7 +166,7 @@
       .card.stage {
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: stretch;
         justify-content: center;
         overflow: hidden;
         padding: 12px;
@@ -349,23 +349,121 @@
         line-height: 1.35;
       }
 
-      /* --- stage --- */
-      canvas {
-        max-width: 100%;
-        max-height: 100%;
-        width: auto;
-        height: auto;
-        display: block;
-        border-radius: 14px;
-        background: #eef3fb;
-        cursor: default;
-        flex: 0 1 auto;
+      /* --- 3D stage --- */
+      .stage3d-wrap {
+        position: relative;
+        width: 100%;
+        flex: 1 1 auto;
         min-height: 0;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #dfe9f7;
+      }
+      .stage3d-wrap:fullscreen,
+      .stage3d-wrap:-webkit-full-screen {
+        border-radius: 0;
+        background: #dfe9f7;
+      }
+      #stage3d {
+        position: absolute;
+        inset: 0;
+      }
+      .stage3d-wrap canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
+      .fullscreen-btn {
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        margin: 0;
+        padding: 7px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        font-family: var(--head);
+        letter-spacing: 0.3px;
+        color: var(--accent);
+        background: rgba(255, 255, 255, 0.88);
+        border-radius: 8px;
+        border: 1.5px solid var(--line);
+        cursor: pointer;
+        z-index: 6;
+        transition: 0.13s;
+      }
+      .fullscreen-btn:hover {
+        border-color: var(--accent2);
+        transform: translateY(-1px);
+      }
+      .orbit-hint {
+        position: absolute;
+        left: 10px;
+        bottom: 10px;
+        margin: 0;
+        padding: 5px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #4a6088;
+        background: rgba(255, 255, 255, 0.78);
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        pointer-events: none;
+        z-index: 5;
+      }
+      .tip3d {
+        position: absolute;
+        pointer-events: none;
+        transform: translate(-50%, -140%);
+        background: rgba(18, 33, 63, 0.94);
+        color: #eaf2ff;
+        font-family: var(--head);
+        font-weight: 800;
+        font-size: 12.5px;
+        letter-spacing: 0.3px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1.2px solid rgba(56, 189, 248, 0.65);
+        white-space: nowrap;
+        display: none;
+        z-index: 20;
+      }
+      .zonetag {
+        position: absolute;
+        pointer-events: none;
+        transform: translate(-50%, -50%);
+        font-family: var(--head);
+        font-weight: 800;
+        font-size: 10.5px;
+        letter-spacing: 0.4px;
+        padding: 4px 9px;
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.92);
+        z-index: 8;
+        border: 1.5px solid;
+        white-space: nowrap;
+        display: none;
+      }
+      .zonetag.object {
+        color: #0e7c92;
+        border-color: #38bdf8;
+      }
+      .zonetag.drop {
+        color: #15803d;
+        border-color: #22c55e;
+      }
+      .zonetag.lrmark {
+        color: #8a6300;
+        border-color: #ffd23f;
+        background: rgba(255, 210, 63, 0.95);
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 11px;
       }
       .stepbanner {
         width: 100%;
         max-width: 820px;
-        margin-top: 8px;
+        margin: 8px auto 0;
         padding: 9px 14px;
         border-radius: 14px;
         background: linear-gradient(145deg, #eaf2ff, #dfeaff);
@@ -689,12 +787,11 @@
           </div>
         </div>
         <div class="cmdgroup">
-          <h4>Gripper &amp; Home</h4>
-          <div class="cmdgrid">
+          <h4>Gripper</h4>
+          <div class="cmdgrid single">
             <button class="cmdbtn" data-cmd="GRIPPER_TOGGLE">
               GRIPPER_TOGGLE
             </button>
-            <button class="cmdbtn" data-cmd="HOME">HOME</button>
           </div>
         </div>
         <div class="cmdgroup">
@@ -741,7 +838,16 @@
       </section>
 
       <section class="card stage">
-        <canvas id="stage" width="820" height="520"></canvas>
+        <div class="stage3d-wrap" id="stage3dWrap">
+          <div id="stage3d"></div>
+          <div class="tip3d" id="tip3d"></div>
+          <div class="zonetag object" id="tagObj">OBJECT ZONE</div>
+          <div class="zonetag drop" id="tagDrop">DROP ZONE</div>
+          <div class="zonetag lrmark" id="tagL">L</div>
+          <div class="zonetag lrmark" id="tagR">R</div>
+          <p class="orbit-hint">🖱️ Drag to orbit · Scroll to zoom</p>
+          <button type="button" class="fullscreen-btn" id="fullscreenBtn">⛶ Fullscreen</button>
+        </div>
         <div class="stepbanner" id="stepBanner">
           <div>
             <div class="lab" id="stepLab">STEP 1 / 10</div>
@@ -844,82 +950,85 @@
       </section>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
       (() => {
         "use strict";
         const DEG = Math.PI / 180;
         const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-        /* =================== GEOMETRY / KINEMATICS =================== */
-        const cv = document.getElementById("stage"),
-          ctx = cv.getContext("2d");
-        const W = cv.width,
-          H = cv.height;
-        const basePivot = { x: 410, y: 440 };
-        const MAST = 60,
-          L1 = 140,
-          L2 = 120;
-        const shoulderScreen = { x: basePivot.x, y: basePivot.y - MAST };
+        const mount = document.getElementById("stage3d");
+        if (typeof THREE === "undefined") {
+          mount.innerHTML =
+            '<div style="padding:20px;color:#5a6d8c;font-size:13px">3D engine failed to load — check your internet connection and reload.</div>';
+          return;
+        }
 
-        // Shoulder [0,90] and elbow-fold [0,90] are each capped so a joint's motion never
-        // crosses the peak of its own sin/cos curve — past that peak, more presses of e.g.
-        // SHOULDER_UP would start lowering it again even though the button still says "up".
-        // Keeping both ranges inside one monotonic quarter-turn means every button always
-        // moves the arm the same direction, no matter how many times it's pressed.
+        /* =================== KINEMATIC CONSTANTS =================== */
+        // World units (roughly "hand spans") — the arm's real shoulder/elbow
+        // trig is identical to a 2D side-view arm; base rotation is now a true
+        // rotation about the vertical Y axis instead of a 2D sway approximation.
+        const MAST = 1.7,
+          L1 = 3.2,
+          L2 = 2.7;
+        const BASE_R = 1.35,
+          BASE_H = 0.32;
+        // How much further the claw's actual grasp point sits beyond the end of
+        // the forearm (L2) — must match graspPoint's local offset inside
+        // gripperGroup exactly, or the pads/objects end up positioned short of
+        // where the claw really reaches and the arm visually plows into them.
+        // This is the midpoint between the two finger PADS at the closed angle
+        // (traced through fingerRig's pivot + curl transforms), not the wrist —
+        // the pads sit noticeably beyond the wrist because of the finger length
+        // and inward curl, so anchoring here is what keeps a held object nested
+        // between the pincer tips instead of swallowed inside the mechanism.
+        const GRIPPER_REACH = 0.57;
         const RANGE = { base: [-75, 75], shoulder: [0, 90], elbow: [0, 90] };
         const STEP = { base: 15, shoulder: 15, elbow: 15 };
         const HOME_A = { base: 0, shoulder: 70, elbow: 90 };
+        const INITIAL_BASE_TILT = -22;
         const BASE_TOL = 15,
           READY_SHOULDER = 30,
           READY_ELBOW = 30,
           LIFT_SHOULDER = 50;
-        // Matched to "press each button repeatedly until it stops" — the natural way anyone
-        // actually operates these — rather than a precise, easy-to-undershoot mid-range pose.
-        const PICK_RADIUS = 150; // on-screen px — how close the gripper must visually be to grab/place
+        const PICK_RADIUS = 3.3; // world units — how close the gripper must be to grab/place
         const OBJECT_BASE = RANGE.base[0],
           DROP_BASE = RANGE.base[1];
 
-        // current (eased, "what the servo has actually reached") vs target (what was last commanded)
         const current = {
-          base: HOME_A.base,
+          base: INITIAL_BASE_TILT,
           shoulder: HOME_A.shoulder,
           elbow: HOME_A.elbow,
         };
         const target = {
-          base: HOME_A.base,
+          base: INITIAL_BASE_TILT,
           shoulder: HOME_A.shoulder,
           elbow: HOME_A.elbow,
         };
 
-        // Point on a joint, projected from the arm's own vertical plane onto the screen —
-        // base rotation sways the horizontal reach left/right (sin) while height always
-        // maps straight to screen Y, so shoulder/elbow keep their true height at any base angle.
-        function jointScreen(planeX, heightAboveFloor, baseDeg) {
-          return {
-            x: basePivot.x + planeX * Math.sin(baseDeg * DEG),
-            y: basePivot.y - heightAboveFloor,
-          };
-        }
-        function armPose(S, foldDeg, baseDeg) {
-          const s = S * DEG,
-            f = (S + foldDeg) * DEG;
-          const elbowJoint = jointScreen(
-            L1 * Math.cos(s),
-            MAST + L1 * Math.sin(s),
-            baseDeg,
+        // Pure forward kinematics for the gripper's WORLD position — mirrors
+        // exactly how the live scene graph (baseGroup -> shoulderGroup ->
+        // elbowGroup -> gripperGroup) composes its rotations, so it's used once
+        // at startup to place the two floor pads without building the hierarchy.
+        function gripWorldPose(shoulderDeg, foldDeg, baseDeg) {
+          const s = shoulderDeg * DEG,
+            f = (shoulderDeg + foldDeg) * DEG,
+            b = baseDeg * DEG;
+          // gripperGroup carries no rotation of its own — it just inherits the
+          // forearm's angle f — so the claw's grasp point extends the reach at
+          // that same angle, exactly as if the forearm were L2+GRIPPER_REACH long.
+          const reach = L2 + GRIPPER_REACH;
+          const forward = L1 * Math.cos(s) + reach * Math.cos(f);
+          const height = BASE_H + MAST + L1 * Math.sin(s) + reach * Math.sin(f);
+          return new THREE.Vector3(
+            forward * Math.cos(b),
+            height,
+            -forward * Math.sin(b),
           );
-          const gripJoint = jointScreen(
-            L1 * Math.cos(s) + L2 * Math.cos(f),
-            MAST + L1 * Math.sin(s) + L2 * Math.sin(f),
-            baseDeg,
-          );
-          return { elbowJoint, gripJoint, fAngle: f };
         }
-        // Static pickup / drop-off pads, placed exactly where the arm ends up when shoulder,
-        // elbow and base are all run to their limit (0, 0, ±75°) — i.e. "hold each button
-        // until it stops". PICK_RADIUS then gives slack around that for anything close to it.
-        const objectZone = armPose(0, 0, OBJECT_BASE).gripJoint;
-        const dropZone = armPose(0, 0, DROP_BASE).gripJoint;
+        const objectZone = gripWorldPose(0, 0, OBJECT_BASE);
+        const dropZone = gripWorldPose(0, 0, DROP_BASE);
 
         /* =================== STATE =================== */
         let mode = "command"; // 'command' | 'guided' | 'record'
@@ -927,36 +1036,16 @@
           gripAnim = 1;
         let objectHeld = false,
           placed = false;
-        let objectPos = { x: objectZone.x, y: objectZone.y };
+        // Placeholder — replaced once the object-zone pad exists and its real
+        // resting height (top surface + this object's own half-height) is known.
+        let objectPos = objectZone.clone();
         let objectType = "crate",
           objectWeightG = 150;
         const HEAVY_LIMIT_G = 500;
-        // gh = ground half-height — how far the shape extends below its own center, so a
-        // resting object can be placed with its actual base touching the floor, not its middle.
         const OBJECT_SHAPES = {
-          crate: {
-            label: "Crate",
-            color: "#d69a4a",
-            dark: "#5c3c1c",
-            r: 16,
-            gh: 13.6,
-          },
-          ball: {
-            label: "Ball",
-            color: "#e0455e",
-            dark: "#7a1f2c",
-            light: "#ff8fa0",
-            r: 14,
-            gh: 14,
-          },
-          can: {
-            label: "Can",
-            color: "#22d3ee",
-            dark: "#0e6478",
-            light: "#a9f2ff",
-            r: 13,
-            gh: 13.65,
-          },
+          crate: { label: "Crate", color: 0xd69a4a, r: 0.42, gh: 0.36 },
+          ball: { label: "Ball", color: 0xe0455e, r: 0.36, gh: 0.36 },
+          can: { label: "Can", color: 0x22d3ee, r: 0.3, gh: 0.36 },
         };
         let recording = false,
           replaying = false,
@@ -968,7 +1057,6 @@
           homeAckStep10 = false;
         let logEntries = [];
         let warnTimer = null;
-        let txToken = 0;
 
         const SERVO_MSG = {
           BASE_LEFT: "Base servo rotating left.",
@@ -1138,21 +1226,25 @@
         }
 
         /* =================== GRIPPER / OBJECT =================== */
-        // Reachability is judged by how close the gripper actually LOOKS to the target on
-        // screen (a generous radius), not by separate strict angle thresholds — so if the
-        // arm visually reaches the crate, closing the gripper picks it up.
+        function currentGripWorld() {
+          const v = new THREE.Vector3();
+          graspPoint.getWorldPosition(v);
+          return v;
+        }
+        // Reachability is judged by how close the gripper actually IS to the target
+        // in world space (a generous radius), not by strict angle thresholds — so
+        // if the arm visually reaches the crate, closing the gripper picks it up.
         function attemptPick() {
           if (objectWeightG > HEAVY_LIMIT_G) {
             pushWarn("Object exceeds lightweight limit.");
             return;
           }
-          const gp = currentGripScreen();
-          const dx = gp.x - objectPos.x,
-            dy = gp.y - objectPos.y,
-            dist = Math.hypot(dx, dy);
+          const gp = currentGripWorld();
+          const dxz = Math.hypot(gp.x - objectPos.x, gp.z - objectPos.z);
+          const dy = Math.abs(gp.y - objectPos.y);
+          const dist = gp.distanceTo(objectPos);
           if (dist > PICK_RADIUS) {
-            if (Math.abs(dx) > Math.abs(dy) + 15)
-              pushWarn("Target is outside reachable range.");
+            if (dxz > dy + 0.6) pushWarn("Target is outside reachable range.");
             else pushWarn("Align gripper before closing.");
             return;
           }
@@ -1164,23 +1256,18 @@
         }
         function releaseObject() {
           objectHeld = false;
-          const gp = currentGripScreen();
-          const dx = gp.x - dropZone.x,
-            dy = gp.y - dropZone.y;
-          if (Math.hypot(dx, dy) <= PICK_RADIUS) {
+          const gp = currentGripWorld();
+          if (gp.distanceTo(dropZone) <= PICK_RADIUS) {
             placed = true;
-            objectPos = { x: dropZone.x, y: dropZone.y };
+            placeObjectOnSurface(dropZoneTableCenter, "dropZonePad");
             clearTimeout(warnTimer);
             els.warnBanner.classList.remove("show");
             logPush("Object placed in drop zone.");
           } else {
-            // Not over the drop pad — let it fall to the floor at that x, rather than
-            // leaving it hanging in mid-air wherever the gripper happened to open.
+            // Not over the drop pad — let it fall straight to the floor at that
+            // XZ, rather than leaving it hanging wherever the gripper opened.
             placed = false;
-            objectPos = {
-              x: gp.x,
-              y: basePivot.y - OBJECT_SHAPES[objectType].gh,
-            };
+            placeObjectOnSurface({ x: gp.x, z: gp.z }, "floor");
           }
         }
         function doGripperToggle() {
@@ -1191,10 +1278,6 @@
             gripperOpen = true;
             if (objectHeld) releaseObject();
           }
-        }
-        function currentGripScreen() {
-          return armPose(current.shoulder, current.elbow, current.base)
-            .gripJoint;
         }
 
         /* =================== RECORD / REPLAY =================== */
@@ -1307,6 +1390,10 @@
           b.addEventListener("click", () => {
             objectType = b.dataset.obj;
             objBtns.forEach((o) => o.classList.toggle("on", o === b));
+            // Different shapes rest at different heights (their own half-height
+            // above whatever surface they're on) — re-settle onto that same
+            // surface instead of leaving the new shape floating or clipped in.
+            if (!objectHeld) placeObjectOnSurface(objectPos, restingOn);
           }),
         );
         const weightSlider = document.getElementById("weightSlider"),
@@ -1330,9 +1417,6 @@
         renderWeight();
 
         /* =================== MODE SWITCHING =================== */
-        // Guided Pick-and-Place and Record & Replay tabs are hidden for now — mode stays
-        // 'command' — but the guided-sequence logic below is left in place so the tabs
-        // (and this function) can be reconnected later without rebuilding it.
         function setMode(m) {
           mode = m;
           els.stepBanner.classList.toggle("show", m === "guided");
@@ -1343,7 +1427,6 @@
             renderGuidedBanner();
           } else clearExpectHighlights();
         }
-
         function clearExpectHighlights() {
           Object.values(btnEls).forEach((b) => b.classList.remove("expect"));
         }
@@ -1391,17 +1474,17 @@
         /* =================== RESET =================== */
         document.getElementById("resetBtn").addEventListener("click", resetSim);
         function resetSim() {
-          target.base = HOME_A.base;
+          target.base = INITIAL_BASE_TILT;
           target.shoulder = HOME_A.shoulder;
           target.elbow = HOME_A.elbow;
-          current.base = HOME_A.base;
+          current.base = INITIAL_BASE_TILT;
           current.shoulder = HOME_A.shoulder;
           current.elbow = HOME_A.elbow;
           gripperOpen = true;
           gripAnim = 1;
           objectHeld = false;
           placed = false;
-          objectPos = { x: objectZone.x, y: objectZone.y };
+          placeObjectOnSurface(objectZoneTableCenter, "objectZonePad");
           recording = false;
           replaying = false;
           recordBuffer = [];
@@ -1452,333 +1535,442 @@
           els.statBuffer.textContent = recordBuffer.length;
         }
 
-        /* =================== DRAWING =================== */
-        function drawBackdrop() {
-          const g = ctx.createLinearGradient(0, 0, 0, H);
-          g.addColorStop(0, "#f3f8ff");
-          g.addColorStop(1, "#dfe9f7");
-          ctx.fillStyle = g;
-          ctx.fillRect(0, 0, W, H);
-          ctx.strokeStyle = "rgba(40,70,140,.08)";
-          ctx.lineWidth = 1;
-          for (let x = 0; x < W; x += 40) {
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, H);
-            ctx.stroke();
-          }
-          for (let y = 0; y < H; y += 40) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(W, y);
-            ctx.stroke();
-          }
-        }
-        function drawBaseShadow() {
-          ctx.save();
-          ctx.fillStyle = "rgba(0,0,0,.28)";
-          ctx.beginPath();
-          ctx.ellipse(basePivot.x, basePivot.y - 2, 50, 15, 0, 0, 7);
-          ctx.fill();
-          ctx.restore();
-        }
-        // A real stool shape (narrower seat on top, wider foot at the ground, lit from
-        // above) instead of a flat dark box — that box barely contrasted against the
-        // dark canvas background and read as "floating" even though it touched the floor.
-        function drawPad(pos, label, color) {
-          ctx.save();
-          const footY = basePivot.y - 2;
-          ctx.fillStyle = color + "2a";
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 2;
-          ctx.setLineDash([5, 4]);
-          ctx.beginPath();
-          ctx.ellipse(pos.x, footY, 48, 15, 0, 0, 7);
-          ctx.fill();
-          ctx.stroke();
-          ctx.setLineDash([]);
+        /* =================== THREE.JS SCENE =================== */
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xdfe9f7);
+        scene.fog = new THREE.Fog(0xdfe9f7, 15, 30);
 
-          // A small table with 4 legs: back pair drawn first (narrower stance, so the
-          // tabletop and front legs overlap their tops and read as "further away"),
-          // then the tabletop slab, then the front pair on top with a wider stance.
-          const topY = pos.y,
-            tw = 32,
-            th = 7,
-            legW = 5;
+        const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+        // Object Zone and Drop Zone sit at mirrored ±75° base angles — same X,
+        // opposite Z — so a camera looking mostly along +X sees both pedestals
+        // symmetrically instead of one cropped out to favor the L/R badges.
+        camera.position.set(22, 7, 2);
 
-          ctx.fillStyle = "#151517";
-          ctx.strokeStyle = "#3a3a3e";
-          ctx.lineWidth = 1;
-          [-tw * 0.32, tw * 0.32].forEach((dx) => {
-            ctx.beginPath();
-            ctx.roundRect(
-              pos.x + dx - legW / 2,
-              topY - 2,
-              legW,
-              footY - (topY - 2),
-              2,
-            );
-            ctx.fill();
-            ctx.stroke();
-          });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "default" });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        mount.appendChild(renderer.domElement);
 
-          const grd = ctx.createLinearGradient(
-            0,
-            topY - th / 2,
-            0,
-            topY + th / 2,
-          );
-          grd.addColorStop(0, "#2c2d31");
-          grd.addColorStop(1, "#050506");
-          ctx.fillStyle = grd;
-          ctx.strokeStyle = "#55575e";
-          ctx.lineWidth = 1.6;
-          ctx.beginPath();
-          ctx.roundRect(pos.x - tw / 2, topY - th / 2, tw, th, 3);
-          ctx.fill();
-          ctx.stroke();
-          ctx.fillStyle = "rgba(255,255,255,.18)";
-          ctx.beginPath();
-          ctx.ellipse(pos.x, topY - th / 2 + 1.5, tw / 2 - 3, 2, 0, 0, 7);
-          ctx.fill();
+        // A lost GPU context (driver reset, tab backgrounding, low-resource software
+        // rendering) would otherwise leave the canvas permanently frozen/blank —
+        // reacquire and resume the loop once the browser restores it.
+        renderer.domElement.addEventListener("webglcontextlost", (e) => {
+          e.preventDefault();
+          console.warn("WebGL context lost — waiting for restore.");
+        });
+        renderer.domElement.addEventListener("webglcontextrestored", () => {
+          console.warn("WebGL context restored — resuming render loop.");
+          fitStage();
+        });
 
-          ctx.fillStyle = "#0a0a0c";
-          ctx.strokeStyle = "#55575e";
-          ctx.lineWidth = 1.2;
-          [-tw * 0.48, tw * 0.48].forEach((dx) => {
-            ctx.beginPath();
-            ctx.roundRect(
-              pos.x + dx - legW / 2,
-              topY + th / 2 - 1,
-              legW,
-              footY - (topY + th / 2 - 1),
-              2,
-            );
-            ctx.fill();
-            ctx.stroke();
-          });
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.minDistance = 4.5;
+        controls.maxDistance = 28;
+        controls.maxPolarAngle = Math.PI / 2 - 0.03;
+        controls.target.set(0, 2.0, 0);
+        controls.update();
 
-          ctx.font = '700 11px "Orbitron",sans-serif';
-          ctx.textAlign = "center";
-          ctx.fillStyle = color;
-          ctx.fillText(label, pos.x, basePivot.y + 22);
-          ctx.restore();
+        function fitStage() {
+          const w = mount.clientWidth,
+            h = mount.clientHeight;
+          if (!w || !h) return;
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+          // updateStyle=false: leave the canvas's CSS width/height (100%/100% of
+          // #stage3d) alone — otherwise Three.js stamps inline pixel style.width/
+          // height here that can go stale and fight the responsive CSS sizing.
+          renderer.setSize(w, h, false);
         }
-        function drawMast() {
-          ctx.save();
-          const grd = ctx.createLinearGradient(
-            basePivot.x - 14,
-            0,
-            basePivot.x + 14,
-            0,
-          );
-          grd.addColorStop(0, "#233a5e");
-          grd.addColorStop(0.5, "#4d76ad");
-          grd.addColorStop(1, "#1c2f4d");
-          ctx.fillStyle = grd;
-          ctx.strokeStyle = "#2a4066";
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.roundRect(basePivot.x - 11, shoulderScreen.y, 22, MAST, 4);
-          ctx.fill();
-          ctx.stroke();
-          ctx.restore();
+        if (typeof ResizeObserver !== "undefined") {
+          new ResizeObserver(fitStage).observe(mount);
+        } else {
+          window.addEventListener("resize", fitStage);
         }
-        function limb(a, b, r1, r2, fill) {
-          const ang = Math.atan2(b.y - a.y, b.x - a.x);
-          const nx = Math.cos(ang + Math.PI / 2),
-            ny = Math.sin(ang + Math.PI / 2);
-          ctx.save();
-          ctx.fillStyle = fill;
-          ctx.strokeStyle = "rgba(0,0,0,.35)";
-          ctx.lineWidth = 1.4;
-          ctx.beginPath();
-          ctx.moveTo(a.x + nx * r1, a.y + ny * r1);
-          ctx.lineTo(b.x + nx * r2, b.y + ny * r2);
-          ctx.arc(b.x, b.y, r2, ang + Math.PI / 2, ang - Math.PI / 2);
-          ctx.lineTo(a.x - nx * r1, a.y - ny * r1);
-          ctx.arc(a.x, a.y, r1, ang - Math.PI / 2, ang + Math.PI / 2);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-          ctx.restore();
-        }
-        function drawJoint(p, r, fill) {
-          ctx.save();
-          ctx.fillStyle = fill;
-          ctx.strokeStyle = "rgba(0,0,0,.4)";
-          ctx.lineWidth = 1.4;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, r, 0, 7);
-          ctx.fill();
-          ctx.stroke();
-          ctx.restore();
-        }
-        // A real two-finger servo claw: a wrist bracket the fingers hinge from, tapered
-        // finger blades (wide at the hinge, narrow at the tip) and a dark rubber contact
-        // pad at each fingertip — not just two bare lines meeting at a point.
-        function drawGripper(upper, grip, fAngleScreen) {
-          const dirAngle = Math.atan2(grip.y - upper.y, grip.x - upper.x);
-          const open = 0.14 + gripAnim * 0.5;
-          const FLEN = 22,
-            FW = 5.5;
-          ctx.save();
-          ctx.translate(grip.x, grip.y);
-          ctx.rotate(dirAngle);
-          ctx.fillStyle = "#2a3450";
-          ctx.strokeStyle = "#111a2e";
-          ctx.lineWidth = 1.4;
-          ctx.beginPath();
-          ctx.roundRect(-3, -8, 13, 16, 3);
-          ctx.fill();
-          ctx.stroke();
-          ctx.restore();
+        fitStage();
 
-          for (const s of [-1, 1]) {
-            const a = dirAngle + s * open;
-            ctx.save();
-            ctx.translate(grip.x, grip.y);
-            ctx.rotate(a);
-            ctx.fillStyle = "#a9bfe0";
-            ctx.strokeStyle = "#1c2740";
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(3, -FW * 0.5);
-            ctx.lineTo(FLEN - 4, -FW * 0.32);
-            ctx.quadraticCurveTo(FLEN, 0, FLEN - 4, FW * 0.32);
-            ctx.lineTo(3, FW * 0.5);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-            ctx.fillStyle = "#1c2740";
-            ctx.beginPath();
-            ctx.arc(FLEN - 4, 0, 2.2, 0, 7);
-            ctx.fill();
-            ctx.restore();
-          }
-          ctx.save();
-          ctx.translate(grip.x, grip.y);
-          ctx.rotate(dirAngle);
-          ctx.fillStyle = "#38bdf8";
-          ctx.shadowColor = "#38bdf8";
-          ctx.shadowBlur = 6;
-          ctx.beginPath();
-          ctx.arc(3, 0, 2, 0, 7);
-          ctx.fill();
-          ctx.shadowBlur = 0;
-          ctx.restore();
+        /* --- fullscreen toggle --- */
+        const stageWrap = document.getElementById("stage3dWrap");
+        const fullscreenBtn = document.getElementById("fullscreenBtn");
+        function isFullscreen() {
+          return !!(document.fullscreenElement || document.webkitFullscreenElement);
         }
-        // Soft contact shadow directly on the floor under wherever the object is resting —
-        // keeps it visually grounded even when dropped somewhere other than the two pads.
-        function drawGroundShadow(pos) {
-          const sh = OBJECT_SHAPES[objectType] || OBJECT_SHAPES.crate;
-          ctx.save();
-          ctx.fillStyle = "rgba(0,0,0,.4)";
-          ctx.beginPath();
-          ctx.ellipse(pos.x, basePivot.y - 3, sh.r * 1.1, sh.r * 0.32, 0, 0, 7);
-          ctx.fill();
-          ctx.restore();
-        }
-        function drawObjectShape(pos) {
-          const sh = OBJECT_SHAPES[objectType] || OBJECT_SHAPES.crate;
-          ctx.save();
-          ctx.translate(pos.x, pos.y);
-          if (objectType === "ball") {
-            const r = sh.r;
-            const grd = ctx.createRadialGradient(
-              -r * 0.3,
-              -r * 0.3,
-              1,
-              0,
-              0,
-              r,
-            );
-            grd.addColorStop(0, sh.light);
-            grd.addColorStop(1, sh.color);
-            ctx.fillStyle = grd;
-            ctx.strokeStyle = sh.dark;
-            ctx.lineWidth = 1.6;
-            ctx.beginPath();
-            ctx.arc(0, 0, r, 0, 7);
-            ctx.fill();
-            ctx.stroke();
-            ctx.fillStyle = "rgba(255,255,255,.35)";
-            ctx.beginPath();
-            ctx.arc(-r * 0.32, -r * 0.32, r * 0.28, 0, 7);
-            ctx.fill();
-          } else if (objectType === "can") {
-            const w = sh.r * 1.5,
-              h = sh.r * 2.1;
-            ctx.fillStyle = sh.color;
-            ctx.strokeStyle = sh.dark;
-            ctx.lineWidth = 1.6;
-            ctx.beginPath();
-            ctx.roundRect(-w / 2, -h / 2, w, h, 4);
-            ctx.fill();
-            ctx.stroke();
-            ctx.strokeStyle = "rgba(0,0,0,.18)";
-            for (const dx of [-w * 0.22, 0, w * 0.22]) {
-              ctx.beginPath();
-              ctx.moveTo(dx, -h / 2 + 3);
-              ctx.lineTo(dx, h / 2 - 3);
-              ctx.stroke();
-            }
-            ctx.fillStyle = "rgba(255,255,255,.28)";
-            ctx.beginPath();
-            ctx.roundRect(-w / 2 + 2, -h / 2 + 2, 3, h - 4, 2);
-            ctx.fill();
+        fullscreenBtn.addEventListener("click", () => {
+          if (!isFullscreen()) {
+            const req =
+              stageWrap.requestFullscreen ||
+              stageWrap.webkitRequestFullscreen ||
+              stageWrap.msRequestFullscreen;
+            if (req) req.call(stageWrap);
           } else {
-            const s = sh.r;
-            ctx.fillStyle = sh.color;
-            ctx.strokeStyle = sh.dark;
-            ctx.lineWidth = 1.6;
-            ctx.beginPath();
-            ctx.roundRect(-s, -s * 0.85, s * 2, s * 1.7, 3);
-            ctx.fill();
-            ctx.stroke();
-            ctx.strokeStyle = "rgba(0,0,0,.25)";
-            ctx.beginPath();
-            ctx.moveTo(-s, 0);
-            ctx.lineTo(s, 0);
-            ctx.moveTo(0, -s * 0.85);
-            ctx.lineTo(0, s * 0.85);
-            ctx.stroke();
+            const exit =
+              document.exitFullscreen ||
+              document.webkitExitFullscreen ||
+              document.msExitFullscreen;
+            if (exit) exit.call(document);
           }
-          ctx.restore();
-          const heavy = objectWeightG > HEAVY_LIMIT_G;
-          const label = objectWeightG + " g";
-          ctx.save();
-          ctx.font = '700 10px "Rajdhani",sans-serif';
-          ctx.textAlign = "center";
-          const tw = ctx.measureText(label).width;
-          ctx.fillStyle = heavy ? "rgba(255,84,112,.92)" : "rgba(15,23,42,.8)";
-          ctx.beginPath();
-          ctx.roundRect(pos.x - tw / 2 - 6, pos.y - sh.r - 24, tw + 12, 15, 7);
-          ctx.fill();
-          ctx.fillStyle = "#fff";
-          ctx.fillText(label, pos.x, pos.y - sh.r - 13);
-          ctx.restore();
+        });
+        ["fullscreenchange", "webkitfullscreenchange"].forEach((evt) => {
+          document.addEventListener(evt, () => {
+            fullscreenBtn.textContent = isFullscreen() ? "✕ Exit Fullscreen" : "⛶ Fullscreen";
+            // The wrap's box changes size the instant fullscreen toggles, but the
+            // browser reports it a beat late — one rAF is enough to see the real size.
+            requestAnimationFrame(fitStage);
+          });
+        });
+
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x37507a, 0.85));
+        const sun = new THREE.DirectionalLight(0xffffff, 1.05);
+        sun.position.set(6, 9, 4);
+        sun.castShadow = true;
+        sun.shadow.mapSize.set(1024, 1024);
+        sun.shadow.camera.left = -9;
+        sun.shadow.camera.right = 9;
+        sun.shadow.camera.top = 9;
+        sun.shadow.camera.bottom = -9;
+        sun.shadow.camera.near = 1;
+        sun.shadow.camera.far = 24;
+        scene.add(sun);
+        const fill = new THREE.DirectionalLight(0xbfd7ff, 0.35);
+        fill.position.set(-6, 4, -5);
+        scene.add(fill);
+
+        const floor = new THREE.Mesh(
+          new THREE.CircleGeometry(11, 64),
+          new THREE.MeshStandardMaterial({ color: 0xeaf1fc, roughness: 0.95 }),
+        );
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        scene.add(floor);
+        const grid = new THREE.GridHelper(22, 22, 0x9fb4d6, 0xd7e3f5);
+        grid.position.y = 0.005;
+        scene.add(grid);
+
+        /* --- arm hierarchy --- */
+        const partMeshes = { base: [], shoulder: [], elbow: [] };
+        function hoverable(mesh, part) {
+          mesh.userData.part = part;
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          partMeshes[part].push(mesh);
+          return mesh;
         }
-        function draw() {
-          drawBackdrop();
-          drawPad(objectZone, "OBJECT ZONE", "#38bdf8");
-          drawPad(dropZone, "DROP ZONE", "#22c55e");
-          drawBaseShadow();
-          drawMast();
+        // Cylinder built along local +X, radius r1 at x=0 (root) tapering to r2
+        // at x=len (tip), so parts naturally thin out away from their pivot.
+        function tapered(r1, r2, len, color) {
+          const geo = new THREE.CylinderGeometry(r1, r2, len, 20);
+          geo.rotateZ(Math.PI / 2);
+          geo.translate(len / 2, 0, 0);
+          return new THREE.Mesh(
+            geo,
+            new THREE.MeshStandardMaterial({ color, metalness: 0.25, roughness: 0.5 }),
+          );
+        }
+        const baseGroup = new THREE.Group();
+        scene.add(baseGroup);
 
-          const pose = armPose(current.shoulder, current.elbow, current.base);
-          limb(shoulderScreen, pose.elbowJoint, 13, 9, "#3b6ea5");
-          limb(pose.elbowJoint, pose.gripJoint, 9, 6, "#ffb02e");
-          drawJoint(shoulderScreen, 14, "#2c4d78");
-          drawJoint(pose.elbowJoint, 10, "#e8940f");
-          drawGripper(pose.elbowJoint, pose.gripJoint, pose.fAngle);
+        const baseDisc = hoverable(
+          new THREE.Mesh(
+            new THREE.CylinderGeometry(BASE_R, BASE_R, BASE_H, 40),
+            new THREE.MeshStandardMaterial({ color: 0x3f66a0, metalness: 0.35, roughness: 0.4 }),
+          ),
+          "base",
+        );
+        baseDisc.position.y = BASE_H / 2;
+        baseGroup.add(baseDisc);
 
-          if (objectHeld) {
-            drawObjectShape(currentGripScreen());
-          } else {
-            drawGroundShadow(objectPos);
-            drawObjectShape(objectPos);
+        // Invisible anchors, off the disc at floor level, just outside its rim.
+        // They carry no geometry of their own — L/R are rendered as HTML tags
+        // (same as OBJECT ZONE / DROP ZONE), projected from these points every
+        // frame so they stay crisp and readable at any zoom instead of being a
+        // small 3D decal that shrinks/foreshortens with distance and angle.
+        const badgeL = new THREE.Group();
+        badgeL.position.set(-(BASE_R + 0.4), 0.15, 0);
+        const badgeR = new THREE.Group();
+        badgeR.position.set(BASE_R + 0.4, 0.15, 0);
+        baseGroup.add(badgeL, badgeR);
+
+        const mast = hoverable(
+          new THREE.Mesh(
+            new THREE.CylinderGeometry(0.42, 0.46, MAST, 24),
+            new THREE.MeshStandardMaterial({ color: 0x3a5c8c, metalness: 0.3, roughness: 0.45 }),
+          ),
+          "base",
+        );
+        mast.position.y = BASE_H + MAST / 2;
+        baseGroup.add(mast);
+
+        const shoulderGroup = new THREE.Group();
+        shoulderGroup.position.y = BASE_H + MAST;
+        baseGroup.add(shoulderGroup);
+
+        const shoulderJoint = hoverable(
+          new THREE.Mesh(
+            new THREE.SphereGeometry(0.34, 24, 18),
+            new THREE.MeshStandardMaterial({ color: 0x2c4d78, metalness: 0.4, roughness: 0.35 }),
+          ),
+          "shoulder",
+        );
+        shoulderGroup.add(shoulderJoint);
+
+        const upperArm = hoverable(tapered(0.31, 0.22, L1, 0x3b6ea5), "shoulder");
+        shoulderGroup.add(upperArm);
+
+        const elbowGroup = new THREE.Group();
+        elbowGroup.position.x = L1;
+        shoulderGroup.add(elbowGroup);
+
+        const elbowJoint = hoverable(
+          new THREE.Mesh(
+            new THREE.SphereGeometry(0.26, 22, 16),
+            new THREE.MeshStandardMaterial({ color: 0xe8940f, metalness: 0.4, roughness: 0.3 }),
+          ),
+          "elbow",
+        );
+        elbowGroup.add(elbowJoint);
+
+        const forearm = hoverable(tapered(0.22, 0.15, L2, 0xffb02e), "elbow");
+        elbowGroup.add(forearm);
+
+        const gripperGroup = new THREE.Group();
+        gripperGroup.position.x = L2;
+        elbowGroup.add(gripperGroup);
+
+        const wrist = hoverable(
+          new THREE.Mesh(
+            new THREE.BoxGeometry(0.32, 0.28, 0.28),
+            new THREE.MeshStandardMaterial({ color: 0x2a3450, metalness: 0.4, roughness: 0.3 }),
+          ),
+          "elbow",
+        );
+        gripperGroup.add(wrist);
+
+        // A real two-segment claw, not a flat paddle: a dark base blade hinged at
+        // the wrist, then a shorter tip that curls inward toward the centerline
+        // with a dark rubber contact pad at the very end — so it visibly hooks
+        // around whatever it's holding instead of just two bars meeting at a point.
+        function fingerRig(side) {
+          const pivot = new THREE.Group();
+          pivot.position.set(0.08, 0, side * 0.11);
+
+          const baseLen = 0.34;
+          const baseGeo = new THREE.BoxGeometry(baseLen, 0.1, 0.16);
+          baseGeo.translate(baseLen / 2, 0, 0);
+          const baseMesh = hoverable(
+            new THREE.Mesh(
+              baseGeo,
+              new THREE.MeshStandardMaterial({ color: 0x1c2740, metalness: 0.45, roughness: 0.35 }),
+            ),
+            "elbow",
+          );
+          pivot.add(baseMesh);
+
+          const tipPivot = new THREE.Group();
+          tipPivot.position.set(baseLen, 0, 0);
+          tipPivot.rotation.y = -side * 0.55;
+          pivot.add(tipPivot);
+
+          const tipLen = 0.17;
+          const tipGeo = new THREE.BoxGeometry(tipLen, 0.08, 0.13);
+          tipGeo.translate(tipLen / 2, 0, 0);
+          const tipMesh = hoverable(
+            new THREE.Mesh(
+              tipGeo,
+              new THREE.MeshStandardMaterial({ color: 0xa9bfe0, metalness: 0.3, roughness: 0.4 }),
+            ),
+            "elbow",
+          );
+          tipPivot.add(tipMesh);
+
+          const pad = hoverable(
+            new THREE.Mesh(
+              new THREE.SphereGeometry(0.05, 12, 10),
+              new THREE.MeshStandardMaterial({ color: 0x14100a, roughness: 0.85 }),
+            ),
+            "elbow",
+          );
+          pad.position.set(tipLen, 0, 0);
+          tipPivot.add(pad);
+
+          return pivot;
+        }
+        const fingerL = fingerRig(1),
+          fingerR = fingerRig(-1);
+        gripperGroup.add(fingerL, fingerR);
+
+        // Where an object actually sits once picked up — between the claw tips,
+        // not at the wrist — so a held object visually nests inside the closed
+        // claw instead of floating out in front of it or hanging off the arm.
+        const graspPoint = new THREE.Group();
+        graspPoint.position.set(GRIPPER_REACH, 0, 0);
+        gripperGroup.add(graspPoint);
+
+        const tipLight = new THREE.Mesh(
+          new THREE.SphereGeometry(0.045, 12, 10),
+          new THREE.MeshBasicMaterial({ color: 0x38bdf8 }),
+        );
+        tipLight.position.set(0.5, 0, 0);
+        gripperGroup.add(tipLight);
+
+        const hoverMeshes = [
+          ...partMeshes.base,
+          ...partMeshes.shoulder,
+          ...partMeshes.elbow,
+        ];
+
+        /* --- object zone / drop zone pedestals --- */
+        function makePad(worldPos, color) {
+          const group = new THREE.Group();
+          group.position.set(worldPos.x, 0, worldPos.z);
+          const standH = Math.max(0.3, worldPos.y);
+          const stand = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.38, standH, 20),
+            new THREE.MeshStandardMaterial({ color: 0x17181c, roughness: 0.6 }),
+          );
+          stand.position.y = standH / 2;
+          stand.castShadow = true;
+          stand.receiveShadow = true;
+          group.add(stand);
+          const top = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.44, 0.44, 0.06, 24),
+            new THREE.MeshStandardMaterial({ color: 0x2c2d31, roughness: 0.5, metalness: 0.3 }),
+          );
+          top.position.y = standH + 0.03;
+          top.castShadow = true;
+          top.receiveShadow = true;
+          group.add(top);
+          const ring = new THREE.Mesh(
+            new THREE.RingGeometry(0.85, 1.0, 40),
+            new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity: 0.7 }),
+          );
+          ring.rotation.x = -Math.PI / 2;
+          ring.position.y = 0.012;
+          group.add(ring);
+          scene.add(group);
+          return standH + 0.06; // top surface Y — center of the 0.06-thick top disc, plus its half-thickness
+        }
+        // Tables sit further out than the claw's raw reach point (by the
+        // largest object's own radius) so a resting object's NEAR face — not
+        // its center — is what the claw actually meets at full extension.
+        const GRAB_CLEARANCE = OBJECT_SHAPES.crate.r;
+        const objectZoneTableCenter = pushRadial(objectZone, GRAB_CLEARANCE);
+        const dropZoneTableCenter = pushRadial(dropZone, GRAB_CLEARANCE);
+        const objectZoneTopY = makePad(objectZoneTableCenter, 0x38bdf8);
+        const dropZoneTopY = makePad(dropZoneTableCenter, 0x22c55e);
+        // Where the object is currently resting — used to keep its center sitting
+        // exactly on top of whichever surface it's on (a pad or the bare floor)
+        // instead of at some arbitrary fixed height that ignores the object's own
+        // size and clips it through the table.
+        let restingOn = "objectZonePad";
+        function restSurfaceY() {
+          return restingOn === "objectZonePad"
+            ? objectZoneTopY
+            : restingOn === "dropZonePad"
+              ? dropZoneTopY
+              : 0;
+        }
+        function placeObjectOnSurface(worldXZ, surface) {
+          restingOn = surface;
+          objectPos = new THREE.Vector3(
+            worldXZ.x,
+            restSurfaceY() + OBJECT_SHAPES[objectType].gh,
+            worldXZ.z,
+          );
+        }
+        // Radially offsets a point away from the origin by `dist`, along the
+        // same direction it already sits at — used to push a whole table (pad
+        // + the object resting on it) further from the arm's shoulder than the
+        // claw's raw reach point, so the claw meets the table's NEAR edge
+        // instead of having to plow to its center just to "arrive".
+        function pushRadial(pos, dist) {
+          const radial = Math.hypot(pos.x, pos.z);
+          const k = radial > 0.001 ? (radial + dist) / radial : 1;
+          return new THREE.Vector3(pos.x * k, pos.y, pos.z * k);
+        }
+        placeObjectOnSurface(objectZoneTableCenter, "objectZonePad");
+
+        /* --- pickable objects --- */
+        const objectMeshes = {
+          crate: new THREE.Mesh(
+            new THREE.BoxGeometry(0.8, 0.72, 0.8),
+            new THREE.MeshStandardMaterial({ color: OBJECT_SHAPES.crate.color, roughness: 0.75 }),
+          ),
+          ball: new THREE.Mesh(
+            new THREE.SphereGeometry(0.36, 24, 18),
+            new THREE.MeshStandardMaterial({ color: OBJECT_SHAPES.ball.color, roughness: 0.3, metalness: 0.15 }),
+          ),
+          can: new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.3, 0.72, 24),
+            new THREE.MeshStandardMaterial({ color: OBJECT_SHAPES.can.color, roughness: 0.35, metalness: 0.25 }),
+          ),
+        };
+        Object.values(objectMeshes).forEach((m) => {
+          m.castShadow = true;
+          m.receiveShadow = true;
+          m.visible = false;
+          scene.add(m);
+        });
+
+        /* =================== HOVER (raycast) =================== */
+        const PART_LABEL = { base: "BASE", shoulder: "SHOULDER", elbow: "ELBOW" };
+        const raycaster = new THREE.Raycaster();
+        const mouseNDC = new THREE.Vector2();
+        let hoveredPart = null;
+        let lastPointer = { x: -999, y: -999 };
+        const tipEl = document.getElementById("tip3d");
+
+        function setHoverPart(part) {
+          if (part === hoveredPart) return;
+          if (hoveredPart)
+            partMeshes[hoveredPart].forEach((m) => m.material.emissive.set(0x000000));
+          hoveredPart = part;
+          if (hoveredPart)
+            partMeshes[hoveredPart].forEach((m) => {
+              m.material.emissive.set(0x38bdf8);
+              m.material.emissiveIntensity = 0.55;
+            });
+        }
+        function updateHoverAt(clientX, clientY) {
+          const r = renderer.domElement.getBoundingClientRect();
+          lastPointer = { x: clientX - r.left, y: clientY - r.top };
+          mouseNDC.x = (lastPointer.x / r.width) * 2 - 1;
+          mouseNDC.y = -(lastPointer.y / r.height) * 2 + 1;
+          raycaster.setFromCamera(mouseNDC, camera);
+          const hits = raycaster.intersectObjects(hoverMeshes, false);
+          setHoverPart(hits.length ? hits[0].object.userData.part : null);
+          renderer.domElement.style.cursor = hoveredPart ? "pointer" : "default";
+        }
+        renderer.domElement.addEventListener("pointermove", (e) =>
+          updateHoverAt(e.clientX, e.clientY),
+        );
+        renderer.domElement.addEventListener("pointerleave", () => {
+          setHoverPart(null);
+          renderer.domElement.style.cursor = "default";
+          lastPointer = { x: -999, y: -999 };
+        });
+
+        /* =================== SCREEN-SPACE OVERLAYS =================== */
+        const tagObjEl = document.getElementById("tagObj");
+        const tagDropEl = document.getElementById("tagDrop");
+        const tagLEl = document.getElementById("tagL");
+        const tagREl = document.getElementById("tagR");
+        const lrVec = new THREE.Vector3();
+        const projVec = new THREE.Vector3();
+        const gripOriginVec = new THREE.Vector3();
+        const gripDirVec = new THREE.Vector3();
+        function placeOverlay(el, worldPos) {
+          projVec.copy(worldPos).project(camera);
+          if (projVec.z > 1 || projVec.z < -1) {
+            el.style.display = "none";
+            return;
           }
+          const w = mount.clientWidth,
+            h = mount.clientHeight;
+          el.style.left = ((projVec.x * 0.5 + 0.5) * w).toFixed(1) + "px";
+          el.style.top = ((-projVec.y * 0.5 + 0.5) * h).toFixed(1) + "px";
+          el.style.display = "block";
         }
 
         /* =================== MAIN LOOP =================== */
@@ -1795,7 +1987,56 @@
           const dt = Math.min(0.05, (now - last) / 1000);
           last = now;
           ease(dt);
-          draw();
+
+          baseGroup.rotation.y = current.base * DEG;
+          shoulderGroup.rotation.z = current.shoulder * DEG;
+          elbowGroup.rotation.z = current.elbow * DEG;
+          const openAngle = 0.12 + gripAnim * 0.55;
+          fingerL.rotation.y = openAngle;
+          fingerR.rotation.y = -openAngle;
+
+          Object.entries(objectMeshes).forEach(([k, m]) => (m.visible = k === objectType));
+          const activeMesh = objectMeshes[objectType];
+          if (objectHeld) {
+            // Nest the object just past the fingertips rather than centering it
+            // ON them — its NEAR face (center minus its own radius) is what
+            // should sit at the grasp point, so it hangs held out in front of
+            // the pincers instead of swallowing the finger rig inside itself.
+            gripperGroup.getWorldPosition(gripOriginVec);
+            const gp = currentGripWorld();
+            gripDirVec.copy(gp).sub(gripOriginVec).normalize();
+            activeMesh.position
+              .copy(gp)
+              .addScaledVector(gripDirVec, OBJECT_SHAPES[objectType].r);
+          } else {
+            activeMesh.position.copy(objectPos);
+          }
+
+          controls.update();
+          renderer.render(scene, camera);
+
+          // Anchored near the floor at the base of each pedestal, not hovering
+          // above the object — floating labels sat right where the picked-up
+          // item needs to be seen and made it harder to actually look at it.
+          placeOverlay(tagObjEl, new THREE.Vector3(objectZone.x, 0.15, objectZone.z));
+          placeOverlay(tagDropEl, new THREE.Vector3(dropZone.x, 0.15, dropZone.z));
+
+          // L/R ride the rotating base, so their world position is re-read
+          // fresh every frame rather than computed once like the fixed pads.
+          badgeL.getWorldPosition(lrVec);
+          placeOverlay(tagLEl, lrVec);
+          badgeR.getWorldPosition(lrVec);
+          placeOverlay(tagREl, lrVec);
+
+          if (hoveredPart) {
+            tipEl.textContent = PART_LABEL[hoveredPart];
+            tipEl.style.left = lastPointer.x + "px";
+            tipEl.style.top = lastPointer.y + "px";
+            tipEl.style.display = "block";
+          } else {
+            tipEl.style.display = "none";
+          }
+
           renderDash();
           guidedTick();
           requestAnimationFrame(frame);
