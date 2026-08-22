@@ -25,7 +25,6 @@
         --aqua: #06b6d4;
         --water: #38bdf8;
         --motion: #f59e0b;
-        --blynk: #2bd97c;
         --warn: #f7a23b;
         --danger: #ff5470;
         --ok: #22c55e;
@@ -61,9 +60,7 @@
       h3,
       h4,
       .chip,
-      .bars-title,
-      .phone-top,
-      .feed-title {
+      .bars-title {
         font-family: var(--head);
       }
       header.top {
@@ -172,46 +169,314 @@
         margin-bottom: 5px;
       }
 
-      .grid {
+      .shell {
         display: grid;
-        grid-template-columns: 310px 1fr 330px;
+        grid-template-columns: minmax(0, 1fr) clamp(330px, 24vw, 420px);
+        grid-template-rows: minmax(0, 1fr);
         gap: 12px;
-        align-items: stretch;
         flex: 1 1 auto;
         min-height: 0;
       }
-      @media (max-width: 1280px) {
-        body {
-          overflow: auto;
-        }
-        .grid {
-          grid-template-columns: 1fr;
-          flex: 0 0 auto;
-        }
-        .stagewrap {
-          flex: 0 0 auto;
-          height: clamp(300px, 52vw, 460px);
-        }
+      /* One scrolling column for the screen, the readouts and every control, so
+         the habitat itself keeps the rest of the window. */
+      .rail {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding-right: 4px;
+      }
+      .rail::-webkit-scrollbar {
+        width: 9px;
+      }
+      .rail::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .rail::-webkit-scrollbar-thumb {
+        background: #c3d3ea;
+        border-radius: 6px;
+      }
+      .rail::-webkit-scrollbar-thumb:hover {
+        background: #a7bcd9;
       }
       .card {
         background: var(--panel);
-        border: 1px solid var(--line);
+        border: 2px solid var(--line);
         border-radius: var(--r);
         box-shadow: var(--shadow);
-        padding: 14px;
-        overflow-y: auto;
-        overflow-x: hidden;
+        padding: 12px 14px;
         min-height: 0;
-      }
-      .card.stage {
         display: flex;
         flex-direction: column;
-        align-items: stretch;
-        justify-content: flex-start;
-        overflow: hidden;
-        padding: 10px;
-        gap: 8px;
       }
+
+      /* ---- hero: the habitat is the whole point, so it gets the room ---- */
+      .hero {
+        position: relative;
+        min-height: 0;
+        border-radius: var(--r);
+        border: 2px solid #14324a;
+        box-shadow: var(--shadow);
+        background: #07202b;
+        overflow: hidden;
+      }
+      .hud {
+        position: absolute;
+        z-index: 3;
+        display: flex;
+        gap: 8px;
+        pointer-events: none;
+      }
+      .hud-left {
+        left: 12px;
+        top: calc(13% + 38px);
+        flex-direction: column;
+      }
+      .hud-right {
+        right: 12px;
+        top: calc(13% + 38px);
+        flex-direction: column;
+        align-items: flex-end;
+      }
+      .hud-msg {
+        left: 12px;
+        right: 12px;
+        bottom: 32px;
+        align-items: flex-end;
+        justify-content: space-between;
+      }
+      .hud-foot {
+        right: 12px;
+        bottom: 10px;
+        pointer-events: auto;
+      }
+      .hudpill {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        background: rgba(6, 26, 35, 0.74);
+        border: 1px solid rgba(90, 190, 220, 0.26);
+        border-radius: 12px;
+        padding: 6px 11px 6px 9px;
+      }
+      .hudpill .bulb {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background: #22384a;
+        box-shadow: inset 0 0 0 2px #0a1a24;
+        flex: 0 0 auto;
+        transition: 0.12s;
+      }
+      .hudpill .bulb.hot {
+        background: var(--motion);
+        box-shadow: 0 0 13px rgba(245, 158, 11, 0.9);
+      }
+      .hudpill .bulb.wet {
+        background: #f97316;
+        box-shadow: 0 0 13px rgba(249, 115, 22, 0.9);
+      }
+      .hudpill .k {
+        font-size: 8.5px;
+        letter-spacing: 0.7px;
+        color: #8fb0c4;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .hudpill .v {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: #e6f2f8;
+        font-family: var(--head);
+        line-height: 1.2;
+      }
+      .hudchip {
+        font-family: var(--head);
+        font-weight: 800;
+        font-size: 11.5px;
+        letter-spacing: 1px;
+        padding: 7px 12px;
+        border-radius: 11px;
+        background: rgba(34, 197, 94, 0.16);
+        color: #4ade80;
+        border: 1px solid rgba(74, 222, 128, 0.45);
+        white-space: nowrap;
+      }
+      .hudchip.alarm {
+        background: rgba(255, 84, 112, 0.18);
+        color: #ff8098;
+        border-color: rgba(255, 128, 152, 0.5);
+      }
+      .hudchip.mode {
+        background: rgba(56, 189, 248, 0.14);
+        color: #7dd3fc;
+        border-color: rgba(125, 211, 252, 0.4);
+      }
+      .hudchip.mode.manual {
+        background: rgba(245, 158, 11, 0.16);
+        color: #fbbf24;
+        border-color: rgba(251, 191, 36, 0.45);
+      }
+      .hudtext {
+        background: rgba(6, 26, 35, 0.74);
+        border: 1px solid rgba(90, 190, 220, 0.22);
+        border-radius: 11px;
+        padding: 7px 11px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #bfe0ee;
+        max-width: 62%;
+        line-height: 1.3;
+      }
+      .hudtext.alarm {
+        border-color: rgba(255, 128, 152, 0.55);
+        color: #ffd3dc;
+        background: rgba(60, 12, 24, 0.78);
+      }
+
+      /* ---- device strip ---- */
+      .devices {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        flex: 0 0 auto;
+      }
+
+      /* ---- control dock ---- */
+      .dock {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        flex: 0 0 auto;
+      }
+      .dockgroup {
+        background: var(--panel);
+        border: 2px solid var(--line);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 9px 11px 11px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .dockgroup h4 {
+        font-size: 10.5px;
+        letter-spacing: 1.1px;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 1px;
+      }
+      .dockgroup.drive h4 {
+        color: var(--aqua);
+      }
+      .dockgroup.pipes h4 {
+        color: #0284c7;
+      }
+      .dockgroup.life h4 {
+        color: #16a34a;
+      }
+      .dockgroup.sensors h4 {
+        color: var(--motion);
+      }
+
+      .keys {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      kbd {
+        font-family: var(--head);
+        font-size: 11px;
+        font-weight: 700;
+        min-width: 27px;
+        text-align: center;
+        padding: 5px 7px;
+        border-radius: 7px;
+        background: #0e2233;
+        color: #bfe6f5;
+        border: 1px solid #2a4d66;
+        border-bottom-width: 3px;
+        transition: 0.08s;
+      }
+      kbd.hot {
+        background: var(--aqua);
+        color: #04222b;
+        border-color: #0e7490;
+        transform: translateY(1px);
+        border-bottom-width: 1px;
+      }
+      .keys .sep {
+        font-size: 11.5px;
+        color: var(--mut);
+        font-weight: 600;
+      }
+
+      .pipegrid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+      }
+      .pipebtn {
+        font-family: var(--head);
+        font-weight: 700;
+        font-size: 13px;
+        padding: 9px 0 7px;
+        border-radius: 10px;
+        border: 2px solid var(--line);
+        background: var(--panel2);
+        color: var(--mut);
+        cursor: pointer;
+        transition: 0.13s;
+        line-height: 1.15;
+      }
+      .pipebtn small {
+        display: block;
+        font-family: var(--body);
+        font-size: 8.5px;
+        letter-spacing: 0.6px;
+        font-weight: 700;
+        text-transform: uppercase;
+        opacity: 0.8;
+      }
+      .pipebtn:hover {
+        border-color: var(--accent2);
+      }
+      .pipebtn.on {
+        background: linear-gradient(145deg, #38bdf8, #0284c7);
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 7px 16px rgba(2, 132, 199, 0.34);
+      }
+      .btnrow {
+        display: flex;
+        gap: 6px;
+      }
+      .btnrow .btn {
+        flex: 1 1 0;
+        justify-content: center;
+      }
+      .count {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--mut);
+        background: var(--panel2);
+        border-radius: 9px;
+        padding: 7px 10px;
+        white-space: nowrap;
+      }
+      .count b {
+        font-family: var(--head);
+        font-size: 12.5px;
+        color: var(--accent);
+      }
+
       .card h3 {
         margin: 0 0 3px;
         font-size: 14.5px;
@@ -269,10 +534,6 @@
         border-color: transparent;
         background: linear-gradient(145deg, #22d3ee, var(--aqua));
         box-shadow: 0 8px 18px rgba(6, 182, 212, 0.35);
-      }
-      .seg.grn button.on {
-        background: linear-gradient(145deg, #4ade80, #16a34a);
-        box-shadow: 0 8px 18px rgba(34, 197, 94, 0.35);
       }
       .toggle {
         display: flex;
@@ -362,178 +623,51 @@
         display: block;
       }
       .stagewrap {
-        flex: 1 1 auto;
-        width: 100%;
-        min-height: 200px;
-        border-radius: 14px;
-        overflow: hidden;
+        position: absolute;
+        inset: 0;
       }
       #zone {
         width: 100%;
         height: 100%;
-        border-radius: 14px;
-        background: #061a22;
+        display: block;
         cursor: grab;
         touch-action: none;
-        box-shadow: inset 0 0 0 1px #12303c;
       }
       #zone.drag {
         cursor: grabbing;
       }
 
-      .modebanner {
-        width: 100%;
-        padding: 9px 14px;
-        border-radius: 14px;
-        background: linear-gradient(145deg, #e9fbf3, #d7f5e8);
-        border: 2px solid #bfeed7;
+      .screenwrap {
+        background: #04140d;
+        border: 2px solid #16543c;
+        border-radius: 12px;
+        padding: 6px;
+        box-shadow:
+          inset 0 0 26px rgba(62, 242, 165, 0.12),
+          var(--shadow);
+        flex: 1 1 auto;
+        min-height: 0;
         display: flex;
-        flex: 0 0 auto;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        transition: 0.2s;
-      }
-      .modebanner.alarm {
-        background: linear-gradient(145deg, #fff0f3, #ffe0e6);
-        border-color: #ffc7d1;
-      }
-      .modebanner .lab {
-        font-size: 11px;
-        color: #0f9960;
-        letter-spacing: 0.5px;
-        font-weight: 700;
-      }
-      .modebanner.alarm .lab {
-        color: #c31f3d;
-      }
-      .modebanner .txt {
-        font-size: 14px;
-        font-weight: 700;
-        color: #123a2b;
-        margin-top: 2px;
-      }
-      .modebanner.alarm .txt {
-        color: #6d1023;
-      }
-      .modebanner .chip {
-        font-family: var(--head);
-        font-size: 11px;
-        color: #fff;
-        font-weight: 800;
-        white-space: nowrap;
-        padding: 6px 12px;
-        border-radius: 9px;
-        background: linear-gradient(145deg, #4ade80, #16a34a);
-      }
-      .modebanner .chip.alarm {
-        background: linear-gradient(145deg, #ff7a90, #e11d48);
-      }
-
-      /* ---- rover device strip (OLED) ---- */
-      .device {
-        --oledh: clamp(64px, 9vh, 92px);
-        width: 100%;
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        flex: 0 0 auto;
-        background: linear-gradient(160deg, #16303a, #0e202a);
-        border: 2px solid #24505f;
-        border-radius: 14px;
-        padding: 7px 9px;
-      }
-      .device .screenwrap {
-        flex: 0 0 auto;
-        border-radius: 9px;
-        padding: 4px;
-        background: #05100c;
-        border: 2px solid #0f2a20;
       }
       #oled {
-        border-radius: 5px;
+        width: 100%;
+        height: 100%;
+        min-height: 150px;
         display: block;
-        height: var(--oledh);
-        width: calc(var(--oledh) * 700 / 228);
-        max-width: 100%;
-      }
-      .device .side {
-        flex: 1 1 auto;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 6px;
-        min-width: 0;
-      }
-      .lampsrow {
-        display: flex;
-        gap: 8px;
-      }
-      .lamp {
-        flex: 1 1 auto;
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        background: #0d222c;
-        border: 1.5px solid #24505f;
-        border-radius: 10px;
-        padding: 5px 8px;
-        min-width: 0;
-      }
-      .lamp .bulb {
-        width: 13px;
-        height: 13px;
-        border-radius: 50%;
-        background: #22384a;
-        box-shadow: inset 0 0 0 2px #0a1922;
-        flex: 0 0 auto;
-        transition: 0.12s;
-      }
-      .lamp .bulb.hot {
-        background: var(--motion);
-        box-shadow:
-          0 0 12px rgba(245, 158, 11, 0.85),
-          inset 0 0 0 2px #6b3d00;
-      }
-      .lamp .bulb.wet {
-        background: #f97316;
-        box-shadow:
-          0 0 12px rgba(249, 115, 22, 0.85),
-          inset 0 0 0 2px #5c2708;
-      }
-      .lamp .k {
-        font-size: 9.5px;
-        letter-spacing: 0.5px;
-        color: #7fa5b8;
-        font-weight: 700;
-        text-transform: uppercase;
-        line-height: 1.1;
-      }
-      .lamp .v {
-        font-size: 12.5px;
-        font-weight: 700;
-        color: #dff1f8;
-        line-height: 1.15;
+        border-radius: 7px;
       }
       .uplink {
         font-size: 11.5px;
-        color: #7fa5b8;
+        color: var(--mut);
         font-weight: 600;
-        line-height: 1.3;
+        margin-top: 8px;
       }
       .uplink b {
-        color: #cfeaf5;
         font-family: var(--head);
-        font-size: 11px;
+        color: var(--aqua);
+        letter-spacing: 0.5px;
       }
 
-      .stage-foot {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        justify-content: center;
-        flex: 0 0 auto;
-      }
       .btn {
         cursor: pointer;
         border: 2px solid var(--line);
@@ -555,225 +689,6 @@
         border-color: transparent;
         color: #fff;
         box-shadow: 0 8px 18px rgba(6, 182, 212, 0.35);
-      }
-
-      /* ---- Blynk phone ---- */
-      .phone {
-        background: #101a24;
-        border: 2px solid #22364a;
-        border-radius: 18px;
-        padding: 8px;
-        box-shadow: var(--shadow);
-        display: flex;
-        flex-direction: column;
-        gap: 7px;
-        position: relative;
-        overflow: hidden;
-      }
-      .phone-top {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 10px;
-        letter-spacing: 0.5px;
-        color: #8fb0c4;
-        font-weight: 700;
-        padding: 2px 2px 6px;
-        border-bottom: 1px solid #22364a;
-      }
-      .phone-top .dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: var(--blynk);
-        box-shadow: 0 0 8px var(--blynk);
-        flex: 0 0 auto;
-      }
-      .phone-top .online {
-        margin-left: auto;
-        color: var(--blynk);
-      }
-      .widgets {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 6px;
-      }
-      .w {
-        background: #17242f;
-        border: 1px solid #24384a;
-        border-radius: 10px;
-        padding: 7px 8px;
-      }
-      .w .k {
-        font-size: 9px;
-        letter-spacing: 0.6px;
-        color: #7e9db0;
-        font-weight: 700;
-        text-transform: uppercase;
-      }
-      .w .v {
-        font-size: 14px;
-        font-weight: 700;
-        color: #e6f2f8;
-        margin-top: 3px;
-        font-family: var(--head);
-      }
-      .w .v.safe {
-        color: var(--blynk);
-      }
-      .w .v.alarm {
-        color: #ff6b85;
-      }
-      .w.ledw {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 6px;
-      }
-      .w .biglamp {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: #22384a;
-        box-shadow: inset 0 0 0 2px #0d1720;
-        flex: 0 0 auto;
-        transition: 0.12s;
-      }
-      .w .biglamp.hot {
-        background: var(--motion);
-        box-shadow: 0 0 14px rgba(245, 158, 11, 0.9);
-      }
-      .w .biglamp.wet {
-        background: #f97316;
-        box-shadow: 0 0 14px rgba(249, 115, 22, 0.9);
-      }
-      .gbar {
-        height: 9px;
-        border-radius: 6px;
-        background: #0d1720;
-        border: 1px solid #24384a;
-        overflow: hidden;
-        margin-top: 5px;
-        position: relative;
-      }
-      .gbar i {
-        position: absolute;
-        inset: 0 auto 0 0;
-        width: 0;
-        background: linear-gradient(90deg, #fbbf24, #f97316);
-        border-radius: 5px;
-        transition: width 0.12s;
-      }
-      .gbar .thr {
-        position: absolute;
-        top: -2px;
-        bottom: -2px;
-        width: 2px;
-        background: #ff6b85;
-        border-radius: 2px;
-      }
-      .feed-title {
-        font-size: 9.5px;
-        letter-spacing: 0.6px;
-        color: #7e9db0;
-        font-weight: 700;
-        text-transform: uppercase;
-        margin-top: 2px;
-      }
-      .feed {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        overflow-y: auto;
-        max-height: 190px;
-        min-height: 60px;
-        padding-right: 2px;
-      }
-      .feed .n {
-        background: #17242f;
-        border: 1px solid #24384a;
-        border-left: 3px solid var(--blynk);
-        border-radius: 8px;
-        padding: 6px 8px;
-        animation: slidein 0.28s ease;
-      }
-      .feed .n.crit {
-        border-left-color: #ff6b85;
-      }
-      .feed .n.motion {
-        border-left-color: var(--motion);
-      }
-      .feed .n.water {
-        border-left-color: var(--water);
-      }
-      .feed .n .h {
-        font-size: 11.5px;
-        font-weight: 700;
-        color: #e6f2f8;
-        line-height: 1.25;
-      }
-      .feed .n .m {
-        font-size: 11px;
-        color: #93b2c4;
-        margin-top: 2px;
-        line-height: 1.3;
-      }
-      .feed .n .t {
-        font-size: 9.5px;
-        color: #5f7d8f;
-        margin-top: 3px;
-        font-weight: 600;
-      }
-      .feed .empty {
-        font-size: 11.5px;
-        color: #5f7d8f;
-        text-align: center;
-        padding: 14px 6px;
-        line-height: 1.4;
-      }
-      @keyframes slidein {
-        from {
-          opacity: 0;
-          transform: translateY(-7px);
-        }
-        to {
-          opacity: 1;
-          transform: none;
-        }
-      }
-      .toast {
-        position: absolute;
-        left: 8px;
-        right: 8px;
-        top: 8px;
-        background: #1f2f3d;
-        border: 1px solid #3a5568;
-        border-radius: 11px;
-        padding: 8px 10px;
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
-        z-index: 5;
-        opacity: 0;
-        transform: translateY(-14px);
-        transition: 0.25s;
-        pointer-events: none;
-      }
-      .toast.show {
-        opacity: 1;
-        transform: none;
-      }
-      .toast .h {
-        font-size: 11.5px;
-        font-weight: 700;
-        color: #fff;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .toast .m {
-        font-size: 11px;
-        color: #b9cfdd;
-        margin-top: 2px;
-        line-height: 1.3;
       }
 
       .reading {
@@ -891,6 +806,47 @@
       .stat .v.b {
         color: var(--water);
       }
+
+      /* ---- responsive: below a comfortable width the rail drops underneath ---- */
+      @media (max-width: 1100px) {
+        body {
+          overflow: auto;
+        }
+        .shell {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto;
+          flex: 0 0 auto;
+        }
+        .hero {
+          height: clamp(320px, 56vw, 520px);
+        }
+        .rail {
+          overflow: visible;
+          padding-right: 0;
+        }
+        .devices {
+          grid-template-columns: 1fr 1fr;
+        }
+        .dock {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 820px) {
+        .devices {
+          grid-template-columns: 1fr;
+        }
+        .hudtext {
+          max-width: 100%;
+        }
+      }
+      @media (max-width: 560px) {
+        .dock {
+          grid-template-columns: 1fr;
+        }
+        .hud-msg {
+          display: none;
+        }
+      }
     </style>
   </head>
   <body>
@@ -898,7 +854,7 @@
       <div class="logo">🌊</div>
       <div class="title">
         <h1>AQUANOVA ALERT STATION</h1>
-        <p>PIR MOTION · WATER LEVEL · BLYNK IoT ALERTS · LOF ROBOTICS</p>
+        <p>DRIVE THE ROVER · PIR MOTION · WATER LEAKS · LOF ROBOTICS</p>
       </div>
       <div class="helpbtns">
         <button type="button" class="helpbtn" data-tab="use">How To Use</button>
@@ -910,33 +866,33 @@
         <div class="tabpanel" data-panel="use">
           <ol>
             <li>
-              The rover patrols the habitat watching for two dangers:
-              <b>movement</b> (PIR sensor) and <b>water</b> (water level
-              sensor).
+              <b>Drive the rover.</b> Hold <b>◀ / A</b> and <b>D / ▶</b> to move
+              it along the floor. It starts on auto-patrol; the moment you press
+              a drive key you take the wheel. Press <b>P</b> to hand it back.
             </li>
             <li>
-              Turn on <b>Creature in Zone</b> and raise <b>Movement</b>. Watch
-              the PIR cone catch it — then drop Movement to <b>0</b> and see the
-              alert die away.
+              <b>Spring a leak.</b> Four pipes run across the ceiling —
+              <b>A B C D</b>. Open any of them from the dock or by clicking the
+              pipe itself, then raise <b>Drip Rate</b>. Each open pipe grows its
+              own puddle in its own part of the habitat.
             </li>
             <li>
-              Raise <b>Water Drop Level</b> to start the pipe leaking. A puddle
-              spreads across the floor; the rover only reads water it is
-              standing in.
+              <b>Go and find the water.</b> The rover only reads the puddle it is
+              standing in, so open a far pipe and drive over to it. A dry floor
+              between two puddles reads dry.
             </li>
             <li>
-              <b>Drag the rover</b> along the floor, or leave <b>Patrol</b> on
-              to let it sweep by itself.
+              <b>Fill the habitat.</b> Press <b>＋ Add</b> for more creatures,
+              up to six. Any one of them moving inside the cone trips the PIR —
+              so a crowded habitat is much harder to keep quiet.
             </li>
             <li>
-              Change the <b>Emergency Condition</b> to see how
-              <i>motion only</i>, <i>water only</i>, <i>both together</i>, and
-              <i>either one</i> give completely different alarms from identical
-              sensors.
+              Drop <b>Movement</b> to <b>0</b>. The creatures stay put and the
+              PIR goes silent, even with six of them standing in the beam.
             </li>
             <li>
-              Watch the <b>Blynk phone</b> on the right receive alerts on its
-              own — nobody pressed anything.
+              Watch <b>Alerts Sent</b> and <b>Throttled</b> climb. The station
+              reports on its own — nobody pressed anything.
             </li>
           </ol>
         </div>
@@ -958,8 +914,8 @@
               threshold
             </li>
             <li>
-              How AND / OR logic over two sensors changes what counts as an
-              emergency
+              Why a sensor reads its <b>own location</b> — four leaking pipes
+              still read dry if the rover is standing between the puddles
             </li>
             <li>
               Why IoT alerts are rate-limited instead of firing continuously
@@ -972,19 +928,174 @@
       </div>
     </header>
 
-    <div class="grid">
-      <!-- ================= CONTROLS ================= -->
-      <section class="card">
-        <h3>Controls</h3>
-        <p class="sub">
-          Set up the habitat, the leak, the rover, and how Blynk should raise
-          the alarm.
-        </p>
+    <main class="shell">
+      <!-- ================= HERO: THE HABITAT ================= -->
+      <section class="hero">
+        <div class="stagewrap">
+          <canvas id="zone" width="820" height="360"></canvas>
+        </div>
 
-        <div class="cmdgroup motion">
-          <h4>Habitat — Motion Source</h4>
+        <div class="hud hud-left">
+          <div class="hudpill">
+            <div class="bulb" id="lampMotion"></div>
+            <div>
+              <div class="k">PIR Motion</div>
+              <div class="v" id="lampMotionV">CLEAR</div>
+            </div>
+          </div>
+          <div class="hudpill">
+            <div class="bulb" id="lampWater"></div>
+            <div>
+              <div class="k">Water Level</div>
+              <div class="v" id="lampWaterV">DRY</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud hud-right">
+          <div class="hudchip" id="hudChip">SAFE</div>
+          <div class="hudchip mode" id="hudMode">PATROL</div>
+        </div>
+
+        <div class="hud hud-msg">
+          <div class="hudtext" id="hudMsg">
+            All clear — patrolling the habitat.
+          </div>
+        </div>
+
+        <div class="hud hud-foot">
+          <button class="btn pause" id="pauseBtn">⏸ Pause</button>
+          <button class="btn" id="resetBtn">↺ Reset</button>
+        </div>
+      </section>
+
+      <!-- ================= SIDE RAIL: EVERYTHING ELSE ================= -->
+      <aside class="rail">
+        <section class="devices">
+        <div class="card">
+          <h3>Rover OLED</h3>
+          <div class="screenwrap">
+            <canvas id="oled" width="700" height="228"></canvas>
+          </div>
+          <div class="seg" id="segOled" style="margin-top: 9px">
+            <button data-oled="status" class="on">Status</button>
+            <button data-oled="sensors">Sensors</button>
+            <button data-oled="alert">Alert</button>
+            <button data-oled="net">Network</button>
+          </div>
+          <div class="toggle" style="margin-top: 2px">
+            <button id="oledBtn" class="on">🖥 Display ON</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Sensor Telemetry</h3>
+          <div class="verdict ok" id="verdictBox">
+            Both sensors quiet. Nothing to report.
+          </div>
+          <div class="uplink">
+            ☁ UPLINK <b id="uplinkTxt">IDLE</b> ·
+            <span id="uplinkNote">Waiting for a trigger.</span>
+          </div>
+
+          <div class="reading">
+            <span class="k">Water Sensor (analog)</span
+            ><span class="v" id="waterVal">0</span>
+          </div>
+          <div class="hbar">
+            <div
+              class="fill"
+              id="waterFill"
+              style="background: linear-gradient(90deg, #fbbf24, #f97316)"
+            ></div>
+            <div class="thr" id="waterThr"></div>
+          </div>
+          <div class="reading">
+            <span class="k">Nearest Creature</span
+            ><span class="v" id="distVal">—</span>
+          </div>
+          <div class="reading">
+            <span class="k">Fastest Creature</span
+            ><span class="v" id="speedVal">0 px/s</span>
+          </div>
+
+          <div class="statusgrid">
+            <div class="stat">
+              <div class="k">PIR Output</div>
+              <div class="v n" id="statPir">LOW</div>
+            </div>
+            <div class="stat">
+              <div class="k">PIR Hold Left</div>
+              <div class="v n" id="statHold">0.0 s</div>
+            </div>
+            <div class="stat">
+              <div class="k">PIR Range</div>
+              <div class="v a" id="statRange">0 px</div>
+            </div>
+            <div class="stat">
+              <div class="k">Pipes Leaking</div>
+              <div class="v b" id="statPipes">0 / 4</div>
+            </div>
+            <div class="stat">
+              <div class="k">Alerts Sent</div>
+              <div class="v g" id="statSent">0</div>
+            </div>
+            <div class="stat">
+              <div class="k">Throttled</div>
+              <div class="v w" id="statThrottled">0</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+        <section class="dock">
+        <div class="dockgroup drive">
+          <h4>Drive</h4>
+          <div class="keys">
+            <kbd id="keyLeft">◀ A</kbd><kbd id="keyRight">D ▶</kbd>
+            <span class="sep">drive</span>
+          </div>
+          <div class="keys">
+            <kbd id="keyPatrol">P</kbd><span class="sep">hand it back</span>
+          </div>
           <div class="toggle">
-            <button id="creatureBtn" class="on">🦎 Creature in Zone</button>
+            <button id="patrolBtn" class="on">▶ Patrol Mode</button>
+          </div>
+          <div class="hint" id="driveHint">
+            The rover sweeps the habitat on its own. Press a drive key to take
+            the wheel.
+          </div>
+        </div>
+
+        <div class="dockgroup pipes">
+          <h4>Ceiling Pipes</h4>
+          <div class="pipegrid" id="pipeGrid"></div>
+          <div class="ctrl">
+            <div class="row">
+              <label>Drip Rate</label><span class="val" id="v_leak">0%</span>
+            </div>
+            <input
+              type="range"
+              id="r_leak"
+              min="0"
+              max="100"
+              step="1"
+              value="0"
+            />
+          </div>
+          <div class="hint" id="pipeHint">
+            All four pipes are sealed. Open one — or click it on the ceiling.
+          </div>
+        </div>
+
+        <div class="dockgroup life">
+          <h4>Habitat</h4>
+          <div class="btnrow">
+            <button class="btn" id="addCreatureBtn">＋ Add</button>
+            <button class="btn" id="clearCreatureBtn">✕ Clear</button>
+          </div>
+          <div class="count" id="creatureCount">
+            <span>Creatures</span><b>1 / 6</b>
           </div>
           <div class="ctrl">
             <div class="row">
@@ -998,47 +1109,15 @@
               step="1"
               value="55"
             />
-            <div class="hint">
-              At <b>0</b> the creature is present but perfectly still — a PIR
-              sensor cannot see it.
-            </div>
+          </div>
+          <div class="hint">
+            Movement drives every creature. Wind it to <b>0</b> and they stand
+            still — invisible to a PIR.
           </div>
         </div>
 
-        <div class="cmdgroup">
-          <h4>Leaking Pipe — Water Source</h4>
-          <div class="ctrl">
-            <div class="row">
-              <label>Water Drop Level</label
-              ><span class="val" id="v_leak">0%</span>
-            </div>
-            <input
-              type="range"
-              id="r_leak"
-              min="0"
-              max="100"
-              step="1"
-              value="0"
-            />
-            <div class="hint">
-              How fast the joint drips. The puddle spreads and drains away when
-              you close it.
-            </div>
-          </div>
-        </div>
-
-        <div class="cmdgroup">
-          <h4>Rover Position</h4>
-          <div class="toggle">
-            <button id="patrolBtn" class="on">▶ Patrol Mode</button>
-          </div>
-          <div class="hint" style="margin-top: -2px">
-            Or drag the rover along the floor to park it exactly where you want.
-          </div>
-        </div>
-
-        <div class="cmdgroup">
-          <h4>Sensor Sensitivity</h4>
+        <div class="dockgroup sensors">
+          <h4>Sensors</h4>
           <div class="ctrl">
             <div class="row">
               <label>PIR Sensitivity</label
@@ -1052,9 +1131,6 @@
               step="1"
               value="55"
             />
-            <div class="hint">
-              Raises detection range and lets slower movement trigger it.
-            </div>
           </div>
           <div class="ctrl">
             <div class="row">
@@ -1064,203 +1140,20 @@
             <input
               type="range"
               id="r_thr"
-              min="5"
-              max="90"
+              min="0"
+              max="100"
               step="1"
               value="30"
             />
-            <div class="hint">
-              The analog reading must cross this to count as WET.
-            </div>
+          </div>
+          <div class="hint">
+            Sensitivity trades detection range against false alarms. The
+            threshold turns an analog reading into a yes/no answer.
           </div>
         </div>
-
-        <div class="cmdgroup">
-          <h4>OLED Display</h4>
-          <div class="toggle">
-            <button id="oledBtn" class="on">🖥 Display ON</button>
-          </div>
-          <div class="seg" id="segOled">
-            <button data-oled="status" class="on">Status</button>
-            <button data-oled="sensors">Sensors</button>
-            <button data-oled="alert">Alert</button>
-            <button data-oled="net">Network</button>
-          </div>
-        </div>
-
-        <div class="cmdgroup blynk">
-          <h4>Emergency Condition</h4>
-          <div class="seg grn" id="segCond">
-            <button data-cond="motion">Motion Only</button>
-            <button data-cond="water">Water Only</button>
-            <button data-cond="both">Motion + Water</button>
-            <button data-cond="either" class="on">Either One</button>
-          </div>
-          <div class="hint" id="condHint">
-            Alarm if the PIR trips <b>or</b> the water sensor goes wet.
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= STAGE ================= -->
-      <section class="card stage">
-        <div class="stagewrap">
-          <canvas id="zone" width="820" height="360"></canvas>
-        </div>
-
-        <div class="modebanner" id="banner">
-          <div>
-            <div class="lab">STATION STATUS</div>
-            <div class="txt" id="bannerTxt">
-              All clear — patrolling the habitat.
-            </div>
-          </div>
-          <div class="chip" id="bannerChip">SAFE</div>
-        </div>
-
-        <div class="device">
-          <div class="screenwrap">
-            <canvas id="oled" width="700" height="228"></canvas>
-          </div>
-          <div class="side">
-            <div class="lampsrow">
-              <div class="lamp">
-                <div class="bulb" id="lampMotion"></div>
-                <div>
-                  <div class="k">PIR Motion</div>
-                  <div class="v" id="lampMotionV">CLEAR</div>
-                </div>
-              </div>
-              <div class="lamp">
-                <div class="bulb" id="lampWater"></div>
-                <div>
-                  <div class="k">Water Level</div>
-                  <div class="v" id="lampWaterV">DRY</div>
-                </div>
-              </div>
-            </div>
-            <div class="uplink">
-              ☁ UPLINK <b id="uplinkTxt">IDLE</b> ·
-              <span id="uplinkNote">Waiting for a trigger.</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="stage-foot">
-          <button class="btn pause" id="pauseBtn">⏸ Pause</button>
-          <button class="btn" id="resetBtn">↺ Reset Simulation</button>
-        </div>
-      </section>
-
-      <!-- ================= BLYNK + TELEMETRY ================= -->
-      <section class="card">
-        <h3>Blynk App</h3>
-        <p class="sub">
-          The rover pushes to the cloud on its own — nobody is pressing anything
-          here.
-        </p>
-
-        <div class="phone">
-          <div class="toast" id="toast">
-            <div class="h">
-              <span id="toastIcon">🔔</span><span id="toastH">AquaNova</span>
-            </div>
-            <div class="m" id="toastM">Alert</div>
-          </div>
-          <div class="phone-top">
-            <span class="dot"></span> AQUANOVA STATION
-            <span class="online" id="phoneOnline">ONLINE</span>
-          </div>
-          <div class="widgets">
-            <div class="w ledw">
-              <div>
-                <div class="k">Motion</div>
-                <div class="v" id="wMotionV">—</div>
-              </div>
-              <div class="biglamp" id="wMotion"></div>
-            </div>
-            <div class="w ledw">
-              <div>
-                <div class="k">Water</div>
-                <div class="v" id="wWaterV">—</div>
-              </div>
-              <div class="biglamp" id="wWater"></div>
-            </div>
-            <div class="w">
-              <div class="k">Water Level</div>
-              <div class="gbar">
-                <i id="wLevel"></i>
-                <div class="thr" id="wThr"></div>
-              </div>
-              <div class="v" id="wLevelV" style="font-size: 12.5px">0%</div>
-            </div>
-            <div class="w">
-              <div class="k">Zone</div>
-              <div class="v safe" id="wZone">SAFE</div>
-            </div>
-          </div>
-          <div class="feed-title">Notifications</div>
-          <div class="feed" id="feed">
-            <div class="empty">
-              No alerts yet.<br />Trigger a sensor to see one arrive.
-            </div>
-          </div>
-        </div>
-
-        <h3 style="margin-top: 12px">Sensor Telemetry</h3>
-        <div class="reading">
-          <span class="k">Water Sensor (analog)</span
-          ><span class="v" id="waterVal">0</span>
-        </div>
-        <div class="hbar">
-          <div
-            class="fill"
-            id="waterFill"
-            style="background: linear-gradient(90deg, #fbbf24, #f97316)"
-          ></div>
-          <div class="thr" id="waterThr"></div>
-        </div>
-        <div class="reading">
-          <span class="k">Creature Distance</span
-          ><span class="v" id="distVal">—</span>
-        </div>
-        <div class="reading">
-          <span class="k">Creature Speed</span
-          ><span class="v" id="speedVal">0 px/s</span>
-        </div>
-
-        <div class="verdict ok" id="verdictBox">
-          Both sensors quiet. Nothing to report.
-        </div>
-
-        <div class="statusgrid">
-          <div class="stat">
-            <div class="k">PIR Output</div>
-            <div class="v n" id="statPir">LOW</div>
-          </div>
-          <div class="stat">
-            <div class="k">PIR Hold Left</div>
-            <div class="v n" id="statHold">0.0 s</div>
-          </div>
-          <div class="stat">
-            <div class="k">PIR Range</div>
-            <div class="v a" id="statRange">0 px</div>
-          </div>
-          <div class="stat">
-            <div class="k">Alerts Sent</div>
-            <div class="v g" id="statSent">0</div>
-          </div>
-          <div class="stat">
-            <div class="k">Throttled</div>
-            <div class="v w" id="statThrottled">0</div>
-          </div>
-          <div class="stat">
-            <div class="k">Uptime</div>
-            <div class="v n" id="statUptime">0 s</div>
-          </div>
-        </div>
-      </section>
-    </div>
+        </section>
+      </aside>
+    </main>
 
     <script>
       (() => {
@@ -1304,10 +1197,14 @@
           // Rescale the scene instead of re-rolling it, so a resize never teleports
           // the rover or re-grows the puddle somewhere else.
           rover.x *= fx;
-          creature.x *= fx;
-          creature.tx *= fx;
-          leak.x *= fx;
-          puddle.cx *= fx;
+          for (const c of creatures) {
+            c.x *= fx;
+            c.tx *= fx;
+          }
+          for (const p of pipes) {
+            p.x *= fx;
+            p.cx *= fx;
+          }
           for (const p of plants) {
             p.x *= fx;
           }
@@ -1336,62 +1233,56 @@
 
         /* =================== MODEL CONSTANTS =================== */
         const PIR_HOLD = 3.0; // seconds the PIR output latches after motion stops
-        const ALERT_COOLDOWN = 5.0; // Blynk-style rate limit between notifications
+        const ALERT_COOLDOWN = 5.0; // cloud-style rate limit between notifications
         const DROP_SPEED = 250; // px/s a falling drop travels
         const MAX_ANALOG = 1023; // what a real 10-bit ADC would report
+        const DRIVE_SPEED = 130; // px/s while the student is driving by hand
+        const PATROL_SPEED = 52; // px/s of the unattended auto-sweep
+        const MAX_CREATURES = 6; // how full the habitat is allowed to get
 
+        // Four pipes are plumbed across the ceiling at fixed points. Each one leaks
+        // independently, so the habitat can be dry in one place and flooded in another
+        // — which is the whole reason the rover has to go and look.
+        const PIPE_SPOTS = [
+          { label: "A", fx: 0.16 },
+          { label: "B", fx: 0.38 },
+          { label: "C", fx: 0.62 },
+          { label: "D", fx: 0.84 },
+        ];
+
+        // The alarm rule is fixed at "either" — the picker is gone, but the table
+        // still drives evaluate() and the OLED network readout.
         const CONDITIONS = {
-          motion: {
-            label: "Motion Only",
-            hint: "Alarm only when the PIR trips. A flood on its own is ignored.",
-          },
-          water: {
-            label: "Water Only",
-            hint: "Alarm only when the water sensor goes wet. Movement is ignored.",
-          },
-          both: {
-            label: "Motion + Water",
-            hint: "Alarm only when <b>both</b> happen at once — an AND gate. Far fewer alarms.",
-          },
-          either: {
-            label: "Either One",
-            hint: "Alarm if the PIR trips <b>or</b> the water sensor goes wet.",
-          },
+          motion: { label: "Motion Only" },
+          water: { label: "Water Only" },
+          both: { label: "Motion + Water" },
+          either: { label: "Either One" },
         };
         const ALERT_TYPES = {
           push: {
             label: "Push Alert",
             icon: "🔔",
-            toast: true,
-            feed: true,
-            note: "Phone buzzes immediately.",
+            note: "Pushed the moment the rule is met.",
           },
           email: {
             label: "Email",
             icon: "✉",
-            toast: false,
-            feed: true,
             note: "Queued to the account inbox.",
           },
           log: {
             label: "Event Log",
             icon: "📋",
-            toast: false,
-            feed: true,
             note: "Recorded quietly, no buzz.",
           },
           none: {
             label: "Widgets Only",
             icon: "📊",
-            toast: false,
-            feed: false,
             note: "Dashboard updates, nothing sent.",
           },
         };
 
         /* =================== STATE =================== */
-        let creatureOn = true,
-          moveLevel = 55,
+        let moveLevel = 55,
           leakLevel = 0;
         let patrol = true,
           pirSens = 55,
@@ -1405,17 +1296,26 @@
 
         let floorY = 0,
           ceilY = 0;
-        let rover = { x: 420, dir: 1, speed: 52 };
-        let creature = {
-          x: 200,
-          tx: 200,
-          dir: 1,
-          speed: 0,
-          wait: 0,
-          legPhase: 0,
-        };
-        let leak = { x: 250, t: 0 };
-        let puddle = { cx: 250, vol: 0 };
+        // How big everything in the habitat is drawn. A short, wide stage keeps the
+        // original 1:1 sizes; a tall one scales the rover, creatures, plants and
+        // puddles up together so the scene fills the space it has been given.
+        let S = 1;
+        const edgeX = () => 30 * S + 16; // how close the rover may get to a wall
+        let rover = { x: 420, dir: 1 };
+        // Which drive keys are held right now. Movement is applied in step(), not in
+        // the key handler, so it stays frame-rate independent like everything else.
+        const keysDown = new Set();
+
+        let creatures = [];
+        let pipes = PIPE_SPOTS.map((p) => ({
+          label: p.label,
+          fx: p.fx,
+          x: 0, // filled in by layout(), which knows the canvas width
+          on: false,
+          t: 0, // countdown to the next drop
+          vol: 0, // how much water its puddle is holding
+          cx: 0, // where that puddle has settled
+        }));
         let drops = [],
           ripples = [],
           plants = [];
@@ -1436,66 +1336,127 @@
           uptime = 0;
         let lastAlertAt = -999,
           uplinkFlash = 0;
-        let feedItems = [],
-          toastTimer = 0;
+        // Kept for the OLED alert log: newest entry first.
+        let feedItems = [];
         let tNow = 0;
 
         /* =================== LAYOUT / SCENERY =================== */
         function layout() {
           floorY = H * 0.8;
           ceilY = H * 0.13;
-          rover.x = clamp(rover.x, 40, W - 40);
-          creature.x = clamp(creature.x, 30, W - 30);
-          leak.x = clamp(leak.x, 80, W - 140);
-          puddle.cx = clamp(puddle.cx, 20, W - 20);
+          S = clamp((floorY - ceilY) / 300, 1, 2);
+          rover.x = clamp(rover.x, edgeX(), W - edgeX());
+          for (const p of pipes) {
+            p.x = p.fx * W;
+            if (!p.cx) p.cx = p.x;
+            p.cx = clamp(p.cx, 20, W - 20);
+          }
+          for (const c of creatures) {
+            c.x = clamp(c.x, 26, W - 26);
+            c.tx = clamp(c.tx, 30, W - 30);
+          }
+        }
+        function newPlant(x) {
+          return {
+            x: x === undefined ? Math.random() * W : clamp(x, 12, W - 12),
+            h: 16 + Math.random() * 30,
+            w: 10 + Math.random() * 16,
+            hue: Math.random(),
+          };
         }
         function seedScenery() {
           plants = [];
-          for (let i = 0; i < 7; i++)
-            plants.push({
-              x: Math.random() * W,
-              h: 16 + Math.random() * 30,
-              w: 10 + Math.random() * 16,
-              hue: Math.random(),
-            });
+          for (let i = 0; i < 7; i++) plants.push(newPlant());
+        }
+
+        /* =================== HABITAT POPULATION =================== */
+        function newCreature(x) {
+          const px = x === undefined ? 30 + Math.random() * (W - 60) : x;
+          return {
+            x: px,
+            tx: 30 + Math.random() * (W - 60),
+            dir: Math.random() < 0.5 ? -1 : 1,
+            speed: 0,
+            wait: Math.random() * 0.8,
+            legPhase: Math.random() * TAU,
+          };
+        }
+        // Every creature arrives with a little greenery around it, so a busy habitat
+        // looks lived-in rather than just crowded.
+        function addCreature() {
+          if (creatures.length >= MAX_CREATURES) return false;
+          const c = newCreature();
+          creatures.push(c);
+          plants.push(newPlant(c.x - 30 + Math.random() * 60));
+          plants.push(newPlant(c.x - 60 + Math.random() * 120));
+          return true;
+        }
+        function clearCreatures() {
+          creatures = [];
         }
 
         /* =================== WATER MODEL =================== */
-        // The pipe drips at a rate set by the student. Drops fall, land, and feed a
-        // puddle that spreads outward and drains away when the leak is closed — so the
-        // rover's reading depends on *where it is standing*, not just on the leak.
+        // Every open pipe drips at the shared rate. Drops fall, land, and feed the
+        // puddle belonging to the pipe they came from — each puddle spreads outward and
+        // drains away once its pipe is shut. The rover's reading therefore depends on
+        // *where it is standing*, not on how many pipes happen to be leaking.
+        const puddleRadius = (p) =>
+          Math.min(W * 0.34, Math.sqrt(p.vol) * 7.5 * S);
+        const puddleDepth = (p) => clamp(p.vol / 260, 0, 1);
+
+        // Depth profile of one puddle: deepest at the centre, tapering to nothing at
+        // the rim. Returns 0..1.
+        function depthAt(p, x) {
+          const R = puddleRadius(p);
+          if (R <= 0) return 0;
+          return Math.max(0, 1 - Math.abs(x - p.cx) / R) * puddleDepth(p);
+        }
+        // Overlapping puddles must not stack into an impossible reading, so the probe
+        // reports the deepest water under it rather than the sum.
+        function waterDepthAt(x) {
+          let d = 0;
+          for (const p of pipes) d = Math.max(d, depthAt(p, x));
+          return d;
+        }
+        const openPipes = () => pipes.filter((p) => p.on).length;
+
         function stepWater(dt) {
-          leak.t -= dt;
           const rate = leakLevel / 100;
-          if (rate > 0) {
-            const interval = lerp(0.55, 0.045, rate);
-            if (leak.t <= 0) {
-              leak.t = interval;
+          const interval = lerp(0.55, 0.045, rate);
+          for (const p of pipes) {
+            if (!p.on || rate <= 0) {
+              p.t = 0;
+              continue;
+            }
+            p.t -= dt;
+            if (p.t <= 0) {
+              p.t = interval;
               drops.push({
-                x: leak.x + (Math.random() - 0.5) * 3,
+                pipe: p,
+                x: p.x + (Math.random() - 0.5) * 3,
                 y: ceilY + 26,
                 vy: 0,
               });
             }
-          } else leak.t = 0;
+          }
 
           for (const d of drops) {
             d.vy += 520 * dt;
             d.y += d.vy * dt;
           }
-          const roverTop = floorY - 30;
+          const roverTop = floorY - 30 * S;
           const survivors = [];
           for (const d of drops) {
             // A drop landing on the rover's probe gives the sensor a direct spike.
-            const onRover = d.y >= roverTop && Math.abs(d.x - rover.x) < 24;
+            const onRover = d.y >= roverTop && Math.abs(d.x - rover.x) < 24 * S;
             if (onRover) {
               splashBoost = Math.min(1, splashBoost + 0.42);
               ripples.push({ x: d.x, y: roverTop, r: 2, life: 0, onBot: true });
               continue;
             }
             if (d.y >= floorY) {
-              puddle.vol += 1.0;
-              puddle.cx = lerp(puddle.cx, d.x, 0.06);
+              d.pipe.vol += 1.0;
+              d.pipe.cx = lerp(d.pipe.cx, d.x, 0.06);
               ripples.push({ x: d.x, y: floorY, r: 2, life: 0, onBot: false });
               continue;
             }
@@ -1503,7 +1464,7 @@
           }
           drops = survivors;
 
-          puddle.vol = Math.max(0, puddle.vol - dt * 3.2); // drainage / evaporation
+          for (const p of pipes) p.vol = Math.max(0, p.vol - dt * 3.2); // drainage
           splashBoost = Math.max(0, splashBoost - dt * 0.85);
 
           for (const r of ripples) {
@@ -1512,60 +1473,59 @@
           }
           ripples = ripples.filter((r) => r.life < 0.85);
 
-          // Depth profile: deepest at the centre, tapering to nothing at the rim.
-          const R = puddleRadius();
-          const d = Math.abs(rover.x - puddle.cx);
-          const depth = R > 0 ? Math.max(0, 1 - d / R) * puddleDepth() : 0;
-          const target = clamp(depth * 100 + splashBoost * 45, 0, 100);
+          const target = clamp(
+            waterDepthAt(rover.x) * 100 + splashBoost * 45,
+            0,
+            100,
+          );
           waterRaw = lerp(waterRaw, target, 1 - Math.pow(0.02, dt)); // sensors settle, they don't snap
           waterWet = waterRaw > waterThr;
         }
-        const puddleRadius = () =>
-          Math.min(W * 0.46, Math.sqrt(puddle.vol) * 7.5);
-        const puddleDepth = () => clamp(puddle.vol / 260, 0, 1);
 
-        /* =================== CREATURE + PIR =================== */
+        /* =================== CREATURES + PIR =================== */
         function stepCreature(dt) {
-          if (!creatureOn) {
-            creature.speed = 0;
-            return;
-          }
           const maxSpeed = (moveLevel / 100) * 90;
-          if (maxSpeed < 0.5) {
-            creature.speed = 0;
-            return;
-          } // present, but standing still
-
-          if (creature.wait > 0) {
-            creature.wait -= dt;
-            creature.speed = 0;
-            return;
+          for (const c of creatures) {
+            if (maxSpeed < 0.5) {
+              c.speed = 0;
+              continue;
+            } // present, but standing still
+            if (c.wait > 0) {
+              c.wait -= dt;
+              c.speed = 0;
+              continue;
+            }
+            const dx = c.tx - c.x;
+            if (Math.abs(dx) < 6) {
+              c.tx = 30 + Math.random() * (W - 60);
+              c.wait = Math.random() * 1.4;
+              c.speed = 0;
+              continue;
+            }
+            c.dir = Math.sign(dx);
+            c.speed = maxSpeed;
+            c.x = clamp(c.x + c.dir * maxSpeed * dt, 26, W - 26);
+            c.legPhase += dt * maxSpeed * 0.13;
           }
-          const dx = creature.tx - creature.x;
-          if (Math.abs(dx) < 6) {
-            creature.tx = 30 + Math.random() * (W - 60);
-            creature.wait = Math.random() * 1.4;
-            creature.speed = 0;
-            return;
-          }
-          creature.dir = Math.sign(dx);
-          creature.speed = maxSpeed;
-          creature.x += creature.dir * maxSpeed * dt;
-          creature.x = clamp(creature.x, 26, W - 26);
-          creature.legPhase += dt * maxSpeed * 0.13;
         }
 
         // A PIR does not see warm bodies — it sees *changes* in infrared. Something
         // inside the cone that is not moving produces no change and no trigger, which
-        // is the single most misunderstood thing about these sensors.
+        // is the single most misunderstood thing about these sensors. With several
+        // creatures about, any one of them moving in the cone is enough to trip it.
         function stepPIR(dt) {
-          pirRange = 90 + pirSens * 1.7;
+          pirRange = (90 + pirSens * 1.7) * S;
           const minSpeed = lerp(34, 3, pirSens / 100);
-          const dx = creature.x - rover.x;
-          const inFront = Math.sign(dx) === rover.dir || Math.abs(dx) < 12;
-          const inRange = Math.abs(dx) < pirRange;
-          pirRaw =
-            creatureOn && inRange && inFront && creature.speed > minSpeed;
+          let seen = false;
+          for (const c of creatures) {
+            const dx = c.x - rover.x;
+            const inFront = Math.sign(dx) === rover.dir || Math.abs(dx) < 12;
+            if (inFront && Math.abs(dx) < pirRange && c.speed > minSpeed) {
+              seen = true;
+              break;
+            }
+          }
+          pirRaw = seen;
 
           // Real modules hold their output HIGH for a set time after the last trigger.
           if (pirRaw) pirHold = PIR_HOLD;
@@ -1573,16 +1533,41 @@
           pirOut = pirRaw || pirHold > 0;
         }
 
+        // Distance to whichever creature is closest, for the telemetry readout.
+        function nearestCreatureDist() {
+          let best = null;
+          for (const c of creatures) {
+            const d = Math.abs(c.x - rover.x);
+            if (best === null || d < best) best = d;
+          }
+          return best;
+        }
+
         /* =================== ROVER =================== */
+        // Held keys steer by hand; with none held the rover either resumes its
+        // unattended sweep or sits parked, depending on the patrol switch.
+        function driveInput() {
+          const left = keysDown.has("left") ? -1 : 0;
+          const right = keysDown.has("right") ? 1 : 0;
+          return left + right;
+        }
         function stepRover(dt) {
-          if (!patrol || dragging) return;
-          rover.x += rover.dir * rover.speed * dt;
-          if (rover.x > W - 46) {
-            rover.x = W - 46;
+          if (dragging) return;
+          const drive = driveInput();
+          const e = edgeX();
+          if (drive !== 0) {
+            rover.dir = drive;
+            rover.x = clamp(rover.x + drive * DRIVE_SPEED * S * dt, e, W - e);
+            return;
+          }
+          if (!patrol) return;
+          rover.x += rover.dir * PATROL_SPEED * S * dt;
+          if (rover.x > W - e) {
+            rover.x = W - e;
             rover.dir = -1;
           }
-          if (rover.x < 46) {
-            rover.x = 46;
+          if (rover.x < e) {
+            rover.x = e;
             rover.dir = 1;
           }
         }
@@ -1620,7 +1605,7 @@
               kind: "motion",
               icon: "⚠",
               head: "Motion detected",
-              msg: `Something is moving ${Math.round(Math.abs(creature.x - rover.x))} px from the rover.`,
+              msg: `Something is moving ${Math.round(nearestCreatureDist() ?? 0)} px from the rover.`,
             };
           return {
             kind: "crit",
@@ -1650,7 +1635,6 @@
           }
         }
         function dispatch(a) {
-          const type = ALERT_TYPES[alertType];
           cooldown = ALERT_COOLDOWN;
           lastAlertAt = uptime;
           uplinkFlash = 0.7;
@@ -1662,35 +1646,6 @@
             t: uptime,
           });
           if (feedItems.length > 14) feedItems.pop();
-          renderFeed();
-          if (type.toast) showToast(a);
-        }
-        function showToast(a) {
-          $("toastIcon").textContent = a.icon;
-          $("toastH").textContent = "AquaNova — " + a.head;
-          $("toastM").textContent = a.msg;
-          $("toast").classList.add("show");
-          toastTimer = 2.6;
-        }
-        function renderFeed() {
-          const box = $("feed");
-          if (!feedItems.length) {
-            box.innerHTML =
-              '<div class="empty">No alerts yet.<br>Trigger a sensor to see one arrive.</div>';
-            return;
-          }
-          box.innerHTML = feedItems
-            .map(
-              (f) =>
-                `<div class="n ${f.kind}"><div class="h">${f.head}</div><div class="m">${f.msg}</div>` +
-                `<div class="t">${fmtAgo(uptime - f.t)}</div></div>`,
-            )
-            .join("");
-        }
-        function fmtAgo(s) {
-          if (s < 1.5) return "just now";
-          if (s < 60) return Math.round(s) + " s ago";
-          return Math.floor(s / 60) + " min ago";
         }
 
         /* =================== SIM STEP =================== */
@@ -1701,10 +1656,6 @@
           stepWater(dt);
           stepPIR(dt);
           stepAlerts(dt);
-          if (toastTimer > 0) {
-            toastTimer -= dt;
-            if (toastTimer <= 0) $("toast").classList.remove("show");
-          }
         }
 
         /* =================== HABITAT RENDER =================== */
@@ -1755,7 +1706,7 @@
           }
 
           drawPlants();
-          drawPipe();
+          drawPipes();
 
           // --- floor ---
           const fg = zx.createLinearGradient(0, floorY, 0, H);
@@ -1770,10 +1721,10 @@
           zx.lineTo(W, floorY);
           zx.stroke();
 
-          drawPuddle();
+          drawPuddles();
           drawRipples();
           drawDrops();
-          if (creatureOn) drawCreature();
+          for (const c of creatures) drawCreature(c);
           drawPIRCone();
           drawRover();
           drawHUD();
@@ -1786,48 +1737,60 @@
               base = floorY;
             zx.strokeStyle =
               p.hue > 0.5 ? "rgba(52,180,140,.55)" : "rgba(90,190,120,.45)";
-            zx.lineWidth = 3;
+            zx.lineWidth = 3 * S;
             zx.lineCap = "round";
+            const ph = p.h * S,
+              pw = p.w * S;
             for (let i = -1; i <= 1; i++) {
               zx.beginPath();
               zx.moveTo(x, base);
               zx.quadraticCurveTo(
-                x + i * p.w,
-                base - p.h * 0.6,
-                x + i * p.w * 1.6,
-                base - p.h,
+                x + i * pw,
+                base - ph * 0.6,
+                x + i * pw * 1.6,
+                base - ph,
               );
               zx.stroke();
             }
           }
         }
-        function drawPipe() {
-          const y = ceilY + 16;
+        function drawPipes() {
+          const y = ceilY + 16 * S;
           zx.fillStyle = "#2b4a56";
           zx.strokeStyle = "#54808f";
           zx.lineWidth = 2;
-          roundRect(zx, 0, y - 9, W, 18, 4);
+          roundRect(zx, 0, y - 9 * S, W, 18 * S, 4);
           zx.fill();
           zx.stroke();
-          // the leaking joint
-          zx.fillStyle = "#3d6272";
-          roundRect(zx, leak.x - 15, y - 13, 30, 26, 5);
-          zx.fill();
-          zx.stroke();
-          if (leakLevel > 0) {
-            zx.fillStyle =
-              "rgba(56,189,248," +
-              (0.35 + 0.4 * Math.sin(tNow * 7) * 0.5 + 0.2) +
-              ")";
-            zx.beginPath();
-            zx.arc(leak.x, y + 11, 3.4, 0, TAU);
+
+          for (const p of pipes) {
+            const live = p.on && leakLevel > 0;
+            // the joint itself — lit when it is running
+            zx.fillStyle = p.on ? "#4d7f93" : "#3d6272";
+            zx.strokeStyle = live ? "#7fd4f0" : "#54808f";
+            zx.lineWidth = 2;
+            roundRect(zx, p.x - 15 * S, y - 13 * S, 30 * S, 26 * S, 5);
             zx.fill();
+            zx.stroke();
+            if (live) {
+              zx.fillStyle =
+                "rgba(56,189,248," +
+                (0.35 + 0.4 * Math.sin(tNow * 7 + p.fx * 9) * 0.5 + 0.2) +
+                ")";
+              zx.beginPath();
+              zx.arc(p.x, y + 11 * S, 3.4 * S, 0, TAU);
+              zx.fill();
+            }
+            zx.fillStyle = p.on
+              ? "rgba(125,211,252,.95)"
+              : "rgba(150,205,225,.5)";
+            zx.font = `700 ${Math.round(11 * S)}px "Orbitron",sans-serif`;
+            zx.textAlign = "center";
+            zx.fillText(p.label, p.x, y + 4 * S);
+            zx.font = `600 ${Math.round(9 * S)}px "Rajdhani",sans-serif`;
+            zx.fillText(p.on ? "LEAKING" : "SEALED", p.x, y - 19 * S);
+            zx.textAlign = "left";
           }
-          zx.fillStyle = "rgba(150,205,225,.75)";
-          zx.font = '700 10px "Orbitron",sans-serif';
-          zx.textAlign = "center";
-          zx.fillText("LEAK", leak.x, y - 19);
-          zx.textAlign = "left";
         }
         function drawDrops() {
           zx.fillStyle = "#7dd3fc";
@@ -1836,8 +1799,8 @@
             zx.ellipse(
               d.x,
               d.y,
-              2.6,
-              4.6 + Math.min(4, d.vy * 0.012),
+              2.6 * S,
+              (4.6 + Math.min(4, d.vy * 0.012)) * S,
               0,
               0,
               TAU,
@@ -1845,61 +1808,69 @@
             zx.fill();
           }
         }
-        function drawPuddle() {
-          const R = puddleRadius();
-          if (R < 2) return;
-          const depth = puddleDepth();
-          const grd = zx.createLinearGradient(0, floorY - 4, 0, floorY + 12);
-          grd.addColorStop(0, `rgba(56,189,248,${0.3 + 0.45 * depth})`);
-          grd.addColorStop(1, `rgba(14,116,180,${0.2 + 0.4 * depth})`);
-          zx.fillStyle = grd;
-          zx.beginPath();
-          zx.ellipse(puddle.cx, floorY + 3, R, 4 + 9 * depth, 0, 0, TAU);
-          zx.fill();
-          // surface shimmer
-          zx.strokeStyle = `rgba(190,235,255,${0.2 + 0.25 * depth})`;
-          zx.lineWidth = 1.4;
-          zx.beginPath();
-          for (let i = 0; i <= 26; i++) {
-            const t = i / 26,
-              x = puddle.cx - R + 2 * R * t;
-            const y = floorY + 1 + Math.sin(t * 9 + tNow * 2.4) * 1.7;
-            i === 0 ? zx.moveTo(x, y) : zx.lineTo(x, y);
+        function drawPuddles() {
+          for (const p of pipes) {
+            const R = puddleRadius(p);
+            if (R < 2) continue;
+            const depth = puddleDepth(p);
+            const grd = zx.createLinearGradient(
+              0,
+              floorY - 4 * S,
+              0,
+              floorY + 12 * S,
+            );
+            grd.addColorStop(0, `rgba(56,189,248,${0.3 + 0.45 * depth})`);
+            grd.addColorStop(1, `rgba(14,116,180,${0.2 + 0.4 * depth})`);
+            zx.fillStyle = grd;
+            zx.beginPath();
+            zx.ellipse(p.cx, floorY + 3 * S, R, (4 + 9 * depth) * S, 0, 0, TAU);
+            zx.fill();
+            // surface shimmer
+            zx.strokeStyle = `rgba(190,235,255,${0.2 + 0.25 * depth})`;
+            zx.lineWidth = 1.4 * S;
+            zx.beginPath();
+            for (let i = 0; i <= 26; i++) {
+              const t = i / 26,
+                x = p.cx - R + 2 * R * t;
+              const y = floorY + (1 + Math.sin(t * 9 + tNow * 2.4) * 1.7) * S;
+              i === 0 ? zx.moveTo(x, y) : zx.lineTo(x, y);
+            }
+            zx.stroke();
           }
-          zx.stroke();
         }
         function drawRipples() {
           for (const r of ripples) {
             const a = 1 - r.life / 0.85;
             zx.strokeStyle = `rgba(160,225,255,${a * 0.7})`;
-            zx.lineWidth = 1.6;
+            zx.lineWidth = 1.6 * S;
             zx.beginPath();
-            zx.ellipse(r.x, r.y + 2, r.r, r.r * 0.32, 0, 0, TAU);
+            zx.ellipse(r.x, r.y + 2 * S, r.r * S, r.r * 0.32 * S, 0, 0, TAU);
             zx.stroke();
           }
         }
 
-        function drawCreature() {
-          const x = creature.x,
-            y = floorY;
-          const walk = creature.speed > 0.5;
-          const bob = walk ? Math.sin(creature.legPhase * 2) * 1.6 : 0;
-          const bodyY = y - 17 + bob;
-          zx.save();
-          zx.translate(x, 0);
-          zx.scale(creature.dir || 1, 1);
+        function drawCreature(c) {
+          const walk = c.speed > 0.5;
+          const bob = walk ? Math.sin(c.legPhase * 2) * 1.6 : 0;
+          const bodyY = -17 + bob; // relative to the creature's feet on the floor
 
+          zx.save();
+          zx.translate(c.x, floorY);
+          zx.scale(S, S);
+
+          zx.save();
+          zx.scale(c.dir || 1, 1);
           // legs
           zx.strokeStyle = "#2f9e6b";
           zx.lineWidth = 2.6;
           zx.lineCap = "round";
           for (let i = -1; i <= 1; i += 2) {
             const ph = walk
-              ? Math.sin(creature.legPhase + (i > 0 ? 0 : Math.PI)) * 4
+              ? Math.sin(c.legPhase + (i > 0 ? 0 : Math.PI)) * 4
               : 0;
             zx.beginPath();
             zx.moveTo(i * 5, bodyY + 7);
-            zx.lineTo(i * 5 + ph, y);
+            zx.lineTo(i * 5 + ph, 0);
             zx.stroke();
           }
           // body
@@ -1927,7 +1898,7 @@
           zx.moveTo(-13, bodyY);
           zx.quadraticCurveTo(
             -24,
-            bodyY - 4 - (walk ? Math.sin(creature.legPhase * 2) * 3 : 0),
+            bodyY - 4 - (walk ? Math.sin(c.legPhase * 2) * 3 : 0),
             -30,
             bodyY + 3,
           );
@@ -1939,28 +1910,28 @@
             zx.strokeStyle = "rgba(245,158,11,.75)";
             zx.lineWidth = 2;
             for (let i = 1; i <= 2; i++) {
-              const off = -creature.dir * (18 + i * 7);
+              const off = -c.dir * (18 + i * 7);
               zx.beginPath();
-              zx.moveTo(x + off, bodyY - 6);
-              zx.lineTo(x + off - creature.dir * 5, bodyY);
-              zx.lineTo(x + off, bodyY + 6);
+              zx.moveTo(off, bodyY - 6);
+              zx.lineTo(off - c.dir * 5, bodyY);
+              zx.lineTo(off, bodyY + 6);
               zx.stroke();
             }
           } else {
             zx.fillStyle = "rgba(150,190,205,.8)";
             zx.font = '600 11px "Rajdhani",sans-serif';
             zx.textAlign = "center";
-            zx.fillText("(still)", x, bodyY - 18);
+            zx.fillText("(still)", 0, bodyY - 18);
             zx.textAlign = "left";
           }
+          zx.restore();
         }
 
         function drawPIRCone() {
-          const x = rover.x,
-            y = floorY - 30;
+          const y = floorY - 30 * S;
           const half = 0.62; // ~70 degrees total, like a real lens
           zx.save();
-          zx.translate(x, y);
+          zx.translate(rover.x, y);
           zx.scale(rover.dir, 1);
           const grd = zx.createRadialGradient(0, 0, 6, 0, 0, pirRange);
           const hot = pirOut;
@@ -1978,7 +1949,7 @@
           zx.strokeStyle = hot
             ? "rgba(245,158,11,.65)"
             : "rgba(120,200,225,.35)";
-          zx.lineWidth = 1.5;
+          zx.lineWidth = 1.5 * S;
           zx.beginPath();
           zx.moveTo(0, 0);
           zx.arc(0, 0, pirRange, -half, half);
@@ -1988,9 +1959,10 @@
         }
 
         function drawRover() {
-          const x = rover.x,
-            y = floorY;
           const wet = waterWet;
+          zx.save();
+          zx.translate(rover.x, floorY);
+          zx.scale(S, S); // everything below is in the rover's own 1:1 units
 
           // wheels
           zx.fillStyle = "#12333f";
@@ -1998,16 +1970,16 @@
           zx.lineWidth = 2;
           for (const wx of [-15, 15]) {
             zx.beginPath();
-            zx.arc(x + wx, y - 8, 8, 0, TAU);
+            zx.arc(wx, -8, 8, 0, TAU);
             zx.fill();
             zx.stroke();
             zx.strokeStyle = "#2b6274";
             zx.lineWidth = 1.5;
             zx.beginPath();
-            zx.moveTo(x + wx, y - 8);
+            zx.moveTo(wx, -8);
             zx.lineTo(
-              x + wx + Math.cos(rover.x * 0.06) * 5,
-              y - 8 + Math.sin(rover.x * 0.06) * 5,
+              wx + Math.cos(rover.x * 0.06) * 5,
+              -8 + Math.sin(rover.x * 0.06) * 5,
             );
             zx.stroke();
             zx.strokeStyle = "#4f93a8";
@@ -2017,14 +1989,14 @@
           zx.fillStyle = "#17414f";
           zx.strokeStyle = "#5cc0d8";
           zx.lineWidth = 2.5;
-          roundRect(zx, x - 26, y - 34, 52, 24, 7);
+          roundRect(zx, -26, -34, 52, 24, 7);
           zx.fill();
           zx.stroke();
 
           // PIR dome on top
           zx.fillStyle = pirOut ? "#f6c76a" : "#cfe6ee";
           zx.beginPath();
-          zx.arc(x + rover.dir * 8, y - 36, 7, Math.PI, 0);
+          zx.arc(rover.dir * 8, -36, 7, Math.PI, 0);
           zx.fill();
           zx.strokeStyle = "#8fb9c6";
           zx.lineWidth = 1.5;
@@ -2033,7 +2005,7 @@
             zx.shadowColor = "#f59e0b";
             zx.shadowBlur = 14;
             zx.beginPath();
-            zx.arc(x + rover.dir * 8, y - 36, 7, Math.PI, 0);
+            zx.arc(rover.dir * 8, -36, 7, Math.PI, 0);
             zx.fill();
             zx.shadowBlur = 0;
           }
@@ -2045,23 +2017,23 @@
               : "#4a1526"
             : "#22c55e";
           zx.beginPath();
-          zx.arc(x - 16, y - 30, 3, 0, TAU);
+          zx.arc(-16, -30, 3, 0, TAU);
           zx.fill();
 
           // water probe hanging to the floor
           zx.strokeStyle = "#8fb9c6";
           zx.lineWidth = 2;
           zx.beginPath();
-          zx.moveTo(x - rover.dir * 14, y - 14);
-          zx.lineTo(x - rover.dir * 14, y - 2);
+          zx.moveTo(-rover.dir * 14, -14);
+          zx.lineTo(-rover.dir * 14, -2);
           zx.stroke();
           zx.fillStyle = wet ? "#38bdf8" : "#39606e";
-          roundRect(zx, x - rover.dir * 14 - 3.5, y - 6, 7, 7, 2);
+          roundRect(zx, -rover.dir * 14 - 3.5, -6, 7, 7, 2);
           zx.fill();
           if (wet) {
             zx.shadowColor = "#38bdf8";
             zx.shadowBlur = 12;
-            roundRect(zx, x - rover.dir * 14 - 3.5, y - 6, 7, 7, 2);
+            roundRect(zx, -rover.dir * 14 - 3.5, -6, 7, 7, 2);
             zx.fill();
             zx.shadowBlur = 0;
           }
@@ -2069,18 +2041,27 @@
           zx.fillStyle = "#9fd6e6";
           zx.font = '700 10px "Orbitron",sans-serif';
           zx.textAlign = "center";
-          zx.fillText("AQUANOVA", x, y - 42);
+          zx.fillText("AQUANOVA", 0, -42);
           zx.textAlign = "left";
+          zx.restore();
         }
 
         function drawHUD() {
           zx.font = '700 11px "Orbitron",sans-serif';
           zx.textAlign = "left";
           zx.fillStyle = "rgba(140,215,235,.85)";
-          zx.fillText("HABITAT ZONE A · AQUANOVA PATROL", 14, 22);
+          zx.fillText(
+            "HABITAT ZONE A · " + (patrol ? "AUTO PATROL" : "MANUAL DRIVE"),
+            14,
+            22,
+          );
           zx.font = '600 11px "Rajdhani",sans-serif';
           zx.fillStyle = "rgba(150,190,205,.7)";
-          zx.fillText("Drag the rover along the floor to move it", 14, H - 12);
+          zx.fillText(
+            "◀ A / D ▶ drive · P patrol · click a ceiling pipe to open or seal it",
+            14,
+            H - 12,
+          );
 
           zx.textAlign = "right";
           zx.font = '800 13px "Orbitron",sans-serif';
@@ -2308,24 +2289,40 @@
           el.style.setProperty("--fill", p + "%");
         }
 
-        function updateDOM() {
-          // banner
-          const b = $("banner"),
-            chip = $("bannerChip");
-          b.classList.toggle("alarm", alarm);
-          chip.className = "chip" + (alarm ? " alarm" : "");
-          chip.textContent = alarm ? "ALARM" : "SAFE";
-          $("bannerTxt").textContent = alarm
-            ? alertMessage().msg
-            : creatureOn && creature.speed < 0.5
-              ? "All clear — the creature is present but holding still, so the PIR sees nothing."
-              : "All clear — patrolling the habitat.";
+        // Fastest thing moving in the habitat right now, for the readout.
+        function creatureTopSpeed() {
+          let v = 0;
+          for (const c of creatures) v = Math.max(v, c.speed);
+          return v;
+        }
 
-          // rover lamps
+        function updateDOM() {
+          // --- hero HUD ---
+          const chip = $("hudChip");
+          chip.className = "hudchip" + (alarm ? " alarm" : "");
+          chip.textContent = alarm ? "ALARM" : "SAFE";
+          const mode = $("hudMode");
+          mode.className = "hudchip mode" + (patrol ? "" : " manual");
+          mode.textContent = patrol ? "PATROL" : "MANUAL";
+
+          const msg = $("hudMsg");
+          msg.classList.toggle("alarm", alarm);
+          msg.textContent = alarm
+            ? alertMessage().msg
+            : !creatures.length
+              ? "All clear — the habitat is empty."
+              : creatureTopSpeed() < 0.5
+                ? "All clear — the creatures are present but holding still, so the PIR sees nothing."
+                : patrol
+                  ? "All clear — patrolling the habitat."
+                  : "All clear — you have the wheel.";
+
           $("lampMotion").className = "bulb" + (pirOut ? " hot" : "");
           $("lampMotionV").textContent = pirOut ? "DETECTED" : "CLEAR";
           $("lampWater").className = "bulb" + (waterWet ? " wet" : "");
           $("lampWaterV").textContent = waterWet ? "WET" : "DRY";
+
+          // --- uplink ---
           $("uplinkTxt").textContent = !notifyOn
             ? "MUTED"
             : uplinkFlash > 0
@@ -2336,27 +2333,12 @@
           $("uplinkNote").textContent = !notifyOn
             ? "Notifications are switched off."
             : uplinkFlash > 0
-              ? "Pushing an alert to the Blynk cloud."
+              ? "Pushing an alert to the cloud."
               : cooldown > 0
                 ? `Rate limited for ${cooldown.toFixed(1)}s.`
                 : ALERT_TYPES[alertType].note;
 
-          // phone widgets
-          $("wMotion").className = "biglamp" + (pirOut ? " hot" : "");
-          $("wMotionV").textContent = pirOut ? "DETECTED" : "Clear";
-          $("wWater").className = "biglamp" + (waterWet ? " wet" : "");
-          $("wWaterV").textContent = waterWet ? "WET" : "Dry";
-          setFill($("wLevel"), waterRaw);
-          $("wThr").style.left = waterThr + "%";
-          $("wLevelV").textContent =
-            Math.round((waterRaw / 100) * MAX_ANALOG) + " / " + MAX_ANALOG;
-          const z = $("wZone");
-          z.textContent = alarm ? "ALARM" : "SAFE";
-          z.className = "v " + (alarm ? "alarm" : "safe");
-          $("phoneOnline").textContent = notifyOn ? "ONLINE" : "MUTED";
-          $("phoneOnline").style.color = notifyOn ? "var(--blynk)" : "#ff6b85";
-
-          // telemetry
+          // --- telemetry ---
           $("waterVal").textContent =
             Math.round((waterRaw / 100) * MAX_ANALOG) +
             "  (" +
@@ -2364,10 +2346,11 @@
             "%)";
           setFill($("waterFill"), waterRaw);
           $("waterThr").style.left = waterThr + "%";
-          const d = creatureOn ? Math.abs(creature.x - rover.x) : null;
+          const d = nearestCreatureDist();
           $("distVal").textContent =
-            d === null ? "— (no creature)" : Math.round(d) + " px";
-          $("speedVal").textContent = Math.round(creature.speed) + " px/s";
+            d === null ? "— (habitat empty)" : Math.round(d) + " px";
+          $("speedVal").textContent =
+            Math.round(creatureTopSpeed()) + " px/s";
 
           $("statPir").textContent = pirOut
             ? pirRaw
@@ -2377,27 +2360,45 @@
           $("statPir").className = "v " + (pirOut ? "w" : "n");
           $("statHold").textContent = pirHold.toFixed(1) + " s";
           $("statRange").textContent = Math.round(pirRange) + " px";
+          $("statPipes").textContent = openPipes() + " / " + pipes.length;
           $("statSent").textContent = sentCount;
           $("statThrottled").textContent = throttledCount;
-          $("statUptime").textContent = Math.floor(uptime) + " s";
 
-          // verdict
+          // --- dock state that several things can change ---
+          syncPipeButtons();
+          $("creatureCount").innerHTML =
+            "<span>Creatures</span><b>" +
+            creatures.length +
+            " / " +
+            MAX_CREATURES +
+            "</b>";
+          $("keyLeft").classList.toggle("hot", keysDown.has("left"));
+          $("keyRight").classList.toggle("hot", keysDown.has("right"));
+          $("driveHint").textContent = patrol
+            ? "The rover sweeps the habitat on its own. Press a drive key to take the wheel."
+            : "You have the wheel. Press P to hand it back to the auto-sweep.";
+
+          // --- verdict ---
           const v = $("verdictBox");
           if (alarm) {
             v.className = "verdict bad";
             v.innerHTML =
-              `<b>${CONDITIONS[condition].label}</b> satisfied — ${alertMessage().head}. ` +
+              `<b>${alertMessage().head}</b>. ` +
               (notifyOn
-                ? "Blynk was notified."
+                ? "An alert went out."
                 : "But notifications are OFF, so nothing was sent.");
           } else if (pirOut || waterWet) {
             v.className = "verdict warn";
             const which = pirOut ? "motion" : "water";
-            v.innerHTML = `The <b>${which}</b> sensor is triggered, but <b>${CONDITIONS[condition].label}</b> is not satisfied — no alarm.`;
-          } else if (creatureOn && creature.speed < 0.5) {
+            v.innerHTML = `The <b>${which}</b> sensor is triggered, but the alert rule is not satisfied — no alarm.`;
+          } else if (creatures.length && creatureTopSpeed() < 0.5) {
             v.className = "verdict warn";
             v.innerHTML =
-              "A creature is inside the cone but <b>not moving</b>. A PIR sensor reads change in infrared, so it stays silent.";
+              "Creatures are inside the cone but <b>not moving</b>. A PIR sensor reads change in infrared, so it stays silent.";
+          } else if (openPipes() > 0 && !waterWet) {
+            v.className = "verdict warn";
+            v.innerHTML =
+              "Water is on the floor, but the probe is <b>not standing in it</b>. Drive the rover over a puddle to read it.";
           } else {
             v.className = "verdict ok";
             v.textContent = "Both sensors quiet. Nothing to report.";
@@ -2413,8 +2414,22 @@
             y: (e.clientY - r.top) * (H / r.height),
           };
         }
+        // A click up on the ceiling rail belongs to a pipe; anywhere else it is the
+        // student grabbing the rover.
+        function pipeAt(p) {
+          if (p.y > ceilY + 36) return null;
+          for (const pipe of pipes)
+            if (Math.abs(p.x - pipe.x) < 24) return pipe;
+          return null;
+        }
         zone.addEventListener("pointerdown", (e) => {
           const p = zonePos(e);
+          const pipe = pipeAt(p);
+          if (pipe) {
+            pipe.on = !pipe.on;
+            refreshPipeHint();
+            return;
+          }
           dragging = true;
           zone.classList.add("drag");
           zone.setPointerCapture(e.pointerId);
@@ -2432,12 +2447,56 @@
           zone.classList.remove("drag");
         });
         function moveRover(x) {
-          const nx = clamp(x, 46, W - 46);
+          const nx = clamp(x, edgeX(), W - edgeX());
           if (Math.abs(nx - rover.x) > 0.6)
             rover.dir = Math.sign(nx - rover.x) || rover.dir;
           rover.x = nx;
         }
 
+        /* --------- keyboard: hold to drive, P to hand back the wheel --------- */
+        const DRIVE_KEYS = {
+          ArrowLeft: "left",
+          ArrowRight: "right",
+          a: "left",
+          A: "left",
+          d: "right",
+          D: "right",
+        };
+        // Typing in a slider or activating a button must keep working normally.
+        const inControl = (t) =>
+          t &&
+          (t.tagName === "INPUT" ||
+            t.tagName === "TEXTAREA" ||
+            t.tagName === "SELECT");
+
+        window.addEventListener("keydown", (e) => {
+          if (inControl(e.target)) return;
+          const dir = DRIVE_KEYS[e.key];
+          if (dir) {
+            e.preventDefault();
+            keysDown.add(dir);
+            if (patrol) setPatrol(false); // taking the wheel drops the auto-sweep
+            return;
+          }
+          const k = e.key.toLowerCase();
+          if (k === "p") {
+            e.preventDefault();
+            setPatrol(!patrol);
+            return;
+          }
+          if (e.key === " " && e.target.tagName !== "BUTTON") {
+            e.preventDefault();
+            setPaused(!paused);
+          }
+        });
+        window.addEventListener("keyup", (e) => {
+          const dir = DRIVE_KEYS[e.key];
+          if (dir) keysDown.delete(dir);
+        });
+        // A key held while the tab loses focus would otherwise stay stuck down.
+        window.addEventListener("blur", () => keysDown.clear());
+
+        /* --------- dock wiring --------- */
         function bindRange(id, valId, fn, fmt) {
           const el = $(id);
           el.addEventListener("input", (e) => {
@@ -2450,7 +2509,10 @@
         bindRange(
           "r_leak",
           "v_leak",
-          (v) => (leakLevel = v),
+          (v) => {
+            leakLevel = v;
+            refreshPipeHint();
+          },
           (v) => v + "%",
         );
         bindRange(
@@ -2477,10 +2539,43 @@
           });
         }
         segBind("segOled", "oled", (k) => (oledMode = k));
-        segBind("segCond", "cond", (k) => {
-          condition = k;
-          $("condHint").innerHTML = CONDITIONS[k].hint;
-        });
+
+        // One button per pipe, built from the model so the two can never drift apart.
+        function buildPipeButtons() {
+          const grid = $("pipeGrid");
+          grid.innerHTML = "";
+          pipes.forEach((p, idx) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "pipebtn";
+            b.dataset.pipe = idx;
+            b.innerHTML = p.label + "<small>sealed</small>";
+            b.addEventListener("click", () => {
+              p.on = !p.on;
+              refreshPipeHint();
+            });
+            grid.appendChild(b);
+          });
+        }
+        function syncPipeButtons() {
+          const kids = $("pipeGrid").children;
+          for (let i = 0; i < kids.length; i++) {
+            const p = pipes[i];
+            kids[i].classList.toggle("on", p.on);
+            const tag = p.on ? (leakLevel > 0 ? "leaking" : "open") : "sealed";
+            const small = kids[i].querySelector("small");
+            if (small.textContent !== tag) small.textContent = tag;
+          }
+        }
+        function refreshPipeHint() {
+          const n = openPipes();
+          $("pipeHint").innerHTML =
+            n === 0
+              ? "All four pipes are sealed. Open one — or click it on the ceiling."
+              : leakLevel === 0
+                ? `<b>${n}</b> pipe${n > 1 ? "s" : ""} open, but the drip rate is 0 — nothing is coming out yet.`
+                : `<b>${n}</b> of ${pipes.length} pipes leaking. Each grows its own puddle.`;
+        }
 
         function toggleBind(id, get, set, onTxt, offTxt) {
           $(id).addEventListener("click", (e) => {
@@ -2489,20 +2584,15 @@
             e.currentTarget.textContent = get() ? onTxt : offTxt;
           });
         }
-        toggleBind(
-          "creatureBtn",
-          () => creatureOn,
-          (v) => (creatureOn = v),
-          "🦎 Creature in Zone",
-          "🚫 Zone Empty",
-        );
-        toggleBind(
-          "patrolBtn",
-          () => patrol,
-          (v) => (patrol = v),
-          "▶ Patrol Mode",
-          "⏹ Parked",
-        );
+        // Patrol is switched from three places (button, P key, driving away), so it
+        // gets one setter that also repaints the button.
+        function setPatrol(v) {
+          patrol = v;
+          const b = $("patrolBtn");
+          b.classList.toggle("on", patrol);
+          b.textContent = patrol ? "▶ Patrol Mode" : "⏹ Manual Drive";
+        }
+        $("patrolBtn").addEventListener("click", () => setPatrol(!patrol));
         toggleBind(
           "oledBtn",
           () => oledOn,
@@ -2510,18 +2600,22 @@
           "🖥 Display ON",
           "🌑 Display OFF",
         );
-        $("pauseBtn").addEventListener("click", (e) => {
-          paused = !paused;
-          e.currentTarget.classList.toggle("on", paused);
-          e.currentTarget.textContent = paused ? "▶ Resume" : "⏸ Pause";
-        });
+
+        $("addCreatureBtn").addEventListener("click", () => addCreature());
+        $("clearCreatureBtn").addEventListener("click", clearCreatures);
+
+        function setPaused(v) {
+          paused = v;
+          const b = $("pauseBtn");
+          b.classList.toggle("on", paused);
+          b.textContent = paused ? "▶ Resume" : "⏸ Pause";
+        }
+        $("pauseBtn").addEventListener("click", () => setPaused(!paused));
         $("resetBtn").addEventListener("click", resetAll);
 
         function resetAll() {
-          creatureOn = true;
           moveLevel = 55;
           leakLevel = 0;
-          patrol = true;
           pirSens = 55;
           waterThr = 30;
           oledOn = true;
@@ -2529,19 +2623,17 @@
           notifyOn = true;
           alertType = "push";
           condition = "either";
-          paused = false;
 
-          rover = { x: W * 0.55, dir: 1, speed: 52 };
-          creature = {
-            x: W * 0.22,
-            tx: W * 0.22,
-            dir: 1,
-            speed: 0,
-            wait: 0,
-            legPhase: 0,
-          };
-          leak = { x: W * 0.3, t: 0 };
-          puddle = { cx: W * 0.3, vol: 0 };
+          rover = { x: W * 0.55, dir: 1 };
+          keysDown.clear();
+          for (const p of pipes) {
+            p.on = false;
+            p.t = 0;
+            p.vol = 0;
+            p.cx = p.x;
+          }
+          seedScenery();
+          creatures = [newCreature(W * 0.22)];
           drops = [];
           ripples = [];
           pirRaw = false;
@@ -2558,9 +2650,6 @@
           uptime = 0;
           uplinkFlash = 0;
           feedItems = [];
-          toastTimer = 0;
-          $("toast").classList.remove("show");
-          renderFeed();
 
           $("r_move").value = 55;
           $("v_move").textContent = "55";
@@ -2573,25 +2662,14 @@
           ["r_move", "r_leak", "r_pir", "r_thr"].forEach((id) =>
             rangeFill($(id)),
           );
-          [
-            ["segOled", "oled", "status"],
-            ["segCond", "cond", "either"],
-          ].forEach(([id, attr, val]) =>
-            [...$(id).children].forEach((b) =>
-              b.classList.toggle("on", b.dataset[attr] === val),
-            ),
+          [...$("segOled").children].forEach((b) =>
+            b.classList.toggle("on", b.dataset.oled === "status"),
           );
-          $("condHint").innerHTML = CONDITIONS.either.hint;
-          $("creatureBtn").classList.add("on");
-          $("creatureBtn").textContent = "🦎 Creature in Zone";
-          $("patrolBtn").classList.add("on");
-          $("patrolBtn").textContent = "▶ Patrol Mode";
           $("oledBtn").classList.add("on");
           $("oledBtn").textContent = "🖥 Display ON";
-          $("pauseBtn").classList.remove("on");
-          $("pauseBtn").textContent = "⏸ Pause";
-
-          seedScenery();
+          setPatrol(true);
+          setPaused(false);
+          refreshPipeHint();
           layout();
         }
 
@@ -2620,8 +2698,7 @@
         });
 
         /* =================== LOOP =================== */
-        let last = performance.now(),
-          feedTick = 0;
+        let last = performance.now();
         function loop(now) {
           let dt = (now - last) / 1000;
           last = now;
@@ -2629,12 +2706,6 @@
           if (!paused) {
             tNow += dt;
             step(dt);
-          }
-          // Relative timestamps in the feed only need refreshing about once a second.
-          feedTick += dt;
-          if (feedTick > 1) {
-            feedTick = 0;
-            if (feedItems.length) renderFeed();
           }
           drawZone();
           drawOled();
@@ -2647,20 +2718,30 @@
         seedScenery();
         refit();
         if (typeof ResizeObserver !== "undefined") {
-          const ro = new ResizeObserver(refit);
+          // refit() resizes the very canvases being observed, so it has to run
+          // outside the observation callback or the browser reports an
+          // undelivered-notification loop.
+          let refitQueued = false;
+          const ro = new ResizeObserver(() => {
+            if (refitQueued) return;
+            refitQueued = true;
+            requestAnimationFrame(() => {
+              refitQueued = false;
+              refit();
+            });
+          });
           ro.observe(zone);
           ro.observe(oled);
         }
         window.addEventListener("resize", refit);
         rover.x = W * 0.55;
-        creature.x = W * 0.22;
-        creature.tx = W * 0.22;
-        leak.x = W * 0.3;
-        puddle.cx = W * 0.3;
+        creatures = [newCreature(W * 0.22)];
+        layout(); // pipes need the real width before anything is drawn
+        buildPipeButtons();
+        refreshPipeHint();
         ["r_move", "r_leak", "r_pir", "r_thr"].forEach((id) =>
           rangeFill($(id)),
         );
-        $("condHint").innerHTML = CONDITIONS.either.hint;
         requestAnimationFrame(loop);
       })();
     </script>
