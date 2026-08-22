@@ -1772,10 +1772,16 @@
         // two flat plates mounted straight off the servo housing that slide
         // toward/away from the centerline to pinch an object from its two
         // sides, instead of hinged fingers that curl around it.
+        // A held object hangs by its TOP face from the grasp point (see the
+        // frame loop), so the plates are lifted mostly ABOVE that point —
+        // only their lower edge dips down to meet the object's top edge,
+        // matching the reference rig's "pinch the top, let it hang" grip
+        // instead of a tall plate that runs most of the object's height.
         const PADDLE_X = 0.18,
-          PADDLE_LEN = 0.5,
-          PADDLE_H = 0.5,
-          PADDLE_T = 0.1;
+          PADDLE_LEN = 0.66,
+          PADDLE_H = 0.4,
+          PADDLE_T = 0.1,
+          PADDLE_Y = 0.11;
         function makePaddle(side) {
           const group = new THREE.Group();
           const geo = new THREE.BoxGeometry(PADDLE_LEN, PADDLE_H, PADDLE_T);
@@ -1803,7 +1809,7 @@
           // jaw reads as mounted on the mechanism instead of floating in space
           // when open. Built to span local z:0..-side (i.e. back toward the
           // centerline) and rescaled along Z every frame to track the live gap.
-          const linkGeo = new THREE.BoxGeometry(0.06, 0.14, 1);
+          const linkGeo = new THREE.BoxGeometry(0.06, 0.2, 1);
           linkGeo.translate(0, 0, -side * 0.5);
           const link = hoverable(
             new THREE.Mesh(
@@ -1814,7 +1820,7 @@
           );
           group.add(link);
           group.userData.link = link;
-          group.position.set(PADDLE_X, 0, 0);
+          group.position.set(PADDLE_X, PADDLE_Y, 0);
           return group;
         }
         const fingerL = makePaddle(1),
@@ -2010,12 +2016,16 @@
           baseGroup.rotation.y = current.base * DEG;
           shoulderGroup.rotation.z = current.shoulder * DEG;
           elbowGroup.rotation.z = current.elbow * DEG;
-          // Paddles slide sideways rather than rotate — closed gap tracks
-          // whichever object is currently loaded so the plates land right at
-          // its sides, open gap backs off enough to clear the widest object.
-          const closedGap = OBJECT_SHAPES[objectType].r + 0.03;
-          const openGap = closedGap + 0.34;
-          const gap = closedGap + gripAnim * (openGap - closedGap);
+          // Paddles slide sideways rather than rotate. Open is a fixed wide
+          // gap independent of any object — so an empty, approaching gripper
+          // doesn't already look pre-shaped around whatever it's near. Closed
+          // is state-dependent: snug around the held object's own radius when
+          // something was actually picked up, or pinched almost shut when
+          // closed on nothing — so "gripping" and "not gripping" read as
+          // visibly different poses instead of always looking the same width.
+          const OPEN_GAP = 0.75;
+          const closedGap = objectHeld ? OBJECT_SHAPES[objectType].r + 0.06 : 0.08;
+          const gap = closedGap + gripAnim * (OPEN_GAP - closedGap);
           fingerL.position.z = gap;
           fingerR.position.z = -gap;
           fingerL.userData.link.scale.z = gap;
@@ -2023,8 +2033,16 @@
 
           Object.entries(objectMeshes).forEach(([k, m]) => (m.visible = k === objectType));
           const activeMesh = objectMeshes[objectType];
-          if (objectHeld) activeMesh.position.copy(currentGripWorld());
-          else activeMesh.position.copy(objectPos);
+          if (objectHeld) {
+            // Grip it by the top, not the center (like the reference rig) —
+            // the object's TOP face sits at the grasp point and it hangs
+            // down from there, so the jaws/connectors stay fully visible
+            // above an exposed object instead of being buried mid-object.
+            const gp = currentGripWorld();
+            activeMesh.position.set(gp.x, gp.y - OBJECT_SHAPES[objectType].gh, gp.z);
+          } else {
+            activeMesh.position.copy(objectPos);
+          }
 
           controls.update();
           renderer.render(scene, camera);
