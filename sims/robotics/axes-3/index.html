@@ -978,12 +978,10 @@
         // the forearm (L2) — must match graspPoint's local offset inside
         // gripperGroup exactly, or the pads/objects end up positioned short of
         // where the claw really reaches and the arm visually plows into them.
-        // This is the midpoint between the two finger PADS at the closed angle
-        // (traced through fingerRig's pivot + curl transforms), not the wrist —
-        // the pads sit noticeably beyond the wrist because of the finger length
-        // and inward curl, so anchoring here is what keeps a held object nested
-        // between the pincer tips instead of swallowed inside the mechanism.
-        const GRIPPER_REACH = 0.57;
+        // Lands roughly mid-length along the parallel-jaw paddles (which start
+        // at the wrist face and run to PADDLE_LEN beyond it), so a held object
+        // nests inside the jaws instead of hanging off their tip or the wrist.
+        const GRIPPER_REACH = 0.4;
         const RANGE = { base: [-75, 75], shoulder: [0, 90], elbow: [0, 90] };
         const STEP = { base: 15, shoulder: 15, elbow: 15 };
         const HOME_A = { base: 0, shoulder: 70, elbow: 90 };
@@ -1263,8 +1261,17 @@
             clearTimeout(warnTimer);
             els.warnBanner.classList.remove("show");
             logPush("Object placed in drop zone.");
+          } else if (gp.distanceTo(objectZone) <= PICK_RADIUS) {
+            // Released right back over its own pedestal — set it back down on
+            // the round table instead of letting it drop past the pad to the
+            // floor underneath.
+            placed = false;
+            placeObjectOnSurface(objectZoneTableCenter, "objectZonePad");
+            clearTimeout(warnTimer);
+            els.warnBanner.classList.remove("show");
+            logPush("Object set back down in the object zone.");
           } else {
-            // Not over the drop pad — let it fall straight to the floor at that
+            // Not over either pad — let it fall straight to the floor at that
             // XZ, rather than leaving it hanging wherever the gripper opened.
             placed = false;
             placeObjectOnSurface({ x: gp.x, z: gp.z }, "floor");
@@ -1538,12 +1545,18 @@
         /* =================== THREE.JS SCENE =================== */
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xdfe9f7);
-        scene.fog = new THREE.Fog(0xdfe9f7, 15, 30);
+        // Pushed well past the camera's actual working distance so it only
+        // ever fades the far horizon, not the arm/pedestals themselves —
+        // at the old near=15 the whole rig sat inside the fade and read washed-out.
+        scene.fog = new THREE.Fog(0xdfe9f7, 26, 46);
 
         const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
         // Object Zone and Drop Zone sit at mirrored ±75° base angles — same X,
         // opposite Z — so a camera looking mostly along +X sees both pedestals
         // symmetrically instead of one cropped out to favor the L/R badges.
+        // Kept at this distance so both zones stay in frame — the color-fade
+        // complaint was the fog range biting at this distance, not the
+        // distance itself, and is fixed above instead.
         camera.position.set(22, 7, 2);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "default" });
@@ -1738,80 +1751,88 @@
         gripperGroup.position.x = L2;
         elbowGroup.add(gripperGroup);
 
+        // A chunky servo housing (matches the reference rig's black gripper
+        // motor block) with a small brand-accent strip on top.
         const wrist = hoverable(
           new THREE.Mesh(
-            new THREE.BoxGeometry(0.32, 0.28, 0.28),
-            new THREE.MeshStandardMaterial({ color: 0x2a3450, metalness: 0.4, roughness: 0.3 }),
+            new THREE.BoxGeometry(0.4, 0.36, 0.36),
+            new THREE.MeshStandardMaterial({ color: 0x20293f, metalness: 0.45, roughness: 0.3 }),
           ),
           "elbow",
         );
         gripperGroup.add(wrist);
+        const wristAccent = new THREE.Mesh(
+          new THREE.BoxGeometry(0.16, 0.03, 0.2),
+          new THREE.MeshStandardMaterial({ color: 0x8b5cf6, metalness: 0.2, roughness: 0.5 }),
+        );
+        wristAccent.position.set(0, 0.195, 0);
+        gripperGroup.add(wristAccent);
 
-        // A real two-segment claw, not a flat paddle: a dark base blade hinged at
-        // the wrist, then a shorter tip that curls inward toward the centerline
-        // with a dark rubber contact pad at the very end — so it visibly hooks
-        // around whatever it's holding instead of just two bars meeting at a point.
-        function fingerRig(side) {
-          const pivot = new THREE.Group();
-          pivot.position.set(0.08, 0, side * 0.11);
-
-          const baseLen = 0.34;
-          const baseGeo = new THREE.BoxGeometry(baseLen, 0.1, 0.16);
-          baseGeo.translate(baseLen / 2, 0, 0);
-          const baseMesh = hoverable(
+        // A visible parallel-jaw gripper (matching the reference rig's style):
+        // two flat plates mounted straight off the servo housing that slide
+        // toward/away from the centerline to pinch an object from its two
+        // sides, instead of hinged fingers that curl around it.
+        const PADDLE_X = 0.18,
+          PADDLE_LEN = 0.5,
+          PADDLE_H = 0.5,
+          PADDLE_T = 0.1;
+        function makePaddle(side) {
+          const group = new THREE.Group();
+          const geo = new THREE.BoxGeometry(PADDLE_LEN, PADDLE_H, PADDLE_T);
+          geo.translate(PADDLE_LEN / 2, 0, 0);
+          const plate = hoverable(
             new THREE.Mesh(
-              baseGeo,
-              new THREE.MeshStandardMaterial({ color: 0x1c2740, metalness: 0.45, roughness: 0.35 }),
+              geo,
+              new THREE.MeshStandardMaterial({ color: 0x1c2740, metalness: 0.4, roughness: 0.4 }),
             ),
             "elbow",
           );
-          pivot.add(baseMesh);
-
-          const tipPivot = new THREE.Group();
-          tipPivot.position.set(baseLen, 0, 0);
-          tipPivot.rotation.y = -side * 0.55;
-          pivot.add(tipPivot);
-
-          const tipLen = 0.17;
-          const tipGeo = new THREE.BoxGeometry(tipLen, 0.08, 0.13);
-          tipGeo.translate(tipLen / 2, 0, 0);
-          const tipMesh = hoverable(
-            new THREE.Mesh(
-              tipGeo,
-              new THREE.MeshStandardMaterial({ color: 0xa9bfe0, metalness: 0.3, roughness: 0.4 }),
-            ),
-            "elbow",
-          );
-          tipPivot.add(tipMesh);
-
+          group.add(plate);
+          // A dark rubber contact strip on the inner face for a bit of grip detail.
+          const padGeo = new THREE.BoxGeometry(PADDLE_LEN * 0.75, PADDLE_H * 0.55, 0.02);
+          padGeo.translate(PADDLE_LEN * 0.5, 0, -side * (PADDLE_T / 2 + 0.011));
           const pad = hoverable(
             new THREE.Mesh(
-              new THREE.SphereGeometry(0.05, 12, 10),
-              new THREE.MeshStandardMaterial({ color: 0x14100a, roughness: 0.85 }),
+              padGeo,
+              new THREE.MeshStandardMaterial({ color: 0x0d1220, roughness: 0.9 }),
             ),
             "elbow",
           );
-          pad.position.set(tipLen, 0, 0);
-          tipPivot.add(pad);
-
-          return pivot;
+          group.add(pad);
+          // A thin bar bridging from the wrist out to the sliding plate, so the
+          // jaw reads as mounted on the mechanism instead of floating in space
+          // when open. Built to span local z:0..-side (i.e. back toward the
+          // centerline) and rescaled along Z every frame to track the live gap.
+          const linkGeo = new THREE.BoxGeometry(0.06, 0.14, 1);
+          linkGeo.translate(0, 0, -side * 0.5);
+          const link = hoverable(
+            new THREE.Mesh(
+              linkGeo,
+              new THREE.MeshStandardMaterial({ color: 0x20293f, metalness: 0.4, roughness: 0.35 }),
+            ),
+            "elbow",
+          );
+          group.add(link);
+          group.userData.link = link;
+          group.position.set(PADDLE_X, 0, 0);
+          return group;
         }
-        const fingerL = fingerRig(1),
-          fingerR = fingerRig(-1);
+        const fingerL = makePaddle(1),
+          fingerR = makePaddle(-1);
         gripperGroup.add(fingerL, fingerR);
 
-        // Where an object actually sits once picked up — between the claw tips,
-        // not at the wrist — so a held object visually nests inside the closed
-        // claw instead of floating out in front of it or hanging off the arm.
+        // Where an object actually sits once picked up — between the paddles,
+        // not at the wrist — so a held object visually nests inside the jaws
+        // instead of floating out in front of them or hanging off the arm.
         const graspPoint = new THREE.Group();
         graspPoint.position.set(GRIPPER_REACH, 0, 0);
         gripperGroup.add(graspPoint);
 
         const tipLight = new THREE.Mesh(
-          new THREE.SphereGeometry(0.045, 12, 10),
+          new THREE.SphereGeometry(0.035, 12, 10),
           new THREE.MeshBasicMaterial({ color: 0x38bdf8 }),
         );
-        tipLight.position.set(0.5, 0, 0);
+        tipLight.position.set(0.21, 0.08, 0.1);
         gripperGroup.add(tipLight);
 
         const hoverMeshes = [
@@ -1958,8 +1979,6 @@
         const tagREl = document.getElementById("tagR");
         const lrVec = new THREE.Vector3();
         const projVec = new THREE.Vector3();
-        const gripOriginVec = new THREE.Vector3();
-        const gripDirVec = new THREE.Vector3();
         function placeOverlay(el, worldPos) {
           projVec.copy(worldPos).project(camera);
           if (projVec.z > 1 || projVec.z < -1) {
@@ -1991,26 +2010,21 @@
           baseGroup.rotation.y = current.base * DEG;
           shoulderGroup.rotation.z = current.shoulder * DEG;
           elbowGroup.rotation.z = current.elbow * DEG;
-          const openAngle = 0.12 + gripAnim * 0.55;
-          fingerL.rotation.y = openAngle;
-          fingerR.rotation.y = -openAngle;
+          // Paddles slide sideways rather than rotate — closed gap tracks
+          // whichever object is currently loaded so the plates land right at
+          // its sides, open gap backs off enough to clear the widest object.
+          const closedGap = OBJECT_SHAPES[objectType].r + 0.03;
+          const openGap = closedGap + 0.34;
+          const gap = closedGap + gripAnim * (openGap - closedGap);
+          fingerL.position.z = gap;
+          fingerR.position.z = -gap;
+          fingerL.userData.link.scale.z = gap;
+          fingerR.userData.link.scale.z = gap;
 
           Object.entries(objectMeshes).forEach(([k, m]) => (m.visible = k === objectType));
           const activeMesh = objectMeshes[objectType];
-          if (objectHeld) {
-            // Nest the object just past the fingertips rather than centering it
-            // ON them — its NEAR face (center minus its own radius) is what
-            // should sit at the grasp point, so it hangs held out in front of
-            // the pincers instead of swallowing the finger rig inside itself.
-            gripperGroup.getWorldPosition(gripOriginVec);
-            const gp = currentGripWorld();
-            gripDirVec.copy(gp).sub(gripOriginVec).normalize();
-            activeMesh.position
-              .copy(gp)
-              .addScaledVector(gripDirVec, OBJECT_SHAPES[objectType].r);
-          } else {
-            activeMesh.position.copy(objectPos);
-          }
+          if (objectHeld) activeMesh.position.copy(currentGripWorld());
+          else activeMesh.position.copy(objectPos);
 
           controls.update();
           renderer.render(scene, camera);
