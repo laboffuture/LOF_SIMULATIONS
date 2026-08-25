@@ -63,36 +63,115 @@
 
       #worldtabs {
         position: absolute;
-        top: 14px;
+        top: 12px;
         left: 16px;
         right: 16px;
         z-index: 4;
+      }
+      .wt-head {
+        font-family: var(--mono);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--paper);
+        background: var(--ink);
+        display: inline-block;
+        padding: 4px 9px 3px;
+        margin-bottom: 7px;
+        box-shadow: 0 2px 10px rgba(13, 21, 27, 0.35);
+      }
+      .wt-head b {
+        color: var(--signal-2);
+        font-weight: 700;
+      }
+      .wt-row {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 8px;
+        gap: 9px;
       }
       .wtab {
-        background: rgba(232, 230, 223, 0.9);
-        border: 1px solid var(--rule);
-        backdrop-filter: blur(6px);
-        padding: 8px 9px;
+        position: relative;
+        display: grid;
+        grid-template-columns: 42px 1fr;
+        align-items: center;
+        gap: 9px;
+        background: linear-gradient(
+          180deg,
+          rgba(244, 243, 238, 0.97),
+          rgba(222, 219, 210, 0.97)
+        );
+        border: 1px solid var(--ink-3);
+        border-top: 3px solid var(--rule);
+        backdrop-filter: blur(8px);
+        padding: 9px 10px;
         cursor: pointer;
         text-align: left;
-        transition: 0.12s;
+        color: var(--ink);
+        box-shadow: 0 3px 12px rgba(13, 21, 27, 0.22);
+        transition:
+          transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1),
+          box-shadow 0.16s,
+          border-color 0.16s,
+          background 0.16s;
       }
       .wtab:hover {
         border-color: var(--ink);
+        border-top-color: var(--signal-2);
+        transform: translateY(-2px);
+        box-shadow: 0 7px 20px rgba(13, 21, 27, 0.3);
       }
       .wtab.on {
         border-color: var(--ink);
-        background: var(--ink);
+        border-top-color: var(--signal-2);
+        background: linear-gradient(180deg, #22323d, #16222a);
         color: var(--paper);
+        transform: translateY(-2px);
+        box-shadow:
+          0 8px 22px rgba(13, 21, 27, 0.42),
+          inset 0 0 0 1px rgba(232, 230, 223, 0.12);
+      }
+      .wtab.on::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: -7px;
+        width: 10px;
+        height: 10px;
+        background: #16222a;
+        border-right: 1px solid var(--ink);
+        border-bottom: 1px solid var(--ink);
+        transform: translateX(-50%) rotate(45deg);
+      }
+      .worb {
+        width: 42px;
+        height: 42px;
+        display: block;
+        border-radius: 50%;
+        transition: filter 0.16s;
+      }
+      .wtab.on .worb {
+        filter: drop-shadow(0 0 7px rgba(234, 88, 12, 0.55));
       }
       .wtab .wn {
-        font-family: var(--mono);
-        font-size: 11px;
+        font-family: var(--sans);
+        font-size: 14px;
         font-weight: 700;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.01em;
+        line-height: 1.1;
+      }
+      .wtab .wsub {
+        font-family: var(--mono);
+        font-size: 8px;
+        letter-spacing: 0.02em;
+        color: var(--ink-2);
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .wtab.on .wsub {
+        color: rgba(232, 230, 223, 0.62);
       }
       .wtab .wd {
         display: flex;
@@ -103,15 +182,18 @@
       .wtab .wd .lab {
         font-family: var(--mono);
         font-size: 8px;
+        font-weight: 700;
         letter-spacing: 0.03em;
         color: var(--ink-3);
+        white-space: nowrap;
       }
       .wtab.on .wd .lab {
-        color: rgba(232, 230, 223, 0.7);
+        color: rgba(232, 230, 223, 0.78);
       }
       .difbar {
         flex: 1;
         height: 5px;
+        min-width: 24px;
         background: var(--rule);
         position: relative;
         overflow: hidden;
@@ -122,18 +204,44 @@
         top: 0;
         bottom: 0;
         background: var(--signal);
+        transition:
+          width 0.2s,
+          background 0.2s;
       }
       .wtab.on .difbar {
         background: rgba(232, 230, 223, 0.25);
       }
       .wtab:focus-visible {
-        outline: 2px solid var(--signal);
-        outline-offset: 2px;
+        outline: 2px solid var(--signal-2);
+        outline-offset: 3px;
+      }
+      /* one-time attention pulse so the world picker is not overlooked */
+      @keyframes wtnudge {
+        0%,
+        100% {
+          box-shadow: 0 3px 12px rgba(13, 21, 27, 0.22);
+        }
+        50% {
+          box-shadow:
+            0 3px 12px rgba(13, 21, 27, 0.22),
+            0 0 0 4px rgba(234, 88, 12, 0.28);
+        }
+      }
+      #worldtabs.nudge .wtab:not(.on) {
+        animation: wtnudge 1.5s ease-in-out 3;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #worldtabs.nudge .wtab:not(.on) {
+          animation: none;
+        }
+        .wtab {
+          transition: none;
+        }
       }
 
       #titlecard {
         position: absolute;
-        top: 78px;
+        top: 132px;
         left: 18px;
         pointer-events: none;
         z-index: 3;
@@ -394,20 +502,28 @@
       }
       .effwrap {
         grid-column: 1/-1;
-        margin-top: 7px;
+        margin-top: 9px;
       }
       .effwrap .lab {
         display: flex;
         justify-content: space-between;
+        align-items: baseline;
         font-family: var(--mono);
         font-size: 9px;
         color: var(--ink-3);
         letter-spacing: 0.04em;
-        margin-bottom: 4px;
+        margin-bottom: 5px;
+      }
+      .effwrap .lab #t_effnum {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--ink);
+        font-variant-numeric: tabular-nums;
       }
       .eff {
-        height: 9px;
-        background: var(--rule);
+        height: 14px;
+        background: var(--paper);
+        border: 1px solid var(--rule);
         position: relative;
         overflow: hidden;
       }
@@ -419,10 +535,85 @@
         background: linear-gradient(
           90deg,
           var(--ok),
-          var(--warn),
+          var(--warn) 55%,
           var(--signal)
         );
         transition: width 0.1s linear;
+      }
+      /* decade gridlines so the compressed scale is readable */
+      .eff u {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: rgba(27, 42, 51, 0.22);
+        pointer-events: none;
+      }
+      /* marker: what THIS world demands to hover */
+      .eff b {
+        position: absolute;
+        top: -2px;
+        bottom: -2px;
+        width: 2px;
+        margin-left: -1px;
+        background: var(--ink);
+        pointer-events: none;
+        transition: left 0.2s;
+      }
+      .eff b::after {
+        content: "";
+        position: absolute;
+        top: -1px;
+        left: -3px;
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-top: 5px solid var(--ink);
+      }
+      .eff b.unreach {
+        background: var(--signal);
+      }
+      .eff b.unreach::after {
+        border-top-color: var(--signal);
+      }
+      .effscale {
+        position: relative;
+        height: 11px;
+        font-family: var(--mono);
+        font-size: 7.5px;
+        letter-spacing: 0.04em;
+        color: var(--ink-3);
+        margin-top: 3px;
+      }
+      .effscale span {
+        position: absolute;
+        top: 0;
+        transform: translateX(-50%);
+        white-space: nowrap;
+      }
+      .effscale span.first {
+        transform: none;
+        left: 0;
+      }
+      .effscale span.last {
+        transform: none;
+        left: auto;
+        right: 0;
+      }
+      .effnote {
+        font-family: var(--mono);
+        font-size: 8.5px;
+        line-height: 1.5;
+        color: var(--ink-3);
+        margin-top: 5px;
+      }
+      .effnote b {
+        font-weight: 700;
+      }
+      .effnote.warn b {
+        color: var(--signal);
+      }
+      .effnote.ok b {
+        color: var(--ok);
       }
 
       /* controls */
@@ -482,30 +673,137 @@
         outline: 2px solid var(--signal);
         outline-offset: 4px;
       }
-      .seg {
+      /* ---- rotor layout picker: three tactile cards with live diagrams ---- */
+      .rotorpick {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 7px;
+      }
+      .rcard {
+        position: relative;
         display: flex;
-        border: 1px solid var(--rule);
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
         background: var(--paper);
-      }
-      .seg button {
-        flex: 1;
-        font-family: var(--mono);
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.03em;
-        background: transparent;
-        border: none;
-        color: var(--ink-2);
-        padding: 8px 4px;
+        border: 1px solid var(--rule);
+        padding: 9px 4px 7px;
         cursor: pointer;
+        color: var(--ink-2);
+        overflow: hidden;
+        transition:
+          transform 0.15s cubic-bezier(0.2, 0.9, 0.3, 1),
+          border-color 0.15s,
+          background 0.15s,
+          box-shadow 0.15s;
       }
-      .seg button.on {
+      .rcard:hover {
+        border-color: var(--ink);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 21, 27, 0.16);
+      }
+      .rcard.on {
         background: var(--ink);
+        border-color: var(--ink);
         color: var(--paper);
+        box-shadow: 0 4px 14px rgba(13, 21, 27, 0.3);
       }
-      .seg button:focus-visible {
+      .rcard.on::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--signal-2);
+      }
+      .rcard:focus-visible {
         outline: 2px solid var(--signal);
-        outline-offset: -2px;
+        outline-offset: 2px;
+      }
+      .rdiag {
+        width: 40px;
+        height: 40px;
+        display: block;
+        overflow: visible;
+      }
+      .rdiag .frame {
+        stroke: var(--ink-3);
+        stroke-width: 2.4;
+        stroke-linecap: round;
+        fill: none;
+      }
+      .rcard.on .rdiag .frame {
+        stroke: rgba(232, 230, 223, 0.5);
+      }
+      .rdiag .hub {
+        fill: var(--ink-3);
+      }
+      .rcard.on .rdiag .hub {
+        fill: var(--paper);
+      }
+      .rdiag .disc {
+        fill: none;
+        stroke: var(--rule);
+        stroke-width: 1;
+      }
+      .rcard.on .rdiag .disc {
+        stroke: rgba(234, 88, 12, 0.55);
+      }
+      .rdiag .blade {
+        stroke: var(--ink-2);
+        stroke-width: 1.8;
+        stroke-linecap: round;
+      }
+      .rcard.on .rdiag .blade {
+        stroke: var(--signal-2);
+      }
+      /* blades idle-turn on the selected card, and spin up with the rotors */
+      .rcard.on .rot {
+        animation: rspin 2.4s linear infinite;
+        transform-origin: center;
+      }
+      .rcard.on .rot:nth-of-type(even) {
+        animation-direction: reverse;
+      }
+      .rotorpick.spinning .rcard.on .rot {
+        animation-duration: 0.34s;
+      }
+      @keyframes rspin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .rcard.on .rot {
+          animation: none;
+        }
+        .rcard {
+          transition: none;
+        }
+      }
+      .rname {
+        font-family: var(--sans);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        line-height: 1;
+      }
+      .rload {
+        font-family: var(--mono);
+        font-size: 8px;
+        letter-spacing: 0.01em;
+        color: var(--ink-3);
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+      }
+      .rcard.on .rload {
+        color: rgba(232, 230, 223, 0.72);
+      }
+
+      .ctl-name .sym {
+        color: var(--ink-3);
+        font-size: 9px;
       }
       .pitchlab {
         display: flex;
@@ -795,7 +1093,10 @@
     <div id="app">
       <div id="stage">
         <canvas id="scene"></canvas>
-        <div id="worldtabs"></div>
+        <div id="worldtabs">
+          <div class="wt-head">Choose a world <b>&rarr;</b></div>
+          <div class="wt-row" id="wtRow"></div>
+        </div>
         <div id="titlecard">
           <h1>AeroVoyage — Rotor Lift Lab</h1>
           <p>one drone, four worlds — will it fly?</p>
@@ -854,9 +1155,15 @@
             </div>
             <div class="effwrap">
               <div class="lab">
-                <span>Effort (power draw)</span><span id="t_effnum">0%</span>
+                <span>Effort (power draw)</span
+                ><span id="t_effnum">0%</span>
               </div>
-              <div class="eff"><i id="t_eff" style="width: 0%"></i></div>
+              <div class="eff" id="effBar">
+                <i id="t_eff" style="width: 0%"></i>
+                <b id="t_effmark" style="left: 0%"></b>
+              </div>
+              <div class="effscale" id="effScale"><span class="first">0%</span><span style="left:25%">25%</span><span style="left:50%">50%</span><span style="left:75%">75%</span><span class="last">100% MAX</span></div>
+              <div class="effnote" id="t_effnote"></div>
             </div>
           </dl>
         </div>
@@ -866,13 +1173,11 @@
           <div class="sec-h">The Drone <span>build it</span></div>
           <div class="ctl">
             <div class="ctl-top">
-              <span class="ctl-name">How many rotors</span>
+              <span class="ctl-name"
+                >How many rotors <span class="sym">(layout)</span></span
+              ><span class="ctl-val" id="rotorVal">4 rotors</span>
             </div>
-            <div class="seg" id="rotorSeg">
-              <button data-n="2">Bi &middot; 2</button>
-              <button data-n="4" class="on">Quad &middot; 4</button>
-              <button data-n="6">Hexa &middot; 6</button>
-            </div>
+            <div class="rotorpick" id="rotorSeg"></div>
           </div>
           <div class="ctl">
             <div class="ctl-top">
@@ -1040,43 +1345,113 @@
       const OMEGA_MAX = (RPM_MAX * TAU) / 60;
       const DEFAULT = { mass: 1.8, radius: 0.15, pitch: 1, rotors: 4 };
 
-      /* real world data (spec 2.2) */
+      /* real world data (spec 2.2) + art direction per world */
       const WORLDS = {
         earth: {
           name: "Earth",
           g: 9.81,
           rhoF: 1.0,
-          sky: ["#5c9fd8", "#bfe0f5"],
+          sub: "thick air · 9.8 m/s²",
+          svgOrb: `<svg class="worb" viewBox="0 0 42 42"><defs><radialGradient id="orbEarth" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#60a5fa"/><stop offset="50%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e3a8a"/></radialGradient></defs><circle cx="21" cy="21" r="18" fill="url(#orbEarth)"/><path d="M12 16c2-4 6-5 9-3s4 4 2 7-5 4-7 2-5-2-4-6z" fill="#22c55e" opacity="0.85"/><path d="M22 24c3-1 6 1 7 4s-2 5-5 5-4-3-3-6z" fill="#15803d" opacity="0.85"/><path d="M10 20c4-2 9-1 14-3s6 2 8 1" stroke="#ffffff" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.75"/><circle cx="21" cy="21" r="18" fill="none" stroke="#93c5fd" stroke-width="1.5" opacity="0.5"/></svg>`,
+          sky: ["#3f7fc4", "#8fc4e8", "#cfe6f3"],
           ground: "#4f7a3a",
           dust: "#6f9a4a",
           star: false,
+          /* orb thumbnail */
+          orb: {
+            base: ["#3d8fd6", "#1a5390"],
+            land: "#4a8f45",
+            land2: "#3a7038",
+            cap: "#eef4f6",
+            rim: "rgba(150,205,245,.85)",
+            clouds: 0.34,
+          },
+          /* scene */
+          far: "#6d9ec9",
+          hills: ["#3f6f4a", "#37613f"],
+          soil: ["#5a8a42", "#3d5f2c"],
+          rock: "#3f6330",
+          haze: "rgba(190,220,240,.30)",
+          sun: { x: 0.8, y: 0.16, c: "#fff3d0", r: 26 },
+          downwash: "rgba(255,255,255,.5)",
         },
         mars: {
           name: "Mars",
           g: 3.71,
           rhoF: 0.016,
-          sky: ["#c07038", "#e6b58c"],
+          sub: "air 60× thinner · 3.7 m/s²",
+          svgOrb: `<svg class="worb" viewBox="0 0 42 42"><defs><radialGradient id="orbMars" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#f97316"/><stop offset="55%" stop-color="#c2410c"/><stop offset="100%" stop-color="#7c2d12"/></radialGradient></defs><circle cx="21" cy="21" r="18" fill="url(#orbMars)"/><path d="M10 22c4 1 9-2 14 0s6 4 9 2" stroke="#9a3412" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.8"/><circle cx="16" cy="15" r="3" fill="#7c2d12" opacity="0.6"/><circle cx="28" cy="25" r="2" fill="#7c2d12" opacity="0.6"/><path d="M15 5c3-1 8-1 11 0c-1 2-4 3-6 3s-4-1-5-3z" fill="#fef3c7" opacity="0.9"/><circle cx="21" cy="21" r="18" fill="none" stroke="#fdba74" stroke-width="1" opacity="0.4"/></svg>`,
+          sky: ["#a85c35", "#d08b57", "#ecc39a"],
           ground: "#9c4d2e",
           dust: "#c06a40",
           star: false,
+          orb: {
+            base: ["#d4783f", "#8c3a1d"],
+            land: "#a04a24",
+            land2: "#7d3418",
+            cap: "#f2e8dc",
+            rim: "rgba(235,165,110,.55)",
+            clouds: 0.08,
+          },
+          far: "#c08055",
+          hills: ["#8d452a", "#73341c"],
+          soil: ["#b05c33", "#7a3a1f"],
+          rock: "#8a4022",
+          haze: "rgba(230,175,130,.34)",
+          sun: { x: 0.78, y: 0.18, c: "#ffe9c8", r: 17 },
+          downwash: "rgba(235,190,150,.35)",
         },
         titan: {
           name: "Titan",
           g: 1.35,
           rhoF: 4.24,
-          sky: ["#b8862c", "#e6cf7e"],
+          sub: "air 4× thicker · 1.4 m/s²",
+          svgOrb: `<svg class="worb" viewBox="0 0 42 42"><defs><radialGradient id="orbTitan" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#fde047"/><stop offset="50%" stop-color="#d97706"/><stop offset="100%" stop-color="#78350f"/></radialGradient></defs><circle cx="21" cy="21" r="18" fill="url(#orbTitan)"/><ellipse cx="21" cy="15" rx="14" ry="4" fill="#b45309" opacity="0.4"/><ellipse cx="21" cy="27" rx="12" ry="3" fill="#78350f" opacity="0.5"/><path d="M14 12c3-1 6 0 8 2" stroke="#fef08a" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.7"/><circle cx="21" cy="21" r="18" fill="none" stroke="#fef08a" stroke-width="2" opacity="0.7"/></svg>`,
+          sky: ["#9a6a1c", "#cfa03a", "#f0d78a"],
           ground: "#7d5f24",
           dust: "#b08a30",
           star: false,
+          orb: {
+            base: ["#f0cf74", "#a3761f"],
+            land: "#8a6a20",
+            land2: "#6d521a",
+            cap: "#f7e9b4",
+            rim: "rgba(255,222,140,.95)",
+            clouds: 0.5,
+          },
+          far: "#c39a45",
+          hills: ["#7a5c22", "#63491a"],
+          soil: ["#8f6c28", "#5e4517"],
+          rock: "#6b501c",
+          haze: "rgba(240,210,130,.42)",
+          sun: { x: 0.74, y: 0.2, c: "#ffeaa8", r: 20 },
+          downwash: "rgba(255,235,175,.55)",
         },
         moon: {
           name: "Moon",
           g: 1.62,
           rhoF: 0,
-          sky: ["#04060c", "#0a0e18"],
+          sub: "no air at all · 1.6 m/s²",
+          svgOrb: `<svg class="worb" viewBox="0 0 42 42"><defs><radialGradient id="orbMoon" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#e2e8f0"/><stop offset="60%" stop-color="#64748b"/><stop offset="100%" stop-color="#1e293b"/></radialGradient></defs><circle cx="21" cy="21" r="18" fill="url(#orbMoon)"/><circle cx="16" cy="16" r="5" fill="#334155" opacity="0.6"/><circle cx="26" cy="22" r="6" fill="#334155" opacity="0.65"/><circle cx="18" cy="27" r="4" fill="#334155" opacity="0.5"/><circle cx="27" cy="14" r="2.5" fill="none" stroke="#cbd5e1" stroke-width="1"/><circle cx="13" cy="24" r="2" fill="none" stroke="#cbd5e1" stroke-width="1"/><circle cx="21" cy="31" r="1.5" fill="none" stroke="#cbd5e1" stroke-width="0.8"/></svg>`,
+          sky: ["#04060c", "#080b14", "#0d1119"],
           ground: "#77777e",
           dust: "#9a9aa0",
           star: true,
+          orb: {
+            base: ["#d2d2d8", "#75757e"],
+            land: "#8e8e97",
+            land2: "#6f6f79",
+            cap: "#e8e8ee",
+            rim: null,
+            clouds: 0,
+          },
+          far: "#2a2a31",
+          hills: ["#5c5c64", "#4a4a51"],
+          soil: ["#8b8b92", "#5e5e66"],
+          rock: "#6a6a72",
+          haze: null,
+          sun: null,
+          downwash: null,
         },
       };
       const ORDER = ["earth", "mars", "titan", "moon"];
@@ -1190,105 +1565,167 @@
       function drawScene() {
         const w = WORLDS[S.world];
         const groundY = CH * 0.8;
-        // sky
+        const t = performance.now() / 1000;
+
+        // Multi-tone sky gradient
         const sky = ctx.createLinearGradient(0, 0, 0, groundY);
         sky.addColorStop(0, w.sky[0]);
-        sky.addColorStop(1, w.sky[1]);
+        sky.addColorStop(0.6, w.sky[1]);
+        sky.addColorStop(1, w.sky[2] || w.sky[1]);
         ctx.fillStyle = sky;
         ctx.fillRect(0, 0, CW, groundY);
+
+        // Sun / Celestial body halo
+        if (w.sun) {
+          const sx = CW * w.sun.x;
+          const sy = groundY * w.sun.y;
+          const sGrad = ctx.createRadialGradient(sx, sy, 2, sx, sy, w.sun.r * 2.5);
+          sGrad.addColorStop(0, w.sun.c);
+          sGrad.addColorStop(0.4, w.sun.c);
+          sGrad.addColorStop(1, "rgba(255,255,255,0)");
+          ctx.fillStyle = sGrad;
+          ctx.beginPath();
+          ctx.arc(sx, sy, w.sun.r * 2.5, 0, TAU);
+          ctx.fill();
+        }
+
+        // Twinkling stars on Moon
         if (w.star) {
-          ctx.fillStyle = "#fff";
-          for (let i = 0; i < 70; i++) {
-            const sx = (i * 97.3) % CW,
-              sy = (i * 53.7) % groundY;
-            ctx.globalAlpha = (i % 5) / 6 + 0.2;
-            ctx.fillRect(sx, sy, 1.4, 1.4);
+          ctx.fillStyle = "#ffffff";
+          for (let i = 0; i < 90; i++) {
+            const sx = (i * 107.3) % CW,
+              sy = (i * 59.7) % groundY;
+            const alpha = 0.3 + 0.5 * Math.sin(t * 3 + i);
+            ctx.globalAlpha = clamp(alpha, 0.1, 1);
+            ctx.fillRect(sx, sy, i % 3 === 0 ? 2 : 1.2, i % 3 === 0 ? 2 : 1.2);
           }
           ctx.globalAlpha = 1;
         }
-        // ground
-        ctx.fillStyle = w.ground;
-        ctx.fillRect(0, groundY, CW, CH - groundY);
-        ctx.fillStyle = w.dust;
-        for (let i = 0; i < CW; i += 26) {
-          ctx.fillRect(i + (i % 3) * 3, groundY + 8 + (i % 4) * 4, 10, 2);
+
+        // Distant terrain hills
+        if (w.hills) {
+          ctx.fillStyle = w.hills[0];
+          ctx.beginPath();
+          ctx.moveTo(0, groundY);
+          for (let x = 0; x <= CW; x += 40) {
+            const h = Math.sin(x * 0.008) * 18 + Math.cos(x * 0.015) * 12;
+            ctx.lineTo(x, groundY - 25 + h);
+          }
+          ctx.lineTo(CW, groundY);
+          ctx.closePath();
+          ctx.fill();
         }
 
-        // wind streaks
+        // Ground surface
+        ctx.fillStyle = w.ground;
+        ctx.fillRect(0, groundY, CW, CH - groundY);
+
+        // Soil texture details
+        ctx.fillStyle = w.dust;
+        for (let i = 0; i < CW; i += 24) {
+          ctx.fillRect(i + (i % 3) * 3, groundY + 6 + (i % 4) * 4, 12, 2.5);
+        }
+
+        // Wind streaks
         if (S.windOn && S.wind > 0.2) {
-          ctx.strokeStyle = "rgba(255,255,255,.28)";
+          ctx.strokeStyle = "rgba(255,255,255,.35)";
           ctx.lineWidth = 1.4;
           const n = Math.round(S.wind);
-          const t = performance.now() / 1000;
           for (let i = 0; i < n; i++) {
             const yy = groundY * 0.2 + (i * groundY * 0.7) / n;
-            const xx = ((t * S.wind * 22 + i * 140) % (CW + 120)) - 60;
+            const xx = ((t * S.wind * 28 + i * 140) % (CW + 120)) - 60;
             ctx.beginPath();
             ctx.moveTo(xx, yy);
-            ctx.lineTo(xx + 22 + S.wind, yy);
+            ctx.lineTo(xx + 25 + S.wind * 2, yy);
             ctx.stroke();
           }
         }
 
-        // drone position
+        // Drone position
         const cx = CW * 0.42 + S.drift * 10;
-        const dy = groundY - 20 - clamp(S.alt / VIS_ALT, 0, 1) * (groundY - 70);
+        const dy = groundY - 22 - clamp(S.alt / VIS_ALT, 0, 1) * (groundY - 72);
+
+        // Downwash dust effect when hovering low in atmosphere
+        if (S.thrust > S.weight * 0.5 && w.rhoF > 0 && S.alt < 8) {
+          const power = clamp(S.thrust / (S.weight || 1), 0.3, 2.5);
+          ctx.fillStyle = w.downwash || "rgba(255,255,255,.4)";
+          for (let p = 0; p < 8; p++) {
+            const side = p % 2 === 0 ? 1 : -1;
+            const px = cx + side * (15 + ((t * 80 + p * 30) % 90) * power * 0.8);
+            const py = groundY - 2 - Math.random() * 4;
+            const sz = 3 + Math.random() * 5;
+            ctx.globalAlpha = clamp(1 - (Math.abs(px - cx) / 100), 0, 0.6);
+            ctx.beginPath();
+            ctx.arc(px, py, sz, 0, TAU);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
+
         drawDrone(cx, dy);
         if (S.alt / VIS_ALT > 1) {
-          ctx.fillStyle = "rgba(255,255,255,.8)";
+          ctx.fillStyle = "rgba(255,255,255,.9)";
           ctx.font = '700 11px "Roboto Mono",monospace';
           ctx.textAlign = "center";
           ctx.fillText("↑ climbing above view", cx, 52);
         }
 
-        // instruments: seesaw + rotor buddies (spec 3.1)
-        drawSeesaw(CW * 0.18, groundY + (CH - groundY) * 0 - 0, groundY);
+        // Instruments: seesaw + rotor buddies
+        drawSeesaw(CW * 0.18, groundY + (CH - groundY) * 0, groundY);
         drawBuddies(CW, groundY);
       }
 
       function drawDrone(cx, cy) {
         const N = S.rotors,
           R = S.radius;
-        const arm = Math.max(26, R * 150); // visual arm length scales with rotor size
-        const rr = Math.max(9, R * 90); // rotor disc radius (visual)
-        // body
-        ctx.fillStyle = "#20303a";
-        ctx.strokeStyle = "#0d151b";
-        ctx.lineWidth = 2;
+        const arm = Math.max(26, R * 150);
+        const rr = Math.max(9, R * 90);
+        // Body base with subtle gradient glow
+        ctx.fillStyle = "#1e293b";
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.ellipse(cx, cy, 13, 8, 0, 0, TAU);
+        ctx.ellipse(cx, cy, 14, 9, 0, 0, TAU);
         ctx.fill();
         ctx.stroke();
-        // arms + rotors
-        const spread = N === 2 ? [0, Math.PI] : [];
+
+        // Arm beams + rotors + LED indicators
         for (let i = 0; i < N; i++) {
-          const ang =
-            N === 2 ? (i ? Math.PI : 0) : -Math.PI / 2 + (i * TAU) / N;
-          const ex = cx + Math.cos(ang) * arm,
-            ey = cy + Math.sin(ang) * arm * 0.55;
-          ctx.strokeStyle = "#20303a";
-          ctx.lineWidth = 3;
+          const ang = N === 2 ? (i ? Math.PI : 0) : -Math.PI / 2 + (i * TAU) / N;
+          const ex = cx + Math.cos(ang) * arm;
+          const ey = cy + Math.sin(ang) * arm * 0.55;
+
+          // Structural arm line
+          ctx.strokeStyle = "#334155";
+          ctx.lineWidth = 3.5;
           ctx.beginPath();
           ctx.moveTo(cx, cy);
           ctx.lineTo(ex, ey);
           ctx.stroke();
-          // rotor disc (blur when spinning)
+
+          // LED tip lights (green front/right, red back/left)
+          ctx.fillStyle = i === 0 ? "#22c55e" : "#ef4444";
+          ctx.beginPath();
+          ctx.arc(ex, ey, 2.5, 0, TAU);
+          ctx.fill();
+
+          // Rotor disc & spinning blades
           const spinning = S.omega > 1;
           ctx.save();
           ctx.translate(ex, ey);
           if (spinning) {
-            ctx.globalAlpha = 0.35;
-            ctx.strokeStyle = "#eef2f4";
+            ctx.globalAlpha = 0.45;
+            ctx.strokeStyle = "#f8fafc";
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.ellipse(0, 0, rr, rr * 0.4, 0, 0, TAU);
             ctx.stroke();
             ctx.globalAlpha = 1;
           }
-          // blades
+          // Spinning blade graphics
           ctx.rotate(S.phase * (i % 2 ? -1 : 1));
-          ctx.strokeStyle = spinning ? "rgba(238,242,244,.7)" : "#cfd6da";
-          ctx.lineWidth = 2.2;
+          ctx.strokeStyle = spinning ? "rgba(248,250,252,.85)" : "#cbd5e1";
+          ctx.lineWidth = 2.4;
           for (let b = 0; b < 2; b++) {
             ctx.rotate(Math.PI);
             ctx.beginPath();
@@ -1298,6 +1735,11 @@
           }
           ctx.restore();
         }
+        // Center LED cap
+        ctx.fillStyle = S.omega > 1 ? "#ea580c" : "#64748b";
+        ctx.beginPath();
+        ctx.arc(cx, cy, 3.5, 0, TAU);
+        ctx.fill();
       }
 
       function drawSeesaw(cx, _ignore, groundY) {
@@ -1568,16 +2010,24 @@
 
       /* ---------- world tabs (with difficulty preview) ---------- */
       function buildTabs() {
-        const t = $("worldtabs");
-        t.innerHTML = "";
+        const row = $("wtRow");
+        if (!row) return;
+        row.innerHTML = "";
         ORDER.forEach((k) => {
           const w = WORLDS[k];
           const b = document.createElement("button");
           b.className = "wtab" + (k === S.world ? " on" : "");
           b.dataset.k = k;
-          b.innerHTML = `<div class="wn">${w.name}</div><div class="wd"><span class="lab">fly</span><div class="difbar"><i id="tab_${k}"></i></div></div>`;
+          b.innerHTML = `
+            ${w.svgOrb}
+            <div>
+              <div class="wn">${w.name}</div>
+              <div class="wsub">${w.sub}</div>
+              <div class="wd"><span class="lab">diff</span><div class="difbar"><i id="tab_${k}"></i></div></div>
+            </div>
+          `;
           b.onclick = () => requestWorld(k);
-          t.appendChild(b);
+          row.appendChild(b);
         });
       }
       function updateTabs() {
@@ -1674,6 +2124,7 @@
         $("telemWorld").textContent = WORLDS[k].name;
         buildBars();
         buildTabs();
+      buildRotorPicker();
         refreshStatic();
       }
 
@@ -1681,6 +2132,7 @@
       function refreshStatic() {
         updateBars();
         updateTabs();
+        buildRotorPicker();
         if (S.mathOn) {
           updateEquation();
           buildTable();
@@ -1706,28 +2158,93 @@
           f.textContent = "HOLDING";
           f.className = "flag hold";
         }
-        const eff = clamp(S.effort, 0, 400);
-        $("t_eff").style.width = (eff / 400) * 100 + "%";
-        $("t_effnum").textContent = Math.round(S.effort) + "%";
+
+        // Proportional motor power scaling (0% to 100% of motor ceiling RPM_MAX)
+        const motorPowerPct = clamp((S.rpm / RPM_MAX) * 100, 0, 100);
+        $("t_eff").style.width = motorPowerPct + "%";
+        $("t_effnum").textContent = Math.round(motorPowerPct) + "%";
+
+        // Position hover marker on effort bar
+        const mark = $("t_effmark");
+        const note = $("t_effnote");
+        if (isFinite(S.hoverRPM)) {
+          const hoverPct = clamp((S.hoverRPM / RPM_MAX) * 100, 0, 100);
+          mark.style.left = hoverPct + "%";
+          if (S.hoverRPM <= RPM_MAX) {
+            mark.className = "";
+            if (note) {
+              note.className = "effnote ok";
+              note.innerHTML = `<b>✓ Hover target:</b> ${Math.round(S.hoverRPM).toLocaleString()} RPM (${Math.round(hoverPct)}% motor power).`;
+            }
+          } else {
+            mark.className = "unreach";
+            if (note) {
+              note.className = "effnote warn";
+              note.innerHTML = `<b>⚠ Cannot hover:</b> Required speed (${Math.round(S.hoverRPM).toLocaleString()} RPM) exceeds 16,000 RPM limit.`;
+            }
+          }
+        } else {
+          mark.style.left = "100%";
+          mark.className = "unreach";
+          if (note) {
+            note.className = "effnote warn";
+            note.innerHTML = `<b>⚠ Airless world:</b> No atmosphere for rotors to push.`;
+          }
+        }
+
         $("bRpm").textContent = Math.round(S.rpm).toLocaleString();
         $("bAlt").innerHTML =
           S.alt.toFixed(1) + '<span style="font-size:9px"> m</span>';
       }
 
       /* ---------- controls ---------- */
-      $("rotorSeg")
-        .querySelectorAll("button")
-        .forEach(
-          (b) =>
-            (b.onclick = () => {
-              S.rotors = +b.dataset.n;
-              $("rotorSeg")
-                .querySelectorAll("button")
-                .forEach((x) => x.classList.remove("on"));
-              b.classList.add("on");
-              refreshStatic();
-            }),
-        );
+
+      function getRotorDiagramSvg(n) {
+        let lines = "";
+        let rotors = "";
+        const r = 13;
+        const cx = 20, cy = 20;
+        for (let i = 0; i < n; i++) {
+          const angle = (i * 2 * Math.PI) / n - Math.PI / 2;
+          const rx = cx + r * Math.cos(angle);
+          const ry = cy + r * Math.sin(angle);
+          lines += `<line x1="${cx}" y1="${cy}" x2="${rx}" y2="${ry}" class="frame" />`;
+          rotors += `<g transform="translate(${rx},${ry})"><circle cx="0" cy="0" r="4.5" class="disc"/><g class="rot"><line x1="-3.5" y1="0" x2="3.5" y2="0" class="blade"/></g></g>`;
+        }
+        return `<svg class="rdiag" viewBox="0 0 40 40">${lines}<circle cx="${cx}" cy="${cy}" r="3" class="hub"/>${rotors}</svg>`;
+      }
+
+      function buildRotorPicker() {
+        const container = $("rotorSeg");
+        if (!container) return;
+        container.innerHTML = "";
+        const opts = [
+          { n: 2, name: "Bi", sub: "2 Rotors" },
+          { n: 4, name: "Quad", sub: "4 Rotors" },
+          { n: 6, name: "Hexa", sub: "6 Rotors" }
+        ];
+        opts.forEach((opt) => {
+          const card = document.createElement("button");
+          card.type = "button";
+          card.className = "rcard" + (S.rotors === opt.n ? " on" : "");
+          card.dataset.n = opt.n;
+          const perW = (S.mass / opt.n).toFixed(2);
+          card.innerHTML = `
+            ${getRotorDiagramSvg(opt.n)}
+            <span class="rname">${opt.name}</span>
+            <span class="rload">${perW} kg/r</span>
+          `;
+          card.onclick = () => {
+            S.rotors = opt.n;
+            container.querySelectorAll(".rcard").forEach((c) => c.classList.remove("on"));
+            card.classList.add("on");
+            $("rotorVal").textContent = opt.n + " rotors (" + opt.name + ")";
+            refreshStatic();
+          };
+          container.appendChild(card);
+        });
+      }
+
       const RADWORD = (r) =>
         r < 0.14 ? "small" : r < 0.2 ? "medium" : "large";
       $("radius").oninput = (e) => {
@@ -1873,6 +2390,7 @@
 
       /* ---------- init ---------- */
       buildTabs();
+      buildRotorPicker();
       buildBars();
       $("massVal").textContent = S.mass.toFixed(2) + " kg";
       $("radVal").textContent = RADWORD(S.radius);
