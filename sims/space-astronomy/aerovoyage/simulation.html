@@ -3,29 +3,34 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>AeroVoyage — Rotor Lift Lab</title>
+    <title>AeroVoyage — Planetary Rotor Flight Simulator</title>
     <link rel="icon" type="image/png" href="../../../assets/logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
     <style>
       :root {
-        --paper: #e8e6df;
-        --paper-2: #dedbd2;
-        --ink: #1b2a33;
-        --ink-2: #4a5a66;
-        --ink-3: #8a9aa6;
-        --rule: #b9bdb4;
-        --signal: #c2410c;
-        --signal-2: #ea580c;
-        --ok: #15803d;
-        --warn: #a16207;
-        --grid: rgba(27, 42, 51, 0.07);
+        --bg-dark: #090d16;
+        --bg-stage: #0c101c;
+        --panel-bg: #121826;
+        --panel-card: rgba(26, 35, 52, 0.8);
+        --panel-card-hover: rgba(35, 47, 68, 0.95);
+        --border-color: rgba(255, 255, 255, 0.12);
+        --border-highlight: rgba(0, 242, 254, 0.45);
+        --accent-cyan: #00f2fe;
+        --accent-blue: #4facfe;
+        --accent-orange: #ff6b35;
+        --accent-pink: #ff2a85;
+        --accent-green: #22c55e;
+        --accent-glow: rgba(0, 242, 254, 0.3);
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
         --mono: "Roboto Mono", ui-monospace, monospace;
-        --sans: "Archivo", system-ui, sans-serif;
+        --sans: "Outfit", system-ui, sans-serif;
       }
       * {
         box-sizing: border-box;
@@ -35,17 +40,15 @@
       html,
       body {
         height: 100%;
-      }
-      body {
-        background: var(--paper);
-        color: var(--ink);
+        background: var(--bg-dark);
+        color: var(--text-primary);
         font-family: var(--sans);
         overflow: hidden;
         -webkit-font-smoothing: antialiased;
       }
       #app {
         display: grid;
-        grid-template-columns: 1fr 366px;
+        grid-template-columns: 1fr 390px;
         height: 100vh;
       }
 
@@ -53,7 +56,7 @@
       #stage {
         position: relative;
         overflow: hidden;
-        background: var(--paper);
+        background: var(--bg-stage);
       }
       #scene {
         display: block;
@@ -61,271 +64,178 @@
         height: 100%;
       }
 
+      /* HIGH VISIBILITY PLANET SELECTOR BAR */
       #worldtabs {
         position: absolute;
-        top: 12px;
+        top: 14px;
         left: 16px;
         right: 16px;
-        z-index: 4;
+        z-index: 5;
+        background: rgba(9, 13, 22, 0.88);
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border-highlight);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px var(--accent-glow);
       }
       .wt-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         font-family: var(--mono);
-        font-size: 9px;
+        font-size: 10.5px;
         font-weight: 700;
-        letter-spacing: 0.18em;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--paper);
-        background: var(--ink);
-        display: inline-block;
-        padding: 4px 9px 3px;
-        margin-bottom: 7px;
-        box-shadow: 0 2px 10px rgba(13, 21, 27, 0.35);
+        color: var(--text-primary);
+        margin-bottom: 10px;
       }
-      .wt-head b {
-        color: var(--signal-2);
-        font-weight: 700;
+      .wt-head .title-badge {
+        background: linear-gradient(90deg, #00f2fe, #4facfe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+        font-size: 11.5px;
+      }
+      .wt-head .hint-badge {
+        background: rgba(0, 242, 254, 0.15);
+        color: var(--accent-cyan);
+        border: 1px solid rgba(0, 242, 254, 0.3);
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 9px;
       }
       .wt-row {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 9px;
+        gap: 12px;
       }
       .wtab {
         position: relative;
         display: grid;
-        grid-template-columns: 42px 1fr;
+        grid-template-columns: 54px 1fr;
         align-items: center;
-        gap: 9px;
-        background: linear-gradient(
-          180deg,
-          rgba(244, 243, 238, 0.97),
-          rgba(222, 219, 210, 0.97)
-        );
-        border: 1px solid var(--ink-3);
-        border-top: 3px solid var(--rule);
-        backdrop-filter: blur(8px);
-        padding: 9px 10px;
+        gap: 12px;
+        background: linear-gradient(180deg, rgba(26, 35, 52, 0.95), rgba(15, 20, 34, 0.95));
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        padding: 10px 12px;
         cursor: pointer;
         text-align: left;
-        color: var(--ink);
-        box-shadow: 0 3px 12px rgba(13, 21, 27, 0.22);
-        transition:
-          transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1),
-          box-shadow 0.16s,
-          border-color 0.16s,
-          background 0.16s;
+        color: var(--text-primary);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
       }
       .wtab:hover {
-        border-color: var(--ink);
-        border-top-color: var(--signal-2);
-        transform: translateY(-2px);
-        box-shadow: 0 7px 20px rgba(13, 21, 27, 0.3);
+        border-color: var(--accent-cyan);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 242, 254, 0.35);
       }
       .wtab.on {
-        border-color: var(--ink);
-        border-top-color: var(--signal-2);
-        background: linear-gradient(180deg, #22323d, #16222a);
-        color: var(--paper);
-        transform: translateY(-2px);
-        box-shadow:
-          0 8px 22px rgba(13, 21, 27, 0.42),
-          inset 0 0 0 1px rgba(232, 230, 223, 0.12);
+        border-color: var(--accent-cyan);
+        background: linear-gradient(180deg, rgba(0, 242, 254, 0.18), rgba(15, 20, 34, 0.98));
+        color: #ffffff;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px var(--accent-glow), inset 0 0 15px rgba(0, 242, 254, 0.15);
       }
       .wtab.on::after {
         content: "";
         position: absolute;
         left: 50%;
         bottom: -7px;
-        width: 10px;
-        height: 10px;
-        background: #16222a;
-        border-right: 1px solid var(--ink);
-        border-bottom: 1px solid var(--ink);
+        width: 12px;
+        height: 12px;
+        background: #00f2fe;
         transform: translateX(-50%) rotate(45deg);
+        box-shadow: 0 0 10px var(--accent-cyan);
       }
       .worb {
-        width: 42px;
-        height: 42px;
+        width: 54px;
+        height: 54px;
         display: block;
         border-radius: 50%;
-        transition: filter 0.16s;
+        transition: transform 0.25s ease, filter 0.25s ease;
+      }
+      .wtab:hover .worb {
+        transform: scale(1.1);
       }
       .wtab.on .worb {
-        filter: drop-shadow(0 0 7px rgba(234, 88, 12, 0.55));
+        filter: drop-shadow(0 0 12px var(--accent-cyan));
       }
       .wtab .wn {
         font-family: var(--sans);
-        font-size: 14px;
-        font-weight: 700;
+        font-size: 16px;
+        font-weight: 800;
         letter-spacing: 0.01em;
         line-height: 1.1;
       }
       .wtab .wsub {
         font-family: var(--mono);
-        font-size: 8px;
-        letter-spacing: 0.02em;
-        color: var(--ink-2);
+        font-size: 9px;
+        color: var(--text-secondary);
         margin-top: 2px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
       .wtab.on .wsub {
-        color: rgba(232, 230, 223, 0.62);
-      }
-      .wtab .wd {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        margin-top: 6px;
-      }
-      .wtab .wd .lab {
-        font-family: var(--mono);
-        font-size: 8px;
+        color: var(--accent-cyan);
         font-weight: 700;
-        letter-spacing: 0.03em;
-        color: var(--ink-3);
-        white-space: nowrap;
       }
-      .wtab.on .wd .lab {
-        color: rgba(232, 230, 223, 0.78);
+      .target-badge {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 8.5px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        padding: 3px 8px;
+        border-radius: 4px;
+        margin-top: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-secondary);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        transition: all 0.2s ease;
       }
-      .difbar {
-        flex: 1;
-        height: 5px;
-        min-width: 24px;
-        background: var(--rule);
-        position: relative;
-        overflow: hidden;
+      .wtab.on .target-badge.active {
+        background: var(--accent-cyan);
+        color: var(--bg-dark);
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 10px var(--accent-glow);
       }
-      .difbar i {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        background: var(--signal);
-        transition:
-          width 0.2s,
-          background 0.2s;
-      }
-      .wtab.on .difbar {
-        background: rgba(232, 230, 223, 0.25);
-      }
-      .wtab:focus-visible {
-        outline: 2px solid var(--signal-2);
-        outline-offset: 3px;
-      }
-      /* one-time attention pulse so the world picker is not overlooked */
-      @keyframes wtnudge {
-        0%,
-        100% {
-          box-shadow: 0 3px 12px rgba(13, 21, 27, 0.22);
-        }
-        50% {
-          box-shadow:
-            0 3px 12px rgba(13, 21, 27, 0.22),
-            0 0 0 4px rgba(234, 88, 12, 0.28);
-        }
-      }
-      #worldtabs.nudge .wtab:not(.on) {
-        animation: wtnudge 1.5s ease-in-out 3;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        #worldtabs.nudge .wtab:not(.on) {
-          animation: none;
-        }
-        .wtab {
-          transition: none;
-        }
+      .wtab:hover .target-badge:not(.active) {
+        background: rgba(0, 242, 254, 0.2);
+        color: var(--accent-cyan);
+        border-color: var(--accent-cyan);
       }
 
       #titlecard {
         position: absolute;
-        top: 132px;
+        top: 156px;
         left: 18px;
         pointer-events: none;
         z-index: 3;
+        background: rgba(9, 13, 22, 0.85);
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        backdrop-filter: blur(8px);
       }
       #titlecard h1 {
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 700;
-        letter-spacing: 0.14em;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--ink-2);
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+        background: linear-gradient(90deg, #00f2fe, #4facfe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
       #titlecard p {
         font-family: var(--mono);
         font-size: 9.5px;
         letter-spacing: 0.05em;
         margin-top: 3px;
-        color: var(--ink-3);
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-      }
-
-      /* guess prompt */
-      #guess {
-        position: absolute;
-        inset: 0;
-        z-index: 8;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        background: rgba(13, 15, 18, 0.35);
-        backdrop-filter: blur(2px);
-      }
-      #guess.show {
-        display: flex;
-      }
-      #guess .card {
-        background: var(--paper);
-        border: 1px solid var(--ink);
-        padding: 20px 22px;
-        max-width: 380px;
-        text-align: center;
-      }
-      #guess .card h3 {
-        font-size: 14px;
-        letter-spacing: 0.04em;
-        margin-bottom: 4px;
-      }
-      #guess .card p {
-        font-family: var(--mono);
-        font-size: 10px;
-        color: var(--ink-3);
-        margin-bottom: 15px;
-        line-height: 1.5;
-      }
-      #guess .gbtns {
-        display: flex;
-        gap: 10px;
-      }
-      #guess .gbtns button {
-        flex: 1;
-        font-family: var(--mono);
-        font-size: 11px;
-        font-weight: 700;
-        padding: 11px;
-        cursor: pointer;
-        border: 1px solid var(--rule);
-        background: var(--paper-2);
-        letter-spacing: 0.03em;
-      }
-      #guess .gbtns button:hover {
-        border-color: var(--ink);
-      }
-      #guess .fb {
-        font-family: var(--mono);
-        font-size: 11px;
-        font-weight: 700;
-        margin-top: 13px;
-        min-height: 16px;
-      }
-      #guess .fb.ok {
-        color: var(--ok);
-      }
-      #guess .fb.no {
-        color: var(--signal);
+        color: var(--text-secondary);
       }
 
       /* throttle bar */
@@ -335,125 +245,171 @@
         right: 16px;
         bottom: 16px;
         z-index: 5;
-        background: rgba(232, 230, 223, 0.94);
-        border: 1px solid var(--rule);
-        backdrop-filter: blur(6px);
-        padding: 11px 14px;
+        background: rgba(18, 24, 38, 0.92);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+        padding: 12px 16px;
         display: flex;
         align-items: center;
         gap: 14px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       }
       #throttlebar .tlab {
         font-family: var(--mono);
-        font-size: 9px;
+        font-size: 9.5px;
         font-weight: 700;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--ink-3);
+        color: var(--accent-cyan);
       }
       .stepbtn {
         font-family: var(--mono);
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 700;
-        width: 30px;
-        height: 30px;
+        padding: 6px 10px;
+        height: 32px;
         flex: none;
-        background: var(--paper);
-        border: 1px solid var(--rule);
-        color: var(--ink);
+        background: var(--panel-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        border-radius: 6px;
         cursor: pointer;
-        line-height: 1;
+        transition: all 0.15s ease;
       }
       .stepbtn:hover {
-        border-color: var(--signal);
-        color: var(--signal);
-      }
-      .stepbtn:active {
-        background: var(--signal);
-        color: var(--paper);
+        border-color: var(--accent-cyan);
+        color: var(--accent-cyan);
+        background: var(--panel-card-hover);
       }
       #throttle {
         flex: 1;
         -webkit-appearance: none;
         appearance: none;
         height: 6px;
-        background: var(--rule);
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.12);
         cursor: pointer;
+        outline: none;
       }
       #throttle::-webkit-slider-thumb {
         -webkit-appearance: none;
-        width: 20px;
-        height: 20px;
-        background: var(--signal);
+        width: 22px;
+        height: 22px;
+        background: var(--accent-cyan);
         border-radius: 50%;
         cursor: pointer;
-        border: 3px solid var(--paper);
+        border: 2px solid var(--bg-dark);
+        box-shadow: 0 0 12px var(--accent-glow);
+        transition: transform 0.1s ease;
       }
-      #throttle::-moz-range-thumb {
-        width: 20px;
-        height: 20px;
-        background: var(--signal);
-        border-radius: 50%;
-        cursor: pointer;
-        border: 3px solid var(--paper);
+      #throttle::-webkit-slider-thumb:hover {
+        transform: scale(1.15);
       }
-      #throttle:focus-visible {
-        outline: 2px solid var(--signal);
-        outline-offset: 4px;
-      }
+
       .bmeter {
         font-family: var(--mono);
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
       }
       .bmeter .k {
-        font-size: 8px;
+        font-size: 8.5px;
         letter-spacing: 0.1em;
-        color: var(--ink-3);
+        color: var(--text-muted);
         text-transform: uppercase;
         display: block;
       }
       .bmeter .v {
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 700;
+        color: var(--accent-cyan);
         line-height: 1.1;
       }
 
       /* ---- PANEL ---- */
       #panel {
-        background: var(--paper-2);
-        border-left: 1px solid var(--rule);
+        background: var(--panel-bg);
+        border-left: 1px solid var(--border-color);
         overflow-y: auto;
         display: flex;
         flex-direction: column;
       }
       #panel::-webkit-scrollbar {
-        width: 8px;
+        width: 6px;
       }
       #panel::-webkit-scrollbar-track {
-        background: var(--paper-2);
+        background: var(--panel-bg);
       }
       #panel::-webkit-scrollbar-thumb {
-        background: var(--rule);
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 3px;
       }
       .sec {
-        border-bottom: 1px solid var(--rule);
-        padding: 14px 16px;
+        border-bottom: 1px solid var(--border-color);
+        padding: 16px 18px;
       }
       .sec-h {
         font-family: var(--mono);
-        font-size: 9px;
+        font-size: 10px;
         font-weight: 700;
-        letter-spacing: 0.16em;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--ink-3);
-        margin-bottom: 11px;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
         display: flex;
         justify-content: space-between;
         align-items: baseline;
       }
       .sec-h span {
-        color: var(--signal);
+        color: var(--accent-cyan);
+        font-size: 9px;
+      }
+
+      /* SIDEBAR PLANET GRID */
+      .side-planet-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .sp-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--panel-card);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 8px 10px;
+        cursor: pointer;
+        color: var(--text-primary);
+        transition: all 0.15s ease;
+        text-align: left;
+      }
+      .sp-btn:hover {
+        border-color: var(--accent-cyan);
+        background: var(--panel-card-hover);
+      }
+      .sp-btn.on {
+        border-color: var(--accent-cyan);
+        background: rgba(0, 242, 254, 0.15);
+        box-shadow: 0 0 10px var(--accent-glow);
+      }
+      .sp-btn .sp-icon {
+        width: 24px;
+        height: 24px;
+        flex: none;
+      }
+      .sp-btn .sp-name {
+        font-family: var(--sans);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .sp-btn .sp-sub {
+        font-family: var(--mono);
+        font-size: 8px;
+        color: var(--text-muted);
+      }
+      .sp-btn.on .sp-sub {
+        color: var(--accent-cyan);
       }
 
       /* telemetry */
@@ -468,19 +424,20 @@
         align-items: baseline;
         font-family: var(--mono);
         font-size: 11px;
-        padding: 4px 0;
-        border-bottom: 1px dotted var(--rule);
+        padding: 5px 0;
+        border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
       }
       .row dt {
-        color: var(--ink-3);
+        color: var(--text-muted);
         letter-spacing: 0.03em;
       }
       .row dd {
         font-weight: 700;
+        color: var(--text-primary);
         font-variant-numeric: tabular-nums;
       }
       .row dd .u {
-        color: var(--ink-3);
+        color: var(--text-muted);
         font-size: 9px;
         font-weight: 400;
         margin-left: 1px;
@@ -491,222 +448,124 @@
         font-weight: 700;
         letter-spacing: 0.04em;
       }
-      .flag.up {
-        color: var(--ok);
-      }
-      .flag.hold {
-        color: var(--ink);
-      }
-      .flag.down {
-        color: var(--signal);
-      }
+      .flag.up { color: var(--accent-green); }
+      .flag.hold { color: var(--accent-cyan); }
+      .flag.down { color: var(--accent-pink); }
+
       .effwrap {
         grid-column: 1/-1;
-        margin-top: 9px;
+        margin-top: 10px;
       }
       .effwrap .lab {
         display: flex;
         justify-content: space-between;
         align-items: baseline;
         font-family: var(--mono);
-        font-size: 9px;
-        color: var(--ink-3);
+        font-size: 9.5px;
+        color: var(--text-secondary);
         letter-spacing: 0.04em;
-        margin-bottom: 5px;
+        margin-bottom: 6px;
       }
       .effwrap .lab #t_effnum {
-        font-size: 12px;
+        font-size: 12.5px;
         font-weight: 700;
-        color: var(--ink);
+        color: var(--accent-cyan);
         font-variant-numeric: tabular-nums;
       }
       .eff {
-        height: 14px;
-        background: var(--paper);
-        border: 1px solid var(--rule);
+        height: 16px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
         position: relative;
         overflow: hidden;
       }
       .eff i {
         position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        background: linear-gradient(
-          90deg,
-          var(--ok),
-          var(--warn) 55%,
-          var(--signal)
-        );
+        left: 0; top: 0; bottom: 0;
+        background: linear-gradient(90deg, var(--accent-green), #eab308 55%, var(--accent-pink));
         transition: width 0.1s linear;
       }
-      /* decade gridlines so the compressed scale is readable */
-      .eff u {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 1px;
-        background: rgba(27, 42, 51, 0.22);
-        pointer-events: none;
-      }
-      /* marker: what THIS world demands to hover */
       .eff b {
         position: absolute;
-        top: -2px;
-        bottom: -2px;
-        width: 2px;
-        margin-left: -1px;
-        background: var(--ink);
-        pointer-events: none;
-        transition: left 0.2s;
+        top: -2px; bottom: -2px; width: 2px;
+        margin-left: -1px; background: #ffffff;
+        pointer-events: none; transition: left 0.2s;
       }
-      .eff b::after {
-        content: "";
-        position: absolute;
-        top: -1px;
-        left: -3px;
-        border-left: 4px solid transparent;
-        border-right: 4px solid transparent;
-        border-top: 5px solid var(--ink);
-      }
-      .eff b.unreach {
-        background: var(--signal);
-      }
-      .eff b.unreach::after {
-        border-top-color: var(--signal);
-      }
+      .eff b.unreach { background: var(--accent-pink); }
+
       .effscale {
         position: relative;
-        height: 11px;
+        height: 12px;
         font-family: var(--mono);
-        font-size: 7.5px;
-        letter-spacing: 0.04em;
-        color: var(--ink-3);
-        margin-top: 3px;
+        font-size: 8px;
+        color: var(--text-muted);
+        margin-top: 4px;
       }
-      .effscale span {
-        position: absolute;
-        top: 0;
-        transform: translateX(-50%);
-        white-space: nowrap;
-      }
-      .effscale span.first {
-        transform: none;
-        left: 0;
-      }
-      .effscale span.last {
-        transform: none;
-        left: auto;
-        right: 0;
-      }
+      .effscale span { position: absolute; top: 0; transform: translateX(-50%); }
+      .effscale span.first { transform: none; left: 0; }
+      .effscale span.last { transform: none; left: auto; right: 0; }
+
       .effnote {
         font-family: var(--mono);
-        font-size: 8.5px;
+        font-size: 9px;
         line-height: 1.5;
-        color: var(--ink-3);
-        margin-top: 5px;
+        color: var(--text-secondary);
+        margin-top: 6px;
       }
-      .effnote b {
-        font-weight: 700;
-      }
-      .effnote.warn b {
-        color: var(--signal);
-      }
-      .effnote.ok b {
-        color: var(--ok);
-      }
+      .effnote b { font-weight: 700; }
+      .effnote.warn b { color: var(--accent-pink); }
+      .effnote.ok b { color: var(--accent-green); }
 
       /* controls */
-      .ctl {
-        margin-bottom: 13px;
-      }
-      .ctl:last-child {
-        margin-bottom: 0;
-      }
-      .ctl-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        margin-bottom: 5px;
-      }
-      .ctl-name {
-        font-family: var(--mono);
-        font-size: 10px;
-        color: var(--ink-2);
-        letter-spacing: 0.05em;
-      }
-      .ctl-val {
-        font-family: var(--mono);
-        font-size: 11px;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-      }
-      .ctl-val .num {
-        color: var(--signal);
-      }
+      .ctl { margin-bottom: 14px; }
+      .ctl-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+      .ctl-name { font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); }
+      .ctl-val { font-family: var(--mono); font-size: 11.5px; font-weight: 700; color: var(--accent-cyan); }
       input[type="range"] {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 100%;
-        height: 2px;
-        background: var(--rule);
-        cursor: pointer;
+        -webkit-appearance: none; appearance: none;
+        width: 100%; height: 5px; border-radius: 3px;
+        background: rgba(255, 255, 255, 0.12); cursor: pointer; outline: none;
       }
       input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 13px;
-        height: 13px;
-        background: var(--ink);
-        border-radius: 50%;
-        cursor: pointer;
-        border: 2px solid var(--paper-2);
+        -webkit-appearance: none; width: 16px; height: 16px;
+        background: var(--accent-cyan); border-radius: 50%;
+        cursor: pointer; border: 2px solid var(--bg-dark);
+        box-shadow: 0 0 10px var(--accent-glow);
       }
-      input[type="range"]::-moz-range-thumb {
-        width: 13px;
-        height: 13px;
-        background: var(--ink);
-        border-radius: 50%;
-        cursor: pointer;
-        border: 2px solid var(--paper-2);
-      }
-      input[type="range"]:focus-visible {
-        outline: 2px solid var(--signal);
-        outline-offset: 4px;
-      }
-      /* ---- rotor layout picker: three tactile cards with live diagrams ---- */
+
       .rotorpick {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 7px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
       }
       .rcard {
         position: relative;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 5px;
-        background: var(--paper);
-        border: 1px solid var(--rule);
+        gap: 4px;
+        background: linear-gradient(180deg, rgba(26, 35, 52, 0.85), rgba(15, 20, 34, 0.95));
+        border: 1.5px solid var(--border-color);
+        border-radius: 8px;
         padding: 9px 4px 7px;
         cursor: pointer;
-        color: var(--ink-2);
+        color: var(--text-secondary);
         overflow: hidden;
-        transition:
-          transform 0.15s cubic-bezier(0.2, 0.9, 0.3, 1),
-          border-color 0.15s,
-          background 0.15s,
-          box-shadow 0.15s;
+        transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
       }
       .rcard:hover {
-        border-color: var(--ink);
+        border-color: var(--accent-cyan);
+        color: var(--text-primary);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(13, 21, 27, 0.16);
+        box-shadow: 0 6px 16px rgba(0, 242, 254, 0.25);
       }
       .rcard.on {
-        background: var(--ink);
-        border-color: var(--ink);
-        color: var(--paper);
-        box-shadow: 0 4px 14px rgba(13, 21, 27, 0.3);
+        background: linear-gradient(180deg, rgba(0, 242, 254, 0.18), rgba(15, 20, 34, 0.98));
+        border-color: var(--accent-cyan);
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px var(--accent-glow);
       }
       .rcard.on::before {
         content: "";
@@ -715,377 +574,55 @@
         left: 0;
         right: 0;
         height: 3px;
-        background: var(--signal-2);
-      }
-      .rcard:focus-visible {
-        outline: 2px solid var(--signal);
-        outline-offset: 2px;
+        background: var(--accent-cyan);
+        box-shadow: 0 0 10px var(--accent-cyan);
       }
       .rdiag {
-        width: 40px;
-        height: 40px;
+        width: 44px;
+        height: 44px;
         display: block;
-        overflow: visible;
       }
-      .rdiag .frame {
-        stroke: var(--ink-3);
-        stroke-width: 2.4;
-        stroke-linecap: round;
-        fill: none;
-      }
-      .rcard.on .rdiag .frame {
-        stroke: rgba(232, 230, 223, 0.5);
-      }
-      .rdiag .hub {
-        fill: var(--ink-3);
-      }
-      .rcard.on .rdiag .hub {
-        fill: var(--paper);
-      }
-      .rdiag .disc {
-        fill: none;
-        stroke: var(--rule);
-        stroke-width: 1;
-      }
-      .rcard.on .rdiag .disc {
-        stroke: rgba(234, 88, 12, 0.55);
-      }
-      .rdiag .blade {
-        stroke: var(--ink-2);
-        stroke-width: 1.8;
-        stroke-linecap: round;
-      }
-      .rcard.on .rdiag .blade {
-        stroke: var(--signal-2);
-      }
-      /* blades idle-turn on the selected card, and spin up with the rotors */
-      .rcard.on .rot {
-        animation: rspin 2.4s linear infinite;
+      .rcard .rot {
+        animation: rspin 2.5s linear infinite;
         transform-origin: center;
       }
-      .rcard.on .rot:nth-of-type(even) {
-        animation-direction: reverse;
-      }
-      .rotorpick.spinning .rcard.on .rot {
-        animation-duration: 0.34s;
+      .rotorpick.spinning .rcard .rot {
+        animation-duration: 0.25s;
       }
       @keyframes rspin {
         to {
           transform: rotate(360deg);
         }
       }
-      @media (prefers-reduced-motion: reduce) {
-        .rcard.on .rot {
-          animation: none;
-        }
-        .rcard {
-          transition: none;
-        }
-      }
-      .rname {
-        font-family: var(--sans);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        line-height: 1;
-      }
-      .rload {
-        font-family: var(--mono);
-        font-size: 8px;
-        letter-spacing: 0.01em;
-        color: var(--ink-3);
-        font-variant-numeric: tabular-nums;
-        line-height: 1;
-      }
-      .rcard.on .rload {
-        color: rgba(232, 230, 223, 0.72);
-      }
 
-      .ctl-name .sym {
-        color: var(--ink-3);
-        font-size: 9px;
-      }
-      .pitchlab {
-        display: flex;
-        justify-content: space-between;
-        font-family: var(--mono);
-        font-size: 8.5px;
-        color: var(--ink-3);
-        letter-spacing: 0.03em;
-        margin-top: 3px;
-      }
-
-      .tog {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        font-family: var(--mono);
-        font-size: 10px;
-        padding: 5px 0;
-        cursor: pointer;
-        color: var(--ink-2);
-      }
-      .tog input {
-        appearance: none;
-        -webkit-appearance: none;
-        width: 26px;
-        height: 14px;
-        background: var(--rule);
-        position: relative;
-        cursor: pointer;
-        transition: 0.12s;
-        flex: none;
-      }
-      .tog input:checked {
-        background: var(--signal);
-      }
-      .tog input::after {
-        content: "";
-        position: absolute;
-        top: 2px;
-        left: 2px;
-        width: 10px;
-        height: 10px;
-        background: var(--paper);
-        transition: 0.12s;
-      }
-      .tog input:checked::after {
-        left: 14px;
-      }
-      .tog input:focus-visible {
-        outline: 2px solid var(--signal);
-        outline-offset: 2px;
-      }
-
-      /* math panel */
       .eqbox {
-        font-family: var(--mono);
-        font-size: 11px;
-        line-height: 1.7;
-        color: var(--ink);
-        background: var(--paper);
-        border: 1px solid var(--rule);
-        border-left: 3px solid var(--signal);
-        padding: 10px 11px;
-        font-variant-numeric: tabular-nums;
-        overflow-x: auto;
-      }
-      .eqbox .lbl {
-        color: var(--ink-3);
-      }
-      .eqbox b {
-        color: var(--signal);
-        font-weight: 700;
-      }
-      .eqbox .res {
-        font-size: 13px;
-        font-weight: 700;
-        margin-top: 5px;
-        display: block;
-      }
-      .eqbox .moon {
-        color: var(--signal);
-        font-weight: 700;
+        font-family: var(--mono); font-size: 11px; line-height: 1.7;
+        color: var(--text-primary); background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color); border-left: 3px solid var(--accent-cyan);
+        padding: 10px 12px; border-radius: 6px; overflow-x: auto;
       }
       #gGraph {
-        width: 100%;
-        height: 120px;
-        border: 1px solid var(--rule);
-        background: var(--paper);
-        margin-top: 10px;
-        display: block;
+        width: 100%; height: 130px; border: 1px solid var(--border-color);
+        border-radius: 6px; background: #06080e; margin-top: 10px; display: block;
       }
-      .graphcap {
-        font-family: var(--mono);
-        font-size: 8.5px;
-        color: var(--ink-3);
-        margin-top: 4px;
-        letter-spacing: 0.02em;
+      .btn {
+        font-family: var(--mono); font-size: 10.5px; font-weight: 700;
+        background: var(--panel-card); border: 1px solid var(--border-color);
+        color: var(--text-primary); padding: 9px 12px; border-radius: 6px;
+        cursor: pointer; width: 100%; transition: all 0.15s ease;
       }
-      #rpmTable {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 11px;
-        font-family: var(--mono);
-        font-size: 10px;
-      }
-      #rpmTable td,
-      #rpmTable th {
-        border: 1px solid var(--rule);
-        padding: 4px 7px;
-        text-align: left;
-      }
-      #rpmTable th {
-        color: var(--ink-3);
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        background: var(--paper);
-      }
-      #rpmTable td.n {
-        text-align: right;
-        font-variant-numeric: tabular-nums;
-        font-weight: 700;
-      }
-      #rpmTable tr.cur td {
-        background: rgba(194, 65, 12, 0.08);
-      }
+      .btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
 
-      /* comparison bars */
-      .cbars {
-        display: flex;
-        flex-direction: column;
-        gap: 9px;
-      }
-      .cbar {
-        display: grid;
-        grid-template-columns: 52px 1fr auto;
-        align-items: center;
-        gap: 8px;
-        font-family: var(--mono);
-        font-size: 10px;
-      }
-      .cbar .cn {
-        color: var(--ink-2);
-        font-weight: 700;
-        letter-spacing: 0.03em;
-      }
-      .cbar .track {
-        height: 14px;
-        background: var(--paper);
-        border: 1px solid var(--rule);
-        position: relative;
-        overflow: hidden;
-      }
-      .cbar .track i {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        transition: width 0.15s;
-      }
-      .cbar .cv {
-        color: var(--ink-3);
-        font-variant-numeric: tabular-nums;
-        white-space: nowrap;
-        font-size: 9px;
-      }
-      .cbar.cur .cn {
-        color: var(--signal);
-      }
-
-      .note {
-        font-family: var(--mono);
-        font-size: 9.5px;
-        line-height: 1.55;
-        color: var(--ink-3);
-        border-left: 2px solid var(--rule);
-        padding-left: 8px;
-        margin-top: 10px;
-      }
-      .note b {
-        color: var(--signal);
-        font-weight: 700;
-      }
-      .linkbtn {
-        font-family: var(--mono);
-        font-size: 10px;
-        font-weight: 700;
-        background: transparent;
-        border: 1px solid var(--rule);
-        color: var(--ink);
-        padding: 8px 10px;
-        cursor: pointer;
-        letter-spacing: 0.03em;
-        width: 100%;
-      }
-      .linkbtn:hover {
-        border-color: var(--ink);
-        background: var(--paper);
-      }
-
-      /* overlay */
       #scrim {
-        position: fixed;
-        inset: 0;
-        background: rgba(13, 15, 18, 0.55);
-        z-index: 20;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
+        position: fixed; inset: 0; background: rgba(5, 7, 12, 0.85);
+        backdrop-filter: blur(10px); z-index: 20; display: none;
+        align-items: center; justify-content: center; padding: 20px;
       }
-      #scrim.show {
-        display: flex;
-      }
+      #scrim.show { display: flex; }
       .ovl {
-        background: var(--paper);
-        border: 1px solid var(--ink);
-        max-width: 560px;
-        width: 100%;
-        max-height: 88vh;
-        overflow-y: auto;
-        padding: 22px 24px;
-      }
-      .ovl h2 {
-        font-size: 15px;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        margin-bottom: 4px;
-      }
-      .ovl .sub {
-        font-family: var(--mono);
-        font-size: 10px;
-        color: var(--ink-3);
-        margin-bottom: 16px;
-        letter-spacing: 0.03em;
-      }
-      .ovl p {
-        font-size: 13px;
-        line-height: 1.6;
-        color: var(--ink-2);
-        margin-bottom: 11px;
-      }
-      .ovl ol {
-        margin: 0 0 12px 18px;
-      }
-      .ovl li {
-        font-size: 12.5px;
-        line-height: 1.6;
-        color: var(--ink-2);
-        margin-bottom: 6px;
-      }
-      .ovl b {
-        color: var(--ink);
-      }
-      .ovl h3 {
-        font-family: var(--mono);
-        font-size: 11px;
-        letter-spacing: 0.05em;
-        color: var(--signal);
-        margin: 16px 0 5px;
-        text-transform: uppercase;
-      }
-      .ovl .close {
-        margin-top: 8px;
-        font-family: var(--mono);
-        font-size: 11px;
-        font-weight: 700;
-        background: var(--ink);
-        color: var(--paper);
-        border: none;
-        padding: 10px 16px;
-        cursor: pointer;
-        letter-spacing: 0.04em;
-      }
-
-      @media (max-width: 900px) {
-        #app {
-          grid-template-columns: 1fr;
-          grid-template-rows: 1fr auto;
-        }
-        #panel {
-          max-height: 46vh;
-        }
+        background: var(--panel-bg); border: 1px solid var(--border-highlight);
+        border-radius: 12px; max-width: 560px; width: 100%;
+        max-height: 86vh; overflow-y: auto; padding: 26px 28px;
       }
     </style>
   </head>
@@ -1093,241 +630,163 @@
     <div id="app">
       <div id="stage">
         <canvas id="scene"></canvas>
+
+        <!-- HIGH VISIBILITY PLANET SELECTOR BAR -->
         <div id="worldtabs">
-          <div class="wt-head">Choose a world <b>&rarr;</b></div>
-          <div class="wt-row" id="wtRow"></div>
+          <div class="wt-head">
+            <span class="title-badge">🌍 PLANETARY FLIGHT TARGETS</span>
+            <span class="hint-badge">CLICK PLANET TO SWITCH ATMOSPHERE</span>
+          </div>
+          <div class="wt-row" id="wtabRow"></div>
         </div>
+
         <div id="titlecard">
-          <h1>AeroVoyage — Rotor Lift Lab</h1>
-          <p>one drone, four worlds — will it fly?</p>
+          <h1>AeroVoyage Lab</h1>
+          <p>Planetary Aerodynamics &amp; Rotor Lift Simulation</p>
         </div>
-        <div id="guess">
-          <div class="card">
-            <h3 id="guessTitle">Flying to Mars</h3>
-            <p>
-              Same drone, new world. Before we go — will it need
-              <b>MORE</b> push or <b>LESS</b> push to hover than here?
-            </p>
-            <div class="gbtns">
-              <button id="guessMore">More push</button>
-              <button id="guessLess">Less push</button>
-            </div>
-            <div class="fb" id="guessFb"></div>
-          </div>
-        </div>
+
+        <!-- THROTTLE CONTROL BAR -->
         <div id="throttlebar">
-          <span class="tlab">Throttle</span>
-          <button class="stepbtn" id="thrDown">&minus;</button>
+          <span class="tlab">Throttle Control</span>
+          <button class="stepbtn" id="tSub10">-10%</button>
+          <button class="stepbtn" id="tSub1">-1%</button>
           <input type="range" id="throttle" min="0" max="100" value="0" />
-          <button class="stepbtn" id="thrUp">+</button>
+          <button class="stepbtn" id="tAdd1">+1%</button>
+          <button class="stepbtn" id="tAdd10">+10%</button>
           <div class="bmeter">
-            <span class="k">Rotor RPM</span><span class="v" id="bRpm">0</span>
-          </div>
-          <div class="bmeter">
-            <span class="k">Altitude</span
-            ><span class="v" id="bAlt"
-              >0.0<span style="font-size: 9px"> m</span></span
-            >
+            <span class="k">Motor Power</span>
+            <span class="v" id="thval">0%</span>
           </div>
         </div>
       </div>
 
       <div id="panel">
-        <!-- TELEMETRY -->
+        <!-- SIDEBAR PLANET QUICK SWITCH -->
         <div class="sec">
-          <div class="sec-h">Telemetry <span id="telemWorld">Earth</span></div>
-          <dl id="telem">
-            <div class="row">
-              <dt>Altitude</dt>
-              <dd id="t_alt">0.0<span class="u">m</span></dd>
-            </div>
-            <div class="row">
-              <dt>Climb rate</dt>
-              <dd id="t_vs">0.0<span class="u">m/s</span></dd>
-            </div>
-            <div class="row">
-              <dt>Rotor RPM</dt>
-              <dd id="t_rpm">0</dd>
-            </div>
-            <div class="row">
-              <dt>Lift</dt>
-              <dd><span class="flag hold" id="t_flag">HOLDING</span></dd>
-            </div>
-            <div class="effwrap">
-              <div class="lab">
-                <span>Effort (power draw)</span
-                ><span id="t_effnum">0%</span>
-              </div>
-              <div class="eff" id="effBar">
-                <i id="t_eff" style="width: 0%"></i>
-                <b id="t_effmark" style="left: 0%"></b>
-              </div>
-              <div class="effscale" id="effScale"><span class="first">0%</span><span style="left:25%">25%</span><span style="left:50%">50%</span><span style="left:75%">75%</span><span class="last">100% MAX</span></div>
-              <div class="effnote" id="t_effnote"></div>
-            </div>
-          </dl>
+          <div class="sec-h">Flight Target Atmosphere <span>Location</span></div>
+          <div class="side-planet-grid" id="sidePlanetGrid"></div>
         </div>
 
-        <!-- DRONE CONFIG -->
+        <!-- TELEMETRY -->
         <div class="sec">
-          <div class="sec-h">The Drone <span>build it</span></div>
-          <div class="ctl">
-            <div class="ctl-top">
-              <span class="ctl-name"
-                >How many rotors <span class="sym">(layout)</span></span
-              ><span class="ctl-val" id="rotorVal">4 rotors</span>
+          <div class="sec-h">Flight Telemetry <span>HUD Gauges</span></div>
+          <div id="telem">
+            <div class="row"><dt>Altitude</dt><dd id="t_alt">0.0 <span class="u">m</span></dd></div>
+            <div class="row"><dt>Vertical Speed</dt><dd id="t_vspeed">0.0 <span class="u">m/s</span></dd></div>
+            <div class="row"><dt>Motor RPM</dt><dd id="t_rpm">0 <span class="u">RPM</span></dd></div>
+            <div class="row"><dt>Flight State</dt><dd id="t_state"><span class="flag hold">PARKED</span></dd></div>
+            <div class="row"><dt>Rotor Thrust</dt><dd id="t_thrust">0.0 <span class="u">N</span></dd></div>
+            <div class="row"><dt>Vehicle Weight</dt><dd id="t_weight">17.7 <span class="u">N</span></dd></div>
+
+            <div class="effwrap">
+              <div class="lab">
+                <span>Hover Effort (vs Earth Baseline)</span>
+                <span id="t_effnum">0%</span>
+              </div>
+              <div class="eff" id="effbar">
+                <i id="efffill" style="width: 0%"></i>
+                <b id="efftarget" style="left: 25%"></b>
+              </div>
+              <div class="effscale">
+                <span class="first">0%</span>
+                <span style="left: 25%">100%</span>
+                <span style="left: 50%">200%</span>
+                <span style="left: 75%">300%</span>
+                <span class="last">400%+</span>
+              </div>
+              <div class="effnote" id="effnote"></div>
             </div>
-            <div class="rotorpick" id="rotorSeg"></div>
           </div>
+        </div>
+
+        <!-- DRONE BUILDER CONTROLS -->
+        <div class="sec">
+          <div class="sec-h">Vehicle Configuration <span>Specs</span></div>
+
           <div class="ctl">
             <div class="ctl-top">
-              <span class="ctl-name"
-                >Rotor size <span class="sym">(radius)</span></span
-              ><span class="ctl-val" id="radVal">medium</span>
+              <span class="ctl-name">Rotor Configuration</span>
             </div>
-            <input
-              type="range"
-              id="radius"
-              min="0.10"
-              max="0.25"
-              step="0.005"
-              value="0.15"
-            />
+            <div class="rotorpick" id="rotorPick"></div>
           </div>
+
           <div class="ctl">
             <div class="ctl-top">
-              <span class="ctl-name"
-                >Blade angle <span class="sym">(pitch)</span></span
-              ><span class="ctl-val" id="pitchVal">medium</span>
+              <span class="ctl-name">Vehicle Mass <span class="sym">(m)</span></span>
+              <span class="ctl-val" id="massVal">1.80 kg</span>
+            </div>
+            <input type="range" id="mass" min="0.4" max="5.0" step="0.1" value="1.8" />
+          </div>
+
+          <div class="ctl">
+            <div class="ctl-top">
+              <span class="ctl-name">Rotor Diameter <span class="sym">(Radius R)</span></span>
+              <span class="ctl-val" id="radVal">Medium (15 cm)</span>
+            </div>
+            <input type="range" id="radius" min="0.08" max="0.32" step="0.01" value="0.15" />
+          </div>
+
+          <div class="ctl">
+            <div class="ctl-top">
+              <span class="ctl-name">Blade Pitch Angle <span class="sym">(Thrust C<sub>t</sub>)</span></span>
+              <span class="ctl-val" id="pitchVal">Standard Pitch</span>
             </div>
             <input type="range" id="pitch" min="0" max="2" step="1" value="1" />
             <div class="pitchlab">
-              <span>shallow</span><span>medium</span><span>steep</span>
+              <span>Shallow</span>
+              <span>Standard</span>
+              <span>Steep</span>
             </div>
-          </div>
-          <div class="ctl">
-            <div class="ctl-top">
-              <span class="ctl-name"
-                >Weight <span class="sym">(mass)</span></span
-              ><span class="ctl-val" id="massVal">1.80 kg</span>
-            </div>
-            <input
-              type="range"
-              id="mass"
-              min="1.2"
-              max="2.4"
-              step="0.05"
-              value="1.8"
-            />
           </div>
         </div>
 
-        <!-- TOGGLES -->
+        <!-- ENVIRONMENT & MATH -->
         <div class="sec">
-          <div class="sec-h">View <span>options</span></div>
+          <div class="sec-h">Environment &amp; Physics <span>Analysis</span></div>
           <label class="tog"
-            ><span>Show the math</span><input type="checkbox" id="mathTog"
+            ><span>Crosswind Shear &amp; Gusts</span><input type="checkbox" id="windTog"
           /></label>
-          <label class="tog"
-            ><span>Wind</span><input type="checkbox" id="windTog"
-          /></label>
-          <div class="ctl" id="windCtl" style="display: none; margin-top: 10px">
+          <div class="ctl" id="windCtl" style="display: none; margin-top: 8px">
             <div class="ctl-top">
-              <span class="ctl-name">Wind speed</span
-              ><span class="ctl-val" id="windVal">0 m/s</span>
+              <span class="ctl-name">Wind Velocity</span>
+              <span class="ctl-val" id="windVal">0.0 m/s</span>
             </div>
-            <input
-              type="range"
-              id="wind"
-              min="0"
-              max="15"
-              step="0.5"
-              value="0"
-            />
+            <input type="range" id="wind" min="0" max="20" step="0.5" value="0" />
+          </div>
+
+          <label class="tog" style="margin-top: 6px"
+            ><span>Show Lift Equation &amp; Curves</span><input type="checkbox" id="mathTog"
+          /></label>
+
+          <div id="mathSec" style="display: none; margin-top: 10px">
+            <div class="eqbox" id="eqbox"></div>
+            <canvas id="gGraph"></canvas>
+            <div class="graphcap">Hover RPM required across planetary atmospheres</div>
           </div>
         </div>
 
-        <!-- MATH PANEL -->
-        <div class="sec" id="mathSec" style="display: none">
-          <div class="sec-h">The Math <span>hover equation</span></div>
-          <div class="eqbox" id="eqbox"></div>
-          <canvas id="gGraph"></canvas>
-          <div class="graphcap">
-            Spin needed vs rotor size — see how fast the curve drops as rotors
-            get bigger (radius⁴).
-          </div>
-          <table id="rpmTable"></table>
-        </div>
-
-        <!-- COMPARISON -->
+        <!-- HELP -->
         <div class="sec">
-          <div class="sec-h">Four Worlds <span>how hard to hover</span></div>
-          <div class="cbars" id="cbars"></div>
-          <div class="note">
-            Taller bar = the rotors must spin faster to hover
-            <b>this exact drone</b>. Rebuild the drone and watch every bar move.
-          </div>
-        </div>
-
-        <!-- REFERENCES -->
-        <div class="sec">
-          <button class="linkbtn" id="helpBtn">
-            ? How it works &amp; real missions
-          </button>
+          <button class="btn" id="helpBtn">? Mission Flight Manual</button>
         </div>
       </div>
     </div>
 
+    <!-- HELP OVERLAY -->
     <div id="scrim">
       <div class="ovl">
-        <h2>AeroVoyage — Rotor Lift Lab</h2>
-        <div class="sub">
-          One drone. Four worlds. Real physics. Nothing to win — just explore.
-        </div>
+        <h2>AeroVoyage Flight Manual</h2>
+        <div class="sub">Aerodynamics across Solar System Atmospheres</div>
         <p>
-          The same drone travels to <b>Earth, Mars, Titan,</b> and the
-          <b>Moon</b>. Build it with the controls on the right, then push the
-          <b>throttle</b> at the bottom to spin the rotors and lift off.
+          Rotorcraft generate aerodynamic lift by spinning blades to push atmospheric gas downwards. Lift force depends on atmospheric density (&rho;), rotor radius (R), and rotation speed (&omega;).
         </p>
         <ol>
-          <li>
-            Push the throttle on Earth and watch the <b>seesaw</b> tip — more
-            push than weight means it climbs.
-          </li>
-          <li>
-            Tap <b>Mars</b>. The air is 60&times; thinner — the same drone can
-            barely lift. Make the <b>rotors bigger</b> and try again.
-          </li>
-          <li>
-            Tap <b>Titan</b>: thick air, weak gravity — flying is <i>easy</i>.
-            That's why NASA is sending a rotorcraft there.
-          </li>
-          <li>
-            Tap the <b>Moon</b>. No air at all. No matter how hard you push, it
-            will not lift. Rotors can't push against nothing.
-          </li>
-          <li>
-            Flip <b>Show the math</b> to reveal the one equation behind every
-            seesaw, bar, and RPM number.
-          </li>
+          <li><b>Earth:</b> Standard atmosphere (&rho; = 1.225 kg/m³) and gravity (9.81 m/s²).</li>
+          <li><b>Mars:</b> Extremely thin air (&rho; = 0.016 kg/m³). High-speed rotors (Ingenuity mission) required to achieve lift.</li>
+          <li><b>Titan:</b> Dense atmosphere (&rho; = 5.2 kg/m³) and low gravity (1.35 m/s²). Ideal environment for heavy aerial explorers (Dragonfly mission).</li>
+          <li><b>Moon:</b> Vacuum environment (&rho; = 0). Rotorcraft cannot fly without an atmosphere to push against.</li>
         </ol>
-        <h3>Real missions</h3>
-        <p>
-          <b>Ingenuity (Mars):</b> NASA's little helicopter had to solve exactly
-          this thin-air problem — it spun its blades about 2,500 RPM, roughly
-          5&times; faster than a drone on Earth, just to get off the ground.
-        </p>
-        <p>
-          <b>Dragonfly (Titan):</b> NASA's upcoming rotorcraft. Titan's air is
-          over 4&times; thicker than Earth's and gravity is weak, so big rotors
-          lift easily — perfect for flying.
-        </p>
-        <p>
-          <b>The Moon:</b> No rotor drone has ever flown there, and none ever
-          will — there's no air for the blades to push. Landers and hoppers use
-          rockets instead.
-        </p>
-        <button class="close" id="helpClose">Start flying</button>
+        <button class="close" id="helpClose">Begin Flight</button>
       </div>
     </div>
 
@@ -1337,126 +796,77 @@
       const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
       const TAU = Math.PI * 2;
 
-      /* ---------- constants (shared with Flight Physics Lab) ---------- */
-      const RHO_EARTH = 1.225; // kg/m^3
-      const CT_MED = 0.0345; // baseline thrust coefficient
-      const CT = [0.025, 0.0345, 0.045]; // shallow / medium / steep pitch
-      const RPM_MAX = 16000; // motor ceiling (rad/s below)
+      const RHO_EARTH = 1.225;
+      const CT_MED = 0.0345;
+      const CT = [0.025, 0.0345, 0.045];
+      const RPM_MAX = 16000;
       const OMEGA_MAX = (RPM_MAX * TAU) / 60;
       const DEFAULT = { mass: 1.8, radius: 0.15, pitch: 1, rotors: 4 };
 
-      /* real world data (spec 2.2) + art direction per world */
       const WORLDS = {
         earth: {
           name: "Earth",
           g: 9.81,
           rhoF: 1.0,
-          sub: "thick air · 9.8 m/s²",
-          svgOrb: `<svg class="worb" viewBox="0 0 42 42"><defs><radialGradient id="orbEarth" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#60a5fa"/><stop offset="50%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e3a8a"/></radialGradient></defs><circle cx="21" cy="21" r="18" fill="url(#orbEarth)"/><path d="M12 16c2-4 6-5 9-3s4 4 2 7-5 4-7 2-5-2-4-6z" fill="#22c55e" opacity="0.85"/><path d="M22 24c3-1 6 1 7 4s-2 5-5 5-4-3-3-6z" fill="#15803d" opacity="0.85"/><path d="M10 20c4-2 9-1 14-3s6 2 8 1" stroke="#ffffff" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.75"/><circle cx="21" cy="21" r="18" fill="none" stroke="#93c5fd" stroke-width="1.5" opacity="0.5"/></svg>`,
-          sky: ["#3f7fc4", "#8fc4e8", "#cfe6f3"],
-          ground: "#4f7a3a",
-          dust: "#6f9a4a",
+          sub: "Air 1.22 kg/m³ · 9.8 m/s²",
+          svgOrb: `<svg class="worb" viewBox="0 0 54 54"><defs><radialGradient id="orbEarth" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#93c5fd"/><stop offset="35%" stop-color="#3b82f6"/><stop offset="75%" stop-color="#1d4ed8"/><stop offset="100%" stop-color="#0f172a"/></radialGradient></defs><circle cx="27" cy="27" r="24" fill="none" stroke="#60a5fa" stroke-width="2.5" opacity="0.6"/><circle cx="27" cy="27" r="22" fill="url(#orbEarth)"/><path d="M14 18c3-5 10-6 15-3s7 6 3 11-8 6-12 3-8-4-6-11z" fill="#22c55e" opacity="0.9"/><path d="M28 30c4-2 9 1 11 5s-3 8-7 7-6-5-4-12z" fill="#15803d" opacity="0.85"/><path d="M12 24c6-3 14-2 22-4s8 3 10 2" stroke="#ffffff" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.75"/><path d="M16 14c5-2 11 0 16 1" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6"/></svg>`,
+          sky: ["#0f2b48", "#1e4d7b", "#3b82f6"],
+          ground: "#1b4332",
+          dust: "rgba(255, 255, 255, 0.3)",
           star: false,
-          /* orb thumbnail */
-          orb: {
-            base: ["#3d8fd6", "#1a5390"],
-            land: "#4a8f45",
-            land2: "#3a7038",
-            cap: "#eef4f6",
-            rim: "rgba(150,205,245,.85)",
-            clouds: 0.34,
-          },
-          /* scene */
-          far: "#6d9ec9",
-          hills: ["#3f6f4a", "#37613f"],
-          soil: ["#5a8a42", "#3d5f2c"],
-          rock: "#3f6330",
-          haze: "rgba(190,220,240,.30)",
-          sun: { x: 0.8, y: 0.16, c: "#fff3d0", r: 26 },
-          downwash: "rgba(255,255,255,.5)",
+          far: "#13382c",
+          hills: ["#2d6a4f", "#1b4332"],
+          sun: { x: 0.8, y: 0.18, c: "#fef08a", r: 24 },
+          downwash: "rgba(255, 255, 255, 0.4)",
         },
         mars: {
           name: "Mars",
           g: 3.71,
           rhoF: 0.016,
-          sub: "air 60× thinner · 3.7 m/s²",
-          svgOrb: `<svg class="worb" viewBox="0 0 42 42"><defs><radialGradient id="orbMars" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#f97316"/><stop offset="55%" stop-color="#c2410c"/><stop offset="100%" stop-color="#7c2d12"/></radialGradient></defs><circle cx="21" cy="21" r="18" fill="url(#orbMars)"/><path d="M10 22c4 1 9-2 14 0s6 4 9 2" stroke="#9a3412" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.8"/><circle cx="16" cy="15" r="3" fill="#7c2d12" opacity="0.6"/><circle cx="28" cy="25" r="2" fill="#7c2d12" opacity="0.6"/><path d="M15 5c3-1 8-1 11 0c-1 2-4 3-6 3s-4-1-5-3z" fill="#fef3c7" opacity="0.9"/><circle cx="21" cy="21" r="18" fill="none" stroke="#fdba74" stroke-width="1" opacity="0.4"/></svg>`,
-          sky: ["#a85c35", "#d08b57", "#ecc39a"],
-          ground: "#9c4d2e",
-          dust: "#c06a40",
+          sub: "Thin Air (1.6%) · 3.7 m/s²",
+          svgOrb: `<svg class="worb" viewBox="0 0 54 54"><defs><radialGradient id="orbMars" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#fed7aa"/><stop offset="40%" stop-color="#f97316"/><stop offset="80%" stop-color="#c2410c"/><stop offset="100%" stop-color="#451a03"/></radialGradient></defs><circle cx="27" cy="27" r="24" fill="none" stroke="#fb923c" stroke-width="2" opacity="0.5"/><circle cx="27" cy="27" r="22" fill="url(#orbMars)"/><path d="M12 28c6 2 14-3 22 0s8 6 12 3" stroke="#7c2d12" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.85"/><circle cx="20" cy="18" r="4" fill="#7c2d12" opacity="0.5"/><circle cx="36" cy="32" r="3" fill="#7c2d12" opacity="0.5"/><path d="M18 7c4-2 12-2 16 0c-2 3-6 4-8 4s-6-1-8-4z" fill="#fef3c7" opacity="0.95"/></svg>`,
+          sky: ["#3a150c", "#6c2b18", "#a84320"],
+          ground: "#5c1d0e",
+          dust: "rgba(249, 115, 22, 0.4)",
           star: false,
-          orb: {
-            base: ["#d4783f", "#8c3a1d"],
-            land: "#a04a24",
-            land2: "#7d3418",
-            cap: "#f2e8dc",
-            rim: "rgba(235,165,110,.55)",
-            clouds: 0.08,
-          },
-          far: "#c08055",
-          hills: ["#8d452a", "#73341c"],
-          soil: ["#b05c33", "#7a3a1f"],
-          rock: "#8a4022",
-          haze: "rgba(230,175,130,.34)",
-          sun: { x: 0.78, y: 0.18, c: "#ffe9c8", r: 17 },
-          downwash: "rgba(235,190,150,.35)",
+          far: "#3b1107",
+          hills: ["#7f2811", "#5c1d0e"],
+          sun: { x: 0.78, y: 0.2, c: "#fed7aa", r: 16 },
+          downwash: "rgba(249, 115, 22, 0.5)",
         },
         titan: {
           name: "Titan",
           g: 1.35,
           rhoF: 4.24,
-          sub: "air 4× thicker · 1.4 m/s²",
-          svgOrb: `<svg class="worb" viewBox="0 0 42 42"><defs><radialGradient id="orbTitan" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#fde047"/><stop offset="50%" stop-color="#d97706"/><stop offset="100%" stop-color="#78350f"/></radialGradient></defs><circle cx="21" cy="21" r="18" fill="url(#orbTitan)"/><ellipse cx="21" cy="15" rx="14" ry="4" fill="#b45309" opacity="0.4"/><ellipse cx="21" cy="27" rx="12" ry="3" fill="#78350f" opacity="0.5"/><path d="M14 12c3-1 6 0 8 2" stroke="#fef08a" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.7"/><circle cx="21" cy="21" r="18" fill="none" stroke="#fef08a" stroke-width="2" opacity="0.7"/></svg>`,
-          sky: ["#9a6a1c", "#cfa03a", "#f0d78a"],
-          ground: "#7d5f24",
-          dust: "#b08a30",
+          sub: "Dense Air (424%) · 1.4 m/s²",
+          svgOrb: `<svg class="worb" viewBox="0 0 54 54"><defs><radialGradient id="orbTitan" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="45%" stop-color="#eab308"/><stop offset="80%" stop-color="#a16207"/><stop offset="100%" stop-color="#451a03"/></radialGradient></defs><circle cx="27" cy="27" r="24" fill="none" stroke="#fde047" stroke-width="3" opacity="0.75"/><circle cx="27" cy="27" r="22" fill="url(#orbTitan)"/><ellipse cx="27" cy="18" rx="18" ry="4" fill="#854d0e" opacity="0.45"/><ellipse cx="27" cy="34" rx="16" ry="3.5" fill="#713f12" opacity="0.5"/><path d="M16 15c4-1 9 0 13 3" stroke="#fef9c3" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7"/></svg>`,
+          sky: ["#2d1b00", "#5c3d00", "#9a6a1c"],
+          ground: "#422e06",
+          dust: "rgba(234, 179, 8, 0.4)",
           star: false,
-          orb: {
-            base: ["#f0cf74", "#a3761f"],
-            land: "#8a6a20",
-            land2: "#6d521a",
-            cap: "#f7e9b4",
-            rim: "rgba(255,222,140,.95)",
-            clouds: 0.5,
-          },
-          far: "#c39a45",
-          hills: ["#7a5c22", "#63491a"],
-          soil: ["#8f6c28", "#5e4517"],
-          rock: "#6b501c",
-          haze: "rgba(240,210,130,.42)",
-          sun: { x: 0.74, y: 0.2, c: "#ffeaa8", r: 20 },
-          downwash: "rgba(255,235,175,.55)",
+          far: "#2a1c02",
+          hills: ["#5e4409", "#422e06"],
+          sun: { x: 0.74, y: 0.22, c: "#fef08a", r: 20 },
+          downwash: "rgba(234, 179, 8, 0.5)",
         },
         moon: {
           name: "Moon",
           g: 1.62,
           rhoF: 0,
-          sub: "no air at all · 1.6 m/s²",
-          svgOrb: `<svg class="worb" viewBox="0 0 42 42"><defs><radialGradient id="orbMoon" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#e2e8f0"/><stop offset="60%" stop-color="#64748b"/><stop offset="100%" stop-color="#1e293b"/></radialGradient></defs><circle cx="21" cy="21" r="18" fill="url(#orbMoon)"/><circle cx="16" cy="16" r="5" fill="#334155" opacity="0.6"/><circle cx="26" cy="22" r="6" fill="#334155" opacity="0.65"/><circle cx="18" cy="27" r="4" fill="#334155" opacity="0.5"/><circle cx="27" cy="14" r="2.5" fill="none" stroke="#cbd5e1" stroke-width="1"/><circle cx="13" cy="24" r="2" fill="none" stroke="#cbd5e1" stroke-width="1"/><circle cx="21" cy="31" r="1.5" fill="none" stroke="#cbd5e1" stroke-width="0.8"/></svg>`,
-          sky: ["#04060c", "#080b14", "#0d1119"],
-          ground: "#77777e",
-          dust: "#9a9aa0",
+          sub: "Vacuum (0%) · 1.6 m/s²",
+          svgOrb: `<svg class="worb" viewBox="0 0 54 54"><defs><radialGradient id="orbMoon" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#f8fafc"/><stop offset="50%" stop-color="#94a3b8"/><stop offset="85%" stop-color="#475569"/><stop offset="100%" stop-color="#0f172a"/></radialGradient></defs><circle cx="27" cy="27" r="22" fill="url(#orbMoon)"/><circle cx="20" cy="20" r="7" fill="#1e293b" opacity="0.6"/><circle cx="34" cy="28" r="8" fill="#1e293b" opacity="0.65"/><circle cx="22" cy="35" r="5" fill="#1e293b" opacity="0.5"/><circle cx="34" cy="18" r="3.5" fill="none" stroke="#e2e8f0" stroke-width="1.2"/><circle cx="16" cy="30" r="3" fill="none" stroke="#e2e8f0" stroke-width="1.2"/></svg>`,
+          sky: ["#020408", "#050810", "#080d1a"],
+          ground: "#334155",
+          dust: "none",
           star: true,
-          orb: {
-            base: ["#d2d2d8", "#75757e"],
-            land: "#8e8e97",
-            land2: "#6f6f79",
-            cap: "#e8e8ee",
-            rim: null,
-            clouds: 0,
-          },
-          far: "#2a2a31",
-          hills: ["#5c5c64", "#4a4a51"],
-          soil: ["#8b8b92", "#5e5e66"],
-          rock: "#6a6a72",
-          haze: null,
+          far: "#1e293b",
+          hills: ["#475569", "#334155"],
           sun: null,
           downwash: null,
         },
       };
       const ORDER = ["earth", "mars", "titan", "moon"];
 
-      /* Earth-default baseline omega for the effort meter */
       function hoverOmega(m, g, rhoF, N, R, ct) {
         const rho = RHO_EARTH * rhoF;
         if (rho <= 0) return Infinity;
@@ -1471,14 +881,13 @@
         CT_MED,
       );
 
-      /* ---------- state ---------- */
       const S = {
         world: "earth",
         mass: DEFAULT.mass,
         radius: DEFAULT.radius,
         pitchIdx: DEFAULT.pitch,
         rotors: DEFAULT.rotors,
-        throttle: 0, // 0..100
+        throttle: 0,
         windOn: false,
         wind: 0,
         mathOn: false,
@@ -1486,7 +895,6 @@
         vel: 0,
         phase: 0,
         drift: 0,
-        // derived (recomputed every frame)
         omega: 0,
         rpm: 0,
         thrust: 0,
@@ -1495,37 +903,22 @@
         effort: 0,
       };
 
-      /* ---------- physics (single source of truth, spec 2/9) ---------- */
-      function ctNow() {
-        return CT[S.pitchIdx];
-      }
-      function rhoNow() {
-        return RHO_EARTH * WORLDS[S.world].rhoF;
-      }
+      function ctNow() { return CT[S.pitchIdx]; }
+      function rhoNow() { return RHO_EARTH * WORLDS[S.world].rhoF; }
 
       function derive() {
-        const w = WORLDS[S.world],
-          g = w.g,
-          rho = rhoNow(),
-          N = S.rotors,
-          R = S.radius,
-          ct = ctNow(),
-          m = S.mass;
+        const w = WORLDS[S.world], g = w.g, rho = rhoNow(), N = S.rotors, R = S.radius, ct = ctNow(), m = S.mass;
         S.weight = m * g;
         S.omega = (S.throttle / 100) * OMEGA_MAX;
         S.rpm = (S.omega * 60) / TAU;
-        // thrust from the same equation, rearranged:  T = N*Ct*rho*R^4*omega^2
         S.thrust = N * ct * rho * R * R * R * R * S.omega * S.omega;
         const oh = hoverOmega(m, g, w.rhoF, N, R, ct);
         S.hoverRPM = isFinite(oh) ? (oh * 60) / TAU : Infinity;
-        // effort meter: motor effort ~ omega^3, relative to Earth-default hover (spec 3.2 / 7)
         S.effort = S.omega > 0 ? Math.pow(S.omega / BASE_OMEGA, 3) * 100 : 0;
       }
 
       function step(dt) {
-        // vertical dynamics: m*a = Thrust - Weight - damping*vel
-        const m = S.mass;
-        const damp = 2.2; // gentle settling
+        const m = S.mass, damp = 2.2;
         const a = (S.thrust - S.weight - damp * S.vel) / m;
         S.vel += a * dt;
         S.alt += S.vel * dt;
@@ -1533,41 +926,32 @@
           S.alt = 0;
           if (S.vel < 0) S.vel = 0;
         }
-        // wind pushes sideways, more when higher / more exposed (spec 3.4)
-        const targetDrift = S.windOn
-          ? S.wind * 0.9 * (0.3 + clamp(S.alt / 12, 0, 1))
-          : 0;
+        const targetDrift = S.windOn ? S.wind * 0.9 * (0.3 + clamp(S.alt / 12, 0, 1)) : 0;
         S.drift += (targetDrift - S.drift) * clamp(dt * 2, 0, 1);
-        // rotor spin visual
         S.phase += S.omega * dt * 0.03;
       }
 
-      /* ---------- canvas ---------- */
-      const cv = $("scene"),
-        ctx = cv.getContext("2d");
-      let DPR = Math.max(1, window.devicePixelRatio || 1),
-        CW = 0,
-        CH = 0;
+      const cv = $("scene"), ctx = cv.getContext("2d");
+      let DPR = Math.max(1, window.devicePixelRatio || 1), CW = 0, CH = 0;
+
       function fit() {
         DPR = Math.max(1, window.devicePixelRatio || 1);
         const r = cv.parentElement.getBoundingClientRect();
         cv.width = Math.max(1, r.width * DPR);
         cv.height = Math.max(1, r.height * DPR);
         ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-        CW = r.width;
-        CH = r.height;
+        CW = r.width; CH = r.height;
         if (S.mathOn) drawGraph();
       }
       window.addEventListener("resize", fit);
 
-      const VIS_ALT = 14; // metres mapped to the flyable band
+      const VIS_ALT = 14;
 
       function drawScene() {
         const w = WORLDS[S.world];
         const groundY = CH * 0.8;
         const t = performance.now() / 1000;
 
-        // Multi-tone sky gradient
         const sky = ctx.createLinearGradient(0, 0, 0, groundY);
         sky.addColorStop(0, w.sky[0]);
         sky.addColorStop(0.6, w.sky[1]);
@@ -1575,86 +959,71 @@
         ctx.fillStyle = sky;
         ctx.fillRect(0, 0, CW, groundY);
 
-        // Sun / Celestial body halo
         if (w.sun) {
-          const sx = CW * w.sun.x;
-          const sy = groundY * w.sun.y;
-          const sGrad = ctx.createRadialGradient(sx, sy, 2, sx, sy, w.sun.r * 2.5);
+          const sx = CW * w.sun.x, sy = groundY * w.sun.y;
+          const sGrad = ctx.createRadialGradient(sx, sy, 2, sx, sy, w.sun.r * 3);
           sGrad.addColorStop(0, w.sun.c);
-          sGrad.addColorStop(0.4, w.sun.c);
-          sGrad.addColorStop(1, "rgba(255,255,255,0)");
+          sGrad.addColorStop(0.3, w.sun.c);
+          sGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
           ctx.fillStyle = sGrad;
           ctx.beginPath();
-          ctx.arc(sx, sy, w.sun.r * 2.5, 0, TAU);
+          ctx.arc(sx, sy, w.sun.r * 3, 0, TAU);
           ctx.fill();
         }
 
-        // Twinkling stars on Moon
         if (w.star) {
           ctx.fillStyle = "#ffffff";
-          for (let i = 0; i < 90; i++) {
-            const sx = (i * 107.3) % CW,
-              sy = (i * 59.7) % groundY;
+          for (let i = 0; i < 110; i++) {
+            const sx = (i * 107.3) % CW, sy = (i * 59.7) % groundY;
             const alpha = 0.3 + 0.5 * Math.sin(t * 3 + i);
-            ctx.globalAlpha = clamp(alpha, 0.1, 1);
+            ctx.globalAlpha = clamp(alpha, 0.15, 1);
             ctx.fillRect(sx, sy, i % 3 === 0 ? 2 : 1.2, i % 3 === 0 ? 2 : 1.2);
           }
           ctx.globalAlpha = 1;
         }
 
-        // Distant terrain hills
         if (w.hills) {
           ctx.fillStyle = w.hills[0];
           ctx.beginPath();
           ctx.moveTo(0, groundY);
           for (let x = 0; x <= CW; x += 40) {
-            const h = Math.sin(x * 0.008) * 18 + Math.cos(x * 0.015) * 12;
-            ctx.lineTo(x, groundY - 25 + h);
+            const h = Math.sin(x * 0.008) * 22 + Math.cos(x * 0.015) * 14;
+            ctx.lineTo(x, groundY - 30 + h);
           }
           ctx.lineTo(CW, groundY);
           ctx.closePath();
           ctx.fill();
         }
 
-        // Ground surface
         ctx.fillStyle = w.ground;
         ctx.fillRect(0, groundY, CW, CH - groundY);
 
-        // Soil texture details
-        ctx.fillStyle = w.dust;
-        for (let i = 0; i < CW; i += 24) {
-          ctx.fillRect(i + (i % 3) * 3, groundY + 6 + (i % 4) * 4, 12, 2.5);
-        }
-
-        // Wind streaks
         if (S.windOn && S.wind > 0.2) {
-          ctx.strokeStyle = "rgba(255,255,255,.35)";
-          ctx.lineWidth = 1.4;
+          ctx.strokeStyle = "rgba(0, 242, 254, 0.4)";
+          ctx.lineWidth = 1.5;
           const n = Math.round(S.wind);
           for (let i = 0; i < n; i++) {
             const yy = groundY * 0.2 + (i * groundY * 0.7) / n;
-            const xx = ((t * S.wind * 28 + i * 140) % (CW + 120)) - 60;
+            const xx = ((t * S.wind * 30 + i * 140) % (CW + 120)) - 60;
             ctx.beginPath();
             ctx.moveTo(xx, yy);
-            ctx.lineTo(xx + 25 + S.wind * 2, yy);
+            ctx.lineTo(xx + 30 + S.wind * 2, yy);
             ctx.stroke();
           }
         }
 
-        // Drone position
         const cx = CW * 0.42 + S.drift * 10;
-        const dy = groundY - 22 - clamp(S.alt / VIS_ALT, 0, 1) * (groundY - 72);
+        const dy = groundY - 24 - clamp(S.alt / VIS_ALT, 0, 1) * (groundY - 76);
 
-        // Downwash dust effect when hovering low in atmosphere
-        if (S.thrust > S.weight * 0.5 && w.rhoF > 0 && S.alt < 8) {
+        if (S.thrust > S.weight * 0.4 && w.rhoF > 0 && S.alt < 8) {
           const power = clamp(S.thrust / (S.weight || 1), 0.3, 2.5);
           ctx.fillStyle = w.downwash || "rgba(255,255,255,.4)";
           for (let p = 0; p < 8; p++) {
             const side = p % 2 === 0 ? 1 : -1;
-            const px = cx + side * (15 + ((t * 80 + p * 30) % 90) * power * 0.8);
-            const py = groundY - 2 - Math.random() * 4;
-            const sz = 3 + Math.random() * 5;
-            ctx.globalAlpha = clamp(1 - (Math.abs(px - cx) / 100), 0, 0.6);
+            const px = cx + side * (15 + ((t * 90 + p * 30) % 100) * power * 0.8);
+            const py = groundY - 2 - Math.random() * 5;
+            const sz = 3 + Math.random() * 6;
+            ctx.globalAlpha = clamp(1 - (Math.abs(px - cx) / 110), 0, 0.6);
             ctx.beginPath();
             ctx.arc(px, py, sz, 0, TAU);
             ctx.fill();
@@ -1663,69 +1032,105 @@
         }
 
         drawDrone(cx, dy);
+
         if (S.alt / VIS_ALT > 1) {
-          ctx.fillStyle = "rgba(255,255,255,.9)";
+          ctx.fillStyle = "#00f2fe";
           ctx.font = '700 11px "Roboto Mono",monospace';
           ctx.textAlign = "center";
-          ctx.fillText("↑ climbing above view", cx, 52);
+          ctx.fillText("▲ ASCENDING ABOVE FLYABLE CEILING", cx, 54);
         }
 
-        // Instruments: seesaw + rotor buddies
         drawSeesaw(CW * 0.18, groundY + (CH - groundY) * 0, groundY);
-        drawBuddies(CW, groundY);
       }
 
       function drawDrone(cx, cy) {
-        const N = S.rotors,
-          R = S.radius;
-        const arm = Math.max(26, R * 150);
-        const rr = Math.max(9, R * 90);
-        // Body base with subtle gradient glow
+        const N = S.rotors, R = S.radius;
+        const arm = Math.max(28, R * 160);
+        const rr = Math.max(10, R * 95);
+
+        const thrustScale = clamp(S.thrust * 3.5, 0, 80);
+        const weightScale = clamp(S.weight * 3.5, 0, 80);
+
+        if (S.thrust > 0.1) {
+          ctx.strokeStyle = "#00f2fe";
+          ctx.fillStyle = "#00f2fe";
+          ctx.lineWidth = 3;
+          ctx.shadowColor = "#00f2fe";
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(cx, cy - thrustScale);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - thrustScale - 6);
+          ctx.lineTo(cx - 5, cy - thrustScale + 2);
+          ctx.lineTo(cx + 5, cy - thrustScale + 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        if (S.weight > 0.1) {
+          ctx.strokeStyle = "#ff2a85";
+          ctx.fillStyle = "#ff2a85";
+          ctx.lineWidth = 3;
+          ctx.shadowColor = "#ff2a85";
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(cx, cy + weightScale);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(cx, cy + weightScale + 6);
+          ctx.lineTo(cx - 5, cy + weightScale - 2);
+          ctx.lineTo(cx + 5, cy + weightScale - 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
         ctx.fillStyle = "#1e293b";
-        ctx.strokeStyle = "#0f172a";
+        ctx.strokeStyle = "#00f2fe";
         ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.ellipse(cx, cy, 14, 9, 0, 0, TAU);
+        ctx.ellipse(cx, cy, 16, 10, 0, 0, TAU);
         ctx.fill();
         ctx.stroke();
 
-        // Arm beams + rotors + LED indicators
         for (let i = 0; i < N; i++) {
           const ang = N === 2 ? (i ? Math.PI : 0) : -Math.PI / 2 + (i * TAU) / N;
           const ex = cx + Math.cos(ang) * arm;
           const ey = cy + Math.sin(ang) * arm * 0.55;
 
-          // Structural arm line
-          ctx.strokeStyle = "#334155";
+          ctx.strokeStyle = "#475569";
           ctx.lineWidth = 3.5;
           ctx.beginPath();
           ctx.moveTo(cx, cy);
           ctx.lineTo(ex, ey);
           ctx.stroke();
 
-          // LED tip lights (green front/right, red back/left)
-          ctx.fillStyle = i === 0 ? "#22c55e" : "#ef4444";
+          ctx.fillStyle = i === 0 ? "#22c55e" : "#ff2a85";
           ctx.beginPath();
-          ctx.arc(ex, ey, 2.5, 0, TAU);
+          ctx.arc(ex, ey, 3, 0, TAU);
           ctx.fill();
 
-          // Rotor disc & spinning blades
           const spinning = S.omega > 1;
           ctx.save();
           ctx.translate(ex, ey);
           if (spinning) {
-            ctx.globalAlpha = 0.45;
-            ctx.strokeStyle = "#f8fafc";
+            ctx.globalAlpha = 0.5;
+            ctx.strokeStyle = "#00f2fe";
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.ellipse(0, 0, rr, rr * 0.4, 0, 0, TAU);
             ctx.stroke();
             ctx.globalAlpha = 1;
           }
-          // Spinning blade graphics
           ctx.rotate(S.phase * (i % 2 ? -1 : 1));
-          ctx.strokeStyle = spinning ? "rgba(248,250,252,.85)" : "#cbd5e1";
-          ctx.lineWidth = 2.4;
+          ctx.strokeStyle = spinning ? "rgba(255, 255, 255, 0.9)" : "#cbd5e1";
+          ctx.lineWidth = 2.5;
           for (let b = 0; b < 2; b++) {
             ctx.rotate(Math.PI);
             ctx.beginPath();
@@ -1735,404 +1140,117 @@
           }
           ctx.restore();
         }
-        // Center LED cap
-        ctx.fillStyle = S.omega > 1 ? "#ea580c" : "#64748b";
+
+        ctx.fillStyle = S.omega > 1 ? "#ff6b35" : "#64748b";
         ctx.beginPath();
-        ctx.arc(cx, cy, 3.5, 0, TAU);
+        ctx.arc(cx, cy, 4, 0, TAU);
         ctx.fill();
       }
 
       function drawSeesaw(cx, _ignore, groundY) {
         const y = groundY + (CH - groundY) * 0.5;
         const half = 64;
-        // tilt: positive thrust>weight -> lift side (right) down? We'll tip DOWN toward the winner.
         const diff = S.thrust - S.weight;
         const ratio = S.weight > 0 ? clamp(diff / S.weight, -1, 1) : 0;
-        const tilt = Math.atan(ratio * 0.9); // radians
-        // pivot
-        ctx.fillStyle = "#4A5A66";
+        const tilt = Math.atan(ratio * 0.9);
+
+        ctx.fillStyle = "#334155";
+        ctx.strokeStyle = "#00f2fe";
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.moveTo(cx, y);
-        ctx.lineTo(cx - 11, y + 18);
-        ctx.lineTo(cx + 11, y + 18);
+        ctx.lineTo(cx - 12, y + 18);
+        ctx.lineTo(cx + 12, y + 18);
         ctx.closePath();
         ctx.fill();
-        // beam
+        ctx.stroke();
+
         ctx.save();
         ctx.translate(cx, y);
         ctx.rotate(-tilt);
-        ctx.strokeStyle = "#20303a";
-        ctx.lineWidth = 5;
+        ctx.strokeStyle = "#1e293b";
+        ctx.lineWidth = 6;
         ctx.lineCap = "round";
         ctx.beginPath();
         ctx.moveTo(-half, 0);
         ctx.lineTo(half, 0);
         ctx.stroke();
-        // left pan = weight, right pan = push
-        ctx.fillStyle = "#8A9AA6";
+
+        ctx.fillStyle = "#ff2a85";
         ctx.beginPath();
-        ctx.arc(-half, 0, 7, 0, TAU);
+        ctx.arc(-half, 0, 8, 0, TAU);
         ctx.fill();
-        ctx.fillStyle = "#C2410C";
+
+        ctx.fillStyle = "#00f2fe";
         ctx.beginPath();
-        ctx.arc(half, 0, 7, 0, TAU);
+        ctx.arc(half, 0, 8, 0, TAU);
         ctx.fill();
         ctx.restore();
-        ctx.font = '700 8px "Roboto Mono",monospace';
+
+        ctx.font = '700 8.5px "Roboto Mono",monospace';
         ctx.textAlign = "center";
-        ctx.fillStyle = "#4A5A66";
+        ctx.fillStyle = "#ff2a85";
         ctx.fillText("WEIGHT", cx - half, y + 34);
-        ctx.fillStyle = "#C2410C";
-        ctx.fillText("PUSH", cx + half, y + 34);
-        ctx.fillStyle = "#8A9AA6";
-        ctx.font = '700 9px "Roboto Mono",monospace';
+        ctx.fillStyle = "#00f2fe";
+        ctx.fillText("THRUST", cx + half, y + 34);
+
+        ctx.font = '700 9.5px "Roboto Mono",monospace';
         ctx.textAlign = "center";
         const msg =
           ratio > 0.03
-            ? "more push → climbs"
+            ? "THRUST OVERCOMES GRAVITY → ASCENDING"
             : ratio < -0.03
-              ? "not enough push → sinks"
-              : "balanced → holds";
+              ? "WEIGHT EXCEEDS THRUST → DESCENT"
+              : "FORCE BALANCE → STABLE HOVER";
+        ctx.fillStyle = ratio > 0.03 ? "#22c55e" : ratio < -0.03 ? "#ff2a85" : "#00f2fe";
         ctx.fillText(msg, cx, y - 24);
       }
 
-      function drawBuddies(CW, groundY) {
-        const N = S.rotors,
-          y = groundY + (CH - groundY) * 0.5;
-        const perW = S.weight / N;
-        const x0 = CW * 0.62,
-          gap = Math.min(46, (CW * 0.34) / N);
-        ctx.textAlign = "center";
-        for (let i = 0; i < N; i++) {
-          const x = x0 + i * gap;
-          ctx.fillStyle = "#20303a";
-          ctx.beginPath();
-          ctx.arc(x, y - 6, 7, 0, TAU);
-          ctx.fill(); // buddy
-          ctx.strokeStyle = "#C2410C";
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(x, y + 1);
-          ctx.lineTo(x, y + 13);
-          ctx.stroke();
-          ctx.fillStyle = "#C2410C";
-          ctx.fillRect(x - 8, y + 13, 16, 6); // the load slice each one holds
-        }
-        ctx.fillStyle = "#4A5A66";
-        ctx.font = '700 8px "Roboto Mono",monospace';
-        ctx.fillText(
-          N + " rotors each hold " + perW.toFixed(2) + " kg",
-          x0 + ((N - 1) * gap) / 2,
-          y + 34,
-        );
-      }
-
-      /* ---------- math graph & table (spec 4) ---------- */
-      function drawGraph() {
-        const g = $("gGraph");
-        const r = g.getBoundingClientRect();
-        g.width = r.width * DPR;
-        g.height = r.height * DPR;
-        const gx = g.getContext("2d");
-        gx.setTransform(DPR, 0, 0, DPR, 0, 0);
-        const W = r.width,
-          H = r.height,
-          pad = 6,
-          x0 = pad + 2,
-          y0 = H - 16,
-          x1 = W - pad,
-          y1 = pad;
-        gx.clearRect(0, 0, W, H);
-        const w = WORLDS[S.world];
-        const Rmin = 0.1,
-          Rmax = 0.25;
-        // sample hover RPM vs R for current world/config
-        const pts = [];
-        let ymax = 0;
-        for (let i = 0; i <= 60; i++) {
-          const R = Rmin + ((Rmax - Rmin) * i) / 60;
-          const oh = hoverOmega(S.mass, w.g, w.rhoF, S.rotors, R, ctNow());
-          const rpm = isFinite(oh) ? (oh * 60) / TAU : NaN;
-          pts.push([R, rpm]);
-          if (isFinite(rpm)) ymax = Math.max(ymax, rpm);
-        }
-        ymax = Math.max(ymax, RPM_MAX * 0.6);
-        const sx = (R) => x0 + ((R - Rmin) / (Rmax - Rmin)) * (x1 - x0);
-        const sy = (v) => y0 - clamp(v / ymax, 0, 1) * (y0 - y1);
-        // motor ceiling line
-        gx.strokeStyle = "rgba(194,65,12,.5)";
-        gx.setLineDash([4, 3]);
-        gx.lineWidth = 1;
-        gx.beginPath();
-        gx.moveTo(x0, sy(RPM_MAX));
-        gx.lineTo(x1, sy(RPM_MAX));
-        gx.stroke();
-        gx.setLineDash([]);
-        gx.fillStyle = "rgba(194,65,12,.7)";
-        gx.font = '700 8px "Roboto Mono",monospace';
-        gx.textAlign = "right";
-        gx.fillText("motor limit", x1 - 2, sy(RPM_MAX) - 3);
-        // curve
-        gx.strokeStyle = "#1B2A33";
-        gx.lineWidth = 2;
-        gx.beginPath();
-        let started = false;
-        pts.forEach(([R, v]) => {
-          if (!isFinite(v)) return;
-          const X = sx(R),
-            Y = sy(v);
-          if (!started) {
-            gx.moveTo(X, Y);
-            started = true;
-          } else gx.lineTo(X, Y);
-        });
-        gx.stroke();
-        // current R marker
-        const oh = hoverOmega(S.mass, w.g, w.rhoF, S.rotors, S.radius, ctNow());
-        if (isFinite(oh)) {
-          const X = sx(S.radius),
-            Y = sy((oh * 60) / TAU);
-          gx.fillStyle = "#C2410C";
-          gx.beginPath();
-          gx.arc(X, Y, 4, 0, TAU);
-          gx.fill();
-        }
-        // axes labels
-        gx.fillStyle = "#8A9AA6";
-        gx.font = '7.5px "Roboto Mono",monospace';
-        gx.textAlign = "left";
-        gx.fillText("RPM", x0, y1 + 8);
-        gx.textAlign = "center";
-        gx.fillText("small rotor", x0 + 30, H - 4);
-        gx.fillText("big rotor", x1 - 28, H - 4);
-      }
-
-      function buildTable() {
-        let h =
-          '<tr><th>World</th><th style="text-align:right">Hover RPM</th></tr>';
-        ORDER.forEach((k) => {
-          const w = WORLDS[k];
-          const oh = hoverOmega(
-            S.mass,
-            w.g,
-            w.rhoF,
-            S.rotors,
-            S.radius,
-            ctNow(),
-          );
-          const val = isFinite(oh)
-            ? Math.round((oh * 60) / TAU).toLocaleString()
-            : "∞ — no lift";
-          h += `<tr class="${k === S.world ? "cur" : ""}"><td>${w.name}</td><td class="n">${val}</td></tr>`;
-        });
-        $("rpmTable").innerHTML = h;
-      }
-
-      function updateEquation() {
-        const w = WORLDS[S.world],
-          rho = rhoNow(),
-          N = S.rotors,
-          R = S.radius,
-          ct = ctNow(),
-          m = S.mass,
-          g = w.g;
-        const R4 = Math.pow(R, 4);
-        if (rho <= 0) {
-          $("eqbox").innerHTML =
-            `<span class="lbl">&Omega; = &radic;( (m&middot;g &divide; N) &divide; (C<sub>t</sub>&middot;<b>&rho;</b>&middot;R&#8308;) )</span><br>` +
-            `&Omega; = &radic;( (${m.toFixed(2)}&middot;${g} &divide; ${N}) &divide; (${ct}&middot;<b>0</b>&middot;${R4.toExponential(2)}) )<br>` +
-            `<span class="moon">air thickness &rho; = 0 → dividing by zero → no hover speed exists.</span>` +
-            `<span class="res moon">No lift possible at any RPM.</span>`;
-          return;
-        }
-        const num = (m * g) / N,
-          den = ct * rho * R4;
-        const oh = Math.sqrt(num / den),
-          rpm = (oh * 60) / TAU;
-        $("eqbox").innerHTML =
-          `<span class="lbl">&Omega; = &radic;( (m&middot;g &divide; N) &divide; (C<sub>t</sub>&middot;&rho;&middot;R&#8308;) )</span><br>` +
-          `&Omega; = &radic;( (${m.toFixed(2)}&middot;${g} &divide; <b>${N}</b>) &divide; (${ct}&middot;${rho.toFixed(3)}&middot;${R4.toExponential(2)}) )<br>` +
-          `&Omega; = <b>${oh.toFixed(0)}</b> rad/s` +
-          `<span class="res">RPM = &Omega; &middot; 60 &divide; 2&pi; = <b>${Math.round(rpm).toLocaleString()}</b> RPM</span>` +
-          `<span class="lbl" style="font-size:9px">m=mass, g=gravity, N=rotors, C<sub>t</sub>=blade pitch, &rho;=air, R=rotor size</span>`;
-      }
-
-      /* ---------- comparison bars ---------- */
-      function buildBars() {
-        const c = $("cbars");
-        c.innerHTML = "";
-        ORDER.forEach((k) => {
-          const w = WORLDS[k];
-          const div = document.createElement("div");
-          div.className = "cbar" + (k === S.world ? " cur" : "");
-          div.innerHTML = `<span class="cn">${w.name}</span><div class="track"><i id="bar_${k}"></i></div><span class="cv" id="barv_${k}"></span>`;
-          c.appendChild(div);
-        });
-      }
-      function updateBars() {
-        // difficulty scale: hover RPM vs motor ceiling
-        ORDER.forEach((k) => {
-          const w = WORLDS[k];
-          const oh = hoverOmega(
-            S.mass,
-            w.g,
-            w.rhoF,
-            S.rotors,
-            S.radius,
-            ctNow(),
-          );
-          const bar = $("bar_" + k),
-            lab = $("barv_" + k);
-          if (!bar) return;
-          if (!isFinite(oh)) {
-            bar.style.width = "100%";
-            bar.style.background = "#4A5A66";
-            lab.textContent = "no air";
-            return;
-          }
-          const rpm = (oh * 60) / TAU;
-          const frac = clamp(rpm / RPM_MAX, 0, 1.001);
-          bar.style.width = Math.min(100, frac * 100) + "%";
-          bar.style.background =
-            rpm > RPM_MAX
-              ? "var(--signal)"
-              : frac < 0.35
-                ? "var(--ok)"
-                : frac < 0.75
-                  ? "var(--warn)"
-                  : "var(--signal-2)";
-          lab.textContent =
-            rpm > RPM_MAX
-              ? Math.round(rpm).toLocaleString() + " ✕"
-              : Math.round(rpm).toLocaleString();
-        });
-      }
-
-      /* ---------- world tabs (with difficulty preview) ---------- */
+      /* ---------- WORLD SWITCHING & BUILD TABS ---------- */
       function buildTabs() {
-        const row = $("wtRow");
-        if (!row) return;
+        const row = $("wtabRow");
         row.innerHTML = "";
-        ORDER.forEach((k) => {
-          const w = WORLDS[k];
-          const b = document.createElement("button");
-          b.className = "wtab" + (k === S.world ? " on" : "");
-          b.dataset.k = k;
-          b.innerHTML = `
-            ${w.svgOrb}
-            <div>
-              <div class="wn">${w.name}</div>
-              <div class="wsub">${w.sub}</div>
-              <div class="wd"><span class="lab">diff</span><div class="difbar"><i id="tab_${k}"></i></div></div>
-            </div>
-          `;
-          b.onclick = () => requestWorld(k);
-          row.appendChild(b);
+        ORDER.forEach((key) => {
+          const w = WORLDS[key];
+          const isActive = S.world === key;
+          const btn = document.createElement("button");
+          btn.className = `wtab ${isActive ? "on" : ""}`;
+          btn.onclick = () => switchWorld(key);
+
+          btn.innerHTML =
+            w.svgOrb +
+            `<div>` +
+            `<div class="wn">${w.name}</div>` +
+            `<div class="wsub">${w.sub}</div>` +
+            `<span class="target-badge ${isActive ? "active" : ""}">${isActive ? "⚡ ACTIVE TARGET" : "FLY HERE ➔"}</span>` +
+            `</div>`;
+          row.appendChild(btn);
         });
-      }
-      function updateTabs() {
-        ORDER.forEach((k) => {
-          const w = WORLDS[k];
-          const oh = hoverOmega(
-            S.mass,
-            w.g,
-            w.rhoF,
-            S.rotors,
-            S.radius,
-            ctNow(),
-          );
-          const el = $("tab_" + k);
-          if (!el) return;
-          if (!isFinite(oh)) {
-            el.style.width = "100%";
-            el.style.background = "#4A5A66";
-            return;
-          }
-          const frac = clamp((oh * 60) / TAU / RPM_MAX, 0, 1);
-          el.style.width = frac * 100 + "%";
-          el.style.background =
-            frac < 0.35
-              ? "var(--ok)"
-              : frac < 0.75
-                ? "var(--warn)"
-                : "var(--signal)";
-        });
+
+        // Also build sidebar quick selector
+        const sideGrid = $("sidePlanetGrid");
+        if (sideGrid) {
+          sideGrid.innerHTML = "";
+          ORDER.forEach((key) => {
+            const w = WORLDS[key];
+            const isActive = S.world === key;
+            const sbtn = document.createElement("button");
+            sbtn.className = `sp-btn ${isActive ? "on" : ""}`;
+            sbtn.onclick = () => switchWorld(key);
+            sbtn.innerHTML =
+              `<div class="sp-icon">${w.svgOrb}</div>` +
+              `<div><div class="sp-name">${w.name}</div><div class="sp-sub">${w.sub}</div></div>`;
+            sideGrid.appendChild(sbtn);
+          });
+        }
       }
 
-      /* ---------- world switching with a prediction (spec 3.1 / 5) ---------- */
-      let pending = null;
-      function requestWorld(k) {
-        if (k === S.world) return;
-        pending = k;
-        $("guessTitle").textContent = "Flying to " + WORLDS[k].name;
-        $("guessFb").textContent = "";
-        $("guessFb").className = "fb";
-        $("guessMore").disabled = false;
-        $("guessLess").disabled = false;
-        $("guess").classList.add("show");
-      }
-      function answerGuess(saidMore) {
-        const k = pending;
-        if (!k) return;
-        const curOh = hoverOmega(
-          S.mass,
-          WORLDS[S.world].g,
-          WORLDS[S.world].rhoF,
-          S.rotors,
-          S.radius,
-          ctNow(),
-        );
-        const newOh = hoverOmega(
-          S.mass,
-          WORLDS[k].g,
-          WORLDS[k].rhoF,
-          S.rotors,
-          S.radius,
-          ctNow(),
-        );
-        const needsMore =
-          !isFinite(newOh) ||
-          (isFinite(curOh) && newOh > curOh) ||
-          (!isFinite(curOh) ? false : false);
-        const correct = saidMore === needsMore;
-        const fb = $("guessFb");
-        let why;
-        if (!isFinite(newOh))
-          why =
-            WORLDS[k].name +
-            " has no air — the rotors need MUCH more (actually infinite) push, so it can never hover.";
-        else if (needsMore) why = WORLDS[k].name + " needs MORE push.";
-        else why = WORLDS[k].name + " needs LESS push — easier to fly!";
-        fb.textContent = (correct ? "✓ Right! " : "✗ Not quite. ") + why;
-        fb.className = "fb " + (correct ? "ok" : "no");
-        $("guessMore").disabled = true;
-        $("guessLess").disabled = true;
-        setTimeout(() => {
-          applyWorld(k);
-          $("guess").classList.remove("show");
-          pending = null;
-        }, 1150);
-      }
-      function applyWorld(k) {
-        S.world = k;
-        S.alt = 0;
-        S.vel = 0;
-        S.drift = 0;
-        document
-          .querySelectorAll(".wtab")
-          .forEach((b) => b.classList.toggle("on", b.dataset.k === k));
-        $("telemWorld").textContent = WORLDS[k].name;
-        buildBars();
+      function switchWorld(key) {
+        if (S.world === key) return;
+        S.world = key;
         buildTabs();
-      buildRotorPicker();
-        refreshStatic();
-      }
-
-      /* ---------- panel refresh (spec 8: recompute on every change) ---------- */
-      function refreshStatic() {
-        updateBars();
-        updateTabs();
-        buildRotorPicker();
+        derive();
+        updateTelemetry();
         if (S.mathOn) {
           updateEquation();
           buildTable();
@@ -2140,202 +1258,219 @@
         }
       }
 
-      function updateTelemetry() {
-        $("t_alt").innerHTML = S.alt.toFixed(1) + '<span class="u">m</span>';
-        $("t_vs").innerHTML =
-          (S.vel >= 0 ? "+" : "") +
-          S.vel.toFixed(1) +
-          '<span class="u">m/s</span>';
-        $("t_rpm").textContent = Math.round(S.rpm).toLocaleString();
-        const f = $("t_flag");
-        if (S.thrust > S.weight * 1.02) {
-          f.textContent = "LIFTING";
-          f.className = "flag up";
-        } else if (S.thrust < S.weight * 0.98) {
-          f.textContent = "SINKING";
-          f.className = "flag down";
-        } else {
-          f.textContent = "HOLDING";
-          f.className = "flag hold";
-        }
-
-        // Proportional motor power scaling (0% to 100% of motor ceiling RPM_MAX)
-        const motorPowerPct = clamp((S.rpm / RPM_MAX) * 100, 0, 100);
-        $("t_eff").style.width = motorPowerPct + "%";
-        $("t_effnum").textContent = Math.round(motorPowerPct) + "%";
-
-        // Position hover marker on effort bar
-        const mark = $("t_effmark");
-        const note = $("t_effnote");
-        if (isFinite(S.hoverRPM)) {
-          const hoverPct = clamp((S.hoverRPM / RPM_MAX) * 100, 0, 100);
-          mark.style.left = hoverPct + "%";
-          if (S.hoverRPM <= RPM_MAX) {
-            mark.className = "";
-            if (note) {
-              note.className = "effnote ok";
-              note.innerHTML = `<b>✓ Hover target:</b> ${Math.round(S.hoverRPM).toLocaleString()} RPM (${Math.round(hoverPct)}% motor power).`;
-            }
-          } else {
-            mark.className = "unreach";
-            if (note) {
-              note.className = "effnote warn";
-              note.innerHTML = `<b>⚠ Cannot hover:</b> Required speed (${Math.round(S.hoverRPM).toLocaleString()} RPM) exceeds 16,000 RPM limit.`;
-            }
-          }
-        } else {
-          mark.style.left = "100%";
-          mark.className = "unreach";
-          if (note) {
-            note.className = "effnote warn";
-            note.innerHTML = `<b>⚠ Airless world:</b> No atmosphere for rotors to push.`;
-          }
-        }
-
-        $("bRpm").textContent = Math.round(S.rpm).toLocaleString();
-        $("bAlt").innerHTML =
-          S.alt.toFixed(1) + '<span style="font-size:9px"> m</span>';
-      }
-
-      /* ---------- controls ---------- */
-
-      function getRotorDiagramSvg(n) {
-        let lines = "";
-        let rotors = "";
-        const r = 13;
-        const cx = 20, cy = 20;
-        for (let i = 0; i < n; i++) {
-          const angle = (i * 2 * Math.PI) / n - Math.PI / 2;
-          const rx = cx + r * Math.cos(angle);
-          const ry = cy + r * Math.sin(angle);
-          lines += `<line x1="${cx}" y1="${cy}" x2="${rx}" y2="${ry}" class="frame" />`;
-          rotors += `<g transform="translate(${rx},${ry})"><circle cx="0" cy="0" r="4.5" class="disc"/><g class="rot"><line x1="-3.5" y1="0" x2="3.5" y2="0" class="blade"/></g></g>`;
-        }
-        return `<svg class="rdiag" viewBox="0 0 40 40">${lines}<circle cx="${cx}" cy="${cy}" r="3" class="hub"/>${rotors}</svg>`;
-      }
-
       function buildRotorPicker() {
-        const container = $("rotorSeg");
-        if (!container) return;
-        container.innerHTML = "";
-        const opts = [
-          { n: 2, name: "Bi", sub: "2 Rotors" },
-          { n: 4, name: "Quad", sub: "4 Rotors" },
-          { n: 6, name: "Hexa", sub: "6 Rotors" }
+        const el = $("rotorPick");
+        if (!el) return;
+        el.innerHTML = "";
+        const configs = [
+          { n: 2, name: "Bi", label: "2 Rotors" },
+          { n: 4, name: "Quad", label: "4 Rotors" },
+          { n: 6, name: "Hexa", label: "6 Rotors" },
+          { n: 8, name: "Octo", label: "8 Rotors" },
         ];
-        opts.forEach((opt) => {
-          const card = document.createElement("button");
-          card.type = "button";
-          card.className = "rcard" + (S.rotors === opt.n ? " on" : "");
-          card.dataset.n = opt.n;
-          const perW = (S.mass / opt.n).toFixed(2);
-          card.innerHTML = `
-            ${getRotorDiagramSvg(opt.n)}
-            <span class="rname">${opt.name}</span>
-            <span class="rload">${perW} kg/r</span>
-          `;
+
+        el.classList.toggle("spinning", S.omega > 1);
+
+        configs.forEach(({ n, name, label }) => {
+          const card = document.createElement("div");
+          const isActive = S.rotors === n;
+          card.className = `rcard ${isActive ? "on" : ""}`;
           card.onclick = () => {
-            S.rotors = opt.n;
-            container.querySelectorAll(".rcard").forEach((c) => c.classList.remove("on"));
-            card.classList.add("on");
-            $("rotorVal").textContent = opt.n + " rotors (" + opt.name + ")";
-            refreshStatic();
+            S.rotors = n;
+            buildRotorPicker();
+            derive();
+            updateTelemetry();
+            if (S.mathOn) {
+              updateEquation();
+              drawGraph();
+            }
           };
-          container.appendChild(card);
+
+          let svgContent = `<circle cx="25" cy="25" r="4.5" fill="${isActive ? "#00f2fe" : "#94a3b8"}" />`;
+          for (let i = 0; i < n; i++) {
+            const ang = -Math.PI / 2 + (i * TAU) / n;
+            const rx = 25 + Math.cos(ang) * 16;
+            const ry = 25 + Math.sin(ang) * 16;
+
+            svgContent += `<line x1="25" y1="25" x2="${rx}" y2="${ry}" stroke="${isActive ? "rgba(0,242,254,0.6)" : "#475569"}" stroke-width="2.5" stroke-linecap="round"/>`;
+
+            const dir = i % 2 === 0 ? "normal" : "reverse";
+            svgContent +=
+              `<g transform="translate(${rx},${ry})">` +
+              `<circle cx="0" cy="0" r="5" fill="none" stroke="${isActive ? "#00f2fe" : "#64748b"}" stroke-dasharray="2 2" stroke-width="1"/>` +
+              `<g class="rot" style="animation-direction:${dir}">` +
+              `<line x1="-5" y1="0" x2="5" y2="0" stroke="${isActive ? "#ffffff" : "#cbd5e1"}" stroke-width="2" stroke-linecap="round"/>` +
+              `</g>` +
+              `<circle cx="0" cy="0" r="1.5" fill="${i === 0 ? "#22c55e" : "#ff2a85"}"/>` +
+              `</g>`;
+          }
+
+          card.innerHTML =
+            `<svg class="rdiag" viewBox="0 0 50 50">${svgContent}</svg>` +
+            `<span class="rname">${name}</span>` +
+            `<span class="rload">${label}</span>` +
+            `<span class="target-badge ${isActive ? "active" : ""}" style="font-size:7.5px; padding:2px 5px; margin-top:2px;">${isActive ? "ACTIVE" : "SELECT"}</span>`;
+
+          el.appendChild(card);
         });
       }
 
-      const RADWORD = (r) =>
-        r < 0.14 ? "small" : r < 0.2 ? "medium" : "large";
-      $("radius").oninput = (e) => {
-        const prevOh = hoverOmega(
-          S.mass,
-          WORLDS[S.world].g,
-          WORLDS[S.world].rhoF,
-          S.rotors,
-          S.radius,
-          ctNow(),
-        );
-        S.radius = +e.target.value;
-        $("radVal").innerHTML = S.mathOn
-          ? `${RADWORD(S.radius)} <span class="num">${S.radius.toFixed(3)} m</span>`
-          : RADWORD(S.radius);
-        // "some changes matter more" reaction (spec 3.1)
-        const newOh = hoverOmega(
-          S.mass,
-          WORLDS[S.world].g,
-          WORLDS[S.world].rhoF,
-          S.rotors,
-          S.radius,
-          ctNow(),
-        );
-        if (isFinite(prevOh) && isFinite(newOh)) {
-          const ch = Math.abs(newOh - prevOh) / prevOh;
-          if (ch > 0.06) flashReaction(newOh < prevOh);
+      function buildBars() {
+        $("tSub10").onclick = () => setThrottle(S.throttle - 10);
+        $("tSub1").onclick = () => setThrottle(S.throttle - 1);
+        $("tAdd1").onclick = () => setThrottle(S.throttle + 1);
+        $("tAdd10").onclick = () => setThrottle(S.throttle + 10);
+        $("throttle").oninput = (e) => setThrottle(+e.target.value);
+      }
+
+      function setThrottle(val) {
+        S.throttle = clamp(val, 0, 100);
+        $("throttle").value = S.throttle;
+        $("thval").textContent = Math.round(S.throttle) + "%";
+        derive();
+        updateTelemetry();
+      }
+
+      function updateTelemetry() {
+        $("t_alt").innerHTML = `${S.alt.toFixed(1)} <span class="u">m</span>`;
+        $("t_vspeed").innerHTML = `${S.vel.toFixed(1)} <span class="u">m/s</span>`;
+        $("t_rpm").innerHTML = `${Math.round(S.rpm)} <span class="u">RPM</span>`;
+        $("t_thrust").innerHTML = `${S.thrust.toFixed(1)} <span class="u">N</span>`;
+        $("t_weight").innerHTML = `${S.weight.toFixed(1)} <span class="u">N</span>`;
+
+        let stateText = "PARKED", stateClass = "hold";
+        if (S.alt > 0.05) {
+          if (S.vel > 0.2) { stateText = "CLIMBING"; stateClass = "up"; }
+          else if (S.vel < -0.2) { stateText = "DESCENT"; stateClass = "down"; }
+          else { stateText = "HOVERING"; stateClass = "hold"; }
         }
-        refreshStatic();
-      };
-      const PITCHWORD = ["shallow", "medium", "steep"];
-      $("pitch").oninput = (e) => {
-        S.pitchIdx = +e.target.value;
-        $("pitchVal").innerHTML = S.mathOn
-          ? `${PITCHWORD[S.pitchIdx]} <span class="num">C<sub>t</sub>=${CT[S.pitchIdx]}</span>`
-          : PITCHWORD[S.pitchIdx];
-        refreshStatic();
-      };
+        $("t_state").innerHTML = `<span class="flag ${stateClass}">${stateText}</span>`;
+
+        const MAX_EFFORT_SCALE = 400; // 400% Earth baseline effort scale
+        const currentEffort = S.effort; // 0..400+
+        const fillWidthPct = clamp((currentEffort / MAX_EFFORT_SCALE) * 100, 0, 100);
+
+        $("efffill").style.width = fillWidthPct + "%";
+        $("t_effnum").textContent = Math.round(currentEffort) + "%";
+
+        const hoverEffort = isFinite(S.hoverRPM)
+          ? Math.pow((S.hoverRPM * TAU / 60) / BASE_OMEGA, 3) * 100
+          : Infinity;
+
+        const targetPosPct = isFinite(hoverEffort)
+          ? clamp((hoverEffort / MAX_EFFORT_SCALE) * 100, 0, 100)
+          : 100;
+
+        $("efftarget").style.left = targetPosPct + "%";
+
+        const unreach = !isFinite(S.hoverRPM) || S.hoverRPM > RPM_MAX || hoverEffort > MAX_EFFORT_SCALE;
+        $("efftarget").className = unreach ? "unreach" : "";
+
+        const note = $("effnote");
+        if (S.world === "moon") {
+          note.className = "effnote warn";
+          note.innerHTML = "<b>Vacuum:</b> Impossible to hover. Zero atmosphere = zero lift.";
+        } else if (unreach) {
+          note.className = "effnote warn";
+          note.innerHTML = `<b>Exceeds Limit:</b> Hover requires <b>${Math.round(S.hoverRPM)} RPM</b> (${Math.round(hoverEffort)}% Earth baseline effort), exceeding motor limit.`;
+        } else {
+          note.className = "effnote ok";
+          note.innerHTML = `Hover requires <b>${Math.round(S.hoverRPM)} RPM</b> (${Math.round(hoverEffort)}% Earth baseline effort).`;
+        }
+      }
+
+      function updateEquation() {
+        const eq = $("eqbox");
+        const w = WORLDS[S.world];
+        if (w.rhoF <= 0) {
+          eq.innerHTML = `<span class="lbl">Lift Equation:</span><br>T = N &middot; C<sub>t</sub> &middot; &rho; &middot; R<sup>4</sup> &middot; &omega;<sup>2</sup><br><span class="res" style="color:#ff2a85;">&rho; = 0 kg/m³ &implies; Thrust = 0.0 N</span>`;
+          return;
+        }
+        const rho = rhoNow(), ct = ctNow(), N = S.rotors, R = S.radius;
+        eq.innerHTML =
+          `<span class="lbl">Lift Equation:</span> T = N &middot; C<sub>t</sub> &middot; &rho; &middot; R<sup>4</sup> &middot; &omega;<sup>2</sup><br>` +
+          `T = ${N} &times; ${ct} &times; ${rho.toFixed(3)} &times; ${R.toFixed(2)}<sup>4</sup> &times; &omega;<sup>2</sup><br>` +
+          `<span class="res">Required Hover RPM = <b>${isFinite(S.hoverRPM) ? Math.round(S.hoverRPM) : "Infinity"} RPM</b></span>`;
+      }
+
+      function buildTable() {}
+
+      function drawGraph() {
+        const gc = $("gGraph");
+        if (!gc) return;
+        const ctxG = gc.getContext("2d");
+        const W = gc.clientWidth || 300, H = gc.clientHeight || 130;
+        gc.width = W * DPR; gc.height = H * DPR;
+        ctxG.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+        ctxG.fillStyle = "#06080e";
+        ctxG.fillRect(0, 0, W, H);
+
+        const pad = 30;
+        const gw = W - pad * 2, gh = H - pad * 2;
+
+        ctxG.strokeStyle = "rgba(255,255,255,0.1)";
+        ctxG.lineWidth = 1;
+        ctxG.strokeRect(pad, pad / 2, gw, gh);
+
+        const keys = ["earth", "mars", "titan"];
+        const maxVal = 16000;
+
+        keys.forEach((k, idx) => {
+          const w = WORLDS[k];
+          const oh = hoverOmega(S.mass, w.g, w.rhoF, S.rotors, S.radius, ctNow());
+          const rpm = isFinite(oh) ? (oh * 60) / TAU : maxVal;
+          const barH = clamp(rpm / maxVal, 0, 1) * gh;
+
+          const bx = pad + (idx + 0.5) * (gw / keys.length);
+          const bw = 28;
+
+          ctxG.fillStyle = k === S.world ? "#00f2fe" : "rgba(255,255,255,0.3)";
+          ctxG.fillRect(bx - bw / 2, pad / 2 + gh - barH, bw, barH);
+
+          ctxG.font = '600 9px "Roboto Mono",monospace';
+          ctxG.fillStyle = "#94a3b8";
+          ctxG.textAlign = "center";
+          ctxG.fillText(w.name, bx, pad / 2 + gh + 12);
+        });
+      }
+
       $("mass").oninput = (e) => {
         S.mass = +e.target.value;
         $("massVal").textContent = S.mass.toFixed(2) + " kg";
-        refreshStatic();
+        derive();
+        updateTelemetry();
+        if (S.mathOn) { updateEquation(); drawGraph(); }
+      };
+      $("radius").oninput = (e) => {
+        S.radius = +e.target.value;
+        $("radVal").textContent = `${Math.round(S.radius * 100)} cm`;
+        derive();
+        updateTelemetry();
+        if (S.mathOn) { updateEquation(); drawGraph(); }
+      };
+      $("pitch").oninput = (e) => {
+        S.pitchIdx = +e.target.value;
+        $("pitchVal").textContent = ["Shallow", "Standard", "Steep"][S.pitchIdx];
+        derive();
+        updateTelemetry();
+        if (S.mathOn) { updateEquation(); drawGraph(); }
       };
 
-      $("throttle").oninput = (e) => {
-        S.throttle = +e.target.value;
-      };
-      $("thrUp").onclick = () => {
-        S.throttle = clamp(S.throttle + 5, 0, 100);
-        $("throttle").value = S.throttle;
-      };
-      $("thrDown").onclick = () => {
-        S.throttle = clamp(S.throttle - 5, 0, 100);
-        $("throttle").value = S.throttle;
-      };
-
-      $("mathTog").onchange = (e) => {
-        S.mathOn = e.target.checked;
-        $("mathSec").style.display = S.mathOn ? "block" : "none";
-        // sliders show numbers in math mode
-        $("radVal").innerHTML = S.mathOn
-          ? `${RADWORD(S.radius)} <span class="num">${S.radius.toFixed(3)} m</span>`
-          : RADWORD(S.radius);
-        $("pitchVal").innerHTML = S.mathOn
-          ? `${PITCHWORD[S.pitchIdx]} <span class="num">C<sub>t</sub>=${CT[S.pitchIdx]}</span>`
-          : PITCHWORD[S.pitchIdx];
-        if (S.mathOn) {
-          updateEquation();
-          buildTable();
-          requestAnimationFrame(drawGraph);
-        }
-        try {
-          localStorage.setItem("aero_math", S.mathOn ? "1" : "0");
-        } catch (_) {}
-      };
       $("windTog").onchange = (e) => {
         S.windOn = e.target.checked;
         $("windCtl").style.display = S.windOn ? "block" : "none";
-        if (!S.windOn) {
-          S.wind = 0;
-          $("wind").value = 0;
-          $("windVal").textContent = "0 m/s";
-        }
       };
       $("wind").oninput = (e) => {
         S.wind = +e.target.value;
         $("windVal").textContent = S.wind.toFixed(1) + " m/s";
       };
 
-      $("guessMore").onclick = () => answerGuess(true);
-      $("guessLess").onclick = () => answerGuess(false);
+      $("mathTog").onchange = (e) => {
+        S.mathOn = e.target.checked;
+        $("mathSec").style.display = S.mathOn ? "block" : "none";
+        if (S.mathOn) { updateEquation(); drawGraph(); }
+      };
 
       $("helpBtn").onclick = () => $("scrim").classList.add("show");
       $("helpClose").onclick = () => $("scrim").classList.remove("show");
@@ -2343,37 +1478,13 @@
         if (e.target === $("scrim")) $("scrim").classList.remove("show");
       });
 
-      /* radius reaction flash on the scene */
-      let reaction = { t: 0, easier: true };
-      function flashReaction(easier) {
-        reaction = { t: performance.now(), easier };
-      }
-      function drawReaction() {
-        const dt = performance.now() - reaction.t;
-        if (dt > 1600) return;
-        const a = 1 - dt / 1600;
-        ctx.globalAlpha = a;
-        ctx.fillStyle = reaction.easier ? "#15803D" : "#C2410C";
-        ctx.font = '700 14px "Archivo",sans-serif';
-        ctx.textAlign = "center";
-        ctx.fillText(
-          reaction.easier
-            ? "Whoa — way less push needed!"
-            : "Whoa — that needs way more push!",
-          CW * 0.42,
-          CH * 0.3,
-        );
-        ctx.globalAlpha = 1;
-      }
-
-      /* ---------- main loop (fixed step, clamped dt — spec 2.3 / 8) ---------- */
-      let last = performance.now(),
-        acc = 0;
+      /* ---------- MAIN LOOP ---------- */
+      let last = performance.now(), acc = 0;
       const FIXED = 1 / 120;
       function loop(now) {
         let dt = (now - last) / 1000;
         last = now;
-        dt = clamp(dt, 0, 0.1); // clamp so a backgrounded tab can't jump the sim
+        dt = clamp(dt, 0, 0.1);
         derive();
         acc += dt;
         let guard = 0;
@@ -2383,38 +1494,18 @@
           guard++;
         }
         drawScene();
-        drawReaction();
         updateTelemetry();
         requestAnimationFrame(loop);
       }
 
-      /* ---------- init ---------- */
+      /* ---------- INIT ---------- */
       buildTabs();
       buildRotorPicker();
       buildBars();
-      $("massVal").textContent = S.mass.toFixed(2) + " kg";
-      $("radVal").textContent = RADWORD(S.radius);
-      $("pitchVal").textContent = PITCHWORD[S.pitchIdx];
-      try {
-        if (localStorage.getItem("aero_math") === "1") {
-          S.mathOn = true;
-          $("mathTog").checked = true;
-          $("mathSec").style.display = "block";
-          $("radVal").innerHTML =
-            `${RADWORD(S.radius)} <span class="num">${S.radius.toFixed(3)} m</span>`;
-          $("pitchVal").innerHTML =
-            `${PITCHWORD[S.pitchIdx]} <span class="num">C<sub>t</sub>=${CT[S.pitchIdx]}</span>`;
-        }
-      } catch (_) {}
       fit();
-      refreshStatic();
+      derive();
+      updateTelemetry();
       requestAnimationFrame(loop);
-      try {
-        if (!localStorage.getItem("aero_seen")) {
-          $("scrim").classList.add("show");
-          localStorage.setItem("aero_seen", "1");
-        }
-      } catch (_) {}
     </script>
   </body>
 </html>

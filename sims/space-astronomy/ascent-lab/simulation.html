@@ -3,29 +3,36 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Ascent Lab</title>
+    <title>Ascent Lab — Compressed Air Rocket Simulator</title>
     <link rel="icon" type="image/png" href="../../../assets/logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
     <style>
       :root {
-        --paper: #e8e6df;
-        --paper-2: #dedbd2;
-        --ink: #1b2a33;
-        --ink-2: #4a5a66;
-        --ink-3: #8a9aa6;
-        --rule: #b9bdb4;
-        --signal: #c2410c;
-        --signal-2: #ea580c;
-        --ok: #15803d;
-        --warn: #a16207;
-        --grid: rgba(27, 42, 51, 0.07);
+        --bg-dark: #070a12;
+        --bg-stage: #090e1c;
+        --panel-bg: #0e1320;
+        --panel-card: rgba(22, 30, 48, 0.85);
+        --panel-card-hover: rgba(32, 44, 68, 0.95);
+        --border-color: rgba(255, 255, 255, 0.12);
+        --border-highlight: rgba(0, 242, 254, 0.5);
+        --accent-cyan: #00f2fe;
+        --accent-blue: #4facfe;
+        --accent-orange: #ff6b35;
+        --accent-purple: #a855f7;
+        --accent-pink: #ff2a85;
+        --accent-green: #22c55e;
+        --accent-amber: #eab308;
+        --accent-glow: rgba(0, 242, 254, 0.35);
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-muted: #64748b;
         --mono: "Roboto Mono", ui-monospace, monospace;
-        --sans: "Archivo", system-ui, sans-serif;
+        --sans: "Outfit", system-ui, sans-serif;
       }
       * {
         box-sizing: border-box;
@@ -35,17 +42,15 @@
       html,
       body {
         height: 100%;
-      }
-      body {
-        background: var(--paper);
-        color: var(--ink);
+        background: var(--bg-dark);
+        color: var(--text-primary);
         font-family: var(--sans);
         overflow: hidden;
         -webkit-font-smoothing: antialiased;
       }
       #app {
         display: grid;
-        grid-template-columns: 1fr 366px;
+        grid-template-columns: 1fr 390px;
         height: 100vh;
       }
 
@@ -53,7 +58,7 @@
       #stage {
         position: relative;
         overflow: hidden;
-        background: var(--paper);
+        background: var(--bg-stage);
       }
       #scene {
         display: block;
@@ -61,58 +66,164 @@
         height: 100%;
       }
 
-      #scentabs {
+      /* SCENARIO TARGET MODES HEADER CONTAINER */
+      #scenContainer {
         position: absolute;
         top: 14px;
         left: 16px;
         right: 16px;
-        z-index: 4;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .scen-header-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(10, 15, 26, 0.88);
+        border: 1px solid var(--border-highlight);
+        border-radius: 8px;
+        padding: 5px 12px;
+        backdrop-filter: blur(10px);
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+      }
+      .scen-header-badge {
+        background: rgba(0, 242, 254, 0.15);
+        color: var(--accent-cyan);
+        border: 1px solid var(--accent-cyan);
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 8.5px;
+        letter-spacing: 0.05em;
+        animation: badgePulse 2s infinite ease-in-out;
+      }
+      @keyframes badgePulse {
+        0%, 100% { box-shadow: 0 0 5px rgba(0, 242, 254, 0.3); }
+        50% { box-shadow: 0 0 15px rgba(0, 242, 254, 0.7); }
+      }
+
+      #scentabs {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
+        gap: 10px;
       }
       .wtab {
-        background: rgba(232, 230, 223, 0.9);
-        border: 1px solid var(--rule);
-        backdrop-filter: blur(6px);
-        padding: 8px 9px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        background: linear-gradient(180deg, rgba(26, 35, 54, 0.92), rgba(12, 17, 28, 0.96));
+        border: 1.5px solid var(--border-color);
+        backdrop-filter: blur(12px);
+        border-radius: 10px;
+        padding: 10px 12px 8px;
         cursor: pointer;
-        text-align: left;
-        transition: 0.12s;
+        color: var(--text-primary);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        overflow: hidden;
+        transition: all 0.22s cubic-bezier(0.2, 0.9, 0.3, 1);
       }
       .wtab:hover {
-        border-color: var(--ink);
+        transform: translateY(-3px) scale(1.01);
+        border-color: var(--accent-cyan);
+        box-shadow: 0 8px 25px rgba(0, 242, 254, 0.3);
       }
       .wtab.on {
-        border-color: var(--ink);
-        background: var(--ink);
-        color: var(--paper);
+        transform: translateY(-3px) scale(1.01);
+        color: #ffffff;
       }
-      .wtab .wn {
+      .wtab.open.on {
+        border-color: var(--accent-cyan);
+        background: linear-gradient(180deg, rgba(0, 242, 254, 0.22), rgba(12, 17, 28, 0.98));
+        box-shadow: 0 8px 30px rgba(0, 242, 254, 0.4), inset 0 0 20px rgba(0, 242, 254, 0.15);
+      }
+      .wtab.cross.on {
+        border-color: var(--accent-orange);
+        background: linear-gradient(180deg, rgba(255, 107, 53, 0.22), rgba(12, 17, 28, 0.98));
+        box-shadow: 0 8px 30px rgba(255, 107, 53, 0.4), inset 0 0 20px rgba(255, 107, 53, 0.15);
+      }
+      .wtab.prec.on {
+        border-color: var(--accent-purple);
+        background: linear-gradient(180deg, rgba(168, 85, 247, 0.22), rgba(12, 17, 28, 0.98));
+        box-shadow: 0 8px 30px rgba(168, 85, 247, 0.4), inset 0 0 20px rgba(168, 85, 247, 0.15);
+      }
+
+      .wtab.on::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3.5px;
+      }
+      .wtab.open.on::before { background: var(--accent-cyan); box-shadow: 0 0 12px var(--accent-cyan); }
+      .wtab.cross.on::before { background: var(--accent-orange); box-shadow: 0 0 12px var(--accent-orange); }
+      .wtab.prec.on::before { background: var(--accent-purple); box-shadow: 0 0 12px var(--accent-purple); }
+
+      .wtab-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .wtab-icon-name {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .wtab-icon {
+        font-size: 15px;
+      }
+      .wtab-name {
+        font-family: var(--sans);
+        font-size: 13.5px;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+      }
+      .wtab-status-pill {
         font-family: var(--mono);
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.04em;
+        font-size: 8px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        padding: 2.5px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-muted);
+        border: 1px solid transparent;
       }
+      .wtab.open.on .wtab-status-pill { background: var(--accent-cyan); color: #080c14; border-color: var(--accent-cyan); box-shadow: 0 0 8px var(--accent-cyan); }
+      .wtab.cross.on .wtab-status-pill { background: var(--accent-orange); color: #080c14; border-color: var(--accent-orange); box-shadow: 0 0 8px var(--accent-orange); }
+      .wtab.prec.on .wtab-status-pill { background: var(--accent-purple); color: #ffffff; border-color: var(--accent-purple); box-shadow: 0 0 8px var(--accent-purple); }
+
       .wtab .wd {
         display: flex;
         align-items: center;
-        gap: 5px;
-        margin-top: 6px;
+        gap: 6px;
+        margin-top: 3px;
       }
       .wtab .wd .lab {
         font-family: var(--mono);
         font-size: 8px;
-        letter-spacing: 0.03em;
-        color: var(--ink-3);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+        text-transform: uppercase;
       }
       .wtab.on .wd .lab {
-        color: rgba(232, 230, 223, 0.7);
+        color: #ffffff;
+        font-weight: 800;
       }
       .difbar {
         flex: 1;
         height: 5px;
-        background: var(--rule);
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 3px;
         position: relative;
         overflow: hidden;
       }
@@ -121,99 +232,100 @@
         left: 0;
         top: 0;
         bottom: 0;
-        background: var(--signal);
-      }
-      .wtab.on .difbar {
-        background: rgba(232, 230, 223, 0.25);
-      }
-      .wtab:focus-visible {
-        outline: 2px solid var(--signal);
-        outline-offset: 2px;
+        border-radius: 3px;
       }
 
       #titlecard {
         position: absolute;
-        top: 74px;
+        top: 112px;
         left: 18px;
         pointer-events: none;
         z-index: 3;
+        background: rgba(9, 14, 25, 0.88);
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        backdrop-filter: blur(8px);
       }
       #titlecard h1 {
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.14em;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--ink-2);
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+        background: linear-gradient(90deg, #ff6b35, #00f2fe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
       #titlecard p {
         font-family: var(--mono);
         font-size: 9.5px;
         letter-spacing: 0.05em;
         margin-top: 3px;
-        color: var(--ink-3);
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+        color: var(--text-secondary);
       }
 
-      /* launch bar */
+      /* LAUNCH CONTROL BAR */
       #launchbar {
         position: absolute;
         left: 16px;
         right: 16px;
         bottom: 16px;
         z-index: 5;
-        background: rgba(232, 230, 223, 0.94);
-        border: 1px solid var(--rule);
-        backdrop-filter: blur(6px);
-        padding: 10px 12px;
+        background: rgba(14, 20, 32, 0.94);
+        border: 1.5px solid var(--border-highlight);
+        border-radius: 12px;
+        backdrop-filter: blur(12px);
+        padding: 12px 16px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7), 0 0 25px var(--accent-glow);
       }
       #launchBtn {
         font-family: var(--mono);
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        color: var(--paper);
-        background: var(--signal);
-        border: 1px solid var(--signal);
-        padding: 12px 20px;
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        color: #ffffff;
+        background: linear-gradient(90deg, #ff3b00, #ff8c00);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 26px;
         cursor: pointer;
         white-space: nowrap;
         flex: none;
+        box-shadow: 0 0 20px rgba(255, 59, 0, 0.5);
+        transition: all 0.2s ease;
+        animation: launchPulse 2s infinite ease-in-out;
+      }
+      @keyframes launchPulse {
+        0%, 100% { box-shadow: 0 0 20px rgba(255, 59, 0, 0.5); }
+        50% { box-shadow: 0 0 32px rgba(255, 59, 0, 0.85); }
       }
       #launchBtn:hover {
-        background: var(--signal-2);
-        border-color: var(--signal-2);
+        transform: translateY(-2px);
+        box-shadow: 0 0 35px rgba(255, 59, 0, 0.9);
       }
       #launchBtn:active {
-        transform: translateY(1px);
-      }
-      #launchBtn:focus-visible {
-        outline: 2px solid var(--ink);
-        outline-offset: 2px;
+        transform: translateY(0);
       }
       .minibtn {
         font-family: var(--mono);
-        font-size: 10px;
+        font-size: 10.5px;
         font-weight: 700;
-        background: var(--paper);
-        border: 1px solid var(--rule);
-        color: var(--ink-2);
-        padding: 9px 11px;
+        background: var(--panel-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        border-radius: 6px;
+        padding: 10px 14px;
         cursor: pointer;
-        white-space: nowrap;
-        flex: none;
-        letter-spacing: 0.02em;
+        transition: all 0.15s ease;
       }
       .minibtn:hover {
-        border-color: var(--signal);
-        color: var(--signal);
+        border-color: var(--accent-cyan);
+        color: var(--accent-cyan);
       }
-      .spacer {
-        flex: 1;
-      }
+      .spacer { flex: 1; }
       .bmeter {
         font-family: var(--mono);
         font-variant-numeric: tabular-nums;
@@ -221,56 +333,115 @@
         text-align: right;
       }
       .bmeter .k {
-        font-size: 8px;
+        font-size: 8.5px;
         letter-spacing: 0.1em;
-        color: var(--ink-3);
+        color: var(--text-muted);
         text-transform: uppercase;
         display: block;
       }
       .bmeter .v {
-        font-size: 15px;
+        font-size: 16.5px;
         font-weight: 700;
+        color: var(--accent-cyan);
         line-height: 1.1;
       }
 
-      /* ---- PANEL ---- */
+      /* ---- SIDEBAR PANEL WITH DISTINCT COLORED SECTION CARDS ---- */
       #panel {
-        background: var(--paper-2);
-        border-left: 1px solid var(--rule);
+        background: var(--panel-bg);
+        border-left: 1px solid var(--border-color);
         overflow-y: auto;
         display: flex;
         flex-direction: column;
+        gap: 2px;
       }
       #panel::-webkit-scrollbar {
-        width: 8px;
+        width: 6px;
       }
       #panel::-webkit-scrollbar-track {
-        background: var(--paper-2);
+        background: var(--panel-bg);
       }
       #panel::-webkit-scrollbar-thumb {
-        background: var(--rule);
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 3px;
       }
       .sec {
-        border-bottom: 1px solid var(--rule);
-        padding: 14px 16px;
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--border-color);
+        position: relative;
       }
+
+      .sec-telemetry {
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.08), rgba(14, 19, 32, 0.95));
+        border-left: 3px solid var(--accent-cyan);
+      }
+      .sec-assembly {
+        background: linear-gradient(135deg, rgba(255, 107, 53, 0.08), rgba(14, 19, 32, 0.95));
+        border-left: 3px solid var(--accent-orange);
+      }
+      .sec-environment {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(14, 19, 32, 0.95));
+        border-left: 3px solid var(--accent-green);
+      }
+      .sec-math {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(14, 19, 32, 0.95));
+        border-left: 3px solid var(--accent-purple);
+      }
+      .sec-comparison {
+        background: linear-gradient(135deg, rgba(234, 179, 8, 0.08), rgba(14, 19, 32, 0.95));
+        border-left: 3px solid var(--accent-amber);
+      }
+
       .sec-h {
         font-family: var(--mono);
-        font-size: 9px;
-        font-weight: 700;
-        letter-spacing: 0.16em;
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--ink-3);
-        margin-bottom: 11px;
+        color: var(--text-primary);
+        margin-bottom: 12px;
         display: flex;
         justify-content: space-between;
         align-items: baseline;
       }
       .sec-h span {
-        color: var(--signal);
+        font-size: 9px;
+        font-weight: 700;
       }
 
-      /* telemetry */
+      /* BLUEPRINT GRID ROCKET PREVIEW BOX */
+      #rocketPreviewBox {
+        background: #040812;
+        background-image: linear-gradient(rgba(0, 242, 254, 0.06) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(0, 242, 254, 0.06) 1px, transparent 1px);
+        background-size: 16px 16px;
+        border: 1px solid var(--border-highlight);
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+        margin-bottom: 14px;
+        box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+      }
+      #rocketCanvas {
+        display: block;
+        margin: 0 auto;
+        width: 100%;
+        height: 120px;
+      }
+      .stab-badge {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 9.5px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 4px;
+        margin-top: 6px;
+      }
+      .stab-badge.stable { background: rgba(34, 197, 94, 0.25); color: var(--accent-green); border: 1px solid var(--accent-green); }
+      .stab-badge.marginal { background: rgba(234, 179, 8, 0.25); color: var(--accent-amber); border: 1px solid var(--accent-amber); }
+      .stab-badge.unstable { background: rgba(255, 42, 133, 0.25); color: var(--accent-pink); border: 1px solid var(--accent-pink); }
+
+      /* TELEMETRY GAUGES */
       #telem {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -282,22 +453,20 @@
         align-items: baseline;
         font-family: var(--mono);
         font-size: 11px;
-        padding: 4px 0;
-        border-bottom: 1px dotted var(--rule);
-      }
-      .row.wide {
-        grid-column: 1/-1;
+        padding: 5px 0;
+        border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
       }
       .row dt {
-        color: var(--ink-3);
+        color: var(--text-secondary);
         letter-spacing: 0.03em;
       }
       .row dd {
         font-weight: 700;
+        color: var(--text-primary);
         font-variant-numeric: tabular-nums;
       }
       .row dd .u {
-        color: var(--ink-3);
+        color: var(--text-muted);
         font-size: 9px;
         font-weight: 400;
         margin-left: 1px;
@@ -308,137 +477,81 @@
         font-weight: 700;
         letter-spacing: 0.04em;
       }
-      .flag.stable {
-        color: var(--ok);
-      }
-      .flag.marginal {
-        color: var(--warn);
-      }
-      .flag.unstable {
-        color: var(--signal);
-      }
-      .smnum {
-        font-size: 9px;
-        color: var(--ink-3);
-        font-weight: 400;
-        margin-left: 4px;
-      }
+      .flag.stable { color: var(--accent-green); }
+      .flag.marginal { color: var(--accent-amber); }
+      .flag.unstable { color: var(--accent-pink); }
+
       .resultline {
         grid-column: 1/-1;
-        margin-top: 8px;
+        margin-top: 10px;
         font-family: var(--mono);
-        font-size: 10px;
+        font-size: 10.5px;
         letter-spacing: 0.02em;
-        padding: 7px 9px;
-        border: 1px solid var(--rule);
-        background: var(--paper);
-        min-height: 30px;
+        padding: 9px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.4);
+        min-height: 36px;
         display: flex;
         align-items: center;
       }
-      .resultline b {
-        font-weight: 700;
-      }
-      .resultline.in {
-        border-left: 3px solid var(--ok);
-      }
-      .resultline.near {
-        border-left: 3px solid var(--warn);
-      }
-      .resultline.off {
-        border-left: 3px solid var(--signal);
-      }
+      .resultline b { font-weight: 700; }
+      .resultline.in { border-left: 4px solid var(--accent-green); color: #ffffff; }
+      .resultline.near { border-left: 4px solid var(--accent-amber); color: #ffffff; }
+      .resultline.off { border-left: 4px solid var(--accent-pink); color: #ffffff; }
 
-      /* controls */
-      .ctl {
-        margin-bottom: 13px;
-      }
-      .ctl:last-child {
-        margin-bottom: 0;
-      }
-      .ctl-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        margin-bottom: 5px;
-      }
-      .ctl-name {
-        font-family: var(--mono);
-        font-size: 10px;
-        color: var(--ink-2);
-        letter-spacing: 0.05em;
-      }
-      .ctl-val {
-        font-family: var(--mono);
-        font-size: 11px;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-      }
-      .ctl-val .num {
-        color: var(--signal);
-      }
+      /* CONTROLS & COLOR CODED SEGMENTS */
+      .ctl { margin-bottom: 14px; }
+      .ctl-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+      .ctl-name { font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); }
+      .ctl-val { font-family: var(--mono); font-size: 11.5px; font-weight: 700; color: var(--accent-cyan); }
       input[type="range"] {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 100%;
-        height: 2px;
-        background: var(--rule);
-        cursor: pointer;
+        -webkit-appearance: none; appearance: none;
+        width: 100%; height: 6px; border-radius: 3px;
+        background: rgba(255, 255, 255, 0.15); cursor: pointer; outline: none;
       }
       input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 13px;
-        height: 13px;
-        background: var(--ink);
-        border-radius: 50%;
-        cursor: pointer;
-        border: 2px solid var(--paper-2);
+        -webkit-appearance: none; width: 18px; height: 18px;
+        background: var(--accent-orange); border-radius: 50%;
+        cursor: pointer; border: 2px solid var(--bg-dark);
+        box-shadow: 0 0 12px rgba(255, 107, 53, 0.6);
       }
-      input[type="range"]::-moz-range-thumb {
-        width: 13px;
-        height: 13px;
-        background: var(--ink);
-        border-radius: 50%;
-        cursor: pointer;
-        border: 2px solid var(--paper-2);
-      }
-      input[type="range"]:focus-visible {
-        outline: 2px solid var(--signal);
-        outline-offset: 4px;
-      }
+
       .seg {
         display: flex;
-        border: 1px solid var(--rule);
-        background: var(--paper);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.4);
+        overflow: hidden;
       }
       .seg button {
         flex: 1;
         font-family: var(--mono);
-        font-size: 10px;
+        font-size: 10.5px;
         font-weight: 700;
         letter-spacing: 0.02em;
         background: transparent;
         border: none;
-        color: var(--ink-2);
-        padding: 8px 3px;
+        color: var(--text-secondary);
+        padding: 8px 4px;
         cursor: pointer;
+        transition: all 0.2s ease;
       }
-      .seg button.on {
-        background: var(--ink);
-        color: var(--paper);
-      }
-      .seg button:focus-visible {
-        outline: 2px solid var(--signal);
-        outline-offset: -2px;
-      }
+
+      /* COLOR-CODED ACTIVE SEGMENT BUTTONS */
+      #scenSeg button.on { background: linear-gradient(90deg, #00f2fe, #4facfe); color: #080c14; font-weight: 800; }
+      #noseSeg button.on { background: linear-gradient(90deg, #ff6b35, #ff8c42); color: #080c14; font-weight: 800; }
+      #bodySeg button.on { background: linear-gradient(90deg, #a855f7, #c084fc); color: #ffffff; font-weight: 800; }
+      #finSeg button.on { background: linear-gradient(90deg, #00f2fe, #4facfe); color: #080c14; font-weight: 800; }
+      #pressSeg button.on { background: linear-gradient(90deg, #ff6b35, #ff8c42); color: #080c14; font-weight: 800; }
+
       .steplab {
         display: flex;
         justify-content: space-between;
         font-family: var(--mono);
         font-size: 8.5px;
-        color: var(--ink-3);
-        letter-spacing: 0.03em;
-        margin-top: 3px;
+        color: var(--text-muted);
+        margin-top: 4px;
       }
 
       .tog {
@@ -446,260 +559,88 @@
         align-items: center;
         justify-content: space-between;
         font-family: var(--mono);
-        font-size: 10px;
-        padding: 5px 0;
+        font-size: 10.5px;
+        padding: 6px 0;
         cursor: pointer;
-        color: var(--ink-2);
+        color: var(--text-secondary);
       }
       .tog input {
         appearance: none;
         -webkit-appearance: none;
-        width: 26px;
-        height: 14px;
-        background: var(--rule);
+        width: 34px;
+        height: 18px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 9px;
         position: relative;
         cursor: pointer;
-        transition: 0.12s;
+        transition: 0.2s;
         flex: none;
       }
-      .tog input:checked {
-        background: var(--signal);
-      }
+      .tog input:checked { background: var(--accent-cyan); }
       .tog input::after {
         content: "";
         position: absolute;
         top: 2px;
         left: 2px;
-        width: 10px;
-        height: 10px;
-        background: var(--paper);
-        transition: 0.12s;
+        width: 14px;
+        height: 14px;
+        background: var(--bg-dark);
+        border-radius: 50%;
+        transition: 0.2s;
       }
-      .tog input:checked::after {
-        left: 14px;
-      }
-      .tog input:focus-visible {
-        outline: 2px solid var(--signal);
-        outline-offset: 2px;
-      }
+      .tog input:checked::after { left: 18px; }
 
-      /* math panel */
       .eqbox {
-        font-family: var(--mono);
-        font-size: 11px;
-        line-height: 1.7;
-        color: var(--ink);
-        background: var(--paper);
-        border: 1px solid var(--rule);
-        border-left: 3px solid var(--signal);
-        padding: 10px 11px;
-        font-variant-numeric: tabular-nums;
-        overflow-x: auto;
-        margin-bottom: 10px;
-      }
-      .eqbox:last-child {
-        margin-bottom: 0;
-      }
-      .eqbox .lbl {
-        color: var(--ink-3);
-      }
-      .eqbox b {
-        color: var(--signal);
-        font-weight: 700;
-      }
-      .eqbox .res {
-        font-size: 13px;
-        font-weight: 700;
-        margin-top: 5px;
-        display: block;
-      }
-      .eqbox .cap {
-        color: var(--ink-3);
-        font-size: 9px;
-        display: block;
-        margin-bottom: 5px;
-        letter-spacing: 0.04em;
-      }
-      .eqbox .warn {
-        color: var(--signal);
-        font-weight: 700;
+        font-family: var(--mono); font-size: 11px; line-height: 1.7;
+        color: var(--text-primary); background: rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--border-color); border-left: 3px solid var(--accent-purple);
+        padding: 10px 12px; border-radius: 6px; margin-bottom: 8px; overflow-x: auto;
       }
       #gGraph {
-        width: 100%;
-        height: 120px;
-        border: 1px solid var(--rule);
-        background: var(--paper);
-        margin-top: 4px;
-        display: block;
+        width: 100%; height: 130px; border: 1px solid var(--border-color);
+        border-radius: 6px; background: #06080e; margin-top: 10px; display: block;
       }
       .graphcap {
-        font-family: var(--mono);
-        font-size: 8.5px;
-        color: var(--ink-3);
-        margin-top: 4px;
-        letter-spacing: 0.02em;
+        font-family: var(--mono); font-size: 9px; color: var(--text-muted); margin-top: 4px;
       }
 
-      /* comparison bars */
-      .cbars {
-        display: flex;
-        flex-direction: column;
-        gap: 9px;
-      }
-      .cbar {
-        display: grid;
-        grid-template-columns: 52px 1fr auto;
-        align-items: center;
-        gap: 8px;
-        font-family: var(--mono);
-        font-size: 10px;
-      }
-      .cbar .cn {
-        color: var(--ink-2);
-        font-weight: 700;
-        letter-spacing: 0.03em;
-      }
-      .cbar .track {
-        height: 14px;
-        background: var(--paper);
-        border: 1px solid var(--rule);
-        position: relative;
-        overflow: hidden;
-      }
-      .cbar .track i {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        transition: width 0.15s;
-        background: var(--signal-2);
-      }
-      .cbar .cv {
-        color: var(--ink-3);
-        font-variant-numeric: tabular-nums;
-        white-space: nowrap;
-        font-size: 9px;
-      }
-      .cbar.cur .cn {
-        color: var(--signal);
-      }
-      .cbar.cur .track i {
-        background: var(--signal);
-      }
+      /* COMPARISON BARS */
+      .cbars { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+      .cbar { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 10px; }
+      .cbar .cn { width: 50px; color: var(--text-secondary); font-weight: 700; }
+      .cbar .track { flex: 1; height: 8px; background: rgba(255,255,255,0.12); border-radius: 4px; overflow: hidden; }
+      .cbar .track i { display: block; height: 100%; background: var(--text-secondary); border-radius: 4px; transition: width 0.2s ease; }
+      .cbar.cur .track i { background: var(--accent-amber); box-shadow: 0 0 10px rgba(234, 179, 8, 0.5); }
+      .cbar .cv { width: 36px; text-align: right; color: var(--text-primary); font-weight: 700; }
 
-      .note {
-        font-family: var(--mono);
-        font-size: 9.5px;
-        line-height: 1.55;
-        color: var(--ink-3);
-        border-left: 2px solid var(--rule);
-        padding-left: 8px;
-        margin-top: 10px;
-      }
-      .note b {
-        color: var(--signal);
-        font-weight: 700;
-      }
       .linkbtn {
-        font-family: var(--mono);
-        font-size: 10px;
-        font-weight: 700;
-        background: transparent;
-        border: 1px solid var(--rule);
-        color: var(--ink);
-        padding: 8px 10px;
-        cursor: pointer;
-        letter-spacing: 0.03em;
-        width: 100%;
+        font-family: var(--mono); font-size: 10.5px; font-weight: 700;
+        background: var(--panel-card); border: 1px solid var(--border-color);
+        color: var(--text-primary); padding: 9px 12px; border-radius: 6px;
+        cursor: pointer; width: 100%; transition: all 0.15s ease;
       }
-      .linkbtn:hover {
-        border-color: var(--ink);
-        background: var(--paper);
-      }
+      .linkbtn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
 
-      /* overlay */
       #scrim {
-        position: fixed;
-        inset: 0;
-        background: rgba(13, 15, 18, 0.55);
-        z-index: 20;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
+        position: fixed; inset: 0; background: rgba(5, 7, 12, 0.85);
+        backdrop-filter: blur(10px); z-index: 20; display: none;
+        align-items: center; justify-content: center; padding: 20px;
       }
-      #scrim.show {
-        display: flex;
-      }
+      #scrim.show { display: flex; }
       .ovl {
-        background: var(--paper);
-        border: 1px solid var(--ink);
-        max-width: 580px;
-        width: 100%;
-        max-height: 88vh;
-        overflow-y: auto;
-        padding: 22px 24px;
+        background: var(--panel-bg); border: 1px solid var(--border-highlight);
+        border-radius: 12px; max-width: 560px; width: 100%;
+        max-height: 86vh; overflow-y: auto; padding: 26px 28px;
       }
-      .ovl h2 {
-        font-size: 15px;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        margin-bottom: 4px;
-      }
-      .ovl .sub {
-        font-family: var(--mono);
-        font-size: 10px;
-        color: var(--ink-3);
-        margin-bottom: 16px;
-        letter-spacing: 0.03em;
-      }
-      .ovl p {
-        font-size: 13px;
-        line-height: 1.6;
-        color: var(--ink-2);
-        margin-bottom: 11px;
-      }
-      .ovl ol {
-        margin: 0 0 12px 18px;
-      }
-      .ovl li {
-        font-size: 12.5px;
-        line-height: 1.6;
-        color: var(--ink-2);
-        margin-bottom: 6px;
-      }
-      .ovl b {
-        color: var(--ink);
-      }
-      .ovl h3 {
-        font-family: var(--mono);
-        font-size: 11px;
-        letter-spacing: 0.05em;
-        color: var(--signal);
-        margin: 16px 0 5px;
-        text-transform: uppercase;
-      }
+      .ovl h2 { font-size: 18px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-cyan); margin-bottom: 4px; }
+      .ovl .sub { font-family: var(--mono); font-size: 11px; color: var(--text-secondary); margin-bottom: 18px; }
+      .ovl p { font-size: 13.5px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 12px; }
+      .ovl ol { margin: 0 0 16px 20px; }
+      .ovl li { font-size: 13px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 8px; }
       .ovl .close {
-        margin-top: 8px;
-        font-family: var(--mono);
-        font-size: 11px;
-        font-weight: 700;
-        background: var(--ink);
-        color: var(--paper);
-        border: none;
-        padding: 10px 16px;
-        cursor: pointer;
-        letter-spacing: 0.04em;
-      }
-
-      @media (max-width: 900px) {
-        #app {
-          grid-template-columns: 1fr;
-          grid-template-rows: 1fr auto;
-        }
-        #panel {
-          max-height: 46vh;
-        }
+        margin-top: 12px; font-family: var(--mono); font-size: 11px; font-weight: 700;
+        background: var(--accent-cyan); color: var(--bg-dark); border: none;
+        border-radius: 6px; padding: 10px 20px; cursor: pointer;
       }
     </style>
   </head>
@@ -707,82 +648,78 @@
     <div id="app">
       <div id="stage">
         <canvas id="scene"></canvas>
-        <div id="scentabs"></div>
+
+        <!-- SCENARIO TARGET MODES CONTAINER -->
+        <div id="scenContainer">
+          <div class="scen-header-title">
+            <span>🎯 FLIGHT MISSION CHALLENGES: Select Target Altitude Band</span>
+            <span class="scen-header-badge">CLICK MODE TO SWITCH TARGET</span>
+          </div>
+          <div id="scentabs"></div>
+        </div>
+
         <div id="titlecard">
           <h1>Ascent Lab</h1>
-          <p>build a pressure rocket — launch it — read the flight</p>
+          <p>Rocket Aerodynamics &amp; Stability Simulation</p>
         </div>
+
+        <!-- LAUNCH CONTROL BAR -->
         <div id="launchbar">
-          <button id="launchBtn">&#9650; LAUNCH</button>
-          <button class="minibtn" id="clearBtn">Clear traces</button>
+          <button id="launchBtn">🚀 IGNITE &amp; LAUNCH</button>
+          <button class="minibtn" id="clearBtn">Clear Traces</button>
           <div class="spacer"></div>
           <div class="bmeter">
-            <span class="k">Altitude</span
-            ><span class="v" id="bAlt"
-              >0.0<span style="font-size: 9px"> m</span></span
-            >
+            <span class="k">Live Altitude</span>
+            <span class="v" id="bAlt">0.0 m</span>
           </div>
           <div class="bmeter">
-            <span class="k">Velocity</span><span class="v" id="bVel">0.0</span>
+            <span class="k">Vertical Speed</span>
+            <span class="v" id="bVel">0.0</span>
           </div>
           <div class="bmeter">
-            <span class="k">Apogee</span
-            ><span class="v" id="bApo">&mdash;</span>
+            <span class="k">Apogee</span>
+            <span class="v" id="bApo">—</span>
           </div>
         </div>
       </div>
 
       <div id="panel">
         <!-- TELEMETRY -->
-        <div class="sec">
-          <div class="sec-h">
-            Telemetry <span id="scenName">Open Field Test</span>
+        <div class="sec sec-telemetry">
+          <div class="sec-h">Flight Telemetry <span style="color:var(--accent-cyan)">HUD Gauges</span></div>
+          <div id="telem">
+            <div class="row"><dt>Altitude</dt><dd id="t_alt">0.0 <span class="u">m</span></dd></div>
+            <div class="row"><dt>Velocity</dt><dd id="t_vel">+0.0 <span class="u">m/s</span></dd></div>
+            <div class="row"><dt>Aerodynamic Drag</dt><dd id="t_drag">0.00 <span class="u">N</span></dd></div>
+            <div class="row"><dt>Peak Apogee</dt><dd id="t_apo">—</dd></div>
+            <div class="row wide"><dt>Stability Margin</dt><dd><span class="flag stable" id="t_flag">STABLE</span><span class="smnum" id="t_sm"></span></dd></div>
+            <div class="resultline" id="resultLine">Ready for launch. Configure rocket &amp; press <b>LAUNCH</b>.</div>
           </div>
-          <dl id="telem">
-            <div class="row">
-              <dt>Altitude</dt>
-              <dd id="t_alt">0.0<span class="u">m</span></dd>
-            </div>
-            <div class="row">
-              <dt>Velocity</dt>
-              <dd id="t_vel">0.0<span class="u">m/s</span></dd>
-            </div>
-            <div class="row">
-              <dt>Drag</dt>
-              <dd id="t_drag">0.00<span class="u">N</span></dd>
-            </div>
-            <div class="row">
-              <dt>Apogee</dt>
-              <dd id="t_apo">&mdash;</dd>
-            </div>
-            <div class="row wide">
-              <dt>Stability</dt>
-              <dd>
-                <span class="flag stable" id="t_flag">STABLE</span
-                ><span class="smnum" id="t_sm"></span>
-              </dd>
-            </div>
-            <div class="resultline" id="resultLine">
-              Configure the rocket, then press <b>&nbsp;LAUNCH&nbsp;</b>.
-            </div>
-          </dl>
         </div>
 
-        <!-- ROCKET CONFIG -->
-        <div class="sec">
-          <div class="sec-h">The Rocket <span>build it</span></div>
+        <!-- ROCKET BUILDER & PREVIEW -->
+        <div class="sec sec-assembly">
+          <div class="sec-h">Rocket Assembly <span style="color:var(--accent-orange)">Blueprint</span></div>
+
+          <!-- BLUEPRINT CANVAS PREVIEW -->
+          <div id="rocketPreviewBox">
+            <canvas id="rocketCanvas"></canvas>
+            <div class="stab-badge stable" id="schemStabBadge">STABILITY: STABLE (SM 1.25 cal)</div>
+          </div>
+
           <div class="ctl">
-            <div class="ctl-top"><span class="ctl-name">Nose cone</span></div>
+            <div class="ctl-top"><span class="ctl-name">Nose Cone Shape</span></div>
             <div class="seg" id="noseSeg">
               <button data-k="pointed" class="on">Pointed</button>
               <button data-k="rounded">Rounded</button>
               <button data-k="blunt">Blunt</button>
             </div>
           </div>
+
           <div class="ctl">
             <div class="ctl-top">
-              <span class="ctl-name">Body length</span
-              ><span class="ctl-val" id="bodyVal"></span>
+              <span class="ctl-name">Body Length</span>
+              <span class="ctl-val" id="bodyVal" style="color:var(--accent-purple)">0.12 kg</span>
             </div>
             <div class="seg" id="bodySeg">
               <button data-k="short">Short</button>
@@ -790,143 +727,92 @@
               <button data-k="long">Long</button>
             </div>
           </div>
+
           <div class="ctl">
-            <div class="ctl-top"><span class="ctl-name">Fin shape</span></div>
+            <div class="ctl-top"><span class="ctl-name">Fin Stabilizers</span></div>
             <div class="seg" id="finSeg">
               <button data-k="swept" class="on">Swept</button>
               <button data-k="straight">Straight</button>
               <button data-k="none">None</button>
             </div>
           </div>
+
           <div class="ctl">
             <div class="ctl-top">
-              <span class="ctl-name">Launch pressure</span
-              ><span class="ctl-val" id="pressVal"></span>
+              <span class="ctl-name">Launch Pressure</span>
+              <span class="ctl-val" id="pressVal" style="color:var(--accent-orange)">Medium 5 bar</span>
             </div>
-            <input type="range" id="press" min="0" max="2" step="1" value="1" />
-            <div class="steplab">
-              <span>low</span><span>medium</span><span>high</span>
+            <div class="seg" id="pressSeg">
+              <button data-k="0">Low (3 bar)</button>
+              <button data-k="1" class="on">Med (5 bar)</button>
+              <button data-k="2">High (8 bar)</button>
             </div>
           </div>
         </div>
 
-        <!-- CONDITIONS + VIEW -->
-        <div class="sec">
-          <div class="sec-h">Conditions <span>always live</span></div>
+        <!-- CONDITIONS & WIND -->
+        <div class="sec sec-environment">
+          <div class="sec-h">Environment <span style="color:var(--accent-green)">Conditions</span></div>
+
+          <!-- SIDEBAR SCENARIO QUICK SELECTOR -->
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Flight Challenge Scenario</span></div>
+            <div class="seg" id="scenSeg">
+              <button data-k="open" class="on">Open Field</button>
+              <button data-k="cross">Crosswind</button>
+              <button data-k="prec">Precision</button>
+            </div>
+          </div>
+
           <div class="ctl">
             <div class="ctl-top">
-              <span class="ctl-name">Wind speed</span
-              ><span class="ctl-val" id="windVal">0.0 m/s</span>
+              <span class="ctl-name">Crosswind Speed</span>
+              <span class="ctl-val" id="windVal" style="color:var(--accent-green)">0.0 m/s</span>
             </div>
-            <input
-              type="range"
-              id="wind"
-              min="0"
-              max="10"
-              step="0.5"
-              value="0"
-            />
+            <input type="range" id="wind" min="0" max="10" step="0.5" value="0" />
           </div>
           <label class="tog"
-            ><span>Show the math</span><input type="checkbox" id="mathTog"
+            ><span>Show Flight Equations &amp; Curves</span><input type="checkbox" id="mathTog"
           /></label>
         </div>
 
         <!-- MATH PANEL -->
-        <div class="sec" id="mathSec" style="display: none">
-          <div class="sec-h">The Math <span>plugged in live</span></div>
+        <div class="sec sec-math" id="mathSec" style="display: none">
+          <div class="sec-h">Physics Analysis <span style="color:var(--accent-purple)">Formulas</span></div>
           <div class="eqbox" id="eqBoost"></div>
           <div class="eqbox" id="eqCoast"></div>
           <div class="eqbox" id="eqStab"></div>
           <canvas id="gGraph"></canvas>
-          <div class="graphcap">
-            Predicted apogee vs launch pressure, for this exact rocket. The dot
-            is your current setting.
-          </div>
+          <div class="graphcap">Predicted apogee vs launch pressure curve</div>
         </div>
 
-        <!-- COMPARISON -->
-        <div class="sec">
-          <div class="sec-h">Pressure vs Apogee <span>predicted</span></div>
+        <!-- PRESSURE VS APOGEE COMPARISON -->
+        <div class="sec sec-comparison">
+          <div class="sec-h">Pressure vs Apogee <span style="color:var(--accent-amber)">Predictions</span></div>
           <div class="cbars" id="cbars"></div>
-          <div class="note">
-            Taller bar = higher predicted apogee at that pressure, for
-            <b>this exact rocket</b>. Change nose, body, or fins and every bar
-            moves.
-          </div>
         </div>
 
-        <!-- REFERENCES -->
+        <!-- HELP -->
         <div class="sec">
-          <button class="linkbtn" id="helpBtn">
-            ? How it works &amp; real missions
-          </button>
+          <button class="linkbtn" id="helpBtn">? Launch Manual &amp; Physics Guide</button>
         </div>
       </div>
     </div>
 
+    <!-- OVERLAY MANUAL -->
     <div id="scrim">
       <div class="ovl">
-        <h2>Ascent Lab</h2>
-        <div class="sub">
-          A pressure-launched model rocket. Build it, launch it, read the same
-          numbers a real flight review uses.
-        </div>
+        <h2>Ascent Lab Flight Manual</h2>
+        <div class="sub">Compressed-Air Rocket Dynamics &amp; Stability</div>
         <p>
-          This is a <b>compressed-air / water rocket</b> — the kind you build in
-          a kit. It flies straight up a few tens of metres, so the goals are
-          <b>target altitude bands</b>, not orbit. Every launch is a fresh
-          flight; the old path stays as a faded trace so you can compare.
+          Model rockets fly on impulse boost and aerodynamic coasting. Stability is governed by the relative positions of the Center of Gravity ($X_{cg}$) and Center of Pressure ($X_{cp}$).
         </p>
         <ol>
-          <li>
-            Pick a <b>nose cone</b>, <b>body length</b>, <b>fins</b>, and a
-            <b>launch pressure</b> on the right.
-          </li>
-          <li>
-            Press <b>LAUNCH</b>. Watch the altitude, velocity, drag, and
-            stability update live.
-          </li>
-          <li>
-            Try the scenarios up top: <b>Open Field Test</b> (big target, no
-            wind), <b>Crosswind Range</b> (wind, fins matter),
-            <b>Precision Pad</b> (small target, everything matters).
-          </li>
-          <li>
-            Remove the fins and launch: the rocket goes <b>unstable</b> and
-            tumbles &mdash; that's the stability margin dropping below&nbsp;1.
-          </li>
-          <li>
-            Flip <b>Show the math</b> to see the boost, coast, and stability
-            equations, each with every number plugged in.
-          </li>
+          <li><b>Boost Phase:</b> Launch pressure creates a short impulse $J = k \cdot P \cdot V$, imparting burnout velocity $v_0 = J/m$.</li>
+          <li><b>Coast Phase:</b> Atmospheric drag $F_d = \frac{1}{2}\rho C_d A v^2$ decelerates the rocket until peak apogee.</li>
+          <li><b>Stability Margin ($SM$):</b> $SM = (X_{cp} - X_{cg})/d$. If $SM < 1$, fins cannot stabilize the rocket, causing it to tumble and lose altitude!</li>
         </ol>
-        <h3>The physics (simplified on purpose)</h3>
-        <p>
-          <b>Boost</b> is a single impulse J = k&middot;P&middot;V, giving
-          burnout speed v&#8320; = J/m &mdash; the same way real motors are
-          rated by total impulse. <b>Coast</b> uses the exact closed-form
-          solution for vertical flight against v&sup2; drag.
-          <b>Stability</b> uses the model-rocket margin SM =
-          (X<sub>cp</sub>&minus;X<sub>cg</sub>)/d in calibers.
-        </p>
-        <h3>Real missions</h3>
-        <p>
-          <b>ISRO PSLV:</b> India's workhorse rocket separates into stages,
-          dropping empty mass so the climb keeps accelerating &mdash; a real
-          version of "lighter rockets go higher."
-        </p>
-        <p>
-          <b>NASA sounding rockets:</b> sub-orbital science rockets that, like
-          this one, go up and come straight back down &mdash; used to carry
-          experiments briefly above the atmosphere.
-        </p>
-        <p class="sub" style="margin: 12px 0 0">
-          Note: the impulse constant k must be calibrated to your real launcher
-          hardware; nose-cone drag values here are standard approximations until
-          measured.
-        </p>
-        <button class="close" id="helpClose">Start building</button>
+        <button class="close" id="helpClose">Begin Mission</button>
       </div>
     </div>
 
@@ -934,22 +820,21 @@
       "use strict";
       const $ = (id) => document.getElementById(id);
       const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+      const TAU = Math.PI * 2;
 
-      /* ================= physics constants ================= */
-      const RHO = 1.225; // air density kg/m^3 (one atmosphere, fixed — spec 2)
-      const G = 9.81; // m/s^2
-      const DIAM = 0.075; // body diameter (caliber), m
-      const AREA = Math.PI * (DIAM / 2) * (DIAM / 2); // frontal area, m^2
-      const K_IMPULSE = 0.9; // N·s per (bar·L) — CALIBRATION constant, must come from real launcher
-      const TB = 0.12; // boost burn time (s), for the small boost-phase altitude
+      const RHO = 1.225;
+      const G = 9.81;
+      const DIAM = 0.075;
+      const AREA = Math.PI * (DIAM / 2) * (DIAM / 2);
+      const K_IMPULSE = 0.9;
+      const TB = 0.12;
 
-      /* config option tables (qualitative labels → physics) */
       const NOSE = {
         pointed: { label: "Pointed", cd: 0.35 },
         rounded: { label: "Rounded", cd: 0.45 },
         blunt: { label: "Blunt", cd: 0.75 },
       };
-      const NOSECG = { pointed: +0.004, rounded: 0, blunt: -0.012 }; // heavier blunt nose pulls Xcg forward
+      const NOSECG = { pointed: +0.004, rounded: 0, blunt: -0.012 };
       const BODY = {
         short: { label: "Short", len: 0.25, mass: 0.09, vprop: 0.6 },
         medium: { label: "Medium", len: 0.33, mass: 0.12, vprop: 0.9 },
@@ -964,9 +849,8 @@
         { label: "Low", p: 3 },
         { label: "Medium", p: 5 },
         { label: "High", p: 8 },
-      ]; // bar (gauge)
+      ];
 
-      /* scenarios (spec 6) — target band in metres + wind */
       const SCEN = {
         open: { name: "Open Field Test", lo: 35, hi: 65, wind: 0, diff: 0.3 },
         cross: { name: "Crosswind Range", lo: 42, hi: 58, wind: 4, diff: 0.65 },
@@ -974,7 +858,6 @@
       };
       const SORDER = ["open", "cross", "prec"];
 
-      /* ================= state ================= */
       const S = {
         nose: "pointed",
         body: "medium",
@@ -986,12 +869,12 @@
         viewMax: 60,
         trace: [[0, 0]],
         history: [],
-        flight: null, // active flight snapshot or null
+        flight: null,
         lastResult: null,
         predApogee: 0,
+        particles: [],
       };
 
-      /* ================= physics (single source of truth) ================= */
       function cfg() {
         const b = BODY[S.body];
         return {
@@ -1007,17 +890,15 @@
           noseCg: NOSECG[S.nose],
         };
       }
-      const xcg = (c) => 0.5 * c.len + c.noseCg; // m from nose
-      const xcp = (c) => 0.45 * c.len + c.cpBonus; // m from nose
-      const stab = (c) => (xcp(c) - xcg(c)) / DIAM; // calibers (SM)
-      const impulse = (c) => K_IMPULSE * c.p * c.vprop; // J, N·s
-      const v0 = (c) => impulse(c) / c.mass; // burnout velocity, m/s
-      const dragB = (cd) => 0.5 * RHO * cd * AREA; // ½ρCdA
-      const boostH = (vv) => 0.5 * vv * TB; // small boost-phase gain
+      const xcg = (c) => 0.5 * c.len + c.noseCg;
+      const xcp = (c) => 0.45 * c.len + c.cpBonus;
+      const stab = (c) => (xcp(c) - xcg(c)) / DIAM;
+      const impulse = (c) => K_IMPULSE * c.p * c.vprop;
+      const v0 = (c) => impulse(c) / c.mass;
+      const dragB = (cd) => 0.5 * RHO * cd * AREA;
+      const boostH = (vv) => 0.5 * vv * TB;
       function coastDh(c, vv) {
-        // closed-form coast apogee (spec 2)
-        const b = dragB(c.cd),
-          t = (b * vv * vv) / (c.mass * G);
+        const b = dragB(c.cd), t = (b * vv * vv) / (c.mass * G);
         return (c.mass / (2 * b)) * Math.log(1 + t);
       }
       const apogeeIdeal = (c) => {
@@ -1028,39 +909,30 @@
         if (sm >= 1) return 1;
         if (sm >= 0) return 0.6 + 0.4 * sm;
         return 0.5;
-      } // energy lost when it veers/tumbles
+      }
       function stabWord(sm) {
         return sm >= 1 ? "STABLE" : sm >= 0.5 ? "MARGINAL" : "UNSTABLE";
       }
 
-      /* ================= canvas ================= */
-      const cv = $("scene"),
-        ctx = cv.getContext("2d");
-      let DPR = Math.max(1, window.devicePixelRatio || 1),
-        CW = 0,
-        CH = 0;
+      /* ================= CANVAS SCENE RENDER ================= */
+      const cv = $("scene"), ctx = cv.getContext("2d");
+      let DPR = Math.max(1, window.devicePixelRatio || 1), CW = 0, CH = 0;
       function fit() {
         DPR = Math.max(1, window.devicePixelRatio || 1);
         const r = cv.parentElement.getBoundingClientRect();
         cv.width = Math.max(1, r.width * DPR);
         cv.height = Math.max(1, r.height * DPR);
         ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-        CW = r.width;
-        CH = r.height;
+        CW = r.width; CH = r.height;
         if (S.mathOn) drawGraph();
+        drawRocketPreview();
       }
       window.addEventListener("resize", fit);
 
-      const PAD_FX = 0.3,
-        TOP_FY = 0.08,
-        GROUND_FY = 0.86;
-      const HALF_RANGE = 30; // metres of downrange mapped to half the stage width
-      function groundY() {
-        return CH * GROUND_FY;
-      }
-      function padX() {
-        return CW * PAD_FX;
-      }
+      const PAD_FX = 0.3, TOP_FY = 0.08, GROUND_FY = 0.86;
+      const HALF_RANGE = 30;
+      function groundY() { return CH * GROUND_FY; }
+      function padX() { return CW * PAD_FX; }
       function AY(alt) {
         const gY = groundY();
         return gY - (alt / S.viewMax) * (gY - CH * TOP_FY);
@@ -1071,112 +943,274 @@
 
       function niceStep(v) {
         const c = [5, 10, 20, 25, 50, 100, 200];
-        for (const s of c) {
-          if (v / s <= 8) return s;
-        }
+        for (const s of c) { if (v / s <= 8) return s; }
         return 250;
+      }
+
+      function drawClouds(gY, t) {
+        const windDrift = (t * (Math.max(1, S.wind) * 14)) % (CW + 350);
+
+        const cloudFormations = [
+          { baseC: [100, gY * 0.22], scale: 1.15, opacity: 0.38 },
+          { baseC: [420, gY * 0.44], scale: 0.88, opacity: 0.3 },
+          { baseC: [750, gY * 0.28], scale: 1.35, opacity: 0.35 },
+          { baseC: [1050, gY * 0.52], scale: 0.95, opacity: 0.28 },
+        ];
+
+        cloudFormations.forEach(({ baseC, scale, opacity }) => {
+          let cx = (baseC[0] + windDrift) % (CW + 350) - 175;
+          let cy = baseC[1];
+
+          ctx.save();
+          ctx.globalAlpha = opacity;
+
+          // Base cloud shadow
+          ctx.fillStyle = "rgba(15, 23, 42, 0.4)";
+          ctx.beginPath();
+          ctx.ellipse(cx, cy + 9 * scale, 70 * scale, 20 * scale, 0, 0, TAU);
+          ctx.fill();
+
+          // Volumetric Cumulus Puffs
+          const puffs = [
+            { x: 0, y: 0, r: 30 },
+            { x: -30, y: 4, r: 24 },
+            { x: 30, y: 5, r: 24 },
+            { x: -52, y: 11, r: 18 },
+            { x: 52, y: 11, r: 18 },
+            { x: -16, y: -14, r: 22 },
+            { x: 16, y: -12, r: 20 },
+          ];
+
+          puffs.forEach((p) => {
+            const px = cx + p.x * scale;
+            const py = cy + p.y * scale;
+            const pr = p.r * scale;
+
+            const cGrad = ctx.createRadialGradient(
+              px - pr * 0.35,
+              py - pr * 0.35,
+              pr * 0.1,
+              px,
+              py,
+              pr
+            );
+            cGrad.addColorStop(0, "rgba(255, 245, 235, 0.95)");
+            cGrad.addColorStop(0.65, "rgba(203, 213, 225, 0.7)");
+            cGrad.addColorStop(1, "rgba(100, 116, 139, 0.15)");
+
+            ctx.fillStyle = cGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, TAU);
+            ctx.fill();
+          });
+
+          ctx.restore();
+        });
       }
 
       function drawScene() {
         const gY = groundY();
-        // sky
+        const t = performance.now() / 1000;
+
+        // VIBRANT MULTI-STOP TWILIGHT LAUNCH SKY GRADIENT
         const sky = ctx.createLinearGradient(0, 0, 0, gY);
-        sky.addColorStop(0, "#6ba4d4");
-        sky.addColorStop(1, "#c9e2f2");
+        sky.addColorStop(0, "#050810");
+        sky.addColorStop(0.3, "#11182c");
+        sky.addColorStop(0.6, "#291942");
+        sky.addColorStop(0.82, "#5e234f");
+        sky.addColorStop(1, "#be4343");
         ctx.fillStyle = sky;
         ctx.fillRect(0, 0, CW, gY);
-        // ground
-        ctx.fillStyle = "#4f7a3a";
-        ctx.fillRect(0, gY, CW, CH - gY);
-        ctx.fillStyle = "#3f6630";
-        for (let i = 0; i < CW; i += 24) {
-          ctx.fillRect(i + (i % 3) * 3, gY + 7 + (i % 4) * 3, 9, 2);
-        }
 
-        // altitude ruler
+        // Warm Horizon Sunset Glow Layer
+        const hGlow = ctx.createLinearGradient(0, gY - 70, 0, gY);
+        hGlow.addColorStop(0, "rgba(255, 107, 53, 0)");
+        hGlow.addColorStop(1, "rgba(255, 107, 53, 0.3)");
+        ctx.fillStyle = hGlow;
+        ctx.fillRect(0, gY - 70, CW, 70);
+
+        // Twinkling Starfield
+        ctx.fillStyle = "#ffffff";
+        for (let i = 0; i < 90; i++) {
+          const sx = (i * 97.3) % CW, sy = (i * 47.7) % (gY * 0.65);
+          ctx.globalAlpha = 0.25 + 0.6 * Math.sin(t * 2.8 + i);
+          ctx.fillRect(sx, sy, i % 4 === 0 ? 2 : 1.2, i % 4 === 0 ? 2 : 1.2);
+        }
+        ctx.globalAlpha = 1;
+
+        // Drifting Volumetric Cumulus Clouds
+        drawClouds(gY, t);
+
+        // Launch Pad Spotlight Beams
+        const pX = padX();
+        const spotGrad1 = ctx.createLinearGradient(pX - 15, gY, pX - 60, 0);
+        spotGrad1.addColorStop(0, "rgba(0, 242, 254, 0.28)");
+        spotGrad1.addColorStop(1, "rgba(0, 242, 254, 0)");
+        ctx.fillStyle = spotGrad1;
+        ctx.beginPath();
+        ctx.moveTo(pX - 15, gY); ctx.lineTo(pX - 90, 0); ctx.lineTo(pX - 45, 0); ctx.closePath(); ctx.fill();
+
+        const spotGrad2 = ctx.createLinearGradient(pX + 15, gY, pX + 60, 0);
+        spotGrad2.addColorStop(0, "rgba(0, 242, 254, 0.28)");
+        spotGrad2.addColorStop(1, "rgba(0, 242, 254, 0)");
+        ctx.fillStyle = spotGrad2;
+        ctx.beginPath();
+        ctx.moveTo(pX + 15, gY); ctx.lineTo(pX + 90, 0); ctx.lineTo(pX + 45, 0); ctx.closePath(); ctx.fill();
+
+        // Layered Horizon Mountain Ridges
+        ctx.fillStyle = "rgba(30, 41, 68, 0.7)";
+        ctx.beginPath();
+        ctx.moveTo(0, gY);
+        for (let x = 0; x <= CW; x += 40) {
+          const h = Math.sin(x * 0.008) * 22 + Math.cos(x * 0.015) * 14;
+          ctx.lineTo(x, gY - 20 + h);
+        }
+        ctx.lineTo(CW, gY); ctx.closePath(); ctx.fill();
+
+        ctx.fillStyle = "#121827";
+        ctx.beginPath();
+        ctx.moveTo(0, gY);
+        for (let x = 0; x <= CW; x += 25) {
+          const h = Math.sin(x * 0.015) * 12 + Math.cos(x * 0.03) * 8;
+          ctx.lineTo(x, gY - 10 + h);
+        }
+        ctx.lineTo(CW, gY); ctx.closePath(); ctx.fill();
+
+        ctx.fillStyle = "#090d16";
+        ctx.fillRect(0, gY, CW, CH - gY);
+
+        // Altitude Ruler Grid
         const step = niceStep(S.viewMax);
         ctx.textAlign = "left";
         ctx.font = '9px "Roboto Mono",monospace';
         for (let a = 0; a <= S.viewMax + 0.5; a += step) {
           const y = AY(a);
-          ctx.strokeStyle = "rgba(27,42,51,.10)";
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.moveTo(0, y);
-          ctx.lineTo(CW, y);
-          ctx.stroke();
-          ctx.fillStyle = "rgba(27,42,51,.45)";
-          ctx.fillText(a + " m", 6, y - 3);
+          ctx.moveTo(0, y); ctx.lineTo(CW, y); ctx.stroke();
+          ctx.fillStyle = "rgba(248, 250, 252, 0.75)";
+          ctx.fillText(a + " m", 8, y - 4);
         }
 
-        // target band (spec 6 — informational)
+        // Target Altitude Band
         const sc = SCEN[S.scen];
-        const yHi = AY(sc.hi),
-          yLo = AY(sc.lo);
-        ctx.fillStyle = "rgba(194,65,12,.12)";
+        const yHi = AY(sc.hi), yLo = AY(sc.lo);
+        ctx.fillStyle = "rgba(0, 242, 254, 0.16)";
         ctx.fillRect(0, yHi, CW, yLo - yHi);
-        ctx.strokeStyle = "rgba(194,65,12,.5)";
+        ctx.strokeStyle = "#00f2fe";
         ctx.setLineDash([6, 4]);
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 1.8;
         ctx.beginPath();
-        ctx.moveTo(0, yHi);
-        ctx.lineTo(CW, yHi);
-        ctx.moveTo(0, yLo);
-        ctx.lineTo(CW, yLo);
+        ctx.moveTo(0, yHi); ctx.lineTo(CW, yHi);
+        ctx.moveTo(0, yLo); ctx.lineTo(CW, yLo);
         ctx.stroke();
         ctx.setLineDash([]);
-        ctx.fillStyle = "rgba(194,65,12,.85)";
-        ctx.font = '700 9px "Roboto Mono",monospace';
+        ctx.fillStyle = "#00f2fe";
+        ctx.font = '800 10px "Roboto Mono",monospace';
         ctx.textAlign = "right";
-        ctx.fillText("TARGET " + sc.lo + "–" + sc.hi + " m", CW - 8, yHi + 12);
+        ctx.fillText("🎯 TARGET " + sc.lo + "–" + sc.hi + " m", CW - 12, yHi + 15);
 
-        // wind streaks
+        // Wind Streaks
         if (S.wind > 0.2) {
-          ctx.strokeStyle = "rgba(255,255,255,.32)";
-          ctx.lineWidth = 1.4;
-          const n = Math.round(S.wind),
-            t = performance.now() / 1000;
+          ctx.strokeStyle = "rgba(34, 197, 94, 0.5)";
+          ctx.lineWidth = 1.5;
+          const n = Math.round(S.wind);
           for (let i = 0; i < n; i++) {
             const yy = gY * 0.15 + (i * gY * 0.75) / Math.max(1, n);
-            const xx = ((t * S.wind * 24 + i * 130) % (CW + 120)) - 60;
+            const xx = ((t * S.wind * 26 + i * 130) % (CW + 120)) - 60;
             ctx.beginPath();
             ctx.moveTo(xx, yy);
-            ctx.lineTo(xx + 20 + S.wind, yy);
+            ctx.lineTo(xx + 25 + S.wind * 2, yy);
             ctx.stroke();
           }
-          ctx.fillStyle = "rgba(255,255,255,.7)";
-          ctx.font = '700 9px "Roboto Mono",monospace';
+          ctx.fillStyle = "#22c55e";
+          ctx.font = '700 9.5px "Roboto Mono",monospace';
           ctx.textAlign = "left";
-          ctx.fillText("wind " + S.wind.toFixed(1) + " m/s →", 10, gY * 0.12);
+          ctx.fillText("💨 WIND " + S.wind.toFixed(1) + " m/s →", 12, gY * 0.12);
         }
 
-        // launch pad
-        ctx.fillStyle = "#3a3a3a";
-        ctx.fillRect(padX() - 16, gY - 4, 32, 5);
-        ctx.strokeStyle = "#2a2a2a";
+        // Detailed Launch Tower Gantry & Base Slab
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(pX - 35, gY - 8, 70, 8);
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(pX - 35, gY - 8, 70, 8);
+
+        // Yellow/Black Hazard Stripes on Pad Slab
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(pX - 33, gY - 7, 66, 6);
+        ctx.clip();
+        ctx.fillStyle = "#eab308";
+        for (let i = -40; i < 40; i += 10) {
+          ctx.beginPath();
+          ctx.moveTo(pX + i, gY - 8);
+          ctx.lineTo(pX + i + 5, gY - 8);
+          ctx.lineTo(pX + i - 3, gY);
+          ctx.lineTo(pX + i - 8, gY);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Gantry Metal Truss Tower
+        const tX = pX - 18;
+        const tTopY = gY - 48;
+        ctx.strokeStyle = "#64748b";
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(padX(), gY - 4);
-        ctx.lineTo(padX(), gY - 30);
+        ctx.moveTo(tX - 6, gY - 8); ctx.lineTo(tX - 6, tTopY);
+        ctx.moveTo(tX + 6, gY - 8); ctx.lineTo(tX + 6, tTopY);
+        for (let y = gY - 8; y >= tTopY; y -= 10) {
+          ctx.moveTo(tX - 6, y); ctx.lineTo(tX + 6, y);
+          ctx.moveTo(tX - 6, y); ctx.lineTo(tX + 6, y - 10);
+        }
         ctx.stroke();
 
-        // history traces (faded)
-        S.history.forEach((tr) => drawTrace(tr, "rgba(27,42,51,.22)", 1.5));
-        // active trace
-        drawTrace(S.trace, "rgba(194,65,12,.7)", 2);
+        // Umbilical Arm
+        ctx.strokeStyle = "#00f2fe";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(tX + 6, gY - 24);
+        ctx.lineTo(pX, gY - 24);
+        ctx.stroke();
 
-        // rocket
+        // Blinking Red Aviation Beacon Light on Top of Tower
+        const beaconBlink = Math.sin(t * 5) > 0;
+        ctx.fillStyle = beaconBlink ? "#ff2a85" : "#475569";
+        ctx.beginPath();
+        ctx.arc(tX - 6, tTopY - 3, 3, 0, TAU);
+        ctx.fill();
+        if (beaconBlink) {
+          ctx.shadowColor = "#ff2a85";
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(tX - 6, tTopY - 3, 5, 0, TAU);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        // History traces
+        S.history.forEach((tr) => drawTrace(tr, "rgba(255, 255, 255, 0.25)", 1.5));
+        // Active trace
+        drawTrace(S.trace, "#ff6b35", 2.8);
+
+        // Render Particles
+        drawParticles();
+
+        // Rocket
         const F = S.flight;
         if (F && (F.active || F.landed)) {
           drawRocket(AX(F.x), AY(F.y), F.tilt, F.c, 1, F);
           if (F.y / S.viewMax > 1.02) {
-            ctx.fillStyle = "#C2410C";
-            ctx.font = '700 11px "Roboto Mono",monospace';
+            ctx.fillStyle = "#ff6b35";
+            ctx.font = '800 11px "Roboto Mono",monospace';
             ctx.textAlign = "center";
-            ctx.fillText("↑ above view", AX(F.x), 40);
+            ctx.fillText("▲ ASCENDING ABOVE VIEW CEILING", AX(F.x), 44);
           }
         } else {
-          drawRocket(padX(), gY - 4, 0, cfg(), 1, null); // on the pad
+          drawRocket(padX(), gY - 6, 0, cfg(), 1, null);
         }
       }
 
@@ -1186,8 +1220,7 @@
         ctx.lineWidth = w;
         ctx.beginPath();
         for (let i = 0; i < tr.length; i++) {
-          const X = AX(tr[i][0]),
-            Y = AY(tr[i][1]);
+          const X = AX(tr[i][0]), Y = AY(tr[i][1]);
           if (i === 0) ctx.moveTo(X, Y);
           else ctx.lineTo(X, Y);
         }
@@ -1195,77 +1228,179 @@
       }
 
       function drawRocket(cx, cy, tilt, c, alpha, F) {
-        const bodyLen = 26 + ((c.len - 0.25) / 0.17) * 22; // px
-        const bw = 9;
+        const bodyLen = 28 + ((c.len - 0.25) / 0.17) * 24;
+        const bw = 10;
         ctx.save();
         ctx.globalAlpha = alpha;
-        ctx.translate(cx, cy - bodyLen * 0.0);
+        ctx.translate(cx, cy);
         ctx.rotate(tilt);
-        // fins first (behind body)
-        ctx.fillStyle = "#20303a";
+
+        // Force Vectors
+        if (F && F.active) {
+          if (F.t < TB * 3 && F.vy > 0) {
+            ctx.strokeStyle = "#00f2fe";
+            ctx.fillStyle = "#00f2fe";
+            ctx.lineWidth = 3;
+            ctx.shadowColor = "#00f2fe";
+            ctx.shadowBlur = 10;
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -52); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, -58); ctx.lineTo(-5, -48); ctx.lineTo(5, -48); ctx.closePath(); ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+          if (F.drag > 0.05) {
+            const dragLen = clamp(F.drag * 25, 5, 45);
+            ctx.strokeStyle = "#ff2a85";
+            ctx.fillStyle = "#ff2a85";
+            ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, dragLen); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, dragLen + 5); ctx.lineTo(-4, dragLen - 2); ctx.lineTo(4, dragLen - 2); ctx.closePath(); ctx.fill();
+          }
+        }
+
+        // Fins
+        ctx.fillStyle = "#1e293b";
+        ctx.strokeStyle = "#00f2fe";
+        ctx.lineWidth = 1.5;
         if (c.fin === "swept") {
-          ctx.beginPath();
-          ctx.moveTo(-bw / 2, bodyLen * 0.0);
-          ctx.lineTo(-bw / 2 - 9, bodyLen * 0.16);
-          ctx.lineTo(-bw / 2, bodyLen * 0.02);
-          ctx.closePath();
-          ctx.fill();
-          ctx.beginPath();
-          ctx.moveTo(bw / 2, bodyLen * 0.0);
-          ctx.lineTo(bw / 2 + 9, bodyLen * 0.16);
-          ctx.lineTo(bw / 2, bodyLen * 0.02);
-          ctx.closePath();
-          ctx.fill();
+          ctx.beginPath(); ctx.moveTo(-bw / 2, 0); ctx.lineTo(-bw / 2 - 10, 16); ctx.lineTo(-bw / 2, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(bw / 2, 0); ctx.lineTo(bw / 2 + 10, 16); ctx.lineTo(bw / 2, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
         } else if (c.fin === "straight") {
-          ctx.fillRect(-bw / 2 - 7, -2, 7, bodyLen * 0.16);
-          ctx.fillRect(bw / 2, -2, 7, bodyLen * 0.16);
+          ctx.fillRect(-bw / 2 - 8, -2, 8, 16); ctx.strokeRect(-bw / 2 - 8, -2, 8, 16);
+          ctx.fillRect(bw / 2, -2, 8, 16); ctx.strokeRect(bw / 2, -2, 8, 16);
         }
-        // body (nose at top: y negative up)
-        ctx.fillStyle = "#e9e6df";
-        ctx.strokeStyle = "#20303a";
-        ctx.lineWidth = 1.6;
-        ctx.beginPath();
-        ctx.rect(-bw / 2, -bodyLen, bw, bodyLen);
-        ctx.fill();
-        ctx.stroke();
-        // nose cone
-        ctx.fillStyle = "#C2410C";
+
+        // Body Tube
+        const bodyG = ctx.createLinearGradient(-bw / 2, 0, bw / 2, 0);
+        bodyG.addColorStop(0, "#ffffff");
+        bodyG.addColorStop(0.5, "#cbd5e1");
+        bodyG.addColorStop(1, "#475569");
+        ctx.fillStyle = bodyG;
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(-bw / 2, -bodyLen, bw, bodyLen);
+        ctx.strokeRect(-bw / 2, -bodyLen, bw, bodyLen);
+
+        // Nose Cone
+        ctx.fillStyle = "#ff6b35";
         if (c.nose === "pointed") {
-          ctx.beginPath();
-          ctx.moveTo(-bw / 2, -bodyLen);
-          ctx.lineTo(0, -bodyLen - 16);
-          ctx.lineTo(bw / 2, -bodyLen);
-          ctx.closePath();
-          ctx.fill();
+          ctx.beginPath(); ctx.moveTo(-bw / 2, -bodyLen); ctx.lineTo(0, -bodyLen - 18); ctx.lineTo(bw / 2, -bodyLen); ctx.closePath(); ctx.fill();
         } else if (c.nose === "rounded") {
-          ctx.beginPath();
-          ctx.moveTo(-bw / 2, -bodyLen);
-          ctx.quadraticCurveTo(0, -bodyLen - 13, bw / 2, -bodyLen);
-          ctx.closePath();
-          ctx.fill();
+          ctx.beginPath(); ctx.moveTo(-bw / 2, -bodyLen); ctx.quadraticCurveTo(0, -bodyLen - 14, bw / 2, -bodyLen); ctx.closePath(); ctx.fill();
         } else {
-          ctx.beginPath();
-          ctx.moveTo(-bw / 2, -bodyLen);
-          ctx.lineTo(-bw / 2 + 1, -bodyLen - 5);
-          ctx.lineTo(bw / 2 - 1, -bodyLen - 5);
-          ctx.lineTo(bw / 2, -bodyLen);
-          ctx.closePath();
-          ctx.fill();
+          ctx.beginPath(); ctx.moveTo(-bw / 2, -bodyLen); ctx.lineTo(-bw / 2 + 1, -bodyLen - 6); ctx.lineTo(bw / 2 - 1, -bodyLen - 6); ctx.lineTo(bw / 2, -bodyLen); ctx.closePath(); ctx.fill();
         }
-        // exhaust during boost
+
+        // Particles during boost
         if (F && F.active && F.t < TB * 3 && F.vy > 0) {
-          ctx.fillStyle = "rgba(234,88,12,.8)";
-          ctx.beginPath();
-          ctx.moveTo(-bw / 2 + 1, 0);
-          ctx.lineTo(0, 10 + Math.random() * 8);
-          ctx.lineTo(bw / 2 - 1, 0);
-          ctx.closePath();
-          ctx.fill();
+          for (let p = 0; p < 4; p++) {
+            S.particles.push({
+              x: cx + (Math.random() - 0.5) * 4,
+              y: cy + 4,
+              vx: (Math.random() - 0.5) * 1.8,
+              vy: 3 + Math.random() * 5,
+              life: 1.0,
+              size: 3.5 + Math.random() * 6,
+              type: Math.random() > 0.35 ? "flame" : "smoke",
+            });
+          }
         }
         ctx.restore();
       }
 
-      /* ================= flight ================= */
+      function drawParticles() {
+        for (let i = S.particles.length - 1; i >= 0; i--) {
+          const p = S.particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= 0.04;
+          p.size += 0.35;
+          if (p.life <= 0) { S.particles.splice(i, 1); continue; }
+
+          ctx.globalAlpha = p.life * 0.85;
+          ctx.fillStyle = p.type === "flame" ? "#ff6b35" : "rgba(203, 213, 225, 0.4)";
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, TAU);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      /* ================= BLUEPRINT ROCKET PREVIEW ================= */
+      function drawRocketPreview() {
+        const rc = $("rocketCanvas");
+        if (!rc) return;
+        const rctx = rc.getContext("2d");
+        const W = rc.clientWidth || 300, H = rc.clientHeight || 120;
+        rc.width = W * DPR; rc.height = H * DPR;
+        rctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+        rctx.clearRect(0, 0, W, H);
+        const c = cfg();
+        const sm = stab(c);
+
+        const cx = W / 2, cy = H * 0.7;
+        const bodyLen = 35 + ((c.len - 0.25) / 0.17) * 30;
+        const bw = 14;
+
+        // Draw Fins
+        rctx.fillStyle = "#1e293b";
+        rctx.strokeStyle = "#00f2fe";
+        rctx.lineWidth = 1.5;
+        if (c.fin === "swept") {
+          rctx.beginPath(); rctx.moveTo(cx - bw / 2, cy); rctx.lineTo(cx - bw / 2 - 16, cy + 18); rctx.lineTo(cx - bw / 2, cy + 6); rctx.closePath(); rctx.fill(); rctx.stroke();
+          rctx.beginPath(); rctx.moveTo(cx + bw / 2, cy); rctx.lineTo(cx + bw / 2 + 16, cy + 18); rctx.lineTo(cx + bw / 2, cy + 6); rctx.closePath(); rctx.fill(); rctx.stroke();
+        } else if (c.fin === "straight") {
+          rctx.fillRect(cx - bw / 2 - 12, cy - 4, 12, 22); rctx.strokeRect(cx - bw / 2 - 12, cy - 4, 12, 22);
+          rctx.fillRect(cx + bw / 2, cy - 4, 12, 22); rctx.strokeRect(cx + bw / 2, cy - 4, 12, 22);
+        }
+
+        // Draw Body
+        const bG = rctx.createLinearGradient(cx - bw / 2, 0, cx + bw / 2, 0);
+        bG.addColorStop(0, "#ffffff");
+        bG.addColorStop(0.5, "#cbd5e1");
+        bG.addColorStop(1, "#475569");
+        rctx.fillStyle = bG;
+        rctx.strokeStyle = "#0f172a";
+        rctx.lineWidth = 1.5;
+        rctx.fillRect(cx - bw / 2, cy - bodyLen, bw, bodyLen);
+        rctx.strokeRect(cx - bw / 2, cy - bodyLen, bw, bodyLen);
+
+        // Draw Nose
+        rctx.fillStyle = "#ff6b35";
+        if (c.nose === "pointed") {
+          rctx.beginPath(); rctx.moveTo(cx - bw / 2, cy - bodyLen); rctx.lineTo(cx, cy - bodyLen - 22); rctx.lineTo(cx + bw / 2, cy - bodyLen); rctx.closePath(); rctx.fill();
+        } else if (c.nose === "rounded") {
+          rctx.beginPath(); rctx.moveTo(cx - bw / 2, cy - bodyLen); rctx.quadraticCurveTo(cx, cy - bodyLen - 18, cx + bw / 2, cy - bodyLen); rctx.closePath(); rctx.fill();
+        } else {
+          rctx.beginPath(); rctx.moveTo(cx - bw / 2, cy - bodyLen); rctx.lineTo(cx - bw / 2 + 2, cy - bodyLen - 8); rctx.lineTo(cx + bw / 2 - 2, cy - bodyLen - 8); rctx.lineTo(cx + bw / 2, cy - bodyLen); rctx.closePath(); rctx.fill();
+        }
+
+        // Draw Xcg & Xcp Dots
+        const xgPx = cy - bodyLen + (xcg(c) / c.len) * bodyLen;
+        const xpPx = cy - bodyLen + (xcp(c) / c.len) * bodyLen;
+
+        rctx.fillStyle = "#22c55e";
+        rctx.beginPath(); rctx.arc(cx - 3, xgPx, 4, 0, TAU); rctx.fill();
+        rctx.font = '800 9px "Roboto Mono",monospace';
+        rctx.fillStyle = "#22c55e";
+        rctx.textAlign = "right";
+        rctx.fillText("Xcg", cx - 12, xgPx + 3);
+
+        rctx.fillStyle = "#00f2fe";
+        rctx.beginPath(); rctx.arc(cx + 3, xpPx, 4, 0, TAU); rctx.fill();
+        rctx.textAlign = "left";
+        rctx.fillStyle = "#00f2fe";
+        rctx.fillText("Xcp", cx + 12, xpPx + 3);
+
+        const bEl = $("schemStabBadge");
+        if (bEl) {
+          const w = stabWord(sm);
+          bEl.className = "stab-badge " + w.toLowerCase();
+          bEl.textContent = `STABILITY: ${w} (SM ${sm.toFixed(2)} cal)`;
+        }
+      }
+
+      /* ================= FLIGHT & PHYSICS ================= */
       function launch() {
         const c = cfg();
         const sm = stab(c);
@@ -1296,21 +1431,17 @@
           spin: 0,
         };
         S.lastResult = null;
-        setResult("&#9650; Launched — climbing…", "");
+        setResult("🚀 Launched — accelerating upwards…", "");
       }
 
       function stepFlight(dt) {
         const F = S.flight;
         if (!F || !F.active) return;
-        const m = F.mass,
-          b = F.b,
-          windX = S.wind; // wind blows toward +x (downrange)
-        const relx = F.vx - windX,
-          rely = F.vy,
-          spd = Math.hypot(relx, rely);
+        const m = F.mass, b = F.b, windX = S.wind;
+        const relx = F.vx - windX, rely = F.vy, spd = Math.hypot(relx, rely);
         let ax = -(b / m) * spd * relx;
         let ay = -G - (b / m) * spd * rely;
-        // instability: corkscrew veer while it still has airspeed (spec: flip mechanism)
+
         if (F.sm < 1) {
           const instab = clamp(1 - F.sm, 0, 1.6);
           ax += instab * 7 * Math.sin(F.t * 8) * (F.vy > 0 ? 1 : 0.4);
@@ -1322,25 +1453,23 @@
         F.y += F.vy * dt;
         F.t += dt;
         F.drag = 0.5 * RHO * F.cd * AREA * spd * spd;
-        // tilt: point along velocity, plus tumble when unstable
-        const base =
-          Math.atan2(F.vx - windX * 0.0, Math.max(0.5, Math.abs(F.vy))) *
-          (F.vy >= 0 ? 1 : -1);
+
+        const base = Math.atan2(F.vx - windX * 0.0, Math.max(0.5, Math.abs(F.vy))) * (F.vy >= 0 ? 1 : -1);
         F.tilt = clamp(base, -1.2, 1.2) + F.spin;
-        // apogee freeze (spec 4)
+
         if (!F.apogeeSet && F.vy <= 0 && F.t > 0.05) {
           F.apogeeSet = true;
           F.apogee = F.y;
           onApogee();
         }
-        // trace sampling
+
         F.acc += dt;
         if (F.acc >= 0.02) {
           F.acc = 0;
           S.trace.push([F.x, F.y]);
           if (S.trace.length > 1200) S.trace.shift();
         }
-        // touchdown
+
         if (F.y <= 0 && F.t > 0.15) {
           F.y = 0;
           F.active = false;
@@ -1350,20 +1479,18 @@
       }
 
       function onApogee() {
-        const F = S.flight,
-          sc = SCEN[S.scen],
-          a = F.apogee;
+        const F = S.flight, sc = SCEN[S.scen], a = F.apogee;
         let cls, txt;
         if (a >= sc.lo && a <= sc.hi) {
           cls = "in";
-          txt = `Apogee <b>${a.toFixed(1)} m</b> — inside the ${sc.lo}–${sc.hi} m target band.`;
+          txt = `Apogee <b>${a.toFixed(1)} m</b> — inside the ${sc.lo}–${sc.hi} m target band!`;
         } else {
           const miss = a < sc.lo ? sc.lo - a : a - sc.hi;
           cls = miss <= 8 ? "near" : "off";
-          txt = `Apogee <b>${a.toFixed(1)} m</b> — ${a < sc.lo ? "short of" : "over"} the band by ${miss.toFixed(1)} m.`;
+          txt = `Apogee <b>${a.toFixed(1)} m</b> — ${a < sc.lo ? "short of" : "over"} target by ${miss.toFixed(1)} m.`;
         }
         if (F.sm < 1)
-          txt += ` <span style="color:var(--signal)">(${stabWord(F.sm).toLowerCase()} — it veered, losing height)</span>`;
+          txt += ` <span style="color:var(--accent-pink)">(${stabWord(F.sm).toLowerCase()} — it tumbled, losing height)</span>`;
         setResult(txt, cls);
       }
       function setResult(html, cls) {
@@ -1372,25 +1499,18 @@
         el.className = "resultline" + (cls ? " " + cls : "");
       }
 
-      /* ================= math panel ================= */
+      /* ================= MATH GRAPH & EQUATION ================= */
       function drawGraph() {
         const g = $("gGraph");
+        if (!g) return;
         const r = g.getBoundingClientRect();
-        g.width = r.width * DPR;
-        g.height = r.height * DPR;
+        g.width = r.width * DPR; g.height = r.height * DPR;
         const gx = g.getContext("2d");
         gx.setTransform(DPR, 0, 0, DPR, 0, 0);
-        const W = r.width,
-          H = r.height,
-          pad = 6,
-          x0 = pad + 16,
-          y0 = H - 16,
-          x1 = W - pad,
-          y1 = pad + 2;
+        const W = r.width, H = r.height, pad = 6, x0 = pad + 16, y0 = H - 16, x1 = W - pad, y1 = pad + 2;
         gx.clearRect(0, 0, W, H);
         const c = cfg();
-        const Pmin = 2,
-          Pmax = 9;
+        const Pmin = 2, Pmax = 9;
         const pts = [];
         let ymax = 0;
         for (let i = 0; i <= 60; i++) {
@@ -1403,84 +1523,46 @@
         ymax = Math.max(ymax, 20) * 1.1;
         const sx = (P) => x0 + ((P - Pmin) / (Pmax - Pmin)) * (x1 - x0);
         const sy = (v) => y0 - clamp(v / ymax, 0, 1) * (y0 - y1);
-        // curve
-        gx.strokeStyle = "#1B2A33";
-        gx.lineWidth = 2;
+
+        gx.strokeStyle = "#a855f7";
+        gx.lineWidth = 2.5;
         gx.beginPath();
         pts.forEach(([P, a], i) => {
-          const X = sx(P),
-            Y = sy(a);
+          const X = sx(P), Y = sy(a);
           i ? gx.lineTo(X, Y) : gx.moveTo(X, Y);
         });
         gx.stroke();
-        // low/med/high markers
-        gx.fillStyle = "rgba(27,42,51,.35)";
+
+        gx.fillStyle = "rgba(255,255,255,0.3)";
         PRESSURE.forEach((pr) => {
           const cc = Object.assign({}, c, { p: pr.p });
-          const X = sx(pr.p),
-            Y = sy(apogeeIdeal(cc));
-          gx.beginPath();
-          gx.arc(X, Y, 2.5, 0, Math.PI * 2);
-          gx.fill();
+          const X = sx(pr.p), Y = sy(apogeeIdeal(cc));
+          gx.beginPath(); gx.arc(X, Y, 2.5, 0, TAU); gx.fill();
         });
-        // current
+
         const curP = PRESSURE[S.pressIdx].p;
-        const CX = sx(curP),
-          CY = sy(apogeeIdeal(c));
-        gx.fillStyle = "#C2410C";
-        gx.beginPath();
-        gx.arc(CX, CY, 4.5, 0, Math.PI * 2);
-        gx.fill();
-        // axes
-        gx.fillStyle = "#8A9AA6";
-        gx.font = '7.5px "Roboto Mono",monospace';
-        gx.textAlign = "left";
-        gx.fillText("m", x0 - 14, y1 + 6);
-        gx.fillText("apogee", x0 - 14, y1 + 15);
-        gx.textAlign = "center";
-        gx.fillText("low P", sx(3), H - 4);
-        gx.fillText("high P", sx(8), H - 4);
+        const CX = sx(curP), CY = sy(apogeeIdeal(c));
+        gx.fillStyle = "#ff6b35";
+        gx.beginPath(); gx.arc(CX, CY, 5.5, 0, TAU); gx.fill();
       }
 
       function updateEquation() {
-        const c = cfg(),
-          vv = v0(c),
-          J = impulse(c),
-          b = dragB(c.cd);
-        const bh = boostH(vv),
-          dh = coastDh(c, vv),
-          apo = bh + dh;
-        // boost
+        const c = cfg(), vv = v0(c), J = impulse(c);
+        const bh = boostH(vv), dh = coastDh(c, vv), apo = bh + dh;
         $("eqBoost").innerHTML =
-          `<span class="cap">BOOST — single impulse</span>` +
-          `<span class="lbl">J = k&middot;P&middot;V &nbsp;→&nbsp; v&#8320; = J &divide; m</span><br>` +
-          `J = ${K_IMPULSE}&middot;<b>${c.p}</b>&middot;${c.vprop} = <b>${J.toFixed(2)}</b> N&middot;s<br>` +
-          `v&#8320; = ${J.toFixed(2)} &divide; ${c.mass} = <b>${vv.toFixed(1)}</b> m/s` +
-          `<span class="cap" style="margin-top:5px">k=impulse const, P=pressure, V=propellant vol, m=mass</span>`;
-        // coast — every term shown (spec 10.6)
+          `<span class="lbl">BOOST:</span> J = k&middot;P&middot;V = ${K_IMPULSE}&middot;<b>${c.p}</b>&middot;${c.vprop} = <b>${J.toFixed(2)}</b> N&middot;s<br>` +
+          `Burnout Velocity v₀ = J &divide; m = <b>${vv.toFixed(1)}</b> m/s`;
+
         $("eqCoast").innerHTML =
-          `<span class="cap">COAST — closed form, v&sup2; drag</span>` +
-          `<span class="lbl">&Delta;h = (m &divide; C<sub>d</sub>&rho;A)&middot;ln( 1 + C<sub>d</sub>&rho;A&middot;v&#8320;&sup2; &divide; 2mg )</span><br>` +
-          `C<sub>d</sub>=<b>${c.cd}</b> &nbsp;&rho;=${RHO} &nbsp;A=${AREA.toFixed(5)}<br>` +
-          `m=${c.mass} &nbsp;v&#8320;=${vv.toFixed(1)} &nbsp;g=${G}<br>` +
-          `&Delta;h = <b>${dh.toFixed(1)}</b> m &nbsp;+ boost ${bh.toFixed(1)} m` +
-          `<span class="res">apogee &asymp; <b>${apo.toFixed(1)}</b> m</span>` +
-          `<span class="cap">assumes a straight, stable climb</span>`;
-        // stability
-        const sm = stab(c),
-          xg = xcg(c),
-          xp = xcp(c);
+          `<span class="lbl">COAST:</span> C<sub>d</sub>=<b>${c.cd}</b> &nbsp;&rho;=${RHO} &nbsp;A=${AREA.toFixed(5)}<br>` +
+          `&Delta;h = <b>${dh.toFixed(1)}</b> m + boost ${bh.toFixed(1)} m &implies; <span class="res">Apogee &asymp; <b>${apo.toFixed(1)}</b> m</span>`;
+
+        const sm = stab(c), xg = xcg(c), xp = xcp(c);
         $("eqStab").innerHTML =
-          `<span class="cap">STABILITY — margin in calibers</span>` +
-          `<span class="lbl">SM = (X<sub>cp</sub> &minus; X<sub>cg</sub>) &divide; d</span><br>` +
-          `X<sub>cp</sub>=${(xp * 100).toFixed(1)} cm &nbsp;X<sub>cg</sub>=${(xg * 100).toFixed(1)} cm &nbsp;d=${(DIAM * 100).toFixed(1)} cm<br>` +
-          `SM = <b>${sm.toFixed(2)}</b> cal &nbsp;<span class="${sm >= 1 ? "" : "warn"}">→ ${stabWord(sm).toLowerCase()}</span>` +
-          (sm < 1
-            ? `<span class="cap warn" style="margin-top:4px">SM &lt; 1 → tends to tumble / corkscrew</span>`
-            : "");
+          `<span class="lbl">STABILITY:</span> SM = (X<sub>cp</sub> &minus; X<sub>cg</sub>) &divide; d<br>` +
+          `X<sub>cp</sub>=${(xp * 100).toFixed(1)} cm &nbsp;X<sub>cg</sub>=${(xg * 100).toFixed(1)} cm &implies; <b>SM = ${sm.toFixed(2)} cal</b> (${stabWord(sm)})`;
       }
 
-      /* ================= comparison bars (pressure vs apogee) ================= */
       function buildBars() {
         const el = $("cbars");
         el.innerHTML = "";
@@ -1501,8 +1583,7 @@
         });
         mx = Math.max(mx, 10);
         PRESSURE.forEach((pr, i) => {
-          const bar = $("bar_" + i),
-            lab = $("barv_" + i);
+          const bar = $("bar_" + i), lab = $("barv_" + i);
           if (!bar) return;
           bar.style.width = (vals[i] / mx) * 100 + "%";
           lab.textContent = vals[i].toFixed(0) + " m";
@@ -1510,139 +1591,122 @@
         });
       }
 
-      /* ================= scenario tabs ================= */
       function buildTabs() {
         const t = $("scentabs");
+        if (!t) return;
         t.innerHTML = "";
+
+        const scMeta = {
+          open: { icon: "🏕️", tag: "Calm Sky", color: "#00f2fe" },
+          cross: { icon: "💨", tag: "Crosswind", color: "#ff6b35" },
+          prec: { icon: "🎯", tag: "Bullseye", color: "#a855f7" },
+        };
+
         SORDER.forEach((k) => {
           const sc = SCEN[k];
+          const meta = scMeta[k];
           const b = document.createElement("button");
-          b.className = "wtab" + (k === S.scen ? " on" : "");
+          const isActive = k === S.scen;
+          b.className = `wtab ${k} ${isActive ? "on" : ""}`;
           b.dataset.k = k;
-          b.innerHTML = `<div class="wn">${sc.name}</div><div class="wd"><span class="lab">precision</span><div class="difbar"><i style="width:${sc.diff * 100}%"></i></div></div>`;
+          b.innerHTML =
+            `<div class="wtab-top">` +
+            `<div class="wtab-icon-name"><span class="wtab-icon">${meta.icon}</span><span class="wtab-name">${sc.name}</span></div>` +
+            `<span class="wtab-status-pill">${isActive ? "⚡ ACTIVE" : "SELECT ➔"}</span>` +
+            `</div>` +
+            `<div class="wd"><span class="lab">TARGET ${sc.lo}–${sc.hi}m (${meta.tag})</span><div class="difbar"><i style="width:${sc.diff * 100}%; background:${meta.color}"></i></div></div>`;
+
           b.onclick = () => setScenario(k);
           t.appendChild(b);
         });
+
+        const seg = $("scenSeg");
+        if (seg) {
+          seg.querySelectorAll("button").forEach((b) => {
+            b.classList.toggle("on", b.dataset.k === S.scen);
+            b.onclick = () => setScenario(b.dataset.k);
+          });
+        }
       }
+
       function setScenario(k) {
         S.scen = k;
         const sc = SCEN[k];
         S.wind = sc.wind;
         $("wind").value = sc.wind;
         $("windVal").textContent = sc.wind.toFixed(1) + " m/s";
-        $("scenName").textContent = sc.name;
-        document
-          .querySelectorAll(".wtab")
-          .forEach((b) => b.classList.toggle("on", b.dataset.k === k));
+        buildTabs();
+        refreshStatic();
       }
 
-      /* ================= telemetry ================= */
       function updateTelemetry() {
         const F = S.flight;
-        const alt = F ? F.y : 0,
-          vel = F ? F.vy : 0,
-          drag = F ? F.drag : 0;
-        $("t_alt").innerHTML =
-          Math.max(0, alt).toFixed(1) + '<span class="u">m</span>';
-        $("t_vel").innerHTML =
-          (vel >= 0 ? "+" : "") + vel.toFixed(1) + '<span class="u">m/s</span>';
+        const alt = F ? F.y : 0, vel = F ? F.vy : 0, drag = F ? F.drag : 0;
+        $("t_alt").innerHTML = Math.max(0, alt).toFixed(1) + '<span class="u">m</span>';
+        $("t_vel").innerHTML = (vel >= 0 ? "+" : "") + vel.toFixed(1) + '<span class="u">m/s</span>';
         $("t_drag").innerHTML = drag.toFixed(2) + '<span class="u">N</span>';
         const apoTxt = F && F.apogeeSet ? F.apogee.toFixed(1) + " m" : "—";
         $("t_apo").textContent = apoTxt;
-        // stability from the live pre-launch config (or the flying rocket)
+
         const sm = F && F.active ? F.sm : stab(cfg());
         const f = $("t_flag");
         const w = stabWord(sm);
         f.textContent = w;
-        f.className =
-          "flag " + (sm >= 1 ? "stable" : sm >= 0.5 ? "marginal" : "unstable");
-        $("t_sm").textContent = S.mathOn ? "SM " + sm.toFixed(2) : "";
-        // launch bar
-        $("bAlt").innerHTML =
-          Math.max(0, alt).toFixed(1) + '<span style="font-size:9px"> m</span>';
+        f.className = "flag " + w.toLowerCase();
+        $("t_sm").textContent = "SM " + sm.toFixed(2) + " cal";
+
+        $("bAlt").innerHTML = Math.max(0, alt).toFixed(1) + '<span style="font-size:9px"> m</span>';
         $("bVel").textContent = (vel >= 0 ? "+" : "") + vel.toFixed(1);
         $("bApo").textContent = apoTxt;
       }
 
-      /* ================= refresh on every change (spec 10.5) ================= */
       function refreshStatic() {
         S.predApogee = apogeeIdeal(cfg());
-        $("bodyVal").textContent = S.mathOn
-          ? BODY[S.body].mass.toFixed(2) + " kg"
-          : "";
-        $("pressVal").innerHTML =
-          PRESSURE[S.pressIdx].label +
-          (S.mathOn
-            ? ` <span class="num">${PRESSURE[S.pressIdx].p} bar</span>`
-            : "");
+        $("bodyVal").textContent = BODY[S.body].mass.toFixed(2) + " kg";
+        $("pressVal").innerHTML = PRESSURE[S.pressIdx].label + ` <span class="num">${PRESSURE[S.pressIdx].p} bar</span>`;
         updateBars();
-        if (S.mathOn) {
-          updateEquation();
-          drawGraph();
-        }
+        drawRocketPreview();
+        if (S.mathOn) { updateEquation(); drawGraph(); }
       }
 
-      /* ================= controls ================= */
       function segHandler(segId, apply) {
-        $(segId)
-          .querySelectorAll("button")
-          .forEach(
-            (b) =>
-              (b.onclick = () => {
-                $(segId)
-                  .querySelectorAll("button")
-                  .forEach((x) => x.classList.remove("on"));
-                b.classList.add("on");
-                apply(b.dataset.k);
-                refreshStatic();
-              }),
-          );
+        $(segId).querySelectorAll("button").forEach((b) => (b.onclick = () => {
+          $(segId).querySelectorAll("button").forEach((x) => x.classList.remove("on"));
+          b.classList.add("on");
+          apply(b.dataset.k);
+          refreshStatic();
+        }));
       }
       segHandler("noseSeg", (k) => (S.nose = k));
       segHandler("bodySeg", (k) => (S.body = k));
       segHandler("finSeg", (k) => (S.fin = k));
+      segHandler("pressSeg", (k) => (S.pressIdx = parseInt(k, 10)));
 
-      $("press").oninput = (e) => {
-        S.pressIdx = +e.target.value;
-        refreshStatic();
-      };
-      $("wind").oninput = (e) => {
-        S.wind = +e.target.value;
-        $("windVal").textContent = S.wind.toFixed(1) + " m/s";
-      };
+      $("wind").oninput = (e) => { S.wind = +e.target.value; $("windVal").textContent = S.wind.toFixed(1) + " m/s"; };
 
       $("mathTog").onchange = (e) => {
         S.mathOn = e.target.checked;
         $("mathSec").style.display = S.mathOn ? "block" : "none";
         refreshStatic();
         if (S.mathOn) requestAnimationFrame(drawGraph);
-        try {
-          localStorage.setItem("ascent_math", S.mathOn ? "1" : "0");
-        } catch (_) {}
       };
 
       $("launchBtn").onclick = launch;
       $("clearBtn").onclick = () => {
-        S.history = [];
-        S.trace = [[0, 0]];
-        S.flight = null;
-        setResult("Traces cleared. Press <b>&nbsp;LAUNCH&nbsp;</b>.", "");
+        S.history = []; S.trace = [[0, 0]]; S.flight = null;
+        setResult("Traces cleared. Configure rocket &amp; press <b>LAUNCH</b>.", "");
       };
 
       $("helpBtn").onclick = () => $("scrim").classList.add("show");
       $("helpClose").onclick = () => $("scrim").classList.remove("show");
-      $("scrim").addEventListener("click", (e) => {
-        if (e.target === $("scrim")) $("scrim").classList.remove("show");
-      });
+      $("scrim").addEventListener("click", (e) => { if (e.target === $("scrim")) $("scrim").classList.remove("show"); });
 
-      /* ================= main loop (fixed step, clamped dt — spec 10.7) ================= */
-      let last = performance.now(),
-        acc = 0;
+      let last = performance.now(), acc = 0;
       const FIXED = 1 / 120;
       function loop(now) {
         let dt = (now - last) / 1000;
         last = now;
-        dt = clamp(dt, 0, 0.1); // clamp so a backgrounded tab can't teleport the rocket
+        dt = clamp(dt, 0, 0.1);
         acc += dt;
         let guard = 0;
         while (acc >= FIXED && guard < 40) {
@@ -1650,41 +1714,20 @@
           acc -= FIXED;
           guard++;
         }
-        // ease the vertical view to fit target + prediction + live flight
         const F = S.flight;
-        const need = Math.max(
-          SCEN[S.scen].hi * 1.3,
-          S.predApogee * 1.18,
-          F ? F.y * 1.12 : 0,
-          45,
-        );
+        const need = Math.max(SCEN[S.scen].hi * 1.3, S.predApogee * 1.18, F ? F.y * 1.12 : 0, 45);
         S.viewMax += (need - S.viewMax) * clamp(dt * 1.5, 0, 1);
         drawScene();
         updateTelemetry();
         requestAnimationFrame(loop);
       }
 
-      /* ================= init ================= */
       buildTabs();
       buildBars();
       setScenario("open");
       refreshStatic();
-      try {
-        if (localStorage.getItem("ascent_math") === "1") {
-          S.mathOn = true;
-          $("mathTog").checked = true;
-          $("mathSec").style.display = "block";
-          refreshStatic();
-        }
-      } catch (_) {}
       fit();
       requestAnimationFrame(loop);
-      try {
-        if (!localStorage.getItem("ascent_seen")) {
-          $("scrim").classList.add("show");
-          localStorage.setItem("ascent_seen", "1");
-        }
-      } catch (_) {}
     </script>
   </body>
 </html>
