@@ -126,6 +126,9 @@
       .card.stage canvas {
         flex: 1 1 auto;
         min-height: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
       }
       .card h3 {
         margin: 0 0 3px;
@@ -1017,15 +1020,15 @@
             while (S._spawnAcc >= 1) {
               S._spawnAcc -= 1;
               S.particles.push({
-                x: 118,
-                y: 250 + Math.random() * 90,
+                x: JET_X,
+                y: JET_TOP + Math.random() * JET_BAND,
                 v: 90 + level.base * 0.42 + Math.random() * 30,
               });
             }
           }
           S.particles.forEach((p) => (p.x += p.v * dt));
           S.particles = S.particles.filter(
-            (p) => p.x < 300 && S.particles.indexOf(p) < 60,
+            (p) => p.x < JET_END && S.particles.indexOf(p) < 60,
           );
         }
 
@@ -1125,20 +1128,48 @@
         /* ---------- drawing ---------- */
         const canvas = document.getElementById("stage");
         const ctx = canvas.getContext("2d");
-        const W = 640,
-          H = 520;
-        // Supersample well past the logical 640x520 drawing space so the canvas
-        // still looks sharp once CSS stretches it to fill the stage card.
-        const dpr = (window.devicePixelRatio || 1) * 1.75;
-        canvas.width = W * dpr;
-        canvas.height = H * dpr;
-        ctx.scale(dpr, dpr);
+        // The stage card decides how much room the scene gets, so the drawing
+        // space is the canvas's own box rather than a fixed 640x520 — nothing is
+        // letterboxed and nothing is cropped. A single scale on the context
+        // keeps every size, line width and font in design units exactly as
+        // written; only the anchors below are placed from W and H, so the scene
+        // spreads out to fill whatever shape the card gives it. ENLARGE shrinks
+        // the design box against the canvas, which draws the whole scene bigger.
+        const DESIGN_W = 640,
+          DESIGN_H = 520,
+          ENLARGE = 1.22;
+        const R = 62;
+        let W, H, GROUND, SHAFT_X, SHAFT_TOP, SHAFT_BOT;
+        let BLOWER_X, BLOWER_Y, TOP_X, TOP_Y, DEV_X, WIRE_END;
+        let JET_X, JET_TOP, JET_BAND, JET_END;
 
-        const GROUND = 462;
-        const SHAFT_X = 330,
-          SHAFT_TOP = 128,
-          SHAFT_BOT = GROUND - 30,
-          R = 62;
+        function layout() {
+          const cw = Math.max(360, Math.round(canvas.clientWidth || DESIGN_W));
+          const ch = Math.max(300, Math.round(canvas.clientHeight || DESIGN_H));
+          // supersample past the CSS box so the canvas still looks sharp
+          const dpr = (window.devicePixelRatio || 1) * 1.5;
+          canvas.width = Math.round(cw * dpr);
+          canvas.height = Math.round(ch * dpr);
+          const k = Math.min(cw / DESIGN_W, ch / DESIGN_H) * ENLARGE;
+          ctx.setTransform(dpr * k, 0, 0, dpr * k, 0, 0);
+          W = cw / k;
+          H = ch / k;
+
+          GROUND = H * 0.885;
+          SHAFT_X = W * 0.5;
+          SHAFT_BOT = GROUND - 26;
+          SHAFT_TOP = SHAFT_BOT - H * 0.63;
+          BLOWER_X = W * 0.105;
+          BLOWER_Y = GROUND - 84;
+          TOP_X = W - 62;
+          TOP_Y = 66;
+          DEV_X = W * 0.845;
+          WIRE_END = DEV_X - 10;
+          JET_X = BLOWER_X + 40;
+          JET_TOP = GROUND - 212;
+          JET_BAND = 90;
+          JET_END = SHAFT_X - 30;
+        }
 
         function drawSky() {
           ctx.clearRect(0, 0, W, H);
@@ -1158,8 +1189,8 @@
         }
 
         function drawBlower() {
-          const cx = 78,
-            cy = 380;
+          const cx = BLOWER_X,
+            cy = BLOWER_Y;
           ctx.fillStyle = "#e3eefb";
           ctx.strokeStyle = "#4c5c6b";
           ctx.lineWidth = 2;
@@ -1458,8 +1489,8 @@
         // states the blade count plainly — this top-down inset draws the same
         // semicircular cross-section the rotor is built from, which does.
         function drawTopView() {
-          const cx = 580,
-            cy = 66,
+          const cx = TOP_X,
+            cy = TOP_Y,
             ring = 30;
           ctx.beginPath();
           ctx.arc(cx, cy, ring + 14, 0, Math.PI * 2);
@@ -1528,9 +1559,9 @@
           p.bezierCurveTo(
             SHAFT_X + 40,
             GROUND + 6,
-            470,
+            WIRE_END - 40,
             GROUND + 6,
-            510,
+            WIRE_END,
             GROUND - 16,
           );
           return p;
@@ -1552,7 +1583,7 @@
         }
 
         function drawDevice() {
-          const cx = 520,
+          const cx = DEV_X,
             base = GROUND - 6;
           if (S.device === "led") {
             const b = S.ledBrightness;
@@ -1643,9 +1674,25 @@
           draw();
           requestAnimationFrame(loop);
         }
+        layout();
         updateUI();
         draw();
         requestAnimationFrame(loop);
+
+        // the scene is rebuilt from W and H, so a resize only needs a relayout
+        if (window.ResizeObserver) {
+          let first = true;
+          new ResizeObserver(() => {
+            if (first) return void (first = false);
+            layout();
+            draw();
+          }).observe(canvas);
+        } else {
+          window.addEventListener("resize", () => {
+            layout();
+            draw();
+          });
+        }
       })();
     </script>
   </body>

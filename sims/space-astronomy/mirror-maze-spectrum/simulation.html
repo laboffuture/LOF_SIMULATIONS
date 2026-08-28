@@ -1168,7 +1168,13 @@
           } else {
             if (S.slots[1]) {
               S.midRays = out0;
-              rays = applyObject(out0, S.slots[1]);
+              const dx = 18;
+              const maxH = S.slots[1].type === "lens" ? LENS_HMAX : 15;
+              const inSlot2 = out0.map((r) => ({
+                ...r,
+                h: clamp((r.h || 0) + dx * Math.tan(r.ang * DEG), -maxH, maxH),
+              }));
+              rays = applyObject(inSlot2, S.slots[1]);
               exitSlotIndex = 1;
             } else {
               exitSlotIndex = 0;
@@ -1233,49 +1239,91 @@
             return "Detector state: <b>Dark</b> — light beam completely obstructed by blocker.";
           return "Detector state: <b>Dark</b> — beam missing detector array. Drag screen or turn auto-aim on.";
         }
-        let lo = 1e9, hi = -1e9, sw = 0;
-        S.bins.forEach((bn, i) => {
-          if (bn.w > 1e-4) {
-            const x = (i / 240) * 2 * SW - SW;
-            lo = Math.min(lo, x);
-            hi = Math.max(hi, x);
-            sw += bn.w;
-          }
-        });
-        let wlsum = 0, wlw = 0;
-        S.out.forEach((r) => {
-          if (r.br > 1e-5) {
-            wlsum += r.wl * r.br;
-            wlw += r.br;
-          }
-        });
-        const width = hi - lo;
+
         const types = S.slots.filter(Boolean).map((o) => o.type);
         const single = S.lightType === "mono";
 
-        if (types.includes("diffuser"))
-          return "Pattern: <b>Scattered Diffuse Field</b> — beam randomized by frosted glass.";
-        if (types.includes("grating")) {
-          if (single)
-            return `Pattern: <b>Diffraction Harmonics</b> — discrete ${colorName(S.wl)} central & order spots.`;
-          return "Pattern: <b>Dispersed Diffraction Spectrum</b> — central spot with symmetric spectral orders.";
+        const hasGrating = types.includes("grating");
+        const hasPrism = types.includes("prism");
+        const hasFilter = types.includes("filter");
+        const hasDiffuser = types.includes("diffuser");
+        const hasLens = types.includes("lens");
+        const filterObj = S.slots.find((o) => o && o.type === "filter");
+        const lensObj = S.slots.find((o) => o && o.type === "lens");
+
+        // 1. Diffuser combinations (Diffuser overrides focus into scattered field)
+        if (hasDiffuser) {
+          if (hasFilter && filterObj) {
+            return `Pattern: <b>Scattered ${filterObj.color} Diffuse Field</b> — filtered light randomized by frosted glass.`;
+          }
+          if (single) {
+            return `Pattern: <b>Scattered ${colorName(S.wl)} Diffuse Field</b> — laser beam randomized by frosted glass.`;
+          }
+          return "Pattern: <b>Scattered White Diffuse Field</b> — multi-wavelength light randomized by frosted glass.";
         }
-        if (types.includes("prism")) {
-          if (single)
+
+        // 2. Lens + Grating combination
+        if (hasLens && hasGrating) {
+          if (hasFilter && filterObj) {
+            return `Pattern: <b>Focused Filtered ${filterObj.color} Orders</b> — converged diffracted harmonics in ${filterObj.color} passband.`;
+          }
+          if (single) {
+            return `Pattern: <b>Focused ${colorName(S.wl)} Order Harmonics</b> — converged discrete diffraction spots.`;
+          }
+          return "Pattern: <b>Focused Spectral Order Harmonics</b> — converging diffraction orders with sharp focal spots.";
+        }
+
+        // 3. Lens + Prism combination
+        if (hasLens && hasPrism) {
+          if (hasFilter && filterObj) {
+            return `Pattern: <b>Focused Filtered ${filterObj.color} Spot</b> — converged refracted ${filterObj.color} beam.`;
+          }
+          if (single) {
+            return `Pattern: <b>Focused Refracted Spot (${colorName(S.wl)})</b> — converged beam bent by glass prism.`;
+          }
+          return "Pattern: <b>Focused Continuous Rainbow</b> — converging refractive rainbow spectrum.";
+        }
+
+        // 4. Standalone Grating combinations
+        if (hasGrating) {
+          if (hasFilter && filterObj) {
+            return `Pattern: <b>Filtered ${filterObj.color} Diffraction Orders</b> — ${filterObj.color} passband transmitted through diffraction orders.`;
+          }
+          if (single) {
+            return `Pattern: <b>Monochromatic ${colorName(S.wl)} Diffraction Orders</b> — discrete harmonic order spots.`;
+          }
+          return "Pattern: <b>Dispersed Diffraction Spectrum</b> — central white spot with symmetric spectral orders.";
+        }
+
+        // 5. Standalone Prism combinations
+        if (hasPrism) {
+          if (hasFilter && filterObj) {
+            return `Pattern: <b>Filtered ${filterObj.color} Refracted Spot</b> — ${filterObj.color} band isolated after Cauchy dispersion.`;
+          }
+          if (single) {
             return `Pattern: <b>Refracted Spot (${colorName(S.wl)})</b> — single beam bent by glass prism.`;
+          }
           return "Pattern: <b>Continuous Refractive Rainbow</b> — visible light split by Cauchy dispersion.";
         }
-        if (types.includes("lens")) {
-          const div = S.slots.find((o) => o && o.type === "lens").diverging;
+
+        // 6. Lens combinations (Standalone Lens or Lens + Mirror / Lens + Filter)
+        if (hasLens && lensObj) {
+          const div = lensObj.diverging;
+          if (hasFilter && filterObj) {
+            return div
+              ? `Pattern: <b>Divergent ${filterObj.color} Field</b> — expanded filtered footprint.`
+              : `Pattern: <b>Focused ${filterObj.color} Spot</b> — converged filtered footprint.`;
+          }
           return div
             ? "Pattern: <b>Divergent Field</b> — expanded beam footprint."
             : "Pattern: <b>Focused Focal Spot</b> — converged beam footprint.";
         }
-        if (width < 2) {
-          const nm = single ? colorName(S.wl) : "white";
-          return `Pattern: <b>Direct ${nm} Laser Spot</b>` +
-            (types.includes("filter") ? " filtered through passband window." : ".");
+
+        // 7. Standalone Filter
+        if (hasFilter && filterObj) {
+          return `Pattern: <b>Filtered ${filterObj.color} Beam</b> — transmitted through ${filterObj.color} passband window.`;
         }
+
         return "Pattern: <b>Illuminated Beam Field</b> on detector screen.";
       }
 
@@ -1339,55 +1387,123 @@
         bx.arc(srcX - 4, cy, 6, 0, Math.PI * 2);
         bx.fill();
 
-        // 1) Incoming Beam Segment: Source -> Slot 1 (or ExitX)
+        // 1) Incoming Beam Segment: Source -> Slot 1 (or Slot 2 Target)
         const firstTargetX = S.slots[0] ? slotX[0] : exitX;
         bx.shadowColor = `rgba(${srcCol[0]}, ${srcCol[1]}, ${srcCol[2]}, 0.8)`;
         bx.shadowBlur = 12;
         bx.strokeStyle = `rgba(${srcCol[0]}, ${srcCol[1]}, ${srcCol[2]}, 0.95)`;
-        bx.lineWidth = 3;
-        bx.beginPath();
-        bx.moveTo(srcX, cy);
-        bx.lineTo(firstTargetX, cy);
-        bx.stroke();
+        bx.lineWidth = 2;
+        [-4, -2, 0, 2, 4].forEach((hVal) => {
+          const yPos = cy - hVal * 3.5;
+          bx.beginPath();
+          bx.moveTo(srcX, yPos);
+          bx.lineTo(firstTargetX, yPos);
+          bx.stroke();
+        });
         bx.shadowBlur = 0;
 
         // 2) Intermediate Beam Segment: Slot 1 -> Slot 2 (ONLY if Slot 0 passes light through)
         if (S.slots[0] && S.slots[0].type !== "mirror" && S.slots[0].type !== "blocker" && S.slots[1]) {
-          let rSum = 0, gSum = 0, bSum = 0, wSum = 0;
-          if (S.midRays) {
-            S.midRays.forEach(r => {
-              if (r.br > 1e-5) {
-                const c = wlRGB(r.wl);
-                rSum += c[0] * r.br; gSum += c[1] * r.br; bSum += c[2] * r.br; wSum += r.br;
-              }
+          bx.globalCompositeOperation = "screen";
+          const dx = slotX[1] - slotX[0];
+
+          if (S.slots[0].type === "diffuser") {
+            let sumR = 0, sumG = 0, sumB = 0, totalW = 0;
+            if (S.midRays) {
+              S.midRays.forEach((r) => {
+                if (r.br > 1e-4) {
+                  const c = wlRGB(r.wl);
+                  sumR += c[0] * r.br;
+                  sumG += c[1] * r.br;
+                  sumB += c[2] * r.br;
+                  totalW += r.br;
+                }
+              });
+            }
+            const avgR = totalW > 1e-6 ? Math.round(sumR / totalW) : srcCol[0];
+            const avgG = totalW > 1e-6 ? Math.round(sumG / totalW) : srcCol[1];
+            const avgB = totalW > 1e-6 ? Math.round(sumB / totalW) : srcCol[2];
+
+            const diffCone = bx.createLinearGradient(slotX[0], 0, slotX[1], 0);
+            diffCone.addColorStop(0, `rgba(${avgR}, ${avgG}, ${avgB}, 0.5)`);
+            diffCone.addColorStop(0.5, `rgba(${avgR}, ${avgG}, ${avgB}, 0.3)`);
+            diffCone.addColorStop(1, `rgba(${avgR}, ${avgG}, ${avgB}, 0.12)`);
+            bx.fillStyle = diffCone;
+            bx.beginPath();
+            bx.moveTo(slotX[0], cy - 14);
+            bx.lineTo(slotX[1], cy - 50);
+            bx.lineTo(slotX[1], cy + 50);
+            bx.lineTo(slotX[0], cy + 14);
+            bx.closePath();
+            bx.fill();
+          }
+
+          if (S.midRays && S.midRays.length > 0) {
+            S.midRays.forEach((r) => {
+              if (r.br <= 1e-4) return;
+              const a = r.ang * DEG;
+              const startY = cy - (r.h ? r.h * 3.5 : 0);
+              const targetY = startY - dx * Math.tan(a);
+              const c = wlRGB(r.wl);
+              bx.shadowColor = `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+              bx.shadowBlur = 10;
+              bx.strokeStyle = `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${clamp(r.br * 7.0, 0.35, 0.95)})`;
+              bx.lineWidth = S.slots[0].type === "diffuser" ? 2.5 : 2;
+              bx.beginPath();
+              bx.moveTo(slotX[0], startY);
+              bx.lineTo(slotX[1], clamp(targetY, cy - 90, cy + 90));
+              bx.stroke();
             });
           }
-          const midCol = wSum > 0 ? [rSum / wSum, gSum / wSum, bSum / wSum] : srcCol;
-          bx.shadowColor = `rgba(${midCol[0] | 0}, ${midCol[1] | 0}, ${midCol[2] | 0}, 0.8)`;
-          bx.shadowBlur = 10;
-          bx.strokeStyle = `rgba(${midCol[0] | 0}, ${midCol[1] | 0}, ${midCol[2] | 0}, 0.9)`;
-          bx.lineWidth = 3;
-          bx.beginPath();
-          bx.moveTo(slotX[0], cy);
-          bx.lineTo(slotX[1], cy);
-          bx.stroke();
+          bx.globalCompositeOperation = "source-over";
           bx.shadowBlur = 0;
         }
 
         // Exit Fan of Dispersed / Refracted Rays
         bx.globalCompositeOperation = "screen";
+        const exitSlotObj = S.exitSlotIndex >= 0 ? S.slots[S.exitSlotIndex] : null;
+        if (exitSlotObj && exitSlotObj.type === "diffuser") {
+          let sumR = 0, sumG = 0, sumB = 0, totalW = 0;
+          S.out.forEach((r) => {
+            if (r.br > 1e-4) {
+              const c = wlRGB(r.wl);
+              sumR += c[0] * r.br;
+              sumG += c[1] * r.br;
+              sumB += c[2] * r.br;
+              totalW += r.br;
+            }
+          });
+          const avgR = totalW > 1e-6 ? Math.round(sumR / totalW) : srcCol[0];
+          const avgG = totalW > 1e-6 ? Math.round(sumG / totalW) : srcCol[1];
+          const avgB = totalW > 1e-6 ? Math.round(sumB / totalW) : srcCol[2];
+
+          const exitCone = bx.createLinearGradient(exit.x, 0, exit.x + R, 0);
+          exitCone.addColorStop(0, `rgba(${avgR}, ${avgG}, ${avgB}, 0.5)`);
+          exitCone.addColorStop(0.5, `rgba(${avgR}, ${avgG}, ${avgB}, 0.3)`);
+          exitCone.addColorStop(1, `rgba(${avgR}, ${avgG}, ${avgB}, 0.08)`);
+          bx.fillStyle = exitCone;
+          bx.beginPath();
+          bx.moveTo(exit.x, cy - 14);
+          bx.lineTo(exit.x + R, cy - R * Math.tan(25 * DEG));
+          bx.lineTo(exit.x + R, cy + R * Math.tan(25 * DEG));
+          bx.lineTo(exit.x, cy + 14);
+          bx.closePath();
+          bx.fill();
+        }
+
         S.out.forEach((r) => {
           if (r.br <= 1e-4) return;
           const a = r.ang * DEG;
-          const ex = exit.x + Math.cos(a) * R, ey = exit.y - Math.sin(a) * R;
+          const startY = exit.y - (r.h ? r.h * 3.5 : 0);
+          const ex = exit.x + Math.cos(a) * R, ey = startY - Math.sin(a) * R;
           const c = wlRGB(r.wl);
           
           bx.shadowColor = `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
           bx.shadowBlur = 10;
-          bx.strokeStyle = `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${clamp(r.br * 2.5, 0.1, 0.9)})`;
-          bx.lineWidth = 2;
+          bx.strokeStyle = `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${clamp(r.br * 7.0, 0.35, 0.95)})`;
+          bx.lineWidth = exitSlotObj && exitSlotObj.type === "diffuser" ? 2.5 : 2;
           bx.beginPath();
-          bx.moveTo(exit.x, exit.y);
+          bx.moveTo(exit.x, startY);
           bx.lineTo(ex, ey);
           bx.stroke();
         });
@@ -1401,8 +1517,9 @@
         S.out.forEach((r, idx) => {
           if (r.br <= 0.05 || idx % 2 !== 0) return;
           const a = r.ang * DEG;
+          const startY = exit.y - (r.h ? r.h * 3.5 : 0);
           const px = exit.x + Math.cos(a) * particleOffset;
-          const py = exit.y - Math.sin(a) * particleOffset;
+          const py = startY - Math.sin(a) * particleOffset;
           bx.beginPath();
           bx.arc(px, py, 1.5, 0, Math.PI * 2);
           bx.fill();
@@ -1547,52 +1664,152 @@
         const overall = clamp(S.survived, 0, 1);
 
         if (S.maxW > 1e-6 && overall > 0.005) {
-          sx.globalCompositeOperation = "screen";
-          S.bins.forEach((bn, i) => {
-            if (bn.w <= 1e-5) return;
-            const rr = bn.r / bn.w, gg = bn.g / bn.w, bb = bn.b / bn.w;
-            const inten = clamp(bn.w / S.maxW, 0, 1) * overall;
-            if (inten < 0.01) return;
-            const cx = pad + (i / 240) * pw;
-            const rad = Math.max(12, (pw / 240) * 3.8);
-
-            const g = sx.createRadialGradient(cx, cy, 0, cx, cy, rad);
-            g.addColorStop(0, `rgba(${rr | 0},${gg | 0},${bb | 0},${inten})`);
-            g.addColorStop(1, `rgba(${rr | 0},${gg | 0},${bb | 0},0)`);
-            sx.fillStyle = g;
-            sx.beginPath();
-            sx.arc(cx, cy, rad, 0, Math.PI * 2);
-            sx.fill();
-          });
-          sx.globalCompositeOperation = "source-over";
-
-          // Real-time Spectral Intensity Histogram Curve
+          const exitObj = S.exitSlotIndex >= 0 ? S.slots[S.exitSlotIndex] : null;
+          const isDiffuser = exitObj && exitObj.type === "diffuser";
+          const NB = S.bins.length;
+          const stripY = py + 8;
+          const stripH = 16;
           const graphY = py + ph - 10;
-          const graphH = ph * 0.42;
+          const graphH = ph * 0.40;
 
-          sx.strokeStyle = "rgba(0, 242, 254, 0.7)";
-          sx.lineWidth = 2;
-          sx.beginPath();
-          S.bins.forEach((bn, i) => {
-            const cx = pad + (i / 240) * pw;
-            const inten = clamp(bn.w / S.maxW, 0, 1) * overall;
-            const y = graphY - inten * graphH;
-            if (i === 0) sx.moveTo(cx, y);
-            else sx.lineTo(cx, y);
-          });
-          sx.stroke();
+          if (isDiffuser) {
+            // Compute average scattered light color across active bins
+            let sumR = 0, sumG = 0, sumB = 0, totalW = 0;
+            S.bins.forEach((bn) => {
+              if (bn.w > 1e-5) {
+                sumR += bn.r;
+                sumG += bn.g;
+                sumB += bn.b;
+                totalW += bn.w;
+              }
+            });
+            const avgR = totalW > 1e-6 ? Math.round(sumR / totalW) : 255;
+            const avgG = totalW > 1e-6 ? Math.round(sumG / totalW) : 255;
+            const avgB = totalW > 1e-6 ? Math.round(sumB / totalW) : 255;
 
-          // Fill curve with spectral gradient
-          const fillG = sx.createLinearGradient(pad, 0, pad + pw, 0);
-          fillG.addColorStop(0, "rgba(107, 63, 160, 0.25)");
-          fillG.addColorStop(0.3, "rgba(42, 160, 216, 0.25)");
-          fillG.addColorStop(0.6, "rgba(200, 208, 42, 0.25)");
-          fillG.addColorStop(1, "rgba(216, 52, 42, 0.25)");
-          sx.fillStyle = fillG;
-          sx.lineTo(pad + pw, graphY);
-          sx.lineTo(pad, graphY);
-          sx.closePath();
-          sx.fill();
+            // Auto-gain contrast boost for multi-diffuser / filtered diffuse fields
+            const visOverall = clamp(Math.sqrt(S.survived * 5.0), 0.35, 1.0);
+
+            // 1. Broad Diffuse Glow filling the detector frame
+            const diffG = sx.createLinearGradient(pad, 0, pad + pw, 0);
+            diffG.addColorStop(0, `rgba(${avgR}, ${avgG}, ${avgB}, 0.08)`);
+            diffG.addColorStop(0.2, `rgba(${avgR}, ${avgG}, ${avgB}, ${0.5 * visOverall})`);
+            diffG.addColorStop(0.5, `rgba(${avgR}, ${avgG}, ${avgB}, ${0.85 * visOverall})`);
+            diffG.addColorStop(0.8, `rgba(${avgR}, ${avgG}, ${avgB}, ${0.5 * visOverall})`);
+            diffG.addColorStop(1, `rgba(${avgR}, ${avgG}, ${avgB}, 0.08)`);
+            sx.fillStyle = diffG;
+            sx.fillRect(pad, py, pw, ph);
+
+            // 2. Full Top Projection Spectrum Bar
+            sx.fillStyle = diffG;
+            sx.fillRect(pad, stripY, pw, stripH);
+            sx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+            sx.lineWidth = 1;
+            sx.strokeRect(pad, stripY, pw, stripH);
+
+            // 3. Smooth Diffuse Bell-Curve Intensity Profile
+            sx.strokeStyle = `rgba(${avgR}, ${avgG}, ${avgB}, 0.95)`;
+            sx.lineWidth = 3;
+            sx.beginPath();
+            S.bins.forEach((bn, i) => {
+              const cx = pad + (i / NB) * pw;
+              const normW = Math.sqrt(clamp(bn.w / S.maxW, 0, 1)) * 0.85;
+              const y = graphY - normW * graphH * visOverall;
+              if (i === 0) sx.moveTo(cx, y);
+              else sx.lineTo(cx, y);
+            });
+            sx.stroke();
+
+            const fillG = sx.createLinearGradient(pad, 0, pad + pw, 0);
+            fillG.addColorStop(0, `rgba(${avgR}, ${avgG}, ${avgB}, 0.1)`);
+            fillG.addColorStop(0.5, `rgba(${avgR}, ${avgG}, ${avgB}, 0.35)`);
+            fillG.addColorStop(1, `rgba(${avgR}, ${avgG}, ${avgB}, 0.1)`);
+            sx.fillStyle = fillG;
+            sx.lineTo(pad + pw, graphY);
+            sx.lineTo(pad, graphY);
+            sx.closePath();
+            sx.fill();
+          } else {
+            let maxColorW = 0;
+            S.bins.forEach((bn) => {
+              if (bn.w > 1e-5) {
+                const rr = bn.r / bn.w, gg = bn.g / bn.w, bb = bn.b / bn.w;
+                if (Math.max(rr, gg, bb) - Math.min(rr, gg, bb) > 15) {
+                  if (bn.w > maxColorW) maxColorW = bn.w;
+                }
+              }
+            });
+            if (maxColorW < 1e-6) maxColorW = S.maxW;
+
+            // Projection Rainbow Spectrum Bar across detector top
+            for (let i = 0; i < NB; i++) {
+              const bn = S.bins[i];
+              if (bn.w > 1e-5) {
+                const rr = Math.round(bn.r / bn.w);
+                const gg = Math.round(bn.g / bn.w);
+                const bb = Math.round(bn.b / bn.w);
+                const isColor = Math.max(rr, gg, bb) - Math.min(rr, gg, bb) > 15;
+                const rawW = isColor ? bn.w / maxColorW : bn.w / S.maxW;
+                const normW = Math.sqrt(clamp(rawW, 0, 1));
+                const alpha = clamp(normW, 0.45, 1.0);
+                sx.fillStyle = `rgba(${rr},${gg},${bb},${alpha})`;
+                const cx = pad + (i / NB) * pw;
+                sx.fillRect(cx, stripY, pw / NB + 1.2, stripH);
+              }
+            }
+            sx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+            sx.lineWidth = 1;
+            sx.strokeRect(pad, stripY, pw, stripH);
+
+            // Radial Spot Projection
+            sx.globalCompositeOperation = "screen";
+            S.bins.forEach((bn, i) => {
+              if (bn.w <= 1e-5) return;
+              const rr = bn.r / bn.w, gg = bn.g / bn.w, bb = bn.b / bn.w;
+              const isColor = Math.max(rr, gg, bb) - Math.min(rr, gg, bb) > 15;
+              const rawW = isColor ? bn.w / maxColorW : bn.w / S.maxW;
+              const normW = Math.sqrt(clamp(rawW, 0, 1));
+              const inten = clamp(normW, 0.3, 1.0) * overall;
+              const cx = pad + (i / NB) * pw;
+              const rad = Math.max(12, (pw / NB) * 4.2);
+
+              const g = sx.createRadialGradient(cx, cy, 0, cx, cy, rad);
+              g.addColorStop(0, `rgba(${rr | 0},${gg | 0},${bb | 0},${inten})`);
+              g.addColorStop(1, `rgba(${rr | 0},${gg | 0},${bb | 0},0)`);
+              sx.fillStyle = g;
+              sx.beginPath();
+              sx.arc(cx, cy, rad, 0, Math.PI * 2);
+              sx.fill();
+            });
+            sx.globalCompositeOperation = "source-over";
+
+            // Real-time Spectral Intensity Histogram Curve
+            sx.strokeStyle = "rgba(0, 242, 254, 0.85)";
+            sx.lineWidth = 2;
+            sx.beginPath();
+            S.bins.forEach((bn, i) => {
+              const cx = pad + (i / NB) * pw;
+              const isColor = bn.w > 1e-5 && Math.max(bn.r / bn.w, bn.g / bn.w, bn.b / bn.w) - Math.min(bn.r / bn.w, bn.g / bn.w, bn.b / bn.w) > 15;
+              const rawW = isColor ? (bn.w / maxColorW) : (bn.w / S.maxW);
+              const normW = Math.sqrt(clamp(rawW, 0, 1)) * 0.85;
+              const inten = clamp(normW, 0, 1) * overall;
+              const y = graphY - inten * graphH;
+              if (i === 0) sx.moveTo(cx, y);
+              else sx.lineTo(cx, y);
+            });
+            sx.stroke();
+
+            // Fill curve with spectral gradient
+            const fillG = sx.createLinearGradient(pad, 0, pad + pw, 0);
+            fillG.addColorStop(0, "rgba(107, 63, 160, 0.3)");
+            fillG.addColorStop(0.3, "rgba(42, 160, 216, 0.3)");
+            fillG.addColorStop(0.6, "rgba(200, 208, 42, 0.3)");
+            fillG.addColorStop(1, "rgba(216, 52, 42, 0.3)");
+            sx.fillStyle = fillG;
+            sx.lineTo(pad + pw, graphY);
+            sx.lineTo(pad, graphY);
+            sx.closePath();
+          }
         }
 
         // Detector Wavelength Axis Labels
