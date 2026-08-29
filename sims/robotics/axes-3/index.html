@@ -978,19 +978,29 @@
         // the forearm (L2) — must match graspPoint's local offset inside
         // gripperGroup exactly, or the pads/objects end up positioned short of
         // where the claw really reaches and the arm visually plows into them.
-        // Lands roughly mid-length along the parallel-jaw paddles (which start
-        // at the wrist face and run to PADDLE_LEN beyond it), so a held object
-        // nests inside the jaws instead of hanging off their tip or the wrist.
+        // Lands where the object should sit centered between the finger
+        // pads, so a held object nests inside the jaws instead of hanging
+        // off their tip or the wrist.
         const GRIPPER_REACH = 0.4;
         const RANGE = { base: [-75, 75], shoulder: [0, 90], elbow: [0, 90] };
-        const STEP = { base: 15, shoulder: 15, elbow: 15 };
+        // Elbow steps finer than base/shoulder — at 15° there was nothing
+        // between "folded" and "fully extended," so the final approach into
+        // a pick jumped straight from clearly short to exactly on target
+        // with no sensible stop in between.
+        const STEP = { base: 15, shoulder: 15, elbow: 10 };
         const HOME_A = { base: 0, shoulder: 70, elbow: 90 };
         const INITIAL_BASE_TILT = -22;
         const BASE_TOL = 15,
           READY_SHOULDER = 30,
           READY_ELBOW = 30,
           LIFT_SHOULDER = 50;
-        const PICK_RADIUS = 3.3; // world units — how close the gripper must be to grab/place
+        // World units — how close the gripper must actually be to grab/place.
+        // This used to be generous enough that GRIPPER_TOGGLE could succeed
+        // from well short of the object, which then had to visually snap
+        // into the claw the instant it was "picked" — looking like the
+        // object flew to the gripper instead of the gripper reaching it.
+        // Tight enough now that a real, deliberate approach is required.
+        const PICK_RADIUS = 1.0;
         const OBJECT_BASE = RANGE.base[0],
           DROP_BASE = RANGE.base[1];
 
@@ -1040,10 +1050,18 @@
         let objectType = "crate",
           objectWeightG = 150;
         const HEAVY_LIMIT_G = 500;
+        // Sized close to the crate's own footprint (0.42) rather than much
+        // smaller — a bigger gap between shapes made the arm's approach
+        // distance (tuned around the crate) visibly overshoot/undershoot the
+        // ball/can, since a bigger mismatch between "where the arm stops"
+        // and "where the object actually is" reads as more of a miss.
         const OBJECT_SHAPES = {
           crate: { label: "Crate", color: 0xd69a4a, r: 0.42, gh: 0.36 },
-          ball: { label: "Ball", color: 0xe0455e, r: 0.36, gh: 0.36 },
-          can: { label: "Can", color: 0x22d3ee, r: 0.3, gh: 0.36 },
+          // Sized up close to (or past) the crate's own radius — a
+          // noticeably smaller ball/can left visible daylight inside the
+          // closed jaws instead of filling the grip the way the crate does.
+          ball: { label: "Ball", color: 0xe0455e, r: 0.46, gh: 0.46 },
+          can: { label: "Can", color: 0x22d3ee, r: 0.4, gh: 0.4 },
         };
         let recording = false,
           replaying = false,
@@ -1203,6 +1221,13 @@
         }
 
         /* =================== JOINT MOVEMENT =================== */
+        // A held object can never render below whatever surface is under it —
+        // the frame loop clamps its Y to floorY + half-height every frame,
+        // regardless of the arm's raw kinematic position — so there's no need
+        // to also predict and block the joint move itself here. An earlier
+        // version did block it, but the block fired on the same final step
+        // needed to actually lower the object onto a pad for release, leaving
+        // the arm unable to complete a normal, deliberate placement.
         function moveJoint(joint, delta) {
           const [mn, mx] = RANGE[joint];
           const nv = clamp(target[joint] + delta, mn, mx);
@@ -1397,9 +1422,10 @@
           b.addEventListener("click", () => {
             objectType = b.dataset.obj;
             objBtns.forEach((o) => o.classList.toggle("on", o === b));
-            // Different shapes rest at different heights (their own half-height
-            // above whatever surface they're on) — re-settle onto that same
-            // surface instead of leaving the new shape floating or clipped in.
+            // Different shapes rest at different heights AND, on a pad, a
+            // different XZ (their own radius from the arm) — re-settle onto
+            // the same surface instead of leaving the new shape floating,
+            // clipped in, or sitting where a differently-sized object would.
             if (!objectHeld) placeObjectOnSurface(objectPos, restingOn);
           }),
         );
@@ -1581,8 +1607,16 @@
         controls.enableDamping = true;
         controls.dampingFactor = 0.08;
         controls.minDistance = 4.5;
-        controls.maxDistance = 28;
+        // Capped close to the default distance (~23) — zooming out much
+        // further compresses the object/drop zones and their tags toward the
+        // screen center until they visually overlap each other.
+        controls.maxDistance = 24;
         controls.maxPolarAngle = Math.PI / 2 - 0.03;
+        // Free full 360° orbit — the model should be viewable from any side.
+        // The screen-space declutter pass on the tag overlays (below) is what
+        // keeps labels from visually overlapping at the angles where the
+        // base and a pedestal happen to line up with the camera, instead of
+        // restricting how far the camera can turn.
         controls.target.set(0, 2.0, 0);
         controls.update();
 
@@ -1761,55 +1795,68 @@
           "elbow",
         );
         gripperGroup.add(wrist);
-        const wristAccent = new THREE.Mesh(
-          new THREE.BoxGeometry(0.16, 0.03, 0.2),
-          new THREE.MeshStandardMaterial({ color: 0x8b5cf6, metalness: 0.2, roughness: 0.5 }),
-        );
-        wristAccent.position.set(0, 0.195, 0);
-        gripperGroup.add(wristAccent);
 
-        // A visible parallel-jaw gripper (matching the reference rig's style):
-        // two flat plates mounted straight off the servo housing that slide
-        // toward/away from the centerline to pinch an object from its two
-        // sides, instead of hinged fingers that curl around it.
-        // A held object hangs by its TOP face from the grasp point (see the
-        // frame loop), so the plates are lifted mostly ABOVE that point —
-        // only their lower edge dips down to meet the object's top edge,
-        // matching the reference rig's "pinch the top, let it hang" grip
-        // instead of a tall plate that runs most of the object's height.
-        const PADDLE_X = 0.18,
-          PADDLE_LEN = 0.66,
-          PADDLE_H = 0.4,
-          PADDLE_T = 0.1,
-          PADDLE_Y = 0.11;
+        // A visible parallel-jaw gripper matching the reference rig's actual
+        // finger shape: a slim two-segment hook (dark base blade + lighter
+        // angled tip, ending in a dark contact pad) — NOT a single flat tall
+        // slab. The whole finger still slides toward/away from the
+        // centerline as one rigid unit to open/close (see the frame loop),
+        // same mechanism as before; only the finger's own shape changed.
+        const PADDLE_X = 0.1,
+          PADDLE_Y = 0;
         function makePaddle(side) {
           const group = new THREE.Group();
-          const geo = new THREE.BoxGeometry(PADDLE_LEN, PADDLE_H, PADDLE_T);
-          geo.translate(PADDLE_LEN / 2, 0, 0);
-          const plate = hoverable(
+
+          const baseLen = 0.36,
+            baseH = 0.13,
+            baseT = 0.13;
+          const baseGeo = new THREE.BoxGeometry(baseLen, baseH, baseT);
+          baseGeo.translate(baseLen / 2, 0, 0);
+          const baseMesh = hoverable(
             new THREE.Mesh(
-              geo,
-              new THREE.MeshStandardMaterial({ color: 0x1c2740, metalness: 0.4, roughness: 0.4 }),
+              baseGeo,
+              new THREE.MeshStandardMaterial({ color: 0x1c2740, metalness: 0.45, roughness: 0.35 }),
             ),
             "elbow",
           );
-          group.add(plate);
-          // A dark rubber contact strip on the inner face for a bit of grip detail.
-          const padGeo = new THREE.BoxGeometry(PADDLE_LEN * 0.75, PADDLE_H * 0.55, 0.02);
-          padGeo.translate(PADDLE_LEN * 0.5, 0, -side * (PADDLE_T / 2 + 0.011));
+          group.add(baseMesh);
+
+          // A fixed bend at the base's end, angling the tip slightly inward —
+          // the "hook" look — rather than the base and tip running dead straight.
+          const tipPivot = new THREE.Group();
+          tipPivot.position.set(baseLen, 0, 0);
+          tipPivot.rotation.y = -side * 0.4;
+          group.add(tipPivot);
+
+          const tipLen = 0.24,
+            tipH = 0.11,
+            tipT = 0.1;
+          const tipGeo = new THREE.BoxGeometry(tipLen, tipH, tipT);
+          tipGeo.translate(tipLen / 2, 0, 0);
+          const tipMesh = hoverable(
+            new THREE.Mesh(
+              tipGeo,
+              new THREE.MeshStandardMaterial({ color: 0xa9bfe0, metalness: 0.3, roughness: 0.4 }),
+            ),
+            "elbow",
+          );
+          tipPivot.add(tipMesh);
+
           const pad = hoverable(
             new THREE.Mesh(
-              padGeo,
-              new THREE.MeshStandardMaterial({ color: 0x0d1220, roughness: 0.9 }),
+              new THREE.SphereGeometry(0.05, 12, 10),
+              new THREE.MeshStandardMaterial({ color: 0x14100a, roughness: 0.85 }),
             ),
             "elbow",
           );
-          group.add(pad);
-          // A thin bar bridging from the wrist out to the sliding plate, so the
+          pad.position.set(tipLen, 0, 0);
+          tipPivot.add(pad);
+
+          // A thin bar bridging from the wrist out to the sliding finger, so the
           // jaw reads as mounted on the mechanism instead of floating in space
           // when open. Built to span local z:0..-side (i.e. back toward the
           // centerline) and rescaled along Z every frame to track the live gap.
-          const linkGeo = new THREE.BoxGeometry(0.06, 0.2, 1);
+          const linkGeo = new THREE.BoxGeometry(0.06, 0.16, 1);
           linkGeo.translate(0, 0, -side * 0.5);
           const link = hoverable(
             new THREE.Mesh(
@@ -1833,6 +1880,7 @@
         const graspPoint = new THREE.Group();
         graspPoint.position.set(GRIPPER_REACH, 0, 0);
         gripperGroup.add(graspPoint);
+
 
         const tipLight = new THREE.Mesh(
           new THREE.SphereGeometry(0.035, 12, 10),
@@ -1878,14 +1926,31 @@
           scene.add(group);
           return standH + 0.06; // top surface Y — center of the 0.06-thick top disc, plus its half-thickness
         }
-        // Tables sit further out than the claw's raw reach point (by the
-        // largest object's own radius) so a resting object's NEAR face — not
-        // its center — is what the claw actually meets at full extension.
+        // Table/pedestal MESHES sit further out than the claw's raw reach
+        // point, by the largest object's radius, so the pad is comfortably
+        // sized for whatever might rest on it. (The object's actual resting
+        // XZ on the pad is computed per-object-type in placeObjectOnSurface,
+        // not fixed to this — a smaller ball/can sits a bit closer to the
+        // arm on the same pad so the claw's reach still lands on ITS near
+        // face, not short of/past it.)
         const GRAB_CLEARANCE = OBJECT_SHAPES.crate.r;
         const objectZoneTableCenter = pushRadial(objectZone, GRAB_CLEARANCE);
         const dropZoneTableCenter = pushRadial(dropZone, GRAB_CLEARANCE);
         const objectZoneTopY = makePad(objectZoneTableCenter, 0x38bdf8);
         const dropZoneTopY = makePad(dropZoneTableCenter, 0x22c55e);
+        // The height the gripper must not sink below at a given XZ — a pad's
+        // top surface if that XZ is over one, otherwise the bare floor. Used
+        // by moveJoint() to stop a joint move BEFORE it would plow the arm
+        // (and whatever it's holding) down through solid geometry, since
+        // nothing else in this simplified kinematic sim does that on its own.
+        const PAD_HOVER_RADIUS = 0.55; // a bit past the pad's own 0.44 visual radius
+        function surfaceYAt(x, z) {
+          if (Math.hypot(x - objectZoneTableCenter.x, z - objectZoneTableCenter.z) <= PAD_HOVER_RADIUS)
+            return objectZoneTopY;
+          if (Math.hypot(x - dropZoneTableCenter.x, z - dropZoneTableCenter.z) <= PAD_HOVER_RADIUS)
+            return dropZoneTopY;
+          return 0;
+        }
         // Where the object is currently resting — used to keep its center sitting
         // exactly on top of whichever surface it's on (a pad or the bare floor)
         // instead of at some arbitrary fixed height that ignores the object's own
@@ -1898,12 +1963,26 @@
               ? dropZoneTopY
               : 0;
         }
+        // On a pad, the resting XZ is recomputed from the CURRENT object's own
+        // radius (not the table's fixed crate-sized position) — otherwise a
+        // smaller ball/can still sits where a crate's near face would land,
+        // so the gripper's natural reach stops short of/past its actual
+        // surface instead of exactly at it. The pad itself stays put (it's
+        // sized for the largest object); only where the object rests on it
+        // shifts a little toward the arm for a smaller shape. 'floor' has no
+        // pad to re-anchor to, so it keeps whatever XZ it was given.
         function placeObjectOnSurface(worldXZ, surface) {
           restingOn = surface;
+          const xz =
+            surface === "objectZonePad"
+              ? pushRadial(objectZone, OBJECT_SHAPES[objectType].r)
+              : surface === "dropZonePad"
+                ? pushRadial(dropZone, OBJECT_SHAPES[objectType].r)
+                : worldXZ;
           objectPos = new THREE.Vector3(
-            worldXZ.x,
+            xz.x,
             restSurfaceY() + OBJECT_SHAPES[objectType].gh,
-            worldXZ.z,
+            xz.z,
           );
         }
         // Radially offsets a point away from the origin by `dist`, along the
@@ -1925,11 +2004,16 @@
             new THREE.MeshStandardMaterial({ color: OBJECT_SHAPES.crate.color, roughness: 0.75 }),
           ),
           ball: new THREE.Mesh(
-            new THREE.SphereGeometry(0.36, 24, 18),
+            new THREE.SphereGeometry(OBJECT_SHAPES.ball.r, 24, 18),
             new THREE.MeshStandardMaterial({ color: OBJECT_SHAPES.ball.color, roughness: 0.3, metalness: 0.15 }),
           ),
           can: new THREE.Mesh(
-            new THREE.CylinderGeometry(0.3, 0.3, 0.72, 24),
+            new THREE.CylinderGeometry(
+              OBJECT_SHAPES.can.r,
+              OBJECT_SHAPES.can.r,
+              OBJECT_SHAPES.can.gh * 2,
+              24,
+            ),
             new THREE.MeshStandardMaterial({ color: OBJECT_SHAPES.can.color, roughness: 0.35, metalness: 0.25 }),
           ),
         };
@@ -1985,17 +2069,132 @@
         const tagREl = document.getElementById("tagR");
         const lrVec = new THREE.Vector3();
         const projVec = new THREE.Vector3();
-        function placeOverlay(el, worldPos) {
+        // Returns a plain {x,y} screen-pixel point (or null if behind the
+        // camera) — a fresh object per call, safe to mutate afterward, unlike
+        // reusing the shared projVec.
+        function projectToScreen(worldPos) {
           projVec.copy(worldPos).project(camera);
-          if (projVec.z > 1 || projVec.z < -1) {
+          if (projVec.z > 1 || projVec.z < -1) return null;
+          const w = mount.clientWidth,
+            h = mount.clientHeight;
+          return {
+            x: (projVec.x * 0.5 + 0.5) * w,
+            y: (-projVec.y * 0.5 + 0.5) * h,
+          };
+        }
+        function applyOverlay(el, pos) {
+          if (!pos) {
             el.style.display = "none";
             return;
           }
-          const w = mount.clientWidth,
-            h = mount.clientHeight;
-          el.style.left = ((projVec.x * 0.5 + 0.5) * w).toFixed(1) + "px";
-          el.style.top = ((-projVec.y * 0.5 + 0.5) * h).toFixed(1) + "px";
+          el.style.left = pos.x.toFixed(1) + "px";
+          el.style.top = pos.y.toFixed(1) + "px";
           el.style.display = "block";
+        }
+        // The camera can orbit a full 360° around the arm, and the object/drop
+        // zones sit at a fixed angle from the base — so there's always SOME
+        // angle where the base and a pedestal line up with the camera and
+        // project to (almost) the same screen point. Rather than restrict the
+        // orbit, nudge any two tags that land too close together apart in
+        // screen space, symmetrically, a few relaxation passes being plenty
+        // for just 4 small tags. Each tag stays at its true projected spot
+        // except when another tag's spot would actually collide with it.
+        const TAG_MIN_SEP = 74;
+        function declutterTags(items) {
+          for (let pass = 0; pass < 3; pass++) {
+            for (let i = 0; i < items.length; i++) {
+              for (let j = i + 1; j < items.length; j++) {
+                const a = items[i].pos,
+                  b = items[j].pos;
+                if (!a || !b) continue;
+                let dx = b.x - a.x,
+                  dy = b.y - a.y;
+                let dist = Math.hypot(dx, dy);
+                if (dist < 0.001) {
+                  dx = 1;
+                  dy = 0;
+                  dist = 1;
+                }
+                if (dist < TAG_MIN_SEP) {
+                  const push = (TAG_MIN_SEP - dist) / 2;
+                  const ux = dx / dist,
+                    uy = dy / dist;
+                  a.x -= ux * push;
+                  a.y -= uy * push;
+                  b.x += ux * push;
+                  b.y += uy * push;
+                }
+              }
+            }
+          }
+        }
+        // The arm itself swings freely and can point straight at either
+        // pedestal, putting its own body right where that pedestal's tag
+        // projects to. Sampling a handful of skeleton points gives a rough
+        // on-screen footprint for the arm each frame; the object/drop zone
+        // tags (NOT the L/R badges, which are supposed to sit on the base)
+        // get shoved clear of it if they land inside — and clear of EACH
+        // OTHER's pedestal too, since shoving one tag away from the arm can
+        // just as easily land it on the far pedestal instead.
+        function screenBoundsOfPoints(points) {
+          let minX = Infinity,
+            maxX = -Infinity,
+            minY = Infinity,
+            maxY = -Infinity,
+            any = false;
+          for (const p of points) {
+            const s = projectToScreen(p);
+            if (!s) continue;
+            any = true;
+            minX = Math.min(minX, s.x);
+            maxX = Math.max(maxX, s.x);
+            minY = Math.min(minY, s.y);
+            maxY = Math.max(maxY, s.y);
+          }
+          return any ? { minX, maxX, minY, maxY } : null;
+        }
+        const ARM_SAMPLE_PARTS = [baseDisc, mast, shoulderJoint, elbowJoint, wrist, graspPoint];
+        const armPtVec = new THREE.Vector3();
+        function armScreenBounds() {
+          const pts = [];
+          for (const part of ARM_SAMPLE_PARTS) {
+            part.getWorldPosition(armPtVec);
+            pts.push(armPtVec.clone());
+          }
+          return screenBoundsOfPoints(pts);
+        }
+        // Static world points around each pedestal's ring — computed once,
+        // re-projected every frame — used the same way as the arm's box.
+        const PEDESTAL_RING_R = 1.0;
+        function pedestalPoints(center, topY) {
+          return [
+            new THREE.Vector3(center.x - PEDESTAL_RING_R, 0.02, center.z),
+            new THREE.Vector3(center.x + PEDESTAL_RING_R, 0.02, center.z),
+            new THREE.Vector3(center.x, 0.02, center.z - PEDESTAL_RING_R),
+            new THREE.Vector3(center.x, 0.02, center.z + PEDESTAL_RING_R),
+            new THREE.Vector3(center.x, topY, center.z),
+          ];
+        }
+        const OBJ_PEDESTAL_PTS = pedestalPoints(objectZoneTableCenter, objectZoneTopY);
+        const DROP_PEDESTAL_PTS = pedestalPoints(dropZoneTableCenter, dropZoneTopY);
+
+        const AVOID_MARGIN = 60;
+        function pushOutOfBox(pos, box) {
+          if (!pos || !box) return;
+          const minX = box.minX - AVOID_MARGIN,
+            maxX = box.maxX + AVOID_MARGIN,
+            minY = box.minY - AVOID_MARGIN,
+            maxY = box.maxY + AVOID_MARGIN;
+          if (pos.x < minX || pos.x > maxX || pos.y < minY || pos.y > maxY) return;
+          const distLeft = pos.x - minX,
+            distRight = maxX - pos.x,
+            distTop = pos.y - minY,
+            distBottom = maxY - pos.y;
+          const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+          if (minDist === distLeft) pos.x = minX;
+          else if (minDist === distRight) pos.x = maxX;
+          else if (minDist === distTop) pos.y = minY;
+          else pos.y = maxY;
         }
 
         /* =================== MAIN LOOP =================== */
@@ -2024,7 +2223,10 @@
           // closed on nothing — so "gripping" and "not gripping" read as
           // visibly different poses instead of always looking the same width.
           const OPEN_GAP = 0.75;
-          const closedGap = objectHeld ? OBJECT_SHAPES[objectType].r + 0.06 : 0.08;
+          // Trimmed from +0.06 — that clearance was leaving the same visible
+          // sliver of daylight between the paddle and the held object no
+          // matter what it was gripping, instead of reading as an actual grip.
+          const closedGap = objectHeld ? OBJECT_SHAPES[objectType].r + 0.015 : 0.08;
           const gap = closedGap + gripAnim * (OPEN_GAP - closedGap);
           fingerL.position.z = gap;
           fingerR.position.z = -gap;
@@ -2034,12 +2236,15 @@
           Object.entries(objectMeshes).forEach(([k, m]) => (m.visible = k === objectType));
           const activeMesh = objectMeshes[objectType];
           if (objectHeld) {
-            // Grip it by the top, not the center (like the reference rig) —
-            // the object's TOP face sits at the grasp point and it hangs
-            // down from there, so the jaws/connectors stay fully visible
-            // above an exposed object instead of being buried mid-object.
+            // Held centered on the grasp point, between the jaws — not hung
+            // by an edge — so it reads as actually gripped in the middle.
             const gp = currentGripWorld();
-            activeMesh.position.set(gp.x, gp.y - OBJECT_SHAPES[objectType].gh, gp.z);
+            // Never let it render lower than resting properly on whatever
+            // surface is under it right now (a pad or the bare floor); the
+            // center-hold position wins once there's room above that, e.g.
+            // lifted clear of any table.
+            const floorCenterY = surfaceYAt(gp.x, gp.z) + OBJECT_SHAPES[objectType].gh;
+            activeMesh.position.set(gp.x, Math.max(gp.y, floorCenterY), gp.z);
           } else {
             activeMesh.position.copy(objectPos);
           }
@@ -2047,18 +2252,46 @@
           controls.update();
           renderer.render(scene, camera);
 
-          // Anchored near the floor at the base of each pedestal, not hovering
-          // above the object — floating labels sat right where the picked-up
-          // item needs to be seen and made it harder to actually look at it.
-          placeOverlay(tagObjEl, new THREE.Vector3(objectZone.x, 0.15, objectZone.z));
-          placeOverlay(tagDropEl, new THREE.Vector3(dropZone.x, 0.15, dropZone.z));
-
-          // L/R ride the rotating base, so their world position is re-read
-          // fresh every frame rather than computed once like the fixed pads.
+          // Anchored at the pedestal/ring's OWN position (objectZoneTableCenter,
+          // not the raw un-pushed objectZone reach point) and near the floor,
+          // not hovering above the object — so the tag stays locked onto its
+          // own stand's ring instead of drifting toward the arm's side by the
+          // clearance offset, and floating labels don't sit where the
+          // picked-up item needs to be seen.
           badgeL.getWorldPosition(lrVec);
-          placeOverlay(tagLEl, lrVec);
+          const tagLPos = projectToScreen(lrVec);
           badgeR.getWorldPosition(lrVec);
-          placeOverlay(tagREl, lrVec);
+          const tagRPos = projectToScreen(lrVec);
+          const tagItems = [
+            {
+              el: tagObjEl,
+              pos: projectToScreen(
+                new THREE.Vector3(objectZoneTableCenter.x, 0.15, objectZoneTableCenter.z),
+              ),
+            },
+            {
+              el: tagDropEl,
+              pos: projectToScreen(
+                new THREE.Vector3(dropZoneTableCenter.x, 0.15, dropZoneTableCenter.z),
+              ),
+            },
+            // L/R ride the rotating base, so their world position is re-read
+            // fresh every frame rather than computed once like the fixed pads.
+            { el: tagLEl, pos: tagLPos },
+            { el: tagREl, pos: tagRPos },
+          ];
+          // Only the zone tags need to dodge the arm and the OTHER pedestal —
+          // L/R are meant to sit on the base, so they're deliberately left
+          // out of this pass.
+          const armBox = armScreenBounds();
+          const objPedBox = screenBoundsOfPoints(OBJ_PEDESTAL_PTS);
+          const dropPedBox = screenBoundsOfPoints(DROP_PEDESTAL_PTS);
+          pushOutOfBox(tagItems[0].pos, armBox);
+          pushOutOfBox(tagItems[0].pos, dropPedBox);
+          pushOutOfBox(tagItems[1].pos, armBox);
+          pushOutOfBox(tagItems[1].pos, objPedBox);
+          declutterTags(tagItems);
+          tagItems.forEach(({ el, pos }) => applyOverlay(el, pos));
 
           if (hoveredPart) {
             tipEl.textContent = PART_LABEL[hoveredPart];

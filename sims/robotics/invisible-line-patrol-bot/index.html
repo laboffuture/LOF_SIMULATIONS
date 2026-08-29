@@ -981,10 +981,25 @@
         function uvReadingAt(px, py) {
           if (simMode === "chaser") {
             const d = Math.hypot(px - cursorPos.x, py - cursorPos.y);
-            return (
+            const raw =
               uvIntensity *
-              Math.exp(-(d * d) / (2 * CHASER_SIGMA * CHASER_SIGMA))
-            );
+              Math.exp(-(d * d) / (2 * CHASER_SIGMA * CHASER_SIGMA));
+            // A real forward-facing sensor can't see a light behind the bot —
+            // gate the reading out once the light is more than ~90° off the
+            // bot's heading. This must be a narrow on/off gate around that
+            // boundary, NOT a gradual taper across the whole front half —
+            // tapering scaled left and right down by the same shrinking
+            // factor as the light swung toward either side, which flattens
+            // exactly the L/R difference the steering compares to turn
+            // toward it, making a light dead to one side read as "straight
+            // ahead, both sides equal" instead of triggering a turn.
+            const toLightX = cursorPos.x - bot.x,
+              toLightY = cursorPos.y - bot.y;
+            const facingDot =
+              toLightX * Math.cos(bot.heading) + toLightY * Math.sin(bot.heading);
+            const BEHIND_SOFTEN = 20; // world units of blur right at the ±90° line, just to avoid flicker
+            const gate = clamp(facingDot / BEHIND_SOFTEN + 0.5, 0, 1);
+            return raw * gate;
           }
           const d = nearestPathDist(px, py);
           return uvIntensity * Math.exp(-(d * d) / (2 * SIGMA * SIGMA));
