@@ -1,0 +1,1879 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Decoder Console · StarLight Decoder Lab</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f4f6ff;
+        --panel: #ffffff;
+        --panel2: #f3f5ff;
+        --line: #dee2f5;
+        --txt: #1b2036;
+        --mut: #656c8c;
+        --dim: #a2a8c8;
+        --accent: #0891b2;
+        --accent2: #67e8f9;
+        --blue: #3b82f6;
+        --blue2: #93c5fd;
+        --white-star: #e7ebf5;
+        --yellow: #facc15;
+        --yellow2: #fde68a;
+        --orange: #fb923c;
+        --orange2: #fdba74;
+        --red: #ef4444;
+        --red2: #fca5a5;
+        --warn: #f59e0b;
+        --danger: #dc2626;
+        --ok: #16a34a;
+        --shadow: 0 12px 34px rgba(30, 40, 90, 0.14);
+        --r: 20px;
+        --head: "Orbitron", sans-serif;
+        --body: "Rajdhani", sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        font-family: var(--body);
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--txt);
+        background:
+          radial-gradient(900px 500px at 6% -8%, #e6f0ff 0, transparent 60%),
+          radial-gradient(900px 600px at 102% 0%, #fdeeff 0, transparent 55%),
+          linear-gradient(180deg, #f7f9ff, #edf0fb);
+        height: 100vh;
+        overflow: hidden;
+        padding: 10px clamp(10px, 2vw, 26px);
+        display: flex;
+        flex-direction: column;
+      }
+      h1,
+      h3,
+      h4,
+      .chip,
+      .modebanner .lab {
+        font-family: var(--head);
+      }
+
+      header.top {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 6px;
+        flex: 0 0 auto;
+        position: relative;
+      }
+      .title {
+        grid-column: 2;
+        text-align: center;
+        min-width: 0;
+      }
+      .title h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: #131a30;
+      }
+      .title p {
+        margin: 3px 0 0;
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        color: var(--mut);
+      }
+      .helpbtns {
+        grid-column: 3;
+        justify-self: end;
+        display: flex;
+        gap: 8px;
+      }
+      @media (max-width: 760px) {
+        header.top {
+          grid-template-columns: 1fr;
+        }
+        .helpbtns {
+          grid-row: 1;
+          grid-column: 1;
+        }
+        .title {
+          grid-row: 2;
+          grid-column: 1;
+        }
+      }
+      .helpbtn {
+        cursor: pointer;
+        font-weight: 700;
+        color: #fff;
+        font-family: var(--head);
+        font-size: 12px;
+        letter-spacing: 0.3px;
+        background: linear-gradient(145deg, var(--accent2), var(--accent));
+        border: none;
+        padding: 9px 15px;
+        border-radius: 12px;
+        box-shadow: 0 8px 18px rgba(8, 145, 178, 0.32);
+        transition: 0.15s;
+      }
+      .helpbtn:hover {
+        transform: translateY(-2px);
+      }
+      .helpbtn.on {
+        box-shadow:
+          inset 0 0 0 2px #fff,
+          0 8px 18px rgba(8, 145, 178, 0.32);
+      }
+      .helpbar {
+        display: none;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 20px 34px 14px 16px;
+        font-size: 14px;
+        line-height: 1.55;
+        color: var(--txt);
+        position: absolute;
+        right: 0;
+        top: 52px;
+        width: 420px;
+        max-width: min(420px, 90vw);
+        max-height: 75vh;
+        overflow-y: auto;
+        z-index: 40;
+      }
+      .helpbar.show {
+        display: block;
+      }
+      .helpClose {
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: var(--dim);
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1;
+        padding: 5px 7px;
+        border-radius: 8px;
+        transition: 0.15s;
+      }
+      .helpClose:hover {
+        color: #fff;
+        background: var(--accent);
+      }
+      @media (max-width: 1280px) {
+        .helpbar {
+          position: static;
+          width: auto;
+          max-width: none;
+          margin-top: 8px;
+          grid-column: 1 / -1;
+        }
+      }
+      .tabpanel {
+        display: none;
+      }
+      .tabpanel.on {
+        display: block;
+      }
+      .tabpanel ol,
+      .tabpanel ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .tabpanel li {
+        margin-bottom: 5px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 300px 1fr 350px;
+        gap: 12px;
+        align-items: stretch;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      @media (max-width: 1280px) {
+        body {
+          overflow: auto;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+          flex: 0 0 auto;
+        }
+        .stagewrap {
+          flex: 0 0 auto;
+          height: clamp(300px, 58vw, 460px);
+        }
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        box-shadow: var(--shadow);
+        padding: 14px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
+      }
+      .card.stage {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        overflow: hidden;
+        padding: 10px;
+        gap: 8px;
+      }
+      .card h3 {
+        margin: 0 0 3px;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        color: #131a30;
+      }
+      .card .sub {
+        font-size: 12.5px;
+        color: var(--mut);
+        margin: 0 0 8px;
+        line-height: 1.4;
+      }
+
+      .cmdgroup {
+        margin-bottom: 14px;
+      }
+      .cmdgroup h4 {
+        margin: 0 0 6px;
+        font-size: 11px;
+        letter-spacing: 0.6px;
+        color: var(--accent);
+        text-transform: uppercase;
+      }
+
+      /* colour swatch picker */
+      .colorpick {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin-bottom: 6px;
+      }
+      .swatch {
+        cursor: pointer;
+        border: 2px solid var(--line);
+        background: #fff;
+        padding: 9px 4px 7px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--mut);
+        transition: 0.15s;
+        font-family: var(--body);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+      }
+      .swatch .dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--sw);
+        box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, 0.12);
+      }
+      .swatch:hover {
+        border-color: var(--sw);
+      }
+      .swatch.on {
+        border-color: var(--sw);
+        color: var(--txt);
+        background: color-mix(in srgb, var(--sw) 14%, white);
+        box-shadow: 0 8px 16px color-mix(in srgb, var(--sw) 35%, transparent);
+      }
+
+      .stepbtn {
+        font-family: var(--body);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 7px 8px;
+        flex: none;
+        background: #fff;
+        border: 2px solid var(--line);
+        color: var(--txt);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.15s;
+      }
+      .stepbtn:hover {
+        border-color: var(--accent2);
+        color: var(--accent);
+      }
+      .steprow {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 6px;
+      }
+
+      .toggle {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .toggle button {
+        flex: 1;
+        cursor: pointer;
+        border: 2px solid var(--line);
+        background: #fff;
+        color: var(--mut);
+        padding: 8px 6px;
+        border-radius: 11px;
+        font-size: 12.5px;
+        font-weight: 700;
+        transition: 0.15s;
+        font-family: var(--body);
+      }
+      .toggle button:hover {
+        border-color: var(--accent2);
+      }
+      .toggle button.on {
+        color: #fff;
+        border-color: transparent;
+        background: linear-gradient(145deg, var(--accent2), var(--accent));
+        box-shadow: 0 8px 18px rgba(8, 145, 178, 0.3);
+      }
+      .toggle.warn button.on {
+        background: linear-gradient(145deg, #fcd34d, var(--warn));
+        box-shadow: 0 8px 18px rgba(245, 158, 11, 0.32);
+      }
+
+      .ctrl {
+        margin-top: 8px;
+      }
+      .ctrl .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--txt);
+      }
+      .ctrl .row .val {
+        color: var(--accent);
+        font-weight: 800;
+      }
+      .ctrl input[type="range"] {
+        width: 100%;
+        margin: 6px 0 2px;
+        accent-color: var(--accent);
+      }
+      .hint {
+        font-size: 11px;
+        color: var(--dim);
+        line-height: 1.4;
+        margin-top: 3px;
+      }
+      .btn {
+        cursor: pointer;
+        width: 100%;
+        border: 2px solid var(--line);
+        background: #fff;
+        color: var(--txt);
+        padding: 10px 13px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+        font-family: var(--head);
+        letter-spacing: 0.4px;
+        transition: 0.15s;
+        margin-bottom: 8px;
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent2);
+      }
+      .btn.reset {
+        background: linear-gradient(145deg, #cbd5e1, #64748b);
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(100, 116, 139, 0.28);
+      }
+      .btn.mission {
+        background: linear-gradient(145deg, #d8b4fe, #9333ea);
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(147, 51, 234, 0.3);
+      }
+      .btn.mission.on {
+        background: linear-gradient(145deg, #fca5a5, var(--danger));
+      }
+      .btn.start {
+        width: auto;
+        margin-bottom: 0;
+        padding: 11px 24px;
+        font-size: 14px;
+        background: linear-gradient(145deg, var(--accent2), var(--accent));
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(8, 145, 178, 0.32);
+      }
+      .btn.start:disabled {
+        opacity: 0.4;
+        cursor: default;
+        transform: none;
+        box-shadow: none;
+      }
+
+      /* ---------- stage ---------- */
+      .modebanner {
+        width: 100%;
+        padding: 9px 14px;
+        border-radius: 14px;
+        background: linear-gradient(145deg, #e6f7fb, #d3f0f7);
+        border: 2px solid #b7e6ef;
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        transition:
+          background 0.35s,
+          border-color 0.35s;
+      }
+      .modebanner .lab {
+        font-size: 10.5px;
+        color: var(--accent);
+        letter-spacing: 0.5px;
+        font-weight: 700;
+      }
+      .modebanner .txt {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: #131a30;
+        margin-top: 2px;
+      }
+      .modebanner .chip {
+        font-size: 12px;
+        color: #fff;
+        font-weight: 800;
+        white-space: nowrap;
+        padding: 7px 13px;
+        border-radius: 9px;
+        background: linear-gradient(145deg, var(--dim), var(--mut));
+        transition: background 0.35s;
+      }
+      .modebanner .chip.c-ready {
+        background: linear-gradient(145deg, var(--accent2), var(--accent));
+      }
+      .modebanner .chip.c-scan {
+        background: linear-gradient(145deg, #d8b4fe, #9333ea);
+        animation: pulseScan 0.7s infinite;
+      }
+      .modebanner .chip.c-match {
+        background: linear-gradient(145deg, #86efac, var(--ok));
+      }
+      .modebanner .chip.c-unclear {
+        background: linear-gradient(145deg, #fcd34d, var(--warn));
+      }
+      @keyframes pulseScan {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.5);
+        }
+        50% {
+          box-shadow: 0 0 0 8px rgba(147, 51, 234, 0);
+        }
+      }
+
+      .stagewrap {
+        flex: 1 1 auto;
+        min-height: 0;
+        background: #0a0e1f;
+        border-radius: 14px;
+        border: 2px solid #1c2447;
+        overflow: hidden;
+        position: relative;
+      }
+      #core {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .stage-foot {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+      .stage-foot .missionNote {
+        font-size: 12px;
+        color: var(--mut);
+        font-weight: 600;
+      }
+
+      /* ---------- right dashboard ---------- */
+      .statusgrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .stat {
+        background: var(--panel2);
+        border: 1.5px solid var(--line);
+        border-radius: 10px;
+        padding: 6px 8px;
+      }
+      .stat .k {
+        font-size: 10px;
+        color: var(--dim);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        font-weight: 700;
+      }
+      .stat .v {
+        font-size: 14px;
+        font-weight: 700;
+        margin-top: 2px;
+      }
+      .stat .v.g {
+        color: var(--ok);
+      }
+      .stat .v.c {
+        color: var(--accent);
+      }
+      .stat .v.a {
+        color: #7c3aed;
+      }
+      .stat .v.w {
+        color: var(--warn);
+      }
+      .stat .v.d {
+        color: var(--danger);
+      }
+      .stat .v.n {
+        color: var(--mut);
+      }
+
+      .spectrumrow {
+        display: flex;
+        align-items: flex-end;
+        gap: 5px;
+        height: 92px;
+        background: #10142c;
+        border: 1.5px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 8px 4px;
+        margin-top: 4px;
+      }
+      .specbar {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        height: 100%;
+      }
+      .specbar .fill {
+        width: 100%;
+        border-radius: 4px 4px 2px 2px;
+        background: var(--bc);
+        height: 2%;
+        transition: height 0.08s linear;
+        box-shadow:
+          0 0 8px var(--bc),
+          0 0 0 1px rgba(255, 255, 255, 0.25) inset;
+      }
+      .specbar.dom .fill {
+        box-shadow:
+          0 0 16px var(--bc),
+          0 0 22px var(--bc),
+          0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+      }
+      .specbar .lab {
+        font-size: 8px;
+        color: #9fa8cc;
+        font-weight: 700;
+        margin-top: 3px;
+      }
+
+      .reading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1.5px dashed var(--line);
+        font-size: 12.5px;
+      }
+      .reading:last-child {
+        border-bottom: none;
+      }
+      .reading .k {
+        color: var(--mut);
+      }
+      .reading .v {
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .hbar {
+        height: 12px;
+        border-radius: 8px;
+        background: var(--panel2);
+        border: 1.5px solid var(--line);
+        position: relative;
+        overflow: hidden;
+        margin: 4px 0 8px;
+      }
+      .hbar .fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0;
+        border-radius: 7px;
+        transition:
+          width 0.15s,
+          background 0.2s;
+      }
+
+      .maprow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+        font-size: 11.5px;
+        color: var(--mut);
+      }
+      .maprow .msw {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex: none;
+        box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, 0.12);
+      }
+
+      .conperm {
+        display: flex;
+        gap: 8px;
+        margin-top: 4px;
+        justify-content: space-between;
+      }
+      .constar {
+        flex: 1;
+        text-align: center;
+        padding: 8px 2px;
+        border-radius: 10px;
+        border: 1.5px solid var(--line);
+        background: var(--panel2);
+        font-size: 16px;
+        opacity: 0.35;
+        transition: 0.25s;
+      }
+      .constar.on {
+        opacity: 1;
+        border-color: var(--sw);
+        box-shadow: 0 6px 14px color-mix(in srgb, var(--sw) 40%, transparent);
+      }
+
+      .feedback {
+        margin-top: 6px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border-left: 5px solid var(--accent);
+        background: var(--panel2);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--txt);
+        line-height: 1.35;
+        transition: 0.25s;
+      }
+      .feedback.ok {
+        border-left-color: var(--ok);
+        background: #f0fbf3;
+      }
+      .feedback.warn {
+        border-left-color: var(--warn);
+        background: #fff8ec;
+      }
+      .feedback.bad {
+        border-left-color: var(--danger);
+        background: #fff1f1;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="title">
+        <h1>STARLIGHT DECODER LAB</h1>
+        <p>Spectral colour sensing &amp; star classification</p>
+      </div>
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">What You'll Learn</button>
+      </div>
+      <div class="helpbar" id="helpbar">
+        <button type="button" class="helpClose" id="helpClose" aria-label="Close">✕</button>
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li>
+              Pick a <b>wand colour</b>. The tip lights up, but nothing is read yet —
+              the sensor only sees light once you start the scan.
+            </li>
+            <li>
+              Set <b>distance</b>, <b>brightness</b>, and <b>interference</b> however
+              you like, then press <b>Start</b>. The girl swishes the wand through the
+              air on her own and points it at the decoder's sensor lens.
+            </li>
+            <li>
+              Watch the <b>AS7341 channel bars</b> ramp up as the sensor reads —
+              the tallest bars are what the controller compares against its colour map.
+            </li>
+            <li>
+              Move the wand <b>far away</b> or dim it right down and scan again — the
+              reading comes back too weak to classify.
+            </li>
+            <li>
+              Turn <b>interference</b> up and scan a colour you already know — watch a
+              clean reading turn into a mixed, unclear one.
+            </li>
+            <li>
+              Use <b>Run Guided Decode</b> to watch all five colours scan back-to-back
+              and fill in the constellation.
+            </li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <ul>
+            <li>How LED colour can be used as a light signal</li>
+            <li>How a spectral colour sensor reads incoming light</li>
+            <li>How AS7341 readings can be shown as spectrum bars</li>
+            <li>How colour intensity affects detection</li>
+            <li>Why wand distance changes sensor accuracy</li>
+            <li>Why brightness affects graph strength</li>
+            <li>How background light can interfere with colour detection</li>
+            <li>How colour mapping converts sensor readings into star identities</li>
+            <li>How OLED display can show both text and graph output</li>
+            <li>Why scientific decoding needs careful observation and measurement</li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- ================= CONTROLS ================= -->
+      <section class="card">
+        <h3>Wand &amp; Environment</h3>
+        <p class="sub">Set the light, then scan. The sensor only sees what you send it.</p>
+
+        <div class="cmdgroup">
+          <h4>Wand Colour</h4>
+          <div class="colorpick" id="colorPick">
+            <button class="swatch" data-color="blue" style="--sw:#3b82f6"><span class="dot"></span>Blue</button>
+            <button class="swatch" data-color="white" style="--sw:#94a3b8"><span class="dot"></span>White</button>
+            <button class="swatch" data-color="yellow" style="--sw:#facc15"><span class="dot"></span>Yellow</button>
+            <button class="swatch" data-color="orange" style="--sw:#fb923c"><span class="dot"></span>Orange</button>
+            <button class="swatch" data-color="red" style="--sw:#ef4444"><span class="dot"></span>Red</button>
+          </div>
+          <div class="hint">Choosing a colour only lights the tip — press Start below to read it.</div>
+        </div>
+
+        <div class="cmdgroup">
+          <h4>Wand Distance</h4>
+          <div class="steprow">
+            <button class="stepbtn" id="btnCloser">◀ Move Closer</button>
+            <button class="stepbtn" id="btnFarther">Move Farther ▶</button>
+          </div>
+          <div class="ctrl">
+            <div class="row"><label>Distance</label><span class="val" id="v_dist">30%</span></div>
+            <input type="range" id="r_dist" min="0" max="100" step="1" value="30" />
+          </div>
+          <div class="hint">Close boosts the signal (and risks saturating it); far weakens it.</div>
+        </div>
+
+        <div class="cmdgroup">
+          <h4>LED Brightness</h4>
+          <div class="steprow">
+            <button class="stepbtn" id="btnDimmer">−10%</button>
+            <button class="stepbtn" id="btnBrighter">+10%</button>
+          </div>
+          <div class="ctrl">
+            <div class="row"><label>Brightness</label><span class="val" id="v_bright">70%</span></div>
+            <input type="range" id="r_bright" min="0" max="100" step="1" value="70" />
+          </div>
+        </div>
+
+        <div class="cmdgroup">
+          <h4>Background Interference</h4>
+          <div class="toggle warn" id="tgInterf">
+            <button data-interf="on">On</button>
+            <button data-interf="off" class="on">Off</button>
+          </div>
+          <div class="ctrl">
+            <div class="row"><label>Interference Level</label><span class="val" id="v_interf">0%</span></div>
+            <input type="range" id="r_interf" min="0" max="100" step="1" value="0" />
+          </div>
+          <div class="hint">Stray light washes into every channel and can flip a clean reading into a mixed one.</div>
+        </div>
+
+        <div class="cmdgroup">
+          <h4>Sensor Sensitivity</h4>
+          <div class="ctrl" style="margin-top: 0">
+            <div class="row"><label>Sensitivity</label><span class="val" id="v_sens">50%</span></div>
+            <input type="range" id="r_sens" min="0" max="100" step="1" value="50" />
+          </div>
+          <div class="hint">Higher catches dim colours sooner, but accepts noisier matches too.</div>
+        </div>
+
+        <div class="cmdgroup">
+          <h4>System</h4>
+          <button type="button" class="btn reset" id="btnReset">↺ Reset</button>
+          <button type="button" class="btn mission" id="btnMission">▶ Run Guided Decode</button>
+        </div>
+        <div class="hint">Choose a colour and set the brightness above, then press <b>Start</b> below the decoder view.</div>
+      </section>
+
+      <!-- ================= STAGE ================= -->
+      <section class="card stage">
+        <div class="modebanner" id="banner">
+          <div>
+            <div class="lab">DECODER STATUS</div>
+            <div class="txt" id="bannerTxt">Ready — pick a wand colour and press Start.</div>
+          </div>
+          <div class="chip c-ready" id="bannerChip">READY</div>
+        </div>
+
+        <div class="stagewrap">
+          <canvas id="core" width="900" height="440"></canvas>
+        </div>
+
+        <div class="stage-foot">
+          <button type="button" class="btn start" id="btnStart" disabled>▶ Start</button>
+          <span class="missionNote" id="missionNote"></span>
+        </div>
+      </section>
+
+      <!-- ================= DASHBOARD ================= -->
+      <section class="card">
+        <h3>Spectral Reading &amp; Decode Status</h3>
+        <p class="sub">Everything the AS7341 currently sees and has decided.</p>
+
+        <div class="statusgrid">
+          <div class="stat">
+            <div class="k">Wand Colour</div>
+            <div class="v n" id="s_color">None</div>
+          </div>
+          <div class="stat">
+            <div class="k">Distance</div>
+            <div class="v c" id="s_dist">Close</div>
+          </div>
+          <div class="stat">
+            <div class="k">Brightness</div>
+            <div class="v c" id="s_bright">70%</div>
+          </div>
+          <div class="stat">
+            <div class="k">Interference</div>
+            <div class="v g" id="s_interf">Clean</div>
+          </div>
+          <div class="stat">
+            <div class="k">Dominant Channel</div>
+            <div class="v n" id="s_dom">—</div>
+          </div>
+          <div class="stat">
+            <div class="k">Star Result</div>
+            <div class="v n" id="s_result">—</div>
+          </div>
+        </div>
+
+        <h3 style="margin-top: 14px">AS7341 Channel Readings</h3>
+        <div class="spectrumrow" id="spectrumRow"></div>
+
+        <h3 style="margin-top: 14px">Signal Meters</h3>
+        <div class="reading"><span class="k">Distance</span><span class="v" id="m_dist">30%</span></div>
+        <div class="hbar"><div class="fill" id="distFill" style="background: var(--accent)"></div></div>
+        <div class="reading"><span class="k">Brightness</span><span class="v" id="m_bright">70%</span></div>
+        <div class="hbar"><div class="fill" id="brightFill" style="background: var(--accent)"></div></div>
+        <div class="reading"><span class="k">Interference</span><span class="v" id="m_interf">0%</span></div>
+        <div class="hbar"><div class="fill" id="interfFill" style="background: var(--warn)"></div></div>
+
+        <h3 style="margin-top: 14px">Star Mapping Reference</h3>
+        <div class="maprow"><span class="msw" style="background:#3b82f6"></span>Blue-dominant channels → Blue Star</div>
+        <div class="maprow"><span class="msw" style="background:#cbd5e1"></span>Balanced, bright channels → White Star</div>
+        <div class="maprow"><span class="msw" style="background:#facc15"></span>Yellow-warm dominant → Yellow Star</div>
+        <div class="maprow"><span class="msw" style="background:#fb923c"></span>Orange-warm dominant → Orange Star</div>
+        <div class="maprow"><span class="msw" style="background:#ef4444"></span>Red-dominant channels → Red Star</div>
+
+        <h3 style="margin-top: 14px">Constellation Progress</h3>
+        <div class="conperm" id="conperm">
+          <div class="constar" id="con-blue" style="--sw:#3b82f6">✦</div>
+          <div class="constar" id="con-white" style="--sw:#94a3b8">✦</div>
+          <div class="constar" id="con-yellow" style="--sw:#facc15">✦</div>
+          <div class="constar" id="con-orange" style="--sw:#fb923c">✦</div>
+          <div class="constar" id="con-red" style="--sw:#ef4444">✦</div>
+        </div>
+
+        <h3 style="margin-top: 14px">System Feedback</h3>
+        <div class="feedback" id="feedback">StarLight Decoder Lab started.</div>
+      </section>
+    </div>
+
+    <script>
+      (() => {
+        "use strict";
+
+        /* =================== HELPERS =================== */
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const TAU = Math.PI * 2;
+        const $ = (id) => document.getElementById(id);
+        const approach = (cur, tgt, tau, dt) => tgt + (cur - tgt) * Math.exp(-dt / tau);
+        function rr(c, x, y, w, h, r) {
+          r = Math.min(r, w / 2, h / 2);
+          c.beginPath();
+          c.moveTo(x + r, y);
+          c.arcTo(x + w, y, x + w, y + h, r);
+          c.arcTo(x + w, y + h, x, y + h, r);
+          c.arcTo(x, y + h, x, y, r);
+          c.arcTo(x, y, x + w, y, r);
+          c.closePath();
+        }
+        function easeInOutCubic(t) {
+          return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+
+        /* =================== STAR / SENSOR MODEL =================== */
+        // AS7341 visible-light channels F1..F8 (approx nm) and a swatch colour per channel
+        const WAVELEN = [415, 445, 480, 515, 555, 590, 630, 680];
+        const CH_COLOR = ["#8b5cf6", "#3b82f6", "#22d3ee", "#22c55e", "#facc15", "#fb923c", "#ef4444", "#dc2626"];
+        const N_CH = 8;
+
+        const STARS = {
+          blue: { name: "Blue Star", sw: "#3b82f6", profile: [0.95, 0.92, 0.72, 0.32, 0.14, 0.1, 0.08, 0.05] },
+          white: { name: "White Star", sw: "#cbd5e1", profile: [0.68, 0.74, 0.78, 0.8, 0.78, 0.75, 0.72, 0.66] },
+          yellow: { name: "Yellow Star", sw: "#facc15", profile: [0.14, 0.18, 0.34, 0.68, 0.94, 0.58, 0.3, 0.15] },
+          orange: { name: "Orange Star", sw: "#fb923c", profile: [0.1, 0.12, 0.16, 0.3, 0.55, 0.94, 0.68, 0.34] },
+          red: { name: "Red Star", sw: "#ef4444", profile: [0.06, 0.06, 0.09, 0.13, 0.2, 0.44, 0.85, 0.94] },
+        };
+        const COLOR_ORDER = ["blue", "white", "yellow", "orange", "red"];
+
+        function normalize(v) {
+          const m = Math.sqrt(v.reduce((a, b) => a + b * b, 0)) || 1;
+          return v.map((x) => x / m);
+        }
+        function dotp(a, b) {
+          return a.reduce((s, x, i) => s + x * b[i], 0);
+        }
+
+        function computeReading() {
+          const profile = STARS[S.color].profile;
+          const distFactor = clamp(1.25 - (S.distance / 100) * 1.15, 0, 1.3);
+          const brightFactor = 0.15 + (S.brightness / 100) * 1.0;
+          const signal = profile.map((p) => p * distFactor * brightFactor);
+          const noiseAmp = (S.interference / 100) * 0.55;
+          const bg = (S.interference / 100) * 0.3;
+          const reading = signal.map((v) => clamp(v + bg + (Math.random() * 2 - 1) * noiseAmp, 0, 1.4));
+          return { reading, signalPeak: Math.max(...signal) };
+        }
+
+        function classify(reading, signalPeak) {
+          const saturated = signalPeak > 1.05;
+          const weakThreshold = 0.55 - (S.sensitivity / 100) * 0.35;
+          const tooWeak = signalPeak < weakThreshold;
+          let best = null,
+            bestScore = -1;
+          for (const key of COLOR_ORDER) {
+            const score = dotp(normalize(reading), normalize(STARS[key].profile));
+            if (score > bestScore) {
+              bestScore = score;
+              best = key;
+            }
+          }
+          const confThreshold = 0.985 - (S.sensitivity / 100) * 0.05;
+          const noisy = bestScore < confThreshold;
+          if (saturated) return { key: "unclear", reason: "saturated" };
+          if (tooWeak) return { key: "unclear", reason: "weak" };
+          if (noisy) return { key: "unclear", reason: "mixed" };
+          return { key: best, reason: "match" };
+        }
+
+        /* =================== STATE =================== */
+        const S = {
+          color: null,
+          distance: 30,
+          brightness: 70,
+          interference: 0,
+          sensitivity: 50,
+          phase: "idle", // idle | swish | point | reading | result
+          phaseT: 0,
+          wandAngle: -2.15, // radians, resting pose
+          displayReadings: new Array(N_CH).fill(0),
+          targetReadings: new Array(N_CH).fill(0),
+          signalPeak: 0,
+          resultKey: null,
+          resultReason: "",
+          sparkles: [],
+          unlocked: { blue: false, white: false, yellow: false, orange: false, red: false },
+          missionRunning: false,
+          missionIdx: 0,
+          missionElapsed: 0,
+          missionStepStarted: false,
+        };
+        const REST_ANGLE = -2.15;
+        const DURATION = { swish: 850, point: 350, reading: 900 };
+
+        /* =================== FEEDBACK =================== */
+        function setFeedback(msg, cls) {
+          const el = $("feedback");
+          el.textContent = msg;
+          el.className = "feedback" + (cls ? " " + cls : "");
+        }
+
+        /* =================== CONTROL WIRING =================== */
+        function setSegOn(container, attr, value) {
+          container.querySelectorAll("button").forEach((b) => {
+            b.classList.toggle("on", b.dataset[attr] === value);
+          });
+        }
+
+        function selectColor(key) {
+          S.color = key;
+          setSegOn($("colorPick"), "color", key);
+          if (S.phase === "result" || S.phase === "reading" || S.phase === "point") {
+            S.phase = "idle";
+            S.phaseT = 0;
+          }
+          S.resultKey = null;
+          updateActionButton();
+          setFeedback("Light Input: " + STARS[key].name.replace(" Star", ""), "");
+        }
+        $("colorPick").addEventListener("click", (e) => {
+          const b = e.target.closest("button");
+          if (!b) return;
+          selectColor(b.dataset.color);
+        });
+
+        function setDistance(v) {
+          S.distance = clamp(v, 0, 100);
+          $("r_dist").value = S.distance;
+          $("v_dist").textContent = Math.round(S.distance) + "%";
+        }
+        $("r_dist").addEventListener("input", (e) => setDistance(+e.target.value));
+        $("btnCloser").addEventListener("click", () => setDistance(S.distance - 15));
+        $("btnFarther").addEventListener("click", () => setDistance(S.distance + 15));
+
+        function setBrightness(v) {
+          S.brightness = clamp(v, 0, 100);
+          $("r_bright").value = S.brightness;
+          $("v_bright").textContent = Math.round(S.brightness) + "%";
+        }
+        $("r_bright").addEventListener("input", (e) => setBrightness(+e.target.value));
+        $("btnDimmer").addEventListener("click", () => setBrightness(S.brightness - 10));
+        $("btnBrighter").addEventListener("click", () => setBrightness(S.brightness + 10));
+
+        function setInterference(v) {
+          S.interference = clamp(v, 0, 100);
+          $("r_interf").value = S.interference;
+          $("v_interf").textContent = Math.round(S.interference) + "%";
+          setSegOn($("tgInterf"), "interf", S.interference > 3 ? "on" : "off");
+        }
+        $("r_interf").addEventListener("input", (e) => setInterference(+e.target.value));
+        $("tgInterf").addEventListener("click", (e) => {
+          const b = e.target.closest("button");
+          if (!b) return;
+          setInterference(b.dataset.interf === "on" ? 60 : 0);
+        });
+
+        function setSensitivity(v) {
+          S.sensitivity = clamp(v, 0, 100);
+          $("r_sens").value = S.sensitivity;
+          $("v_sens").textContent = Math.round(S.sensitivity) + "%";
+        }
+        $("r_sens").addEventListener("input", (e) => setSensitivity(+e.target.value));
+
+        function updateActionButton() {
+          const btn = $("btnStart");
+          btn.disabled = !S.color || S.phase === "swish" || S.phase === "point" || S.phase === "reading";
+          if (S.phase === "result" && S.resultKey === "unclear") {
+            btn.textContent = "🔄 Rescan";
+          } else {
+            btn.textContent = "▶ Start";
+          }
+        }
+
+        function startScan() {
+          if (!S.color) {
+            setFeedback("Select a wand colour before starting.", "warn");
+            return;
+          }
+          if (S.phase === "swish" || S.phase === "point" || S.phase === "reading") return;
+          S.phase = "swish";
+          S.phaseT = 0;
+          setFeedback("Sensor Reading Active", "");
+        }
+        $("btnStart").addEventListener("click", startScan);
+
+        function resetSystem() {
+          S.color = null;
+          S.distance = 30;
+          S.brightness = 70;
+          S.interference = 0;
+          S.sensitivity = 50;
+          S.phase = "idle";
+          S.phaseT = 0;
+          S.displayReadings = new Array(N_CH).fill(0);
+          S.targetReadings = new Array(N_CH).fill(0);
+          S.resultKey = null;
+          setSegOn($("colorPick"), "color", null);
+          setDistance(30);
+          setBrightness(70);
+          setInterference(0);
+          setSensitivity(50);
+          updateActionButton();
+          setFeedback("StarLight Decoder Lab started.", "ok");
+        }
+        $("btnReset").addEventListener("click", () => {
+          resetSystem();
+          if (S.missionRunning) stopMission();
+        });
+
+        /* =================== GUIDED MISSION =================== */
+        const MISSION = COLOR_ORDER.map((key) => ({
+          label: "Scanning " + STARS[key].name + "…",
+          action: () => {
+            setDistance(28);
+            setBrightness(78);
+            setInterference(0);
+            selectColor(key);
+          },
+          hold: 400,
+          scanAt: 400,
+        }));
+        function startMission() {
+          S.missionRunning = true;
+          S.missionIdx = 0;
+          S.missionElapsed = 0;
+          S.missionStepStarted = false;
+          $("btnMission").classList.add("on");
+          $("btnMission").textContent = "■ Stop";
+        }
+        function stopMission() {
+          S.missionRunning = false;
+          $("btnMission").classList.remove("on");
+          $("btnMission").textContent = "▶ Run Guided Decode";
+          $("missionNote").textContent = "";
+        }
+        $("btnMission").addEventListener("click", () => {
+          if (S.missionRunning) stopMission();
+          else startMission();
+        });
+        function tickMission(dtMs) {
+          if (!S.missionRunning) return;
+          const step = MISSION[S.missionIdx];
+          if (!step) {
+            stopMission();
+            setFeedback("Mission complete. Hidden constellation restored.", "ok");
+            return;
+          }
+          if (!S.missionStepStarted) {
+            step.action();
+            S.missionStepStarted = true;
+            S.missionElapsed = 0;
+          }
+          $("missionNote").textContent = "Decode " + (S.missionIdx + 1) + "/" + MISSION.length + " — " + step.label;
+          S.missionElapsed += dtMs;
+          if (S.missionElapsed >= step.scanAt && S.phase === "idle") startScan();
+          const totalStepTime = step.scanAt + DURATION.swish + DURATION.point + DURATION.reading + 900;
+          if (S.missionElapsed >= totalStepTime) {
+            S.missionIdx++;
+            S.missionStepStarted = false;
+          }
+        }
+
+        /* =================== ANIMATION STEP =================== */
+        function spawnSparkle(x, y) {
+          const a = Math.random() * TAU;
+          const sp = 30 + Math.random() * 60;
+          S.sparkles.push({
+            x,
+            y,
+            vx: Math.cos(a) * sp,
+            vy: Math.sin(a) * sp - 20,
+            age: 0,
+            life: 0.45 + Math.random() * 0.35,
+            size: 2 + Math.random() * 2.5,
+          });
+        }
+
+        function step(dt) {
+          S.phaseT += dt * 1000;
+
+          if (S.phase === "swish") {
+            if (S.phaseT >= DURATION.swish) {
+              S.phase = "point";
+              S.phaseT = 0;
+            }
+          } else if (S.phase === "point") {
+            if (S.phaseT >= DURATION.point) {
+              S.phase = "reading";
+              S.phaseT = 0;
+              const { reading, signalPeak } = computeReading();
+              S.targetReadings = reading;
+              S.signalPeak = signalPeak;
+            }
+          } else if (S.phase === "reading") {
+            const u = clamp(S.phaseT / DURATION.reading, 0, 1);
+            for (let i = 0; i < N_CH; i++) {
+              const jitter = (Math.random() * 2 - 1) * 0.16 * (1 - u);
+              S.displayReadings[i] = clamp(S.targetReadings[i] * u + jitter, 0, 1.4);
+            }
+            if (u >= 1) {
+              S.displayReadings = S.targetReadings.slice();
+              const result = classify(S.targetReadings, S.signalPeak);
+              S.resultKey = result.key;
+              S.resultReason = result.reason;
+              S.phase = "result";
+              S.phaseT = 0;
+              if (result.key !== "unclear") S.unlocked[result.key] = true;
+              applyResultFeedback(result);
+              updateActionButton();
+            }
+          }
+
+          // sparkles during swish + a little into point
+          if (S.phase === "swish" || (S.phase === "point" && S.phaseT < 150)) {
+            if (Math.random() < 0.7) spawnSparkle(S.tipX || 0, S.tipY || 0);
+          }
+          S.sparkles.forEach((p) => {
+            p.age += dt;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.vy += 40 * dt;
+          });
+          S.sparkles = S.sparkles.filter((p) => p.age < p.life);
+        }
+
+        function applyResultFeedback(result) {
+          if (result.key !== "unclear") {
+            const msgs = {
+              blue: "Blue-dominant light detected.",
+              white: "Balanced light pattern detected.",
+              yellow: "Warm yellow pattern detected.",
+              orange: "Orange-warm pattern detected.",
+              red: "Red-dominant light detected.",
+            };
+            setFeedback(msgs[result.key] + " Star identity decoded successfully.", "ok");
+          } else if (result.reason === "weak") {
+            setFeedback("Move the wand closer for stronger readings.", "warn");
+          } else if (result.reason === "saturated") {
+            setFeedback("Light too strong. Move the wand slightly away.", "warn");
+          } else {
+            setFeedback("Background light is affecting the scan. Reading is unclear — adjust and scan again.", "bad");
+          }
+        }
+
+        /* =================== UI SYNC =================== */
+        function buildSpectrumBars() {
+          const row = $("spectrumRow");
+          row.innerHTML = "";
+          for (let i = 0; i < N_CH; i++) {
+            const bar = document.createElement("div");
+            bar.className = "specbar";
+            bar.id = "spec" + i;
+            bar.innerHTML = `<div class="fill" id="specfill${i}" style="--bc:${CH_COLOR[i]}"></div><div class="lab">F${i + 1}</div>`;
+            row.appendChild(bar);
+          }
+        }
+
+        function updateDashboard() {
+          $("s_color").textContent = S.color ? STARS[S.color].name.replace(" Star", "") : "None";
+
+          $("s_dist").textContent = S.distance < 30 ? "Close" : S.distance < 65 ? "Medium" : "Far";
+          $("s_dist").className = "v " + (S.distance > 80 ? "d" : "c");
+          $("s_bright").textContent = Math.round(S.brightness) + "%";
+          $("s_bright").className = "v " + (S.brightness < 25 ? "d" : "c");
+          $("s_interf").textContent = S.interference < 5 ? "Clean" : S.interference < 45 ? "Mild" : "High";
+          $("s_interf").className = "v " + (S.interference < 5 ? "g" : S.interference < 45 ? "w" : "d");
+
+          let domIdx = 0;
+          for (let i = 1; i < N_CH; i++) if (S.displayReadings[i] > S.displayReadings[domIdx]) domIdx = i;
+          const domActive = Math.max(...S.displayReadings) > 0.08;
+          $("s_dom").textContent = domActive ? "F" + (domIdx + 1) + " (" + WAVELEN[domIdx] + "nm)" : "—";
+
+          if (S.phase === "result") {
+            $("s_result").textContent = S.resultKey === "unclear" ? "Unclear" : STARS[S.resultKey].name;
+            $("s_result").className = "v " + (S.resultKey === "unclear" ? "w" : "g");
+          } else if (S.phase === "idle") {
+            $("s_result").textContent = "—";
+            $("s_result").className = "v n";
+          } else {
+            $("s_result").textContent = "Scanning…";
+            $("s_result").className = "v a";
+          }
+
+          for (let i = 0; i < N_CH; i++) {
+            const pct = clamp(S.displayReadings[i] / 1.2, 0, 1) * 100;
+            $("specfill" + i).style.height = Math.max(2, pct) + "%";
+            $("spec" + i).classList.toggle("dom", domActive && i === domIdx);
+          }
+
+          $("m_dist").textContent = Math.round(S.distance) + "%";
+          $("distFill").style.width = S.distance + "%";
+          $("m_bright").textContent = Math.round(S.brightness) + "%";
+          $("brightFill").style.width = S.brightness + "%";
+          $("m_interf").textContent = Math.round(S.interference) + "%";
+          $("interfFill").style.width = S.interference + "%";
+          $("interfFill").style.background = S.interference > 45 ? "var(--danger)" : "var(--warn)";
+
+          COLOR_ORDER.forEach((key) => {
+            $("con-" + key).classList.toggle("on", S.unlocked[key]);
+          });
+
+          const banner = { lab: "DECODER STATUS" };
+          const chip = $("bannerChip");
+          const txt = $("bannerTxt");
+          if (S.phase === "idle") {
+            chip.className = "chip c-ready";
+            chip.textContent = "READY";
+            txt.textContent = S.color ? STARS[S.color].name.replace(" Star", "") + " wand ready — press Start." : "Ready — pick a wand colour and press Start.";
+          } else if (S.phase === "swish" || S.phase === "point" || S.phase === "reading") {
+            chip.className = "chip c-scan";
+            chip.textContent = S.phase === "reading" ? "READING" : "AIMING";
+            txt.textContent = S.phase === "reading" ? "AS7341 reading spectral channels…" : "Wand swishing toward the sensor…";
+          } else {
+            if (S.resultKey === "unclear") {
+              chip.className = "chip c-unclear";
+              chip.textContent = "UNCLEAR";
+              txt.textContent =
+                S.resultReason === "weak"
+                  ? "Signal too weak — move wand closer."
+                  : S.resultReason === "saturated"
+                    ? "Signal saturated — move wand away."
+                    : "Reading mixed by interference — rescan.";
+            } else {
+              chip.className = "chip c-match";
+              chip.textContent = "MATCHED";
+              txt.textContent = STARS[S.resultKey].name + " decoded from " + STARS[S.color].name.replace(" Star", "") + " light.";
+            }
+          }
+          updateActionButton();
+        }
+
+        /* =================== CANVAS SCENE =================== */
+        const cv = $("core"),
+          ctx = cv.getContext("2d");
+        let CW = 900,
+          CH = 440,
+          DPR = Math.max(1, window.devicePixelRatio || 1);
+        function fit() {
+          DPR = Math.max(1, window.devicePixelRatio || 1);
+          const r = cv.parentElement.getBoundingClientRect();
+          cv.width = Math.max(1, r.width * DPR);
+          cv.height = Math.max(1, r.height * DPR);
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          CW = r.width;
+          CH = r.height;
+        }
+        window.addEventListener("resize", fit);
+
+        function wandColorHex() {
+          return S.color ? STARS[S.color].sw : "#475569";
+        }
+
+        function drawScene(t) {
+          ctx.clearRect(0, 0, CW, CH);
+          const g = ctx.createLinearGradient(0, 0, 0, CH);
+          g.addColorStop(0, "#0c1330");
+          g.addColorStop(1, "#070a1c");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, CW, CH);
+
+          // starfield
+          ctx.fillStyle = "rgba(255,255,255,0.55)";
+          for (let i = 0; i < 60; i++) {
+            const sx = (i * 173.3) % CW;
+            const sy = (i * 97.7) % CH;
+            const tw = 0.4 + 0.6 * Math.abs(Math.sin(t * 1.3 + i));
+            ctx.globalAlpha = 0.15 + tw * 0.35;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 1 + (i % 3 === 0 ? 0.6 : 0), 0, TAU);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+
+          const pad = 16;
+          ctx.strokeStyle = "rgba(140,170,255,0.2)";
+          ctx.lineWidth = 2;
+          rr(ctx, pad, pad, CW - pad * 2, CH - pad * 2, 18);
+          ctx.stroke();
+
+          // ---- cartoon character holding the wand ----
+          const scaleF = clamp(Math.min(CW, CH) / 360, 0.8, 1.5);
+          const shoulderX = CW * 0.25,
+            shoulderY = CH * 0.62;
+          const consoleX = CW * 0.67,
+            consoleY = CH * 0.48;
+          // big decoder console — sized off the canvas so it stays a dominant, readable monitor
+          const consoleW = clamp(CW * 0.42, 300, 420);
+          const consoleH = clamp(CH * 0.72, 250, 330);
+          const cHalfW = consoleW / 2,
+            cHalfH = consoleH / 2;
+          const lensX = consoleX - cHalfW + 26,
+            lensY = consoleY + cHalfH - 24;
+          const oledX = consoleX - cHalfW + 16,
+            oledY = consoleY - cHalfH + 34,
+            oledW = consoleW - 32,
+            oledH = consoleH - 76;
+          const pointAngle = Math.atan2(lensY - shoulderY, lensX - shoulderX);
+
+          let angleTarget;
+          if (S.phase === "swish") {
+            const u = easeInOutCubic(clamp(S.phaseT / DURATION.swish, 0, 1));
+            const flourish = -1.15;
+            S.wandAngle = lerp(REST_ANGLE, pointAngle, u) + Math.sin(u * Math.PI) * flourish;
+          } else {
+            angleTarget = S.phase === "idle" ? REST_ANGLE + Math.sin(t * 1.4) * 0.05 : pointAngle;
+            S.wandAngle = approach(S.wandAngle, angleTarget, 0.18, 1 / 60);
+          }
+
+          const armLen = 34 * scaleF;
+          const handX = shoulderX + Math.cos(S.wandAngle) * armLen;
+          const handY = shoulderY + Math.sin(S.wandAngle) * armLen;
+
+          const wandLen = Math.min(CW, CH) * 0.13;
+          const tipX = handX + Math.cos(S.wandAngle) * wandLen;
+          const tipY = handY + Math.sin(S.wandAngle) * wandLen;
+          S.tipX = tipX;
+          S.tipY = tipY;
+
+          // ---- chibi cartoon proportions: big round head, short chubby limbs ----
+          // legs
+          const hipY = shoulderY + 30 * scaleF;
+          ctx.strokeStyle = "#fbe0c4";
+          ctx.lineWidth = 9 * scaleF;
+          ctx.lineCap = "round";
+          [-7, 7].forEach((dx) => {
+            ctx.beginPath();
+            ctx.moveTo(shoulderX + dx * scaleF, hipY);
+            ctx.lineTo(shoulderX + dx * 1.5 * scaleF, hipY + 24 * scaleF);
+            ctx.stroke();
+          });
+          // little red shoes
+          ctx.fillStyle = "#dc2626";
+          ctx.strokeStyle = "#991b1b";
+          ctx.lineWidth = 1;
+          [-1, 1].forEach((s) => {
+            ctx.beginPath();
+            ctx.ellipse(shoulderX + s * 10.5 * scaleF, hipY + 26 * scaleF, 8 * scaleF, 5 * scaleF, 0, 0, TAU);
+            ctx.fill();
+            ctx.stroke();
+          });
+
+          // dress / torso — rounded, puffy cartoon silhouette (not a flat trapezoid)
+          ctx.fillStyle = "#6ee7b7";
+          ctx.strokeStyle = "#10b981";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(shoulderX - 14 * scaleF, shoulderY - 2 * scaleF);
+          ctx.quadraticCurveTo(shoulderX - 15 * scaleF, shoulderY + 12 * scaleF, shoulderX - 24 * scaleF, hipY);
+          ctx.quadraticCurveTo(shoulderX, hipY + 10 * scaleF, shoulderX + 24 * scaleF, hipY);
+          ctx.quadraticCurveTo(shoulderX + 15 * scaleF, shoulderY + 12 * scaleF, shoulderX + 14 * scaleF, shoulderY - 2 * scaleF);
+          ctx.quadraticCurveTo(shoulderX, shoulderY - 10 * scaleF, shoulderX - 14 * scaleF, shoulderY - 2 * scaleF);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          // white collar
+          ctx.fillStyle = "#ffffff";
+          ctx.strokeStyle = "#cbd5e1";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(shoulderX - 10 * scaleF, shoulderY - 4 * scaleF);
+          ctx.lineTo(shoulderX, shoulderY + 4 * scaleF);
+          ctx.lineTo(shoulderX + 10 * scaleF, shoulderY - 4 * scaleF);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          // red neck ribbon
+          ctx.fillStyle = "#ef4444";
+          ctx.beginPath();
+          ctx.moveTo(shoulderX, shoulderY - 1 * scaleF);
+          ctx.lineTo(shoulderX - 4.5 * scaleF, shoulderY + 5 * scaleF);
+          ctx.lineTo(shoulderX + 4.5 * scaleF, shoulderY + 5 * scaleF);
+          ctx.closePath();
+          ctx.fill();
+
+          // arm (shoulder -> hand), rotates with the wand — short and chubby
+          ctx.strokeStyle = "#fbe0c4";
+          ctx.lineWidth = 8.5 * scaleF;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(shoulderX, shoulderY);
+          ctx.lineTo(handX, handY);
+          ctx.stroke();
+          // sleeve puff at the shoulder
+          ctx.fillStyle = "#6ee7b7";
+          ctx.strokeStyle = "#10b981";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(shoulderX, shoulderY, 9 * scaleF, 0, TAU);
+          ctx.fill();
+          ctx.stroke();
+
+          // head (big, chibi-style) + golden pigtail hair
+          const neckY = shoulderY - 12 * scaleF;
+          const headR = 19 * scaleF;
+          const headCY = neckY - headR * 0.65;
+          ctx.strokeStyle = "#fbe0c4";
+          ctx.lineWidth = 9 * scaleF;
+          ctx.beginPath();
+          ctx.moveTo(shoulderX, shoulderY);
+          ctx.lineTo(shoulderX, neckY);
+          ctx.stroke();
+          ctx.fillStyle = "#f5a623";
+          [-1, 1].forEach((s) => {
+            ctx.beginPath();
+            ctx.moveTo(shoulderX + s * headR * 0.7, headCY);
+            ctx.quadraticCurveTo(shoulderX + s * headR * 2.15, headCY + 8 * scaleF, shoulderX + s * headR * 1.55, headCY + 26 * scaleF);
+            ctx.quadraticCurveTo(shoulderX + s * headR * 0.95, headCY + 14 * scaleF, shoulderX + s * headR * 0.6, headCY);
+            ctx.closePath();
+            ctx.fill();
+          });
+          ctx.beginPath();
+          ctx.arc(shoulderX, headCY, headR, 0, TAU);
+          ctx.fillStyle = "#fbe0c4";
+          ctx.fill();
+          ctx.strokeStyle = "#e8b98a";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.fillStyle = "#f5a623";
+          ctx.beginPath();
+          ctx.arc(shoulderX, headCY - headR * 0.32, headR * 0.98, Math.PI, TAU);
+          ctx.fill();
+
+          // mint bow on top of the head
+          const bowY = headCY - headR * 1.15;
+          ctx.fillStyle = "#a7f3d0";
+          ctx.strokeStyle = "#10b981";
+          ctx.lineWidth = 1;
+          [-1, 1].forEach((s) => {
+            ctx.beginPath();
+            ctx.moveTo(shoulderX, bowY);
+            ctx.lineTo(shoulderX + s * headR * 1.05, bowY - headR * 0.5);
+            ctx.lineTo(shoulderX + s * headR * 1.05, bowY + headR * 0.5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+          });
+          ctx.beginPath();
+          ctx.arc(shoulderX, bowY, headR * 0.3, 0, TAU);
+          ctx.fill();
+          ctx.stroke();
+
+          // happy face: closed eyes, smile, rosy cheeks
+          ctx.fillStyle = "rgba(244,114,182,0.5)";
+          [-1, 1].forEach((s) => {
+            ctx.beginPath();
+            ctx.arc(shoulderX + s * headR * 0.6, headCY + headR * 0.3, headR * 0.22, 0, TAU);
+            ctx.fill();
+          });
+          ctx.strokeStyle = "#3a2a1a";
+          ctx.lineWidth = 1.3;
+          ctx.lineCap = "round";
+          [-1, 1].forEach((s) => {
+            ctx.beginPath();
+            ctx.arc(shoulderX + s * headR * 0.42, headCY, headR * 0.26, Math.PI * 0.1, Math.PI * 0.9);
+            ctx.stroke();
+          });
+          ctx.beginPath();
+          ctx.arc(shoulderX, headCY + headR * 0.42, headR * 0.3, Math.PI * 0.12, Math.PI * 0.88);
+          ctx.stroke();
+
+          // handle
+          ctx.strokeStyle = "#8b6f4e";
+          ctx.lineWidth = 4;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(handX, handY);
+          ctx.lineTo(lerp(handX, tipX, 0.22), lerp(handY, tipY, 0.22));
+          ctx.stroke();
+          // shaft
+          ctx.strokeStyle = "#c9a876";
+          ctx.lineWidth = 2.6;
+          ctx.beginPath();
+          ctx.moveTo(lerp(handX, tipX, 0.22), lerp(handY, tipY, 0.22));
+          ctx.lineTo(tipX, tipY);
+          ctx.stroke();
+
+          // tip glow — brightness has to be visible here, not just in the sensor bars:
+          // dim LED = small faint glow, bright LED = big, hot, ray-emitting glow.
+          const wc = wandColorHex();
+          if (S.color) {
+            const brightT = clamp(S.brightness / 100, 0, 1);
+            const baseGlow = lerp(4, 27, brightT);
+            const glowR = baseGlow + (S.phase !== "idle" ? 6 : 0) + Math.sin(t * 5) * (1 + brightT * 2.5);
+            const glowAlpha = lerp(0.3, 1, brightT);
+            const rad = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, glowR);
+            rad.addColorStop(0, brightT > 0.65 ? "#ffffff" : wc);
+            rad.addColorStop(0.45, wc);
+            rad.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.globalAlpha = glowAlpha;
+            ctx.fillStyle = rad;
+            ctx.beginPath();
+            ctx.arc(tipX, tipY, glowR, 0, TAU);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+
+            // light rays radiating out once the LED is reasonably bright
+            if (brightT > 0.3) {
+              const rayT = (brightT - 0.3) / 0.7;
+              const rayLen = lerp(3, 24, rayT);
+              const nRays = 8;
+              ctx.strokeStyle = wc;
+              ctx.lineWidth = 1.4;
+              ctx.globalAlpha = 0.55 * rayT;
+              for (let i = 0; i < nRays; i++) {
+                const a = (i / nRays) * TAU + t * 0.7;
+                const r0 = glowR * 0.55;
+                ctx.beginPath();
+                ctx.moveTo(tipX + Math.cos(a) * r0, tipY + Math.sin(a) * r0);
+                ctx.lineTo(tipX + Math.cos(a) * (r0 + rayLen), tipY + Math.sin(a) * (r0 + rayLen));
+                ctx.stroke();
+              }
+              ctx.globalAlpha = 1;
+            }
+          }
+          ctx.beginPath();
+          ctx.arc(tipX, tipY, 4.5, 0, TAU);
+          ctx.fillStyle = S.color ? wc : "#475569";
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255,255,255,0.6)";
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+
+          // sparkles
+          S.sparkles.forEach((p) => {
+            ctx.globalAlpha = clamp(1 - p.age / p.life, 0, 1);
+            ctx.fillStyle = wc;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, TAU);
+            ctx.fill();
+          });
+          ctx.globalAlpha = 1;
+
+          // aiming beam during point/reading/result
+          if (S.color && (S.phase === "point" || S.phase === "reading" || S.phase === "result")) {
+            const beamAlpha = S.phase === "reading" ? 0.35 + 0.25 * Math.abs(Math.sin(t * 10)) : 0.28;
+            ctx.strokeStyle = wc;
+            ctx.globalAlpha = beamAlpha;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(tipX, tipY);
+            ctx.lineTo(lensX, lensY);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+          }
+
+          // ---- decoder console / monitor (big, so the star graph is readable) ----
+          ctx.fillStyle = "#101a3c";
+          ctx.strokeStyle = "#2f3f7a";
+          ctx.lineWidth = 2.5;
+          rr(ctx, consoleX - cHalfW, consoleY - cHalfH, consoleW, consoleH, 16);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#9fb3ff";
+          ctx.font = "700 11px 'Rajdhani', sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("AS7341 SPECTRAL SENSOR", consoleX, consoleY - cHalfH + 20);
+
+          // AS7341 lens (bottom-left of the console, aimed at by the wand)
+          const scanning = S.phase === "reading";
+          const lensPulse = scanning ? 1 + 0.25 * Math.abs(Math.sin(t * 9)) : 1;
+          ctx.beginPath();
+          ctx.arc(lensX, lensY, 13 * lensPulse, 0, TAU);
+          ctx.fillStyle = "#050814";
+          ctx.fill();
+          ctx.strokeStyle = scanning ? wc : "#3f4f8f";
+          ctx.lineWidth = 3;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(lensX, lensY, 5, 0, TAU);
+          ctx.fillStyle = scanning ? wc : "#3f4f8f";
+          ctx.fill();
+
+          // OLED screen — the dominant surface of the console
+          ctx.fillStyle = "#020617";
+          ctx.strokeStyle = "#1e293b";
+          ctx.lineWidth = 2;
+          rr(ctx, oledX, oledY, oledW, oledH, 6);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.textAlign = "center";
+          if (S.phase === "idle") {
+            ctx.fillStyle = "#38bdf8";
+            ctx.font = "700 13px 'Rajdhani', sans-serif";
+            ctx.fillText(S.color ? "READY TO SCAN" : "AWAITING WAND", oledX + oledW / 2, oledY + oledH / 2 + 4);
+          } else if (S.phase === "swish" || S.phase === "point") {
+            ctx.fillStyle = "#facc15";
+            ctx.font = "700 13px 'Rajdhani', sans-serif";
+            ctx.fillText("ALIGNING…", oledX + oledW / 2, oledY + oledH / 2 + 4);
+          } else if (S.phase === "reading") {
+            ctx.fillStyle = "#a78bfa";
+            ctx.font = "700 13px 'Rajdhani', sans-serif";
+            ctx.fillText("SCANNING" + ".".repeat(1 + Math.floor(t * 4) % 3), oledX + oledW / 2, oledY + oledH / 2 + 4);
+          } else if (S.phase === "result") {
+            if (S.resultKey === "unclear") {
+              ctx.fillStyle = "#fbbf24";
+              ctx.font = "800 14px 'Rajdhani', sans-serif";
+              ctx.fillText("UNCLEAR — RESCAN", oledX + oledW / 2, oledY + 30);
+              ctx.font = "600 10px 'Rajdhani', sans-serif";
+              ctx.fillStyle = "#cbd5e1";
+              const hint =
+                S.resultReason === "weak" ? "move wand closer" : S.resultReason === "saturated" ? "move wand away" : "reduce interference";
+              ctx.fillText(hint, oledX + oledW / 2, oledY + 50);
+            } else {
+              const st = STARS[S.resultKey];
+              ctx.fillStyle = st.sw;
+              ctx.font = "800 13px 'Orbitron', sans-serif";
+              ctx.fillText(st.name.toUpperCase(), oledX + oledW / 2, oledY + 16);
+              drawStarGraph(oledX + 10, oledY + 38, oledW - 20, oledH - 50);
+            }
+          }
+
+          // console footer label
+          ctx.fillStyle = "#7c8ac0";
+          ctx.font = "700 9px 'Rajdhani', sans-serif";
+          ctx.fillText("DECODER CONSOLE", consoleX, consoleY + cHalfH + 18);
+        }
+
+        // Real astronomy reference: stars are classified by colour/temperature exactly like this
+        // (a simplified Hertzsprung–Russell-style chart) — hot/blue on the left to cool/red on the right.
+        function starPath(cx, cy, rOuter, rInner) {
+          ctx.beginPath();
+          for (let i = 0; i < 10; i++) {
+            const rad = i % 2 === 0 ? rOuter : rInner;
+            const a = -Math.PI / 2 + (i * Math.PI) / 5;
+            const x = cx + Math.cos(a) * rad,
+              y = cy + Math.sin(a) * rad;
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          }
+          ctx.closePath();
+        }
+
+        function drawStarGraph(gx, gy, gw, gh) {
+          ctx.fillStyle = "#02030a";
+          ctx.fillRect(gx, gy, gw, gh);
+          ctx.strokeStyle = "#475569";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(gx, gy, gw, gh);
+
+          const zoneW = gw / COLOR_ORDER.length;
+          COLOR_ORDER.forEach((key, i) => {
+            ctx.fillStyle = STARS[key].sw;
+            ctx.globalAlpha = 0.4;
+            ctx.fillRect(gx + i * zoneW, gy, zoneW, gh);
+            ctx.globalAlpha = 1;
+            if (i > 0) {
+              ctx.strokeStyle = "rgba(226,232,240,0.4)";
+              ctx.beginPath();
+              ctx.moveTo(gx + i * zoneW, gy);
+              ctx.lineTo(gx + i * zoneW, gy + gh);
+              ctx.stroke();
+            }
+            ctx.fillStyle = "#e2e8f0";
+            ctx.font = "800 8.5px 'Rajdhani', sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(STARS[key].name.replace(" Star", ""), gx + i * zoneW + zoneW / 2, gy + gh + 13);
+          });
+          ctx.fillStyle = "#cbd5e1";
+          ctx.font = "700 8px 'Rajdhani', sans-serif";
+          ctx.fillText("HOTTER  ←  SPECTRAL COLOUR  →  COOLER", gx + gw / 2, gy - 7);
+
+          if (S.resultKey && S.resultKey !== "unclear") {
+            const idx = COLOR_ORDER.indexOf(S.resultKey);
+            const mx = gx + idx * zoneW + zoneW / 2;
+            const brightPos = clamp(S.signalPeak / 1.15, 0.08, 0.92);
+            const my = gy + gh - brightPos * gh;
+            const sw = STARS[S.resultKey].sw;
+            const pulse = 1 + 0.15 * Math.sin(performance.now() / 260);
+            const rad = ctx.createRadialGradient(mx, my, 1, mx, my, 26 * pulse);
+            rad.addColorStop(0, sw);
+            rad.addColorStop(0.5, sw);
+            rad.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.globalAlpha = 0.85;
+            ctx.fillStyle = rad;
+            ctx.beginPath();
+            ctx.arc(mx, my, 26 * pulse, 0, TAU);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            starPath(mx, my, 9.5, 4);
+            ctx.fillStyle = sw;
+            ctx.shadowColor = sw;
+            ctx.shadowBlur = 14;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 1.4;
+            ctx.stroke();
+          }
+        }
+
+        /* =================== MAIN LOOP =================== */
+        let last = performance.now();
+        function loop(now) {
+          const dt = clamp((now - last) / 1000, 0, 0.1);
+          last = now;
+          step(dt);
+          tickMission(dt * 1000);
+          updateDashboard();
+          drawScene(now / 1000);
+          requestAnimationFrame(loop);
+        }
+
+        /* =================== HELP TABS =================== */
+        function closeHelp() {
+          $("helpbar").classList.remove("show");
+          document.querySelectorAll(".helpbtn").forEach((b) => b.classList.remove("on"));
+          document.querySelectorAll(".tabpanel").forEach((p) => p.classList.remove("on"));
+        }
+        document.querySelectorAll(".helpbtn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const wasOn = btn.classList.contains("on");
+            closeHelp();
+            if (wasOn) return;
+            btn.classList.add("on");
+            $("helpbar").classList.add("show");
+            document.querySelector(`.tabpanel[data-panel="${btn.dataset.tab}"]`).classList.add("on");
+          });
+        });
+        $("helpClose").addEventListener("click", closeHelp);
+
+        /* =================== INIT =================== */
+        buildSpectrumBars();
+        fit();
+        setDistance(30);
+        setBrightness(70);
+        setInterference(0);
+        setSensitivity(50);
+        updateActionButton();
+        requestAnimationFrame(loop);
+      })();
+    </script>
+  </body>
+</html>
