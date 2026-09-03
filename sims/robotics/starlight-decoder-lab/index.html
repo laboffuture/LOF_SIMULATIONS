@@ -411,6 +411,10 @@
         border-color: var(--accent2);
       }
       .btn.reset {
+        width: auto;
+        margin-bottom: 0;
+        padding: 11px 20px;
+        font-size: 14px;
         background: linear-gradient(145deg, #cbd5e1, #64748b);
         border-color: transparent;
         color: #fff;
@@ -844,7 +848,6 @@
 
         <div class="cmdgroup">
           <h4>System</h4>
-          <button type="button" class="btn reset" id="btnReset">↺ Reset</button>
           <button type="button" class="btn mission" id="btnMission">▶ Run Guided Decode</button>
         </div>
         <div class="hint">Choose a colour and set the brightness above, then press <b>Start</b> below the decoder view.</div>
@@ -866,6 +869,7 @@
 
         <div class="stage-foot">
           <button type="button" class="btn start" id="btnStart" disabled>▶ Start</button>
+          <button type="button" class="btn reset" id="btnReset">↺ Reset</button>
           <span class="missionNote" id="missionNote"></span>
         </div>
       </section>
@@ -1035,7 +1039,7 @@
           missionElapsed: 0,
           missionStepStarted: false,
         };
-        const REST_ANGLE = -2.15;
+        const REST_ANGLE = 0.85; // arm hangs down and OUT to her side, clear of the dress — not reaching back or through it
         const DURATION = { swish: 850, point: 350, reading: 900 };
 
         /* =================== FEEDBACK =================== */
@@ -1440,7 +1444,11 @@
             oledY = consoleY - cHalfH + 34,
             oledW = consoleW - 32,
             oledH = consoleH - 76;
-          const pointAngle = Math.atan2(lensY - shoulderY, lensX - shoulderX);
+          // her right shoulder — offset out to the dress's shoulder corner, not body-centre,
+          // so the wand arm hangs beside the dress instead of straight down through it
+          const wandShoulderX = shoulderX + 14 * scaleF,
+            wandShoulderY = shoulderY - 2 * scaleF;
+          const pointAngle = Math.atan2(lensY - wandShoulderY, lensX - wandShoulderX);
 
           let angleTarget;
           if (S.phase === "swish") {
@@ -1453,8 +1461,8 @@
           }
 
           const armLen = 34 * scaleF;
-          const handX = shoulderX + Math.cos(S.wandAngle) * armLen;
-          const handY = shoulderY + Math.sin(S.wandAngle) * armLen;
+          const handX = wandShoulderX + Math.cos(S.wandAngle) * armLen;
+          const handY = wandShoulderY + Math.sin(S.wandAngle) * armLen;
 
           const wandLen = Math.min(CW, CH) * 0.13;
           const tipX = handX + Math.cos(S.wandAngle) * wandLen;
@@ -1518,12 +1526,39 @@
           ctx.closePath();
           ctx.fill();
 
+          // other arm — mirrors the wand arm's shoulder offset, rests out to her opposite
+          // side (not through the dress) with a gentle idle sway, so she isn't one-armed
+          const otherShoulderX = shoulderX - 14 * scaleF,
+            otherShoulderY = shoulderY - 2 * scaleF;
+          const otherArmAngle = Math.PI - REST_ANGLE + Math.sin(t * 1.2) * 0.06;
+          const otherArmLen = 30 * scaleF;
+          const otherHandX = otherShoulderX + Math.cos(otherArmAngle) * otherArmLen;
+          const otherHandY = otherShoulderY + Math.sin(otherArmAngle) * otherArmLen;
+          ctx.strokeStyle = "#fbe0c4";
+          ctx.lineWidth = 8 * scaleF;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(otherShoulderX, otherShoulderY);
+          ctx.lineTo(otherHandX, otherHandY);
+          ctx.stroke();
+          ctx.fillStyle = "#fbe0c4";
+          ctx.beginPath();
+          ctx.arc(otherHandX, otherHandY, 4.2 * scaleF, 0, TAU);
+          ctx.fill();
+          ctx.fillStyle = "#6ee7b7";
+          ctx.strokeStyle = "#10b981";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(otherShoulderX, otherShoulderY, 8 * scaleF, 0, TAU);
+          ctx.fill();
+          ctx.stroke();
+
           // arm (shoulder -> hand), rotates with the wand — short and chubby
           ctx.strokeStyle = "#fbe0c4";
           ctx.lineWidth = 8.5 * scaleF;
           ctx.lineCap = "round";
           ctx.beginPath();
-          ctx.moveTo(shoulderX, shoulderY);
+          ctx.moveTo(wandShoulderX, wandShoulderY);
           ctx.lineTo(handX, handY);
           ctx.stroke();
           // sleeve puff at the shoulder
@@ -1531,7 +1566,7 @@
           ctx.strokeStyle = "#10b981";
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(shoulderX, shoulderY, 9 * scaleF, 0, TAU);
+          ctx.arc(wandShoulderX, wandShoulderY, 9 * scaleF, 0, TAU);
           ctx.fill();
           ctx.stroke();
 
