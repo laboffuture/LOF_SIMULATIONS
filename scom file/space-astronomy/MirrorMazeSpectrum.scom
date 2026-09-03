@@ -1,0 +1,2234 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Mirror Maze Spectrum — Optics Laboratory</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-dark: #090d16;
+        --bg-stage: #0f1422;
+        --panel-bg: #121826;
+        --panel-card: rgba(26, 35, 52, 0.75);
+        --panel-card-hover: rgba(35, 47, 68, 0.9);
+        --border-color: rgba(255, 255, 255, 0.1);
+        --border-highlight: rgba(0, 242, 254, 0.35);
+        --accent-cyan: #00f2fe;
+        --accent-blue: #4facfe;
+        --accent-orange: #ff6b35;
+        --accent-pink: #ff2a85;
+        --accent-glow: rgba(0, 242, 254, 0.25);
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+        --mono: "Roboto Mono", ui-monospace, monospace;
+        --sans: "Outfit", system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        height: 100%;
+        background: var(--bg-dark);
+        color: var(--text-primary);
+        font-family: var(--sans);
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+      #app {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        height: 100vh;
+      }
+
+      /* ---- STAGE ---- */
+      #stage {
+        position: relative;
+        overflow: hidden;
+        display: grid;
+        grid-template-rows: 1.35fr 1fr;
+        background: var(--bg-stage);
+      }
+      .view {
+        position: relative;
+        overflow: hidden;
+      }
+      #benchView {
+        border-bottom: 1px solid var(--border-color);
+        background: 
+          radial-gradient(circle at 10% 50%, rgba(0, 242, 254, 0.04) 0%, transparent 60%),
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px) 0 0/32px 32px,
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px) 0 0/32px 32px,
+          #0b0f19;
+      }
+      #screenView {
+        background: #06080e;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .viewtag {
+        position: absolute;
+        top: 14px;
+        left: 16px;
+        pointer-events: none;
+        z-index: 3;
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--accent-cyan);
+        background: rgba(9, 13, 22, 0.85);
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        backdrop-filter: blur(8px);
+      }
+      .viewtag small {
+        display: block;
+        font-weight: 400;
+        letter-spacing: 0.04em;
+        font-size: 9px;
+        margin-top: 2px;
+        color: var(--text-secondary);
+      }
+
+      #titlecard {
+        position: absolute;
+        top: 14px;
+        right: 16px;
+        pointer-events: none;
+        z-index: 3;
+        text-align: right;
+        background: rgba(9, 13, 22, 0.85);
+        padding: 6px 14px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        backdrop-filter: blur(8px);
+      }
+      #titlecard h1 {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        background: linear-gradient(90deg, #00f2fe, #4facfe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      #titlecard p {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        color: var(--text-secondary);
+        letter-spacing: 0.05em;
+        margin-top: 2px;
+      }
+
+      #screenReadout {
+        position: absolute;
+        left: 16px;
+        bottom: 14px;
+        right: 16px;
+        z-index: 3;
+        font-family: var(--mono);
+        font-size: 11.5px;
+        color: #e2e8f0;
+        letter-spacing: 0.02em;
+        line-height: 1.5;
+        pointer-events: none;
+        background: rgba(15, 20, 34, 0.85);
+        padding: 8px 14px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        backdrop-filter: blur(8px);
+      }
+      #screenReadout b {
+        color: var(--accent-cyan);
+        font-weight: 700;
+      }
+
+      /* ---- PANEL ---- */
+      #panel {
+        background: var(--panel-bg);
+        border-left: 1px solid var(--border-color);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+      }
+      #panel::-webkit-scrollbar {
+        width: 6px;
+      }
+      #panel::-webkit-scrollbar-track {
+        background: var(--panel-bg);
+      }
+      #panel::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 3px;
+      }
+      .sec {
+        border-bottom: 1px solid var(--border-color);
+        padding: 16px 18px;
+      }
+      .sec-h {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .sec-h span {
+        color: var(--accent-cyan);
+        font-size: 9px;
+        font-weight: 500;
+      }
+
+      /* Presets Bar */
+      .preset-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-bottom: 4px;
+      }
+      .preset-btn {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        font-weight: 600;
+        background: var(--panel-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 7px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .preset-btn:hover {
+        background: var(--panel-card-hover);
+        border-color: var(--accent-cyan);
+        color: var(--accent-cyan);
+      }
+
+      /* sliders */
+      .ctl {
+        margin-bottom: 14px;
+      }
+      .ctl:last-child {
+        margin-bottom: 0;
+      }
+      .ctl-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 6px;
+      }
+      .ctl-name {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        color: var(--text-secondary);
+        letter-spacing: 0.04em;
+      }
+      .ctl-name .sym {
+        color: var(--text-muted);
+        font-weight: 400;
+      }
+      .ctl-val {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--accent-cyan);
+        font-variant-numeric: tabular-nums;
+      }
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 5px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.12);
+        cursor: pointer;
+        outline: none;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        background: var(--accent-cyan);
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid var(--bg-dark);
+        box-shadow: 0 0 10px var(--accent-glow);
+        transition: transform 0.1s ease;
+      }
+      input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.15);
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        background: var(--accent-cyan);
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid var(--bg-dark);
+        box-shadow: 0 0 10px var(--accent-glow);
+      }
+      input[type="range"]:focus-visible {
+        outline: 2px solid var(--accent-cyan);
+        outline-offset: 3px;
+      }
+      /* wavelength slider gets a spectrum track */
+      #wlWrap input[type="range"] {
+        height: 10px;
+        border-radius: 5px;
+        background: linear-gradient(
+          90deg,
+          #6b3fa0 0%,
+          #3f4fd0 16%,
+          #2aa0d8 33%,
+          #2fb84a 50%,
+          #c8d02a 66%,
+          #e88a1f 82%,
+          #d8342a 100%
+        );
+      }
+      #wlWrap input[type="range"]::-webkit-slider-thumb {
+        background: #ffffff;
+        border: 2px solid #000;
+      }
+
+      /* segmented toggle */
+      .seg {
+        display: flex;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.25);
+        padding: 2px;
+      }
+      .seg button {
+        flex: 1;
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        padding: 7px 4px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .seg button.on {
+        background: var(--accent-cyan);
+        color: var(--bg-dark);
+        box-shadow: 0 0 10px var(--accent-glow);
+      }
+      .seg button:focus-visible {
+        outline: 2px solid var(--accent-cyan);
+      }
+
+      /* tray */
+      #tray {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .tile {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        background: var(--panel-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 9px 10px;
+        border-radius: 6px;
+        cursor: grab;
+        user-select: none;
+        transition: all 0.15s ease;
+      }
+      .tile:hover {
+        border-color: var(--accent-cyan);
+        color: var(--accent-cyan);
+        background: var(--panel-card-hover);
+        transform: translateY(-1px);
+      }
+      .tile:active {
+        cursor: grabbing;
+      }
+      .tile:focus-visible {
+        outline: 2px solid var(--accent-cyan);
+      }
+      .tile .ic {
+        font-size: 16px;
+        line-height: 1;
+      }
+      .tile.picked {
+        background: var(--accent-cyan);
+        color: var(--bg-dark);
+        border-color: var(--accent-cyan);
+      }
+      .trayhint {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        color: var(--text-muted);
+        margin-top: 10px;
+        line-height: 1.5;
+      }
+
+      /* slot cards */
+      .slot {
+        border: 1px dashed var(--border-color);
+        background: rgba(0, 0, 0, 0.2);
+        padding: 12px;
+        border-radius: 8px;
+        min-height: 60px;
+        transition: all 0.15s ease;
+      }
+      .slot.filled {
+        border: 1px solid var(--border-highlight);
+        background: var(--panel-card);
+      }
+      .slot.drop {
+        border-color: var(--accent-cyan);
+        background: rgba(0, 242, 254, 0.08);
+      }
+      .slot-empty {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text-muted);
+        text-align: center;
+        padding: 10px 0;
+        line-height: 1.5;
+      }
+      .slot-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+      .slot-title {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--accent-cyan);
+      }
+      .slot-title .ic {
+        font-size: 16px;
+      }
+      .rm {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        font-weight: 700;
+        background: transparent;
+        border: 1px solid rgba(255, 42, 133, 0.4);
+        color: #ff2a85;
+        padding: 3px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        letter-spacing: 0.03em;
+        transition: all 0.15s ease;
+      }
+      .rm:hover {
+        background: #ff2a85;
+        color: #fff;
+      }
+      .subsel {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 5px;
+      }
+      .subsel button {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        font-weight: 600;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        padding: 5px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        letter-spacing: 0.02em;
+        transition: all 0.15s ease;
+      }
+      .subsel button.on {
+        background: var(--accent-cyan);
+        color: var(--bg-dark);
+        border-color: var(--accent-cyan);
+      }
+      .cswatch {
+        width: 10px;
+        height: 10px;
+        display: inline-block;
+        margin-right: 5px;
+        border-radius: 2px;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        vertical-align: middle;
+      }
+
+      /* snell readout */
+      .snell {
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-primary);
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
+        border-left: 3px solid var(--accent-cyan);
+        padding: 8px 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+        letter-spacing: 0.01em;
+        line-height: 1.5;
+        font-variant-numeric: tabular-nums;
+      }
+      .snell small {
+        display: block;
+        font-weight: 400;
+        font-size: 9.5px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+      }
+      /* transmittance bar */
+      .tbar-wrap {
+        margin-top: 10px;
+      }
+      .tbar-wrap canvas {
+        width: 100%;
+        height: 28px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+      }
+      .tbar-cap {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--text-muted);
+        margin-top: 4px;
+      }
+
+      .note {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        line-height: 1.55;
+        color: var(--text-secondary);
+        border-left: 2px solid var(--accent-cyan);
+        padding-left: 10px;
+        margin-top: 10px;
+        background: rgba(0, 242, 254, 0.03);
+        padding-top: 6px;
+        padding-bottom: 6px;
+        border-radius: 0 4px 4px 0;
+      }
+      .note b {
+        color: var(--accent-cyan);
+        font-weight: 700;
+      }
+
+      .tog {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        padding: 6px 0;
+        cursor: pointer;
+        color: var(--text-secondary);
+      }
+      .tog input {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 32px;
+        height: 16px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        position: relative;
+        cursor: pointer;
+        transition: 0.15s;
+        flex: none;
+      }
+      .tog input:checked {
+        background: var(--accent-cyan);
+      }
+      .tog input::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 12px;
+        height: 12px;
+        background: var(--bg-dark);
+        border-radius: 50%;
+        transition: 0.15s;
+      }
+      .tog input:checked::after {
+        left: 18px;
+      }
+
+      .linkbtn {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        background: var(--panel-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 9px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        letter-spacing: 0.03em;
+        width: 100%;
+        transition: all 0.15s ease;
+      }
+      .linkbtn:hover {
+        border-color: var(--accent-cyan);
+        color: var(--accent-cyan);
+        background: var(--panel-card-hover);
+      }
+
+      /* overlay */
+      #scrim {
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 7, 12, 0.85);
+        backdrop-filter: blur(10px);
+        z-index: 20;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      #scrim.show {
+        display: flex;
+      }
+      .ovl {
+        background: var(--panel-bg);
+        border: 1px solid var(--border-highlight);
+        border-radius: 12px;
+        max-width: 560px;
+        width: 100%;
+        max-height: 86vh;
+        overflow-y: auto;
+        padding: 26px 28px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+      }
+      .ovl h2 {
+        font-size: 18px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--accent-cyan);
+        margin-bottom: 4px;
+      }
+      .ovl .sub {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin-bottom: 18px;
+      }
+      .ovl p {
+        font-size: 13.5px;
+        line-height: 1.6;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+      }
+      .ovl ol {
+        margin: 0 0 16px 20px;
+      }
+      .ovl li {
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+      }
+      .ovl b {
+        color: var(--text-primary);
+      }
+      .ovl .close {
+        margin-top: 12px;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+        background: var(--accent-cyan);
+        color: var(--bg-dark);
+        border: none;
+        border-radius: 6px;
+        padding: 10px 20px;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+        transition: all 0.15s ease;
+      }
+      .ovl .close:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 0 15px var(--accent-glow);
+      }
+      .gloss dt {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--accent-cyan);
+        margin-top: 12px;
+      }
+      .gloss dd {
+        font-size: 12.5px;
+        line-height: 1.55;
+        color: var(--text-secondary);
+        margin-top: 3px;
+      }
+
+      @media (max-width: 900px) {
+        #app {
+          grid-template-columns: 1fr;
+          grid-template-rows: 1fr auto;
+        }
+        #panel {
+          max-height: 48vh;
+        }
+        #stage {
+          grid-template-rows: 1.2fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="stage">
+        <div class="view" id="benchView">
+          <canvas id="bench"></canvas>
+          <div class="viewtag">
+            Optics Bench — Top View<small
+              >Drag screen along the arc to capture dispersed rays</small
+            >
+          </div>
+          <div id="titlecard">
+            <h1>Mirror Maze Spectrum</h1>
+            <p>Optics Workbench — Refraction &amp; Dispersion</p>
+          </div>
+        </div>
+        <div class="view" id="screenView">
+          <canvas id="screen"></canvas>
+          <div class="viewtag">Detector Screen — Spectral Projection &amp; Intensity</div>
+          <div id="screenReadout">&nbsp;</div>
+        </div>
+      </div>
+
+      <div id="panel">
+        <!-- PRESETS -->
+        <div class="sec">
+          <div class="sec-h">Quick Scenarios <span>Presets</span></div>
+          <div class="preset-bar">
+            <button class="preset-btn" onclick="loadPreset('prism')">🌈 Rainbow Prism</button>
+            <button class="preset-btn" onclick="loadPreset('laser')">🔴 Laser Beam</button>
+            <button class="preset-btn" onclick="loadPreset('grating')">📊 Diffraction</button>
+            <button class="preset-btn" onclick="loadPreset('mirror')">🪞 Bent Path</button>
+          </div>
+        </div>
+
+        <!-- SOURCE -->
+        <div class="sec">
+          <div class="sec-h">Light Source <span>Emitter</span></div>
+          <div class="ctl">
+            <div class="ctl-top">
+              <span class="ctl-name"
+                >Brightness <span class="sym">(Intensity)</span></span
+              ><span class="ctl-val" id="intVal">75%</span>
+            </div>
+            <input type="range" id="intensity" min="0" max="100" value="75" />
+          </div>
+          <div class="ctl">
+            <div class="ctl-top">
+              <span class="ctl-name">Beam Emission Mode</span>
+            </div>
+            <div class="seg" id="typeSeg">
+              <button data-type="white" class="on">White Light</button>
+              <button data-type="mono">Monochromatic</button>
+            </div>
+          </div>
+          <div class="ctl" id="wlWrap" style="display: none">
+            <div class="ctl-top">
+              <span class="ctl-name"
+                >Wavelength <span class="sym">(&lambda;)</span></span
+              ><span class="ctl-val" id="wlVal">550 nm</span>
+            </div>
+            <input type="range" id="wl" min="400" max="700" value="550" />
+          </div>
+          <div class="note" id="srcNote">
+            <b>White light</b> is composed of all visible spectrum wavelengths.
+            <b>Monochromatic</b> produces a single pure laser beam wavelength.
+          </div>
+        </div>
+
+        <!-- TRAY -->
+        <div class="sec">
+          <div class="sec-h">Optical Elements <span>Tray</span></div>
+          <div class="ctl" style="margin-bottom: 10px">
+            <div class="ctl-top">
+              <span class="ctl-name">Active Slot Target for Placement</span>
+            </div>
+            <div class="seg" id="targetSlotSeg">
+              <button data-slot="0" class="on">Slot 1 (Active)</button>
+              <button data-slot="1">Slot 2</button>
+            </div>
+          </div>
+          <div id="tray"></div>
+          <div class="trayhint">
+            Click any element to place into the <b>Active Slot Target</b> above, or drag and drop onto Slot 1 or Slot 2.
+          </div>
+        </div>
+
+        <!-- SLOT 1 -->
+        <div class="sec">
+          <div class="sec-h">Slot 1 <span>Primary Component</span></div>
+          <div class="slot" id="slot0" data-slot="0"></div>
+        </div>
+
+        <!-- SLOT 2 -->
+        <div class="sec">
+          <div class="sec-h">Slot 2 <span>Secondary Component</span></div>
+          <div class="slot" id="slot1" data-slot="1"></div>
+        </div>
+
+        <!-- SCREEN -->
+        <div class="sec">
+          <div class="sec-h">Detector Screen <span>Positioning</span></div>
+          <label class="tog"
+            ><span>Auto-aim screen at beam centroid</span
+            ><input type="checkbox" id="autoAim" checked
+          /></label>
+          <div class="ctl" style="margin-top: 8px">
+            <div class="ctl-top">
+              <span class="ctl-name"
+                >Screen Angle <span class="sym">(&theta;)</span></span
+              ><span class="ctl-val" id="scVal">0&deg;</span>
+            </div>
+            <input type="range" id="scAngle" min="-170" max="170" value="0" />
+          </div>
+          <div class="note">
+            Turn off auto-aim to manually position the screen detector along the orbital arc.
+          </div>
+        </div>
+
+        <!-- HELP -->
+        <div class="sec">
+          <button class="linkbtn" id="helpBtn">
+            ? Guide &amp; Optical Concepts
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- OVERLAY -->
+    <div id="scrim">
+      <div class="ovl">
+        <h2>Mirror Maze Spectrum Guide</h2>
+        <div class="sub">
+          Interactive Optics Laboratory Workbench
+        </div>
+        <p>
+          Light originates from the calibrated source module on the left, travels through up to two interactive optical elements, and strikes the orbital screen detector array.
+        </p>
+        <ol>
+          <li>
+            <b>Prism Dispersion:</b> Place a <b>Prism</b> in Slot 1 with <b>White Light</b> to observe Cauchy dispersion fan out the visible spectrum.
+          </li>
+          <li>
+            <b>Laser Coherence:</b> Switch to <b>Monochromatic</b> mode; single wavelengths do not disperse further.
+          </li>
+          <li>
+            <b>Ray Bending:</b> Place a <b>Mirror</b> or <b>Diffraction Grating</b> to manipulate direction and harmonic spectral orders.
+          </li>
+        </ol>
+        <div class="gloss">
+          <dt>Wavelength (&lambda;)</dt>
+          <dd>
+            Measured in nanometers (nm). Human visible range spans ~380nm (violet) to ~700nm (red).
+          </dd>
+          <dt>Snell's Law of Refraction</dt>
+          <dd>
+            Governs light bending across medium boundaries: <i>n<sub>1</sub> sin(&theta;<sub>1</sub>) = n<sub>2</sub> sin(&theta;<sub>2</sub>)</i>.
+          </dd>
+          <dt>Diffraction Grating</dt>
+          <dd>
+            Diffracts light into distinct harmonic spectral orders where longer red wavelengths bend furthest.
+          </dd>
+        </div>
+        <button class="close" id="helpClose">Close Guide</button>
+      </div>
+    </div>
+
+    <script>
+      "use strict";
+      const $ = (id) => document.getElementById(id);
+      const DEG = Math.PI / 180;
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+      const L = 50; // screen distance, cm
+      const SW = 18; // screen half-width, cm
+      const PRISM_APEX = 60; // equilateral prism apex angle, deg
+      const CAUCHY_A = 1.5046, CAUCHY_B = 0.0042; // crown glass
+      const LENS_HMAX = 4; // beam half-aperture at lens, cm
+
+      const FILTER_BANDS = {
+        Violet: [380, 450],
+        Blue: [450, 495],
+        Green: [495, 570],
+        Yellow: [570, 590],
+        Orange: [590, 620],
+        Red: [620, 700],
+      };
+      const FILTER_ORDER = [
+        "Red",
+        "Orange",
+        "Yellow",
+        "Green",
+        "Blue",
+        "Violet",
+      ];
+
+      const TRAY = {
+        mirror: { name: "Mirror", ic: "🪞" },
+        prism: { name: "Prism", ic: "🔺" },
+        grating: { name: "Grating", ic: "☷" },
+        filter: { name: "Filter", ic: "🟩" },
+        blocker: { name: "Blocker", ic: "⬛" },
+        diffuser: { name: "Diffuser", ic: "🌫️" },
+        lens: { name: "Lens", ic: "🔍" },
+      };
+
+      function cauchy(wl) {
+        const um = wl / 1000;
+        return CAUCHY_A + CAUCHY_B / (um * um);
+      }
+
+      function wlRGB(wl) {
+        wl = clamp(wl, 380, 780);
+        let r = 0, g = 0, b = 0;
+        if (wl < 440) {
+          r = -(wl - 440) / 60;
+          g = 0;
+          b = 1;
+        } else if (wl < 490) {
+          r = 0;
+          g = (wl - 440) / 50;
+          b = 1;
+        } else if (wl < 510) {
+          r = 0;
+          g = 1;
+          b = -(wl - 510) / 20;
+        } else if (wl < 580) {
+          r = (wl - 510) / 70;
+          g = 1;
+          b = 0;
+        } else if (wl < 645) {
+          r = 1;
+          g = -(wl - 645) / 65;
+          b = 0;
+        } else {
+          r = 1;
+          g = 0;
+          b = 0;
+        }
+        let f = 1;
+        if (wl < 420) f = 0.3 + (0.7 * (wl - 380)) / 40;
+        else if (wl > 700) f = 0.3 + (0.7 * (780 - wl)) / 80;
+        f = clamp(f, 0, 1);
+        const gm = 0.8;
+        return [
+          Math.round(255 * Math.pow(Math.max(0, r) * f, gm)),
+          Math.round(255 * Math.pow(Math.max(0, g) * f, gm)),
+          Math.round(255 * Math.pow(Math.max(0, b) * f, gm)),
+        ];
+      }
+
+      function colorName(wl) {
+        if (wl < 450) return "violet";
+        if (wl < 495) return "blue";
+        if (wl < 570) return "green";
+        if (wl < 590) return "yellow";
+        if (wl < 620) return "orange";
+        return "red";
+      }
+
+      const S = {
+        intensity: 75,
+        lightType: "white", // 'white' | 'mono'
+        wl: 550,
+        slots: [null, null],
+        targetSlot: 0,
+        autoAim: true,
+        screenAngle: 0,
+        picked: null,
+        out: [],
+        bins: null,
+        maxW: 0,
+        survived: 0,
+        describe: "",
+        animTime: 0,
+      };
+
+      function defaultObj(type) {
+        const o = { type, angle: 45 };
+        if (type === "prism") o.angle = 50;
+        if (type === "grating") {
+          o.lpm = 300;
+          o.angle = 0;
+        }
+        if (type === "filter") {
+          o.color = "Green";
+          o.angle = 0;
+        }
+        if (type === "lens") {
+          o.diverging = false;
+          o.focal = 50;
+          o.angle = 0;
+        }
+        if (type === "blocker" || type === "diffuser") o.angle = 0;
+        return o;
+      }
+
+      function loadPreset(presetKey) {
+        if (presetKey === "prism") {
+          S.lightType = "white";
+          S.intensity = 80;
+          S.slots[0] = defaultObj("prism");
+          S.slots[1] = null;
+        } else if (presetKey === "laser") {
+          S.lightType = "mono";
+          S.wl = 632;
+          S.intensity = 90;
+          S.slots[0] = defaultObj("prism");
+          S.slots[1] = null;
+        } else if (presetKey === "grating") {
+          S.lightType = "white";
+          S.intensity = 85;
+          S.slots[0] = defaultObj("grating");
+          S.slots[0].lpm = 300;
+          S.slots[1] = null;
+        } else if (presetKey === "mirror") {
+          S.lightType = "white";
+          S.intensity = 80;
+          S.slots[0] = defaultObj("mirror");
+          S.slots[0].angle = 30;
+          S.slots[1] = defaultObj("filter");
+          S.slots[1].color = "Cyan" in FILTER_BANDS ? "Cyan" : "Blue";
+        }
+
+        // Update UI controls
+        $("intensity").value = S.intensity;
+        $("intVal").textContent = S.intensity + "%";
+        $("typeSeg").querySelectorAll("button").forEach((btn) => {
+          btn.classList.toggle("on", btn.dataset.type === S.lightType);
+        });
+        $("wlWrap").style.display = S.lightType === "mono" ? "block" : "none";
+        $("wl").value = S.wl;
+        $("wlVal").textContent = S.wl + " nm";
+
+        renderSlot(0);
+        renderSlot(1);
+        recompute();
+      }
+
+      function makeBeam() {
+        const rays = [];
+        const b = S.intensity / 100;
+        if (S.lightType === "mono") {
+          rays.push({ wl: S.wl, ang: 0, br: b, h: 0 });
+        } else {
+          const list = [];
+          for (let wl = 400; wl <= 700; wl += 8) list.push(wl);
+          const per = b / list.length;
+          list.forEach((wl) => rays.push({ wl, ang: 0, br: per, h: 0 }));
+        }
+        return rays;
+      }
+
+      function applyObject(rays, o) {
+        const out = [];
+        switch (o.type) {
+          case "mirror":
+            rays.forEach((r) => out.push({ ...r, ang: r.ang + 2 * o.angle }));
+            break;
+          case "prism": {
+            const A = PRISM_APEX * DEG, th1 = o.angle * DEG;
+            rays.forEach((r) => {
+              const n = cauchy(r.wl);
+              const s2 = Math.sin(th1) / n;
+              if (Math.abs(s2) > 1) {
+                out.push({ ...r, br: 0 });
+                return;
+              }
+              const th2 = Math.asin(s2);
+              const th3 = A - th2;
+              const s4 = n * Math.sin(th3);
+              if (Math.abs(s4) > 1) {
+                out.push({ ...r, br: 0 });
+                return;
+              }
+              const th4 = Math.asin(s4);
+              const dev = (th1 + th4 - A) / DEG;
+              out.push({ ...r, ang: r.ang - dev });
+            });
+            break;
+          }
+          case "grating": {
+            const d = 1e6 / o.lpm;
+            rays.forEach((r) => {
+              out.push({ ...r, ang: r.ang + o.angle, br: r.br * 0.5 });
+              [1, -1].forEach((m) => {
+                const s = (m * r.wl) / d;
+                if (Math.abs(s) <= 1) {
+                  const thm = Math.asin(s) / DEG;
+                  out.push({
+                    ...r,
+                    ang: r.ang + o.angle + thm,
+                    br: r.br * 0.25,
+                  });
+                }
+              });
+            });
+            break;
+          }
+          case "filter": {
+            const band = FILTER_BANDS[o.color] || [400, 700];
+            rays.forEach((r) => {
+              const pass = r.wl >= band[0] && r.wl <= band[1];
+              out.push({ ...r, br: pass ? r.br : 0 });
+            });
+            break;
+          }
+          case "blocker":
+            rays.forEach((r) => out.push({ ...r, br: 0 }));
+            break;
+          case "diffuser": {
+            const N = 7;
+            rays.forEach((r) => {
+              for (let i = 0; i < N; i++) {
+                const spread = (i / (N - 1) - 0.5) * 50;
+                out.push({ ...r, ang: r.ang + spread, br: (r.br * 0.5) / N });
+              }
+            });
+            break;
+          }
+          case "lens": {
+            const f = o.focal * (o.diverging ? -1 : 1);
+            const N = 9;
+            rays.forEach((r) => {
+              for (let i = 0; i < N; i++) {
+                const h = (i / (N - 1) - 0.5) * 2 * LENS_HMAX;
+                const dAng = -Math.atan(h / f) / DEG;
+                out.push({
+                  ...r,
+                  ang: r.ang + o.angle + dAng,
+                  h: (r.h || 0) + h,
+                  br: r.br / N,
+                });
+              }
+            });
+            break;
+          }
+          default:
+            rays.forEach((r) => out.push({ ...r }));
+        }
+        return out;
+      }
+
+      function compute() {
+        let rays = makeBeam();
+        S.midRays = null;
+        let exitSlotIndex = -1;
+
+        if (S.slots[0]) {
+          const out0 = applyObject(rays, S.slots[0]);
+          if (S.slots[0].type === "mirror" || S.slots[0].type === "blocker") {
+            exitSlotIndex = 0;
+            rays = out0;
+          } else {
+            if (S.slots[1]) {
+              S.midRays = out0;
+              const dx = 18;
+              const maxH = S.slots[1].type === "lens" ? LENS_HMAX : 15;
+              const inSlot2 = out0.map((r) => ({
+                ...r,
+                h: clamp((r.h || 0) + dx * Math.tan(r.ang * DEG), -maxH, maxH),
+              }));
+              rays = applyObject(inSlot2, S.slots[1]);
+              exitSlotIndex = 1;
+            } else {
+              exitSlotIndex = 0;
+              rays = out0;
+            }
+          }
+        } else if (S.slots[1]) {
+          rays = applyObject(rays, S.slots[1]);
+          exitSlotIndex = 1;
+        } else {
+          exitSlotIndex = -1;
+        }
+
+        S.exitSlotIndex = exitSlotIndex;
+        S.out = rays;
+
+        if (S.autoAim) {
+          let sa = 0, sw = 0;
+          rays.forEach((r) => {
+            sa += r.ang * r.br;
+            sw += r.br;
+          });
+          S.screenAngle = sw > 1e-6 ? clamp(sa / sw, -170, 170) : 0;
+          $("scAngle").value = Math.round(S.screenAngle);
+          $("scVal").textContent = Math.round(S.screenAngle) + "°";
+        }
+
+        const NB = 240;
+        const bins = new Array(NB);
+        for (let i = 0; i < NB; i++) bins[i] = { r: 0, g: 0, b: 0, w: 0 };
+        let survived = 0, maxW = 0;
+        rays.forEach((rr) => {
+          if (rr.br <= 1e-5) return;
+          let dev = rr.ang - S.screenAngle;
+          while (dev > 180) dev -= 360;
+          while (dev < -180) dev += 360;
+          // Ray must be pointing towards the front of detector (cos(dev) > 0).
+          // Diametrically opposite rays (|dev| >= 90 deg) cannot hit the screen.
+          if (Math.cos(dev * DEG) <= 0) return;
+
+          const x = (rr.h || 0) + L * Math.tan(dev * DEG);
+          if (Math.abs(x) > SW) return;
+          const idx = clamp(Math.floor(((x + SW) / (2 * SW)) * NB), 0, NB - 1);
+          const c = wlRGB(rr.wl);
+          bins[idx].r += c[0] * rr.br;
+          bins[idx].g += c[1] * rr.br;
+          bins[idx].b += c[2] * rr.br;
+          bins[idx].w += rr.br;
+          survived += rr.br;
+          if (bins[idx].w > maxW) maxW = bins[idx].w;
+        });
+        S.bins = bins;
+        S.maxW = maxW;
+        S.survived = survived;
+        S.describe = describe();
+      }
+
+      function describe() {
+        if (S.survived < 0.01) {
+          const hasBlock = S.slots.some((o) => o && o.type === "blocker");
+          if (hasBlock)
+            return "Detector state: <b>Dark</b> — light beam completely obstructed by blocker.";
+          return "Detector state: <b>Dark</b> — beam missing detector array. Drag screen or turn auto-aim on.";
+        }
+
+        const types = S.slots.filter(Boolean).map((o) => o.type);
+        const single = S.lightType === "mono";
+
+        const hasGrating = types.includes("grating");
+        const hasPrism = types.includes("prism");
+        const hasFilter = types.includes("filter");
+        const hasDiffuser = types.includes("diffuser");
+        const hasLens = types.includes("lens");
+        const filterObj = S.slots.find((o) => o && o.type === "filter");
+        const lensObj = S.slots.find((o) => o && o.type === "lens");
+
+        // 1. Diffuser combinations (Diffuser overrides focus into scattered field)
+        if (hasDiffuser) {
+          if (hasFilter && filterObj) {
+            return `Pattern: <b>Scattered ${filterObj.color} Diffuse Field</b> — filtered light randomized by frosted glass.`;
+          }
+          if (single) {
+            return `Pattern: <b>Scattered ${colorName(S.wl)} Diffuse Field</b> — laser beam randomized by frosted glass.`;
+          }
+          return "Pattern: <b>Scattered White Diffuse Field</b> — multi-wavelength light randomized by frosted glass.";
+        }
+
+        // 2. Lens + Grating combination
+        if (hasLens && hasGrating) {
+          if (hasFilter && filterObj) {
+            return `Pattern: <b>Focused Filtered ${filterObj.color} Orders</b> — converged diffracted harmonics in ${filterObj.color} passband.`;
+          }
+          if (single) {
+            return `Pattern: <b>Focused ${colorName(S.wl)} Order Harmonics</b> — converged discrete diffraction spots.`;
+          }
+          return "Pattern: <b>Focused Spectral Order Harmonics</b> — converging diffraction orders with sharp focal spots.";
+        }
+
+        // 3. Lens + Prism combination
+        if (hasLens && hasPrism) {
+          if (hasFilter && filterObj) {
+            return `Pattern: <b>Focused Filtered ${filterObj.color} Spot</b> — converged refracted ${filterObj.color} beam.`;
+          }
+          if (single) {
+            return `Pattern: <b>Focused Refracted Spot (${colorName(S.wl)})</b> — converged beam bent by glass prism.`;
+          }
+          return "Pattern: <b>Focused Continuous Rainbow</b> — converging refractive rainbow spectrum.";
+        }
+
+        // 4. Standalone Grating combinations
+        if (hasGrating) {
+          if (hasFilter && filterObj) {
+            return `Pattern: <b>Filtered ${filterObj.color} Diffraction Orders</b> — ${filterObj.color} passband transmitted through diffraction orders.`;
+          }
+          if (single) {
+            return `Pattern: <b>Monochromatic ${colorName(S.wl)} Diffraction Orders</b> — discrete harmonic order spots.`;
+          }
+          return "Pattern: <b>Dispersed Diffraction Spectrum</b> — central white spot with symmetric spectral orders.";
+        }
+
+        // 5. Standalone Prism combinations
+        if (hasPrism) {
+          if (hasFilter && filterObj) {
+            return `Pattern: <b>Filtered ${filterObj.color} Refracted Spot</b> — ${filterObj.color} band isolated after Cauchy dispersion.`;
+          }
+          if (single) {
+            return `Pattern: <b>Refracted Spot (${colorName(S.wl)})</b> — single beam bent by glass prism.`;
+          }
+          return "Pattern: <b>Continuous Refractive Rainbow</b> — visible light split by Cauchy dispersion.";
+        }
+
+        // 6. Lens combinations (Standalone Lens or Lens + Mirror / Lens + Filter)
+        if (hasLens && lensObj) {
+          const div = lensObj.diverging;
+          if (hasFilter && filterObj) {
+            return div
+              ? `Pattern: <b>Divergent ${filterObj.color} Field</b> — expanded filtered footprint.`
+              : `Pattern: <b>Focused ${filterObj.color} Spot</b> — converged filtered footprint.`;
+          }
+          return div
+            ? "Pattern: <b>Divergent Field</b> — expanded beam footprint."
+            : "Pattern: <b>Focused Focal Spot</b> — converged beam footprint.";
+        }
+
+        // 7. Standalone Filter
+        if (hasFilter && filterObj) {
+          return `Pattern: <b>Filtered ${filterObj.color} Beam</b> — transmitted through ${filterObj.color} passband window.`;
+        }
+
+        return "Pattern: <b>Illuminated Beam Field</b> on detector screen.";
+      }
+
+      const benchC = $("bench"), bx = benchC.getContext("2d");
+      const screenC = $("screen"), sx = screenC.getContext("2d");
+      let DPR = Math.max(1, window.devicePixelRatio || 1);
+
+      function fit() {
+        DPR = Math.max(1, window.devicePixelRatio || 1);
+        [
+          [benchC, bx],
+          [screenC, sx],
+        ].forEach(([c, ctx]) => {
+          const r = c.parentElement.getBoundingClientRect();
+          c.width = Math.max(1, r.width * DPR);
+          c.height = Math.max(1, r.height * DPR);
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        });
+        draw();
+      }
+
+      function drawBench() {
+        const W = benchC.width / DPR, H = benchC.height / DPR;
+        bx.clearRect(0, 0, W, H);
+        const cy = H / 2;
+        const srcX = W * 0.1;
+        const slotX = [W * 0.35, W * 0.53];
+
+        let exitX = srcX;
+        if (S.exitSlotIndex === 0) exitX = slotX[0];
+        else if (S.exitSlotIndex === 1) exitX = slotX[1];
+
+        const exit = { x: exitX, y: cy };
+        S.exit = exit;
+        const R = Math.min(W - exitX - 70, H * 0.44);
+        S.benchR = R;
+
+        // Draw Optical Bench Grid Markers
+        bx.strokeStyle = "rgba(255, 255, 255, 0.04)";
+        bx.lineWidth = 1;
+        for (let x = 0; x < W; x += 40) {
+          bx.beginPath();
+          bx.moveTo(x, 0);
+          bx.lineTo(x, H);
+          bx.stroke();
+        }
+
+        // Draw Light Emitter Housing
+        bx.fillStyle = "#1e293b";
+        bx.strokeStyle = "#00f2fe";
+        bx.lineWidth = 2;
+        bx.beginPath();
+        bx.roundRect(srcX - 35, cy - 20, 35, 40, 6);
+        bx.fill();
+        bx.stroke();
+
+        // Emitter Aperture Glow
+        const srcCol = S.lightType === "mono" ? wlRGB(S.wl) : [255, 255, 255];
+        bx.fillStyle = `rgb(${srcCol[0]}, ${srcCol[1]}, ${srcCol[2]})`;
+        bx.beginPath();
+        bx.arc(srcX - 4, cy, 6, 0, Math.PI * 2);
+        bx.fill();
+
+        // 1) Incoming Beam Segment: Source -> Slot 1 (or Slot 2 Target)
+        const firstTargetX = S.slots[0] ? slotX[0] : exitX;
+        bx.shadowColor = `rgba(${srcCol[0]}, ${srcCol[1]}, ${srcCol[2]}, 0.8)`;
+        bx.shadowBlur = 12;
+        bx.strokeStyle = `rgba(${srcCol[0]}, ${srcCol[1]}, ${srcCol[2]}, 0.95)`;
+        bx.lineWidth = 2;
+        [-4, -2, 0, 2, 4].forEach((hVal) => {
+          const yPos = cy - hVal * 3.5;
+          bx.beginPath();
+          bx.moveTo(srcX, yPos);
+          bx.lineTo(firstTargetX, yPos);
+          bx.stroke();
+        });
+        bx.shadowBlur = 0;
+
+        // 2) Intermediate Beam Segment: Slot 1 -> Slot 2 (ONLY if Slot 0 passes light through)
+        if (S.slots[0] && S.slots[0].type !== "mirror" && S.slots[0].type !== "blocker" && S.slots[1]) {
+          bx.globalCompositeOperation = "screen";
+          const dx = slotX[1] - slotX[0];
+
+          if (S.slots[0].type === "diffuser") {
+            let sumR = 0, sumG = 0, sumB = 0, totalW = 0;
+            if (S.midRays) {
+              S.midRays.forEach((r) => {
+                if (r.br > 1e-4) {
+                  const c = wlRGB(r.wl);
+                  sumR += c[0] * r.br;
+                  sumG += c[1] * r.br;
+                  sumB += c[2] * r.br;
+                  totalW += r.br;
+                }
+              });
+            }
+            const avgR = totalW > 1e-6 ? Math.round(sumR / totalW) : srcCol[0];
+            const avgG = totalW > 1e-6 ? Math.round(sumG / totalW) : srcCol[1];
+            const avgB = totalW > 1e-6 ? Math.round(sumB / totalW) : srcCol[2];
+
+            const diffCone = bx.createLinearGradient(slotX[0], 0, slotX[1], 0);
+            diffCone.addColorStop(0, `rgba(${avgR}, ${avgG}, ${avgB}, 0.5)`);
+            diffCone.addColorStop(0.5, `rgba(${avgR}, ${avgG}, ${avgB}, 0.3)`);
+            diffCone.addColorStop(1, `rgba(${avgR}, ${avgG}, ${avgB}, 0.12)`);
+            bx.fillStyle = diffCone;
+            bx.beginPath();
+            bx.moveTo(slotX[0], cy - 14);
+            bx.lineTo(slotX[1], cy - 50);
+            bx.lineTo(slotX[1], cy + 50);
+            bx.lineTo(slotX[0], cy + 14);
+            bx.closePath();
+            bx.fill();
+          }
+
+          if (S.midRays && S.midRays.length > 0) {
+            S.midRays.forEach((r) => {
+              if (r.br <= 1e-4) return;
+              const a = r.ang * DEG;
+              const startY = cy - (r.h ? r.h * 3.5 : 0);
+              const targetY = startY - dx * Math.tan(a);
+              const c = wlRGB(r.wl);
+              bx.shadowColor = `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+              bx.shadowBlur = 10;
+              bx.strokeStyle = `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${clamp(r.br * 7.0, 0.35, 0.95)})`;
+              bx.lineWidth = S.slots[0].type === "diffuser" ? 2.5 : 2;
+              bx.beginPath();
+              bx.moveTo(slotX[0], startY);
+              bx.lineTo(slotX[1], clamp(targetY, cy - 90, cy + 90));
+              bx.stroke();
+            });
+          }
+          bx.globalCompositeOperation = "source-over";
+          bx.shadowBlur = 0;
+        }
+
+        // Exit Fan of Dispersed / Refracted Rays
+        bx.globalCompositeOperation = "screen";
+        const exitSlotObj = S.exitSlotIndex >= 0 ? S.slots[S.exitSlotIndex] : null;
+        if (exitSlotObj && exitSlotObj.type === "diffuser") {
+          let sumR = 0, sumG = 0, sumB = 0, totalW = 0;
+          S.out.forEach((r) => {
+            if (r.br > 1e-4) {
+              const c = wlRGB(r.wl);
+              sumR += c[0] * r.br;
+              sumG += c[1] * r.br;
+              sumB += c[2] * r.br;
+              totalW += r.br;
+            }
+          });
+          const avgR = totalW > 1e-6 ? Math.round(sumR / totalW) : srcCol[0];
+          const avgG = totalW > 1e-6 ? Math.round(sumG / totalW) : srcCol[1];
+          const avgB = totalW > 1e-6 ? Math.round(sumB / totalW) : srcCol[2];
+
+          const exitCone = bx.createLinearGradient(exit.x, 0, exit.x + R, 0);
+          exitCone.addColorStop(0, `rgba(${avgR}, ${avgG}, ${avgB}, 0.5)`);
+          exitCone.addColorStop(0.5, `rgba(${avgR}, ${avgG}, ${avgB}, 0.3)`);
+          exitCone.addColorStop(1, `rgba(${avgR}, ${avgG}, ${avgB}, 0.08)`);
+          bx.fillStyle = exitCone;
+          bx.beginPath();
+          bx.moveTo(exit.x, cy - 14);
+          bx.lineTo(exit.x + R, cy - R * Math.tan(25 * DEG));
+          bx.lineTo(exit.x + R, cy + R * Math.tan(25 * DEG));
+          bx.lineTo(exit.x, cy + 14);
+          bx.closePath();
+          bx.fill();
+        }
+
+        S.out.forEach((r) => {
+          if (r.br <= 1e-4) return;
+          const a = r.ang * DEG;
+          const startY = exit.y - (r.h ? r.h * 3.5 : 0);
+          const ex = exit.x + Math.cos(a) * R, ey = startY - Math.sin(a) * R;
+          const c = wlRGB(r.wl);
+          
+          bx.shadowColor = `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+          bx.shadowBlur = 10;
+          bx.strokeStyle = `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${clamp(r.br * 7.0, 0.35, 0.95)})`;
+          bx.lineWidth = exitSlotObj && exitSlotObj.type === "diffuser" ? 2.5 : 2;
+          bx.beginPath();
+          bx.moveTo(exit.x, startY);
+          bx.lineTo(ex, ey);
+          bx.stroke();
+        });
+        bx.globalCompositeOperation = "source-over";
+        bx.shadowBlur = 0;
+
+        // Animated Energy Beam Particles
+        S.animTime += 0.03;
+        const particleOffset = (S.animTime * 60) % R;
+        bx.fillStyle = "#ffffff";
+        S.out.forEach((r, idx) => {
+          if (r.br <= 0.05 || idx % 2 !== 0) return;
+          const a = r.ang * DEG;
+          const startY = exit.y - (r.h ? r.h * 3.5 : 0);
+          const px = exit.x + Math.cos(a) * particleOffset;
+          const py = startY - Math.sin(a) * particleOffset;
+          bx.beginPath();
+          bx.arc(px, py, 1.5, 0, Math.PI * 2);
+          bx.fill();
+        });
+
+        // Detector Orbital Arc Track
+        bx.strokeStyle = "rgba(0, 242, 254, 0.25)";
+        bx.setLineDash([4, 6]);
+        bx.lineWidth = 1.5;
+        bx.beginPath();
+        bx.arc(exit.x, exit.y, R, -170 * DEG, 170 * DEG);
+        bx.stroke();
+        bx.setLineDash([]);
+
+        // Detector Sensor Bar
+        const sa = S.screenAngle * DEG;
+        const scx = exit.x + Math.cos(sa) * R, scy = exit.y - Math.sin(sa) * R;
+        S.screenPx = { x: scx, y: scy };
+        const perp = sa + Math.PI / 2, half = 28;
+
+        bx.strokeStyle = "#00f2fe";
+        bx.lineWidth = 6;
+        bx.lineCap = "round";
+        bx.shadowColor = "#00f2fe";
+        bx.shadowBlur = 12;
+        bx.beginPath();
+        bx.moveTo(scx + Math.cos(perp) * half, scy - Math.sin(perp) * half);
+        bx.lineTo(scx - Math.cos(perp) * half, scy + Math.sin(perp) * half);
+        bx.stroke();
+        bx.shadowBlur = 0;
+
+        // Screen Target Pivot Marker
+        bx.fillStyle = "#ff6b35";
+        bx.beginPath();
+        bx.arc(scx, scy, 5, 0, Math.PI * 2);
+        bx.fill();
+
+        // Source & Slots
+        drawNode(srcX, cy, "⚡", S.lightType === "mono" ? `${S.wl}nm` : "White", "#00f2fe");
+        slotX.forEach((sxp, i) => {
+          const o = S.slots[i];
+          if (o)
+            drawNode(sxp, cy, TRAY[o.type].ic, TRAY[o.type].name, "#00f2fe", true, o);
+          else drawGhost(sxp, cy, "Slot " + (i + 1));
+        });
+      }
+
+      function drawNode(x, y, ic, label, col, box, obj) {
+        if (box) {
+          bx.fillStyle = "#1a2334";
+          bx.strokeStyle = "#00f2fe";
+          bx.lineWidth = 1.5;
+          bx.shadowColor = "rgba(0, 242, 254, 0.3)";
+          bx.shadowBlur = 8;
+          bx.fillRect(x - 18, y - 18, 36, 36);
+          bx.strokeRect(x - 18, y - 18, 36, 36);
+          bx.shadowBlur = 0;
+
+          // Draw Component Visual Graphics
+          if (obj && obj.type === "prism") {
+            bx.strokeStyle = "rgba(255, 255, 255, 0.7)";
+            bx.lineWidth = 1.5;
+            bx.beginPath();
+            bx.moveTo(x, y - 10);
+            bx.lineTo(x - 10, y + 10);
+            bx.lineTo(x + 10, y + 10);
+            bx.closePath();
+            bx.stroke();
+          } else if (obj && obj.type === "mirror") {
+            const mirrorAngRad = (90 - obj.angle) * DEG;
+            const dx = Math.cos(mirrorAngRad) * 14;
+            const dy = -Math.sin(mirrorAngRad) * 14;
+            
+            // Mirror reflective face
+            bx.strokeStyle = "#00f2fe";
+            bx.lineWidth = 3;
+            bx.beginPath();
+            bx.moveTo(x - dx, y - dy);
+            bx.lineTo(x + dx, y + dy);
+            bx.stroke();
+
+            // Mirror back hatching (opaque blocker side)
+            bx.strokeStyle = "rgba(255, 42, 133, 0.7)";
+            bx.lineWidth = 1.5;
+            const nx = -Math.sin(mirrorAngRad) * 4;
+            const ny = -Math.cos(mirrorAngRad) * 4;
+            bx.beginPath();
+            bx.moveTo(x - dx + nx, y - dy + ny);
+            bx.lineTo(x + dx + nx, y + dy + ny);
+            bx.stroke();
+          }
+        }
+        bx.font = "16px sans-serif";
+        bx.textAlign = "center";
+        bx.textBaseline = "middle";
+        bx.fillStyle = col;
+        bx.fillText(ic, x, y);
+        bx.font = '700 9px "Roboto Mono", monospace';
+        bx.fillStyle = "#94a3b8";
+        bx.fillText(label.toUpperCase(), x, y + 26);
+        bx.textBaseline = "alphabetic";
+      }
+
+      function drawGhost(x, y, label) {
+        bx.strokeStyle = "rgba(148, 163, 184, 0.4)";
+        bx.setLineDash([4, 4]);
+        bx.lineWidth = 1.5;
+        bx.strokeRect(x - 18, y - 18, 36, 36);
+        bx.setLineDash([]);
+        bx.font = '700 9px "Roboto Mono", monospace';
+        bx.fillStyle = "#64748b";
+        bx.textAlign = "center";
+        bx.fillText(label.toUpperCase(), x, y + 26);
+      }
+
+      function drawScreen() {
+        const W = screenC.width / DPR, H = screenC.height / DPR;
+        sx.fillStyle = "#06080e";
+        sx.fillRect(0, 0, W, H);
+
+        const pad = 24, pw = W - pad * 2, ph = H - pad * 2 - 20;
+        const py = pad;
+
+        // Detector Array Frame
+        sx.fillStyle = "#0d121d";
+        sx.fillRect(pad, py, pw, ph);
+        sx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+        sx.lineWidth = 1;
+        sx.strokeRect(pad, py, pw, ph);
+
+        // Grid lines on detector
+        sx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+        for (let i = 1; i < 6; i++) {
+          const gx = pad + (i / 6) * pw;
+          sx.beginPath();
+          sx.moveTo(gx, py);
+          sx.lineTo(gx, py + ph);
+          sx.stroke();
+        }
+
+        const cy = py + ph * 0.38;
+        const overall = clamp(S.survived, 0, 1);
+
+        if (S.maxW > 1e-6 && overall > 0.005) {
+          const exitObj = S.exitSlotIndex >= 0 ? S.slots[S.exitSlotIndex] : null;
+          const isDiffuser = exitObj && exitObj.type === "diffuser";
+          const NB = S.bins.length;
+          const stripY = py + 8;
+          const stripH = 16;
+          const graphY = py + ph - 10;
+          const graphH = ph * 0.40;
+
+          if (isDiffuser) {
+            // Compute average scattered light color across active bins
+            let sumR = 0, sumG = 0, sumB = 0, totalW = 0;
+            S.bins.forEach((bn) => {
+              if (bn.w > 1e-5) {
+                sumR += bn.r;
+                sumG += bn.g;
+                sumB += bn.b;
+                totalW += bn.w;
+              }
+            });
+            const avgR = totalW > 1e-6 ? Math.round(sumR / totalW) : 255;
+            const avgG = totalW > 1e-6 ? Math.round(sumG / totalW) : 255;
+            const avgB = totalW > 1e-6 ? Math.round(sumB / totalW) : 255;
+
+            // Auto-gain contrast boost for multi-diffuser / filtered diffuse fields
+            const visOverall = clamp(Math.sqrt(S.survived * 5.0), 0.35, 1.0);
+
+            // 1. Broad Diffuse Glow filling the detector frame
+            const diffG = sx.createLinearGradient(pad, 0, pad + pw, 0);
+            diffG.addColorStop(0, `rgba(${avgR}, ${avgG}, ${avgB}, 0.08)`);
+            diffG.addColorStop(0.2, `rgba(${avgR}, ${avgG}, ${avgB}, ${0.5 * visOverall})`);
+            diffG.addColorStop(0.5, `rgba(${avgR}, ${avgG}, ${avgB}, ${0.85 * visOverall})`);
+            diffG.addColorStop(0.8, `rgba(${avgR}, ${avgG}, ${avgB}, ${0.5 * visOverall})`);
+            diffG.addColorStop(1, `rgba(${avgR}, ${avgG}, ${avgB}, 0.08)`);
+            sx.fillStyle = diffG;
+            sx.fillRect(pad, py, pw, ph);
+
+            // 2. Full Top Projection Spectrum Bar
+            sx.fillStyle = diffG;
+            sx.fillRect(pad, stripY, pw, stripH);
+            sx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+            sx.lineWidth = 1;
+            sx.strokeRect(pad, stripY, pw, stripH);
+
+            // 3. Smooth Diffuse Bell-Curve Intensity Profile
+            sx.strokeStyle = `rgba(${avgR}, ${avgG}, ${avgB}, 0.95)`;
+            sx.lineWidth = 3;
+            sx.beginPath();
+            S.bins.forEach((bn, i) => {
+              const cx = pad + (i / NB) * pw;
+              const normW = Math.sqrt(clamp(bn.w / S.maxW, 0, 1)) * 0.85;
+              const y = graphY - normW * graphH * visOverall;
+              if (i === 0) sx.moveTo(cx, y);
+              else sx.lineTo(cx, y);
+            });
+            sx.stroke();
+
+            const fillG = sx.createLinearGradient(pad, 0, pad + pw, 0);
+            fillG.addColorStop(0, `rgba(${avgR}, ${avgG}, ${avgB}, 0.1)`);
+            fillG.addColorStop(0.5, `rgba(${avgR}, ${avgG}, ${avgB}, 0.35)`);
+            fillG.addColorStop(1, `rgba(${avgR}, ${avgG}, ${avgB}, 0.1)`);
+            sx.fillStyle = fillG;
+            sx.lineTo(pad + pw, graphY);
+            sx.lineTo(pad, graphY);
+            sx.closePath();
+            sx.fill();
+          } else {
+            let maxColorW = 0;
+            S.bins.forEach((bn) => {
+              if (bn.w > 1e-5) {
+                const rr = bn.r / bn.w, gg = bn.g / bn.w, bb = bn.b / bn.w;
+                if (Math.max(rr, gg, bb) - Math.min(rr, gg, bb) > 15) {
+                  if (bn.w > maxColorW) maxColorW = bn.w;
+                }
+              }
+            });
+            if (maxColorW < 1e-6) maxColorW = S.maxW;
+
+            // Projection Rainbow Spectrum Bar across detector top
+            for (let i = 0; i < NB; i++) {
+              const bn = S.bins[i];
+              if (bn.w > 1e-5) {
+                const rr = Math.round(bn.r / bn.w);
+                const gg = Math.round(bn.g / bn.w);
+                const bb = Math.round(bn.b / bn.w);
+                const isColor = Math.max(rr, gg, bb) - Math.min(rr, gg, bb) > 15;
+                const rawW = isColor ? bn.w / maxColorW : bn.w / S.maxW;
+                const normW = Math.sqrt(clamp(rawW, 0, 1));
+                const alpha = clamp(normW, 0.45, 1.0);
+                sx.fillStyle = `rgba(${rr},${gg},${bb},${alpha})`;
+                const cx = pad + (i / NB) * pw;
+                sx.fillRect(cx, stripY, pw / NB + 1.2, stripH);
+              }
+            }
+            sx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+            sx.lineWidth = 1;
+            sx.strokeRect(pad, stripY, pw, stripH);
+
+            // Radial Spot Projection
+            sx.globalCompositeOperation = "screen";
+            S.bins.forEach((bn, i) => {
+              if (bn.w <= 1e-5) return;
+              const rr = bn.r / bn.w, gg = bn.g / bn.w, bb = bn.b / bn.w;
+              const isColor = Math.max(rr, gg, bb) - Math.min(rr, gg, bb) > 15;
+              const rawW = isColor ? bn.w / maxColorW : bn.w / S.maxW;
+              const normW = Math.sqrt(clamp(rawW, 0, 1));
+              const inten = clamp(normW, 0.3, 1.0) * overall;
+              const cx = pad + (i / NB) * pw;
+              const rad = Math.max(12, (pw / NB) * 4.2);
+
+              const g = sx.createRadialGradient(cx, cy, 0, cx, cy, rad);
+              g.addColorStop(0, `rgba(${rr | 0},${gg | 0},${bb | 0},${inten})`);
+              g.addColorStop(1, `rgba(${rr | 0},${gg | 0},${bb | 0},0)`);
+              sx.fillStyle = g;
+              sx.beginPath();
+              sx.arc(cx, cy, rad, 0, Math.PI * 2);
+              sx.fill();
+            });
+            sx.globalCompositeOperation = "source-over";
+
+            // Real-time Spectral Intensity Histogram Curve
+            sx.strokeStyle = "rgba(0, 242, 254, 0.85)";
+            sx.lineWidth = 2;
+            sx.beginPath();
+            S.bins.forEach((bn, i) => {
+              const cx = pad + (i / NB) * pw;
+              const isColor = bn.w > 1e-5 && Math.max(bn.r / bn.w, bn.g / bn.w, bn.b / bn.w) - Math.min(bn.r / bn.w, bn.g / bn.w, bn.b / bn.w) > 15;
+              const rawW = isColor ? (bn.w / maxColorW) : (bn.w / S.maxW);
+              const normW = Math.sqrt(clamp(rawW, 0, 1)) * 0.85;
+              const inten = clamp(normW, 0, 1) * overall;
+              const y = graphY - inten * graphH;
+              if (i === 0) sx.moveTo(cx, y);
+              else sx.lineTo(cx, y);
+            });
+            sx.stroke();
+
+            // Fill curve with spectral gradient
+            const fillG = sx.createLinearGradient(pad, 0, pad + pw, 0);
+            fillG.addColorStop(0, "rgba(107, 63, 160, 0.3)");
+            fillG.addColorStop(0.3, "rgba(42, 160, 216, 0.3)");
+            fillG.addColorStop(0.6, "rgba(200, 208, 42, 0.3)");
+            fillG.addColorStop(1, "rgba(216, 52, 42, 0.3)");
+            sx.fillStyle = fillG;
+            sx.lineTo(pad + pw, graphY);
+            sx.lineTo(pad, graphY);
+            sx.closePath();
+          }
+        }
+
+        // Detector Wavelength Axis Labels
+        sx.font = '600 9px "Roboto Mono", monospace';
+        sx.fillStyle = "#64748b";
+        sx.textAlign = "center";
+        sx.fillText("-18 cm", pad + 15, py + ph - 4);
+        sx.fillText("0 cm (Center)", pad + pw / 2, py + ph - 4);
+        sx.fillText("+18 cm", pad + pw - 15, py + ph - 4);
+
+        $("screenReadout").innerHTML = S.describe;
+      }
+
+      function draw() {
+        drawBench();
+        drawScreen();
+      }
+
+      function drawFilterBar(canvas, o) {
+        const ctx = canvas.getContext("2d");
+        const w = canvas.clientWidth || 240, h = 28;
+        canvas.width = w * DPR;
+        canvas.height = h * DPR;
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        const band = FILTER_BANDS[o.color] || [400, 700];
+        for (let px = 0; px < w; px++) {
+          const wl = 400 + (px / w) * 300;
+          const inBand = wl >= band[0] && wl <= band[1];
+          const c = wlRGB(wl);
+          if (inBand) {
+            ctx.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`;
+          } else {
+            const gy = Math.round(((c[0] + c[1] + c[2]) / 3) * 0.25) + 12;
+            ctx.fillStyle = `rgb(${gy},${gy},${gy})`;
+          }
+          ctx.fillRect(px, 0, 1, h);
+        }
+        const x0 = ((band[0] - 400) / 300) * w;
+        const x1 = ((clamp(band[1], 400, 700) - 400) / 300) * w;
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(
+          Math.max(1, x0),
+          1,
+          Math.min(w - 2, x1) - Math.max(1, x0),
+          h - 2,
+        );
+        if (S.lightType === "mono") {
+          const mx = ((clamp(S.wl, 400, 700) - 400) / 300) * w;
+          ctx.strokeStyle = "#00f2fe";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(mx, 0);
+          ctx.lineTo(mx, h);
+          ctx.stroke();
+        }
+      }
+
+      function snellText(o) {
+        const refWl = S.lightType === "mono" ? S.wl : 550;
+        const n = cauchy(refWl);
+        const A = PRISM_APEX; // 60 deg
+        const th1 = Math.round(o.angle);
+        const th1Rad = th1 * DEG;
+        const s2 = Math.sin(th1Rad) / n;
+
+        if (Math.abs(s2) > 1) {
+          return `<div style="color:#ff2a85; font-weight:700;">⚠️ Total Internal Reflection — Light cannot enter prism face at ${th1}&deg;</div>`;
+        }
+
+        const th2Rad = Math.asin(s2);
+        const th2 = th2Rad / DEG;
+        const th3Rad = (A * DEG) - th2Rad;
+        const th3 = th3Rad / DEG;
+        const s4 = n * Math.sin(th3Rad);
+
+        if (Math.abs(s4) > 1) {
+          return `<div style="color:#ff2a85; font-weight:700;">⚠️ Total Internal Reflection (TIR) at Exit Face!<br><small style="color:#94a3b8; font-weight:400;">Internal exit angle &theta;₃ (${th3.toFixed(1)}&deg;) exceeds critical angle (${(Math.asin(1/n)/DEG).toFixed(1)}&deg;). Light trapped inside glass prism.</small></div>`;
+        }
+
+        const th4Rad = Math.asin(s4);
+        const th4 = th4Rad / DEG;
+        const dev = th1 + th4 - A;
+        const isMinDev = Math.abs(th1 - 48.6) < 2.5;
+
+        let html = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:6px;">` +
+          `<div><span style="color:#64748b;">Incident &theta;₁:</span> <b>${th1.toFixed(1)}&deg;</b></div>` +
+          `<div><span style="color:#64748b;">Internal &theta;₂:</span> <b>${th2.toFixed(1)}&deg;</b></div>` +
+          `<div><span style="color:#64748b;">Internal &theta;₃:</span> <b>${th3.toFixed(1)}&deg;</b></div>` +
+          `<div><span style="color:#64748b;">Exit &theta;₄:</span> <b>${th4.toFixed(1)}&deg;</b></div>` +
+          `</div>` +
+          `<div style="border-top:1px solid rgba(255,255,255,0.1); padding-top:6px; margin-top:4px;">` +
+          `Total Deviation (D) = &theta;₁ + &theta;₄ - Apex = <b style="color:#00f2fe;">${dev.toFixed(1)}&deg;</b>` +
+          (isMinDev ? ` <span style="background:rgba(0,242,254,0.2); color:#00f2fe; padding:2px 6px; border-radius:4px; font-size:9px; font-weight:700;">🎯 Minimum Deviation (D<sub>min</sub> ≈ 38.2&deg;)</span>` : "") +
+          `</div>` +
+          `<small style="display:block; color:#94a3b8; font-weight:400; margin-top:4px;">Snell's Law: 1.00 &times; sin(${th1}&deg;) = ${n.toFixed(3)} &times; sin(${th2.toFixed(1)}&deg;). As you adjust tilt angle &theta;₁, watch how total deviation D reaches a minimum at ~48.6&deg; before increasing!</small>`;
+
+        return html;
+      }
+
+      function setTargetSlot(slotIndex) {
+        S.targetSlot = slotIndex;
+        const seg = $("targetSlotSeg");
+        if (seg) {
+          seg.querySelectorAll("button").forEach((b, idx) => {
+            b.classList.toggle("on", idx === slotIndex);
+            b.textContent = idx === slotIndex ? `Slot ${idx + 1} (Selected)` : `Slot ${idx + 1}`;
+          });
+        }
+        renderSlot(0);
+        renderSlot(1);
+      }
+
+      function renderSlot(i) {
+        const el = $("slot" + i);
+        const o = S.slots[i];
+        const isActive = S.targetSlot === i;
+        if (!o) {
+          el.className = `slot ${isActive ? "drop" : ""}`;
+          el.innerHTML =
+            `<div class="slot-empty" onclick="setTargetSlot(${i})" style="cursor:pointer;">` +
+            `Slot ${i + 1} Empty<br>` +
+            `<span style="color:var(--accent-cyan); font-weight:700; text-decoration:underline;">Click to select for placement</span></div>`;
+          return;
+        }
+        el.className = `slot filled ${isActive ? "drop" : ""}`;
+        const t = TRAY[o.type];
+        let h =
+          `<div class="slot-head"><span class="slot-title"><span class="ic">${t.ic}</span>${t.name}</span>` +
+          `<div style="display:flex; gap:6px;">` +
+          `<button class="subsel button ${isActive ? "on" : ""}" onclick="setTargetSlot(${i})" style="font-size:9px; padding:3px 7px; border-radius:4px;">${isActive ? "Selected" : "Target Slot"}</button>` +
+          `<button class="rm" data-rm="${i}">Remove</button></div></div>`;
+
+        const angleShown = ["mirror", "prism", "grating", "lens"].includes(o.type);
+        if (angleShown) {
+          const min = o.type === "prism" ? 40 : 0, max = o.type === "prism" ? 75 : 90;
+          h +=
+            `<div class="ctl"><div class="ctl-top"><span class="ctl-name">Tilt Angle <span class="sym">(&theta;)</span></span>` +
+            `<span class="ctl-val" id="angv${i}">${Math.round(o.angle)}&deg;</span></div>` +
+            `<input type="range" id="ang${i}" min="${min}" max="${max}" value="${clamp(o.angle, min, max)}"></div>`;
+        } else {
+          h += `<div class="note">Angle tilt does not alter behavior for this passive element.</div>`;
+        }
+
+        if (o.type === "prism") {
+          h += `<div class="snell" id="snell${i}">${snellText(o)}</div>`;
+        }
+        if (o.type === "grating") {
+          h += `<div class="ctl" style="margin-top:9px"><div class="ctl-name" style="margin-bottom:5px">Lines per mm</div><div class="subsel" id="lpm${i}">`;
+          [100, 300, 600].forEach((v) => {
+            h += `<button data-lpm="${v}" class="${o.lpm === v ? "on" : ""}">${v}</button>`;
+          });
+          h += `</div></div>`;
+        }
+        if (o.type === "filter") {
+          h += `<div class="ctl" style="margin-top:9px"><div class="ctl-name" style="margin-bottom:5px">Passband Color</div><div class="subsel" id="fc${i}">`;
+          FILTER_ORDER.forEach((c) => {
+            const bd = FILTER_BANDS[c];
+            const mid = (bd[0] + bd[1]) / 2;
+            const rc = wlRGB(mid);
+            h += `<button data-fc="${c}" class="${o.color === c ? "on" : ""}"><span class="cswatch" style="background:rgb(${rc[0]},${rc[1]},${rc[2]})"></span>${c}</button>`;
+          });
+          h +=
+            `</div></div><div class="tbar-wrap"><canvas id="fbar${i}"></canvas>` +
+            `<div class="tbar-cap">Bright band = transmitted wavelengths. Dark = absorbed.</div></div>`;
+        }
+        if (o.type === "lens") {
+          h +=
+            `<div class="ctl" style="margin-top:9px"><div class="seg" id="lt${i}">` +
+            `<button data-div="0" class="${!o.diverging ? "on" : ""}">Converging</button>` +
+            `<button data-div="1" class="${o.diverging ? "on" : ""}">Diverging</button></div></div>` +
+            `<div class="ctl"><div class="ctl-top"><span class="ctl-name">Focal Length</span>` +
+            `<span class="ctl-val" id="flv${i}">${o.focal} cm</span></div>` +
+            `<input type="range" id="fl${i}" min="10" max="100" value="${o.focal}"></div>`;
+        }
+        el.innerHTML = h;
+
+        const rm = el.querySelector("[data-rm]");
+        if (rm)
+          rm.onclick = () => {
+            S.slots[i] = null;
+            renderSlot(i);
+            recompute();
+          };
+        const ang = $("ang" + i);
+        if (ang)
+          ang.oninput = (e) => {
+            o.angle = +e.target.value;
+            $("angv" + i).textContent = Math.round(o.angle) + "°";
+            if (o.type === "prism") $("snell" + i).innerHTML = snellText(o);
+            recompute();
+          };
+        const lpm = $("lpm" + i);
+        if (lpm)
+          lpm.querySelectorAll("button").forEach(
+            (b) =>
+              (b.onclick = () => {
+                o.lpm = +b.dataset.lpm;
+                lpm.querySelectorAll("button").forEach((x) => x.classList.remove("on"));
+                b.classList.add("on");
+                recompute();
+              }),
+          );
+        const fc = $("fc" + i);
+        if (fc)
+          fc.querySelectorAll("button").forEach(
+            (b) =>
+              (b.onclick = () => {
+                o.color = b.dataset.fc;
+                fc.querySelectorAll("button").forEach((x) => x.classList.remove("on"));
+                b.classList.add("on");
+                drawFilterBar($("fbar" + i), o);
+                recompute();
+              }),
+          );
+        const lt = $("lt" + i);
+        if (lt)
+          lt.querySelectorAll("button").forEach(
+            (b) =>
+              (b.onclick = () => {
+                o.diverging = b.dataset.div === "1";
+                lt.querySelectorAll("button").forEach((x) => x.classList.remove("on"));
+                b.classList.add("on");
+                recompute();
+              }),
+          );
+        const fl = $("fl" + i);
+        if (fl)
+          fl.oninput = (e) => {
+            o.focal = +e.target.value;
+            $("flv" + i).textContent = o.focal + " cm";
+            recompute();
+          };
+        const fbar = $("fbar" + i);
+        if (fbar) requestAnimationFrame(() => drawFilterBar(fbar, o));
+      }
+
+      function refreshLiveReadouts() {
+        S.slots.forEach((o, i) => {
+          if (!o) return;
+          if (o.type === "prism") {
+            const el = $("snell" + i);
+            if (el) el.innerHTML = snellText(o);
+          }
+          if (o.type === "filter") {
+            const fb = $("fbar" + i);
+            if (fb) drawFilterBar(fb, o);
+          }
+        });
+      }
+
+      function buildTray() {
+        const tr = $("tray");
+        tr.innerHTML = "";
+        Object.entries(TRAY).forEach(([key, def]) => {
+          const b = document.createElement("button");
+          b.className = "tile";
+          b.draggable = true;
+          b.dataset.type = key;
+          b.innerHTML = `<span class="ic">${def.ic}</span>${def.name}`;
+          b.addEventListener("dragstart", (e) => {
+            e.dataTransfer.setData("text/plain", key);
+            e.dataTransfer.effectAllowed = "copy";
+          });
+          b.addEventListener("click", () => {
+            placeInSlot(S.targetSlot, key);
+          });
+          tr.appendChild(b);
+        });
+
+        const targetSeg = $("targetSlotSeg");
+        if (targetSeg) {
+          targetSeg.querySelectorAll("button").forEach((btn) => {
+            btn.onclick = () => {
+              setTargetSlot(+btn.dataset.slot);
+            };
+          });
+        }
+      }
+
+      function placeInSlot(i, type) {
+        S.slots[i] = defaultObj(type);
+        if (i === 0 && (type === "mirror" || type === "blocker")) {
+          S.autoAim = false;
+          $("autoAim").checked = false;
+          $("scAngle").disabled = false;
+          S.screenAngle = 0;
+          $("scAngle").value = 0;
+          $("scVal").textContent = "0°";
+        }
+        renderSlot(i);
+        recompute();
+      }
+
+      [0, 1].forEach((i) => {
+        const el = $("slot" + i);
+        el.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          el.classList.add("drop");
+        });
+        el.addEventListener("dragleave", () => el.classList.remove("drop"));
+        el.addEventListener("drop", (e) => {
+          e.preventDefault();
+          el.classList.remove("drop");
+          const type = e.dataTransfer.getData("text/plain");
+          if (TRAY[type]) {
+            setTargetSlot(i);
+            placeInSlot(i, type);
+          }
+        });
+      });
+
+      $("intensity").oninput = (e) => {
+        S.intensity = +e.target.value;
+        $("intVal").textContent = S.intensity + "%";
+        recompute();
+      };
+      $("typeSeg").querySelectorAll("button").forEach(
+        (b) =>
+          (b.onclick = () => {
+            S.lightType = b.dataset.type;
+            $("typeSeg").querySelectorAll("button").forEach((x) => x.classList.remove("on"));
+            b.classList.add("on");
+            $("wlWrap").style.display = S.lightType === "mono" ? "block" : "none";
+            $("srcNote").innerHTML =
+              S.lightType === "mono"
+                ? "<b>Monochromatic beam:</b> Single pure wavelength. Continuous spectrum is disabled."
+                : "<b>White light beam:</b> Multi-wavelength emission. Disperses through prisms &amp; gratings.";
+            refreshLiveReadouts();
+            recompute();
+          }),
+      );
+      $("wl").oninput = (e) => {
+        S.wl = +e.target.value;
+        $("wlVal").textContent = S.wl + " nm";
+        refreshLiveReadouts();
+        recompute();
+      };
+      $("autoAim").onchange = (e) => {
+        S.autoAim = e.target.checked;
+        $("scAngle").disabled = e.target.checked;
+        recompute();
+      };
+      $("scAngle").oninput = (e) => {
+        S.screenAngle = +e.target.value;
+        $("scVal").textContent = S.screenAngle + "°";
+        if (S.autoAim) {
+          S.autoAim = false;
+          $("autoAim").checked = false;
+        }
+        recompute();
+      };
+      $("scAngle").disabled = true;
+
+      let dragScreen = false;
+      function benchAngleAt(clientX, clientY) {
+        const r = benchC.getBoundingClientRect();
+        const mx = clientX - r.left, my = clientY - r.top;
+        if (!S.exit) return null;
+        return Math.atan2(-(my - S.exit.y), mx - S.exit.x) / DEG;
+      }
+      benchC.addEventListener("pointerdown", (e) => {
+        if (!S.screenPx) return;
+        const r = benchC.getBoundingClientRect();
+        const mx = e.clientX - r.left, my = e.clientY - r.top;
+        if (Math.hypot(mx - S.screenPx.x, my - S.screenPx.y) < 36) {
+          dragScreen = true;
+          benchC.setPointerCapture(e.pointerId);
+          S.autoAim = false;
+          $("autoAim").checked = false;
+          $("scAngle").disabled = false;
+        }
+      });
+      benchC.addEventListener("pointermove", (e) => {
+        if (!dragScreen) return;
+        const a = benchAngleAt(e.clientX, e.clientY);
+        if (a == null) return;
+        S.screenAngle = clamp(a, -170, 170);
+        $("scAngle").value = Math.round(S.screenAngle);
+        $("scVal").textContent = Math.round(S.screenAngle) + "°";
+        recompute();
+      });
+      benchC.addEventListener("pointerup", () => {
+        dragScreen = false;
+      });
+      benchC.style.touchAction = "none";
+
+      $("helpBtn").onclick = () => $("scrim").classList.add("show");
+      $("helpClose").onclick = () => $("scrim").classList.remove("show");
+      $("scrim").addEventListener("click", (e) => {
+        if (e.target === $("scrim")) $("scrim").classList.remove("show");
+      });
+
+      function recompute() {
+        compute();
+        draw();
+      }
+      window.addEventListener("resize", fit);
+
+      // Continuous animation loop for smooth beam particles
+      function animLoop() {
+        drawBench();
+        requestAnimationFrame(animLoop);
+      }
+
+      buildTray();
+      renderSlot(0);
+      renderSlot(1);
+      fit();
+      compute();
+      draw();
+      requestAnimationFrame(animLoop);
+
+      try {
+        if (!localStorage.getItem("mms_seen")) {
+          $("scrim").classList.add("show");
+          localStorage.setItem("mms_seen", "1");
+        }
+      } catch (e) {}
+    </script>
+  </body>
+</html>

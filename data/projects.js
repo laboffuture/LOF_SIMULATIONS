@@ -13,7 +13,8 @@ const PROJECTS = [
   { id: "cosmic-pulse-tracker", title: "Cosmic Pulse Tracker — Lost Signal Lab", category: "robotics", status: "live", url: "../sims/robotics/CosmicPulseTracker/index.html", description: "Hunt a lost beacon in a dark alien zone: decode broken RF pulse patterns from signal strength, bars, and buzzer speed." },
   { id: "aquanova", title: "AquaNova Alert Station", category: "robotics", status: "live", url: "../sims/robotics/AquaNova/index.html", description: "Drive a patrol rover through a habitat of creatures and leaking ceiling pipes, and watch its motion and water sensors decide when to raise the alarm." },
   { id: "dj-bot", title: "Heartbeat DJ Bot — Crew Calmness Music", category: "robotics", status: "live", url: "../sims/robotics/DJ_Bot/index.html", description: "Read a crew member's pulse and the cabin noise, then watch two thresholds pick the music the DFPlayer sends to the speaker." },
-  ...Array.from({ length: 22 }, (_, i) => ({
+  { id: "lost-bot-thermal-shield", title: "Lost Bot Thermal Shield", category: "robotics", status: "live", url: "../sims/robotics/lost-bot-thermal-shield/index.html", description: "Watch a temperature sensor and MQ-2 gas sensor drive automatic fan-speed and emergency-ventilation decisions inside a lost bot." },
+  ...Array.from({ length: 21 }, (_, i) => ({
     id: `robotics-coming-soon-${i + 7}`,
     title: `Robotics Project ${String(i + 7).padStart(2, "0")}`,
     category: "robotics",

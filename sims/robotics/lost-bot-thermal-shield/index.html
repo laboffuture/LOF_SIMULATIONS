@@ -1,0 +1,1620 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cooling Control Deck · Lost Bot Thermal Shield Simulator</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #fff8ef;
+        --panel: #ffffff;
+        --panel2: #fff6ec;
+        --line: #f2ddc3;
+        --txt: #2c2116;
+        --mut: #8a7460;
+        --dim: #beab93;
+        --accent: #ea580c;
+        --accent2: #fb923c;
+        --gas: #16a34a;
+        --gas2: #86efac;
+        --cool: #0891b2;
+        --cool2: #67e8f9;
+        --warn: #f59e0b;
+        --danger: #dc2626;
+        --ok: #16a34a;
+        --shadow: 0 12px 34px rgba(180, 90, 20, 0.16);
+        --r: 20px;
+        --head: "Orbitron", sans-serif;
+        --body: "Rajdhani", sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        font-family: var(--body);
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--txt);
+        background:
+          radial-gradient(900px 500px at 6% -8%, #ffe6d2 0, transparent 60%),
+          radial-gradient(900px 600px at 102% 0%, #e3fbe9 0, transparent 55%),
+          linear-gradient(180deg, #fffaf3, #fdf0e0);
+        height: 100vh;
+        overflow: hidden;
+        padding: 10px clamp(10px, 2vw, 26px);
+        display: flex;
+        flex-direction: column;
+      }
+      h1,
+      h3,
+      h4,
+      .chip,
+      .modebanner .lab {
+        font-family: var(--head);
+      }
+
+      header.top {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 6px;
+        flex: 0 0 auto;
+        position: relative;
+      }
+      .title {
+        grid-column: 2;
+        text-align: center;
+        min-width: 0;
+      }
+      .title h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: #3a2412;
+      }
+      .title p {
+        margin: 3px 0 0;
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        color: var(--mut);
+      }
+      .helpbtns {
+        grid-column: 3;
+        justify-self: end;
+        display: flex;
+        gap: 8px;
+      }
+      @media (max-width: 760px) {
+        header.top {
+          grid-template-columns: 1fr;
+        }
+        .helpbtns {
+          grid-row: 1;
+          grid-column: 1;
+        }
+        .title {
+          grid-row: 2;
+          grid-column: 1;
+        }
+      }
+      .helpbtn {
+        cursor: pointer;
+        font-weight: 700;
+        color: #fff;
+        font-family: var(--head);
+        font-size: 12px;
+        letter-spacing: 0.3px;
+        background: linear-gradient(145deg, var(--accent2), var(--accent));
+        border: none;
+        padding: 9px 15px;
+        border-radius: 12px;
+        box-shadow: 0 8px 18px rgba(234, 88, 12, 0.32);
+        transition: 0.15s;
+      }
+      .helpbtn:hover {
+        transform: translateY(-2px);
+      }
+      .helpbtn.on {
+        box-shadow:
+          inset 0 0 0 2px #fff,
+          0 8px 18px rgba(234, 88, 12, 0.32);
+      }
+      .helpbar {
+        display: none;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 20px 34px 14px 16px;
+        font-size: 14px;
+        line-height: 1.55;
+        color: var(--txt);
+        position: absolute;
+        right: 0;
+        top: 52px;
+        width: 420px;
+        max-width: min(420px, 90vw);
+        max-height: 75vh;
+        overflow-y: auto;
+        z-index: 40;
+      }
+      .helpbar.show {
+        display: block;
+      }
+      .helpClose {
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: var(--dim);
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1;
+        padding: 5px 7px;
+        border-radius: 8px;
+        transition: 0.15s;
+      }
+      .helpClose:hover {
+        color: #fff;
+        background: var(--accent);
+      }
+      @media (max-width: 1280px) {
+        .helpbar {
+          position: static;
+          width: auto;
+          max-width: none;
+          margin-top: 8px;
+          grid-column: 1 / -1;
+        }
+      }
+      .tabpanel {
+        display: none;
+      }
+      .tabpanel.on {
+        display: block;
+      }
+      .tabpanel ol,
+      .tabpanel ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .tabpanel li {
+        margin-bottom: 5px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 300px 1fr 340px;
+        gap: 12px;
+        align-items: stretch;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      @media (max-width: 1280px) {
+        body {
+          overflow: auto;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+          flex: 0 0 auto;
+        }
+        .stagewrap {
+          flex: 0 0 auto;
+          height: clamp(300px, 58vw, 460px);
+        }
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        box-shadow: var(--shadow);
+        padding: 14px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
+      }
+      .card.stage {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        overflow: hidden;
+        padding: 10px;
+        gap: 8px;
+      }
+      .card h3 {
+        margin: 0 0 3px;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        color: #3a2412;
+      }
+      .card .sub {
+        font-size: 12.5px;
+        color: var(--mut);
+        margin: 0 0 8px;
+        line-height: 1.4;
+      }
+
+      .cmdgroup {
+        margin-bottom: 14px;
+      }
+      .cmdgroup h4 {
+        margin: 0 0 6px;
+        font-size: 11px;
+        letter-spacing: 0.6px;
+        color: var(--accent);
+        text-transform: uppercase;
+      }
+      .cmdgroup.gs h4 {
+        color: var(--gas);
+      }
+      .cmdgroup.vt h4 {
+        color: var(--cool);
+      }
+      .seg {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-bottom: 6px;
+      }
+      .seg button {
+        cursor: pointer;
+        border: 2px solid var(--line);
+        background: #fff;
+        color: var(--mut);
+        padding: 8px 5px;
+        border-radius: 11px;
+        font-size: 12px;
+        font-weight: 700;
+        transition: 0.15s;
+        font-family: var(--body);
+      }
+      .seg button:hover {
+        border-color: var(--accent2);
+      }
+      .seg button.on {
+        color: #fff;
+        border-color: transparent;
+        background: linear-gradient(145deg, var(--accent2), var(--accent));
+        box-shadow: 0 8px 18px rgba(234, 88, 12, 0.3);
+      }
+      .toggle {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .toggle button {
+        flex: 1;
+        cursor: pointer;
+        border: 2px solid var(--line);
+        background: #fff;
+        color: var(--mut);
+        padding: 8px 6px;
+        border-radius: 11px;
+        font-size: 12.5px;
+        font-weight: 700;
+        transition: 0.15s;
+        font-family: var(--body);
+      }
+      .toggle button:hover {
+        border-color: var(--gas);
+      }
+      .toggle.gs button.on {
+        color: #fff;
+        border-color: transparent;
+        background: linear-gradient(145deg, var(--gas2), var(--gas));
+        box-shadow: 0 8px 18px rgba(22, 163, 74, 0.32);
+      }
+      .toggle.vt button.on {
+        color: #fff;
+        border-color: transparent;
+        background: linear-gradient(145deg, #fca5a5, var(--danger));
+        box-shadow: 0 8px 18px rgba(220, 38, 38, 0.32);
+      }
+      .ctrl {
+        margin-top: 8px;
+      }
+      .ctrl .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--txt);
+      }
+      .ctrl .row .val {
+        color: var(--accent);
+        font-weight: 800;
+      }
+      .ctrl input[type="range"] {
+        width: 100%;
+        margin: 6px 0 2px;
+        accent-color: var(--accent);
+      }
+      .cmdgroup.gs .ctrl input[type="range"] {
+        accent-color: var(--gas);
+      }
+      .cmdgroup.gs .ctrl .row .val {
+        color: var(--gas);
+      }
+      .hint {
+        font-size: 11px;
+        color: var(--dim);
+        line-height: 1.4;
+        margin-top: 3px;
+      }
+      .btn {
+        cursor: pointer;
+        width: 100%;
+        border: 2px solid var(--line);
+        background: #fff;
+        color: var(--txt);
+        padding: 10px 13px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+        font-family: var(--head);
+        letter-spacing: 0.4px;
+        transition: 0.15s;
+        margin-bottom: 8px;
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent2);
+      }
+      .btn.reset {
+        background: linear-gradient(145deg, #67e8f9, var(--cool));
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(8, 145, 178, 0.32);
+      }
+      .btn.mission {
+        background: linear-gradient(145deg, #fcd34d, #f59e0b);
+        border-color: transparent;
+        color: #402a00;
+        box-shadow: 0 8px 18px rgba(245, 158, 11, 0.3);
+      }
+      .btn.mission.on {
+        background: linear-gradient(145deg, #fca5a5, var(--danger));
+        color: #fff;
+      }
+      .btn.pause {
+        width: auto;
+        margin-bottom: 0;
+      }
+      .btn.pause.on {
+        background: linear-gradient(145deg, var(--accent2), var(--accent));
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(234, 88, 12, 0.35);
+      }
+
+      /* ---------- stage ---------- */
+      .modebanner {
+        width: 100%;
+        padding: 9px 14px;
+        border-radius: 14px;
+        background: linear-gradient(145deg, #fdeee0, #fbe1cb);
+        border: 2px solid #f4d3ae;
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        transition:
+          background 0.35s,
+          border-color 0.35s;
+      }
+      .modebanner .lab {
+        font-size: 10.5px;
+        color: var(--accent);
+        letter-spacing: 0.5px;
+        font-weight: 700;
+      }
+      .modebanner .txt {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: #3a2412;
+        margin-top: 2px;
+      }
+      .modebanner .chip {
+        font-size: 12px;
+        color: #fff;
+        font-weight: 800;
+        white-space: nowrap;
+        padding: 7px 13px;
+        border-radius: 9px;
+        background: linear-gradient(145deg, var(--dim), var(--mut));
+        transition: background 0.35s;
+      }
+      .modebanner .chip.c-off {
+        background: linear-gradient(145deg, #67e8f9, var(--cool));
+      }
+      .modebanner .chip.c-low {
+        background: linear-gradient(145deg, #bef264, #65a30d);
+      }
+      .modebanner .chip.c-med {
+        background: linear-gradient(145deg, var(--accent2), var(--accent));
+      }
+      .modebanner .chip.c-high {
+        background: linear-gradient(145deg, #fca5a5, var(--danger));
+      }
+      .modebanner .chip.c-vent {
+        background: linear-gradient(145deg, var(--gas2), var(--gas));
+      }
+      .modebanner .chip.c-emg {
+        background: linear-gradient(145deg, #f87171, #991b1b);
+        animation: pulseEmg 0.9s infinite;
+      }
+      @keyframes pulseEmg {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55);
+        }
+        50% {
+          box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+        }
+      }
+
+      .stagewrap {
+        flex: 1 1 auto;
+        min-height: 0;
+        background: #0d1b1a;
+        border-radius: 14px;
+        border: 2px solid #143028;
+        overflow: hidden;
+        position: relative;
+      }
+      #core {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .btn.start {
+        width: auto;
+        margin-bottom: 0;
+      }
+      .btn.start:disabled {
+        opacity: 0.4;
+        cursor: default;
+        transform: none;
+      }
+      .stage-foot {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+      .stage-foot .missionNote {
+        font-size: 12px;
+        color: var(--mut);
+        font-weight: 600;
+      }
+
+      /* ---------- right dashboard ---------- */
+      .statusgrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .stat {
+        background: var(--panel2);
+        border: 1.5px solid var(--line);
+        border-radius: 10px;
+        padding: 6px 8px;
+      }
+      .stat .k {
+        font-size: 10px;
+        color: var(--dim);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        font-weight: 700;
+      }
+      .stat .v {
+        font-size: 14px;
+        font-weight: 700;
+        margin-top: 2px;
+      }
+      .stat .v.g {
+        color: var(--ok);
+      }
+      .stat .v.c {
+        color: var(--cool);
+      }
+      .stat .v.a {
+        color: var(--accent);
+      }
+      .stat .v.w {
+        color: var(--warn);
+      }
+      .stat .v.d {
+        color: var(--danger);
+      }
+      .stat .v.n {
+        color: var(--mut);
+      }
+
+      .reading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1.5px dashed var(--line);
+        font-size: 12.5px;
+      }
+      .reading:last-child {
+        border-bottom: none;
+      }
+      .reading .k {
+        color: var(--mut);
+      }
+      .reading .v {
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .hbar {
+        height: 14px;
+        border-radius: 8px;
+        background: var(--panel2);
+        border: 1.5px solid var(--line);
+        position: relative;
+        overflow: hidden;
+        margin: 4px 0 8px;
+      }
+      .hbar .fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0;
+        border-radius: 7px;
+        transition:
+          width 0.15s,
+          background 0.2s;
+      }
+      .hbar .mark {
+        position: absolute;
+        top: -2px;
+        bottom: -2px;
+        width: 2px;
+        background: #34405c;
+        opacity: 0.55;
+      }
+
+      .feedback {
+        margin-top: 6px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border-left: 5px solid var(--accent);
+        background: var(--panel2);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--txt);
+        line-height: 1.35;
+        transition: 0.25s;
+      }
+      .feedback.ok {
+        border-left-color: var(--ok);
+        background: #f0fbf3;
+      }
+      .feedback.warn {
+        border-left-color: var(--warn);
+        background: #fff8ec;
+      }
+      .feedback.bad {
+        border-left-color: var(--danger);
+        background: #fff1f1;
+      }
+      .feedback.gas {
+        border-left-color: var(--gas);
+        background: #f0fbf3;
+      }
+
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="title">
+        <h1>LOST BOT THERMAL SHIELD</h1>
+        <p>Automatic processor cooling &amp; smoke safety control</p>
+      </div>
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">What You'll Learn</button>
+      </div>
+      <div class="helpbar" id="helpbar">
+        <button type="button" class="helpClose" id="helpClose" aria-label="Close">✕</button>
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li>
+              Trigger a <b>temperature condition</b> with the quick buttons, or drag the
+              slider for fine control. Watch the sensor reading move and the controller
+              pick a fan speed automatically — nothing here is manual.
+            </li>
+            <li>
+              Read the <b>Active Controller Rule</b> banner above the processor cooler view. It
+              always states, in plain words, exactly which threshold rule just fired.
+            </li>
+            <li>
+              Click <b>Smoke Detected</b> at any temperature — even a cold, safe one — and
+              watch smoke safety override the temperature logic and force ventilation on.
+            </li>
+            <li>
+              Push temperature into <b>Above 40°C</b> while smoke is still on to see the
+              combined <b>heat + smoke emergency</b> — the highest-priority safety mode.
+            </li>
+            <li>
+              Try <b>Blocked</b> on the ventilation path — the fan still runs, it just
+              can't move air, so cooling and smoke clearing both slow down.
+            </li>
+            <li>
+              Use <b>Reset System</b> to return everything to a safe baseline, or run the
+              <b>Guided Mission</b> for a scripted walk through the full cooling sequence.
+            </li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <ul>
+            <li>How a temperature sensor monitors internal robot heat continuously</li>
+            <li>How a smoke sensor detects harmful smoke</li>
+            <li>How fan speed changes automatically based on temperature thresholds</li>
+            <li>Why the fan stays OFF below 30°C — and why that's not a bug</li>
+            <li>Why fan speed increases in steps as temperature rises</li>
+            <li>Why smoke detection overrides normal temperature-based fan control</li>
+            <li>How heat and smoke dangers can happen together, and why that needs its own priority mode</li>
+            <li>How a controller uses threshold logic to choose one safety response from two sensor inputs</li>
+            <li>Why a blocked airflow path slows recovery even with the fan running</li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- ================= CONTROLS ================= -->
+      <section class="card">
+        <h3>Sensor &amp; Safety Controls</h3>
+        <p class="sub">
+          Change the bot's condition. The controller only ever reacts to what its two
+          sensors report.
+        </p>
+
+        <div class="cmdgroup">
+          <h4>Internal Temperature Sensor</h4>
+          <div class="seg" id="segTemp">
+            <button data-temp="low">Below 30°C</button>
+            <button data-temp="mild">30°C – 35°C</button>
+            <button data-temp="rising">35°C – 40°C</button>
+            <button data-temp="critical">Above 40°C</button>
+          </div>
+          <div class="ctrl">
+            <div class="row">
+              <label>Temperature</label><span class="val" id="v_temp">24.0°C</span>
+            </div>
+            <input type="range" id="r_temp" min="15" max="48" step="0.5" value="24" />
+          </div>
+          <div class="hint">
+            Quick buttons jump straight into a zone to test it; the slider gives
+            continuous control across the same 15°C – 48°C range.
+          </div>
+        </div>
+
+        <div class="cmdgroup gs">
+          <h4>Smoke Sensor</h4>
+          <div class="toggle gs" id="tgGas">
+            <button data-gas="on">Smoke Detected</button>
+            <button data-gas="off" class="on">Air Safe</button>
+          </div>
+          <div class="ctrl">
+            <div class="row">
+              <label>Smoke Intensity</label><span class="val" id="v_gas">0%</span>
+            </div>
+            <input type="range" id="r_gas" min="0" max="100" step="1" value="0" />
+          </div>
+          <div class="hint">
+            Smoke safety overrides temperature control the instant it's detected — even in
+            a cold, otherwise-safe bot.
+          </div>
+        </div>
+
+        <div class="cmdgroup vt">
+          <h4>Ventilation Path</h4>
+          <div class="toggle vt" id="tgVent">
+            <button data-vent="blocked">Blocked</button>
+            <button data-vent="clear" class="on">Clear</button>
+          </div>
+          <div class="hint">
+            A blocked duct doesn't stop the fan — it just can't move air, so cooling and
+            smoke clearing both slow down.
+          </div>
+        </div>
+
+        <div class="cmdgroup">
+          <h4>System</h4>
+          <button type="button" class="btn reset" id="btnReset">↺ Reset System</button>
+          <button type="button" class="btn mission" id="btnMission">▶ Run Guided Mission</button>
+        </div>
+      </section>
+
+      <!-- ================= STAGE ================= -->
+      <section class="card stage">
+        <div class="modebanner" id="banner">
+          <div>
+            <div class="lab">ACTIVE CONTROLLER RULE</div>
+            <div class="txt" id="bannerTxt">Temperature safe, no smoke → fan OFF</div>
+          </div>
+          <div class="chip c-off" id="bannerChip">OFF</div>
+        </div>
+
+        <div class="stagewrap">
+          <canvas id="core" width="900" height="440"></canvas>
+        </div>
+
+        <div class="stage-foot">
+          <button type="button" class="btn start" id="btnStart">▶ Start</button>
+          <button type="button" class="btn pause" id="btnPause">Pause</button>
+          <span class="missionNote" id="missionNote"></span>
+        </div>
+      </section>
+
+      <!-- ================= DASHBOARD ================= -->
+      <section class="card">
+        <h3>Cooling &amp; Safety Status</h3>
+        <p class="sub">Everything the controller currently sees and has decided.</p>
+
+        <div class="statusgrid">
+          <div class="stat">
+            <div class="k">Temperature</div>
+            <div class="v a" id="s_temp">24.0°C</div>
+          </div>
+          <div class="stat">
+            <div class="k">Temp Zone</div>
+            <div class="v c" id="s_zone">Safe</div>
+          </div>
+          <div class="stat">
+            <div class="k">Smoke Status</div>
+            <div class="v g" id="s_gas">Air Safe</div>
+          </div>
+          <div class="stat">
+            <div class="k">Ventilation</div>
+            <div class="v g" id="s_vent">Clear</div>
+          </div>
+          <div class="stat">
+            <div class="k">Fan Speed</div>
+            <div class="v c" id="s_fan">OFF</div>
+          </div>
+          <div class="stat">
+            <div class="k">System Health</div>
+            <div class="v g" id="s_health">Safe</div>
+          </div>
+        </div>
+
+        <h3 style="margin-top: 14px">Power &amp; Airflow</h3>
+        <div class="reading">
+          <span class="k">Battery</span><span class="v" id="s_batt">100%</span>
+        </div>
+        <div class="hbar"><div class="fill" id="battFill"></div></div>
+        <div class="reading">
+          <span class="k">Smoke Concentration</span><span class="v" id="s_gasLevel">0%</span>
+        </div>
+        <div class="hbar">
+          <div class="fill" id="gasFill"></div>
+          <div class="mark" style="left: 5%"></div>
+        </div>
+
+        <div class="reading">
+          <span class="k">Heat trend</span><span class="v" id="s_trend">stable</span>
+        </div>
+        <div class="reading">
+          <span class="k">Fan speed changes</span><span class="v" id="s_changes">0</span>
+        </div>
+        <div class="reading">
+          <span class="k">Peak temperature (session)</span
+          ><span class="v" id="s_peak">24.0°C</span>
+        </div>
+        <div class="reading">
+          <span class="k">Time in danger</span><span class="v" id="s_danger">0s</span>
+        </div>
+
+        <h3 style="margin-top: 14px">System Feedback</h3>
+        <div class="feedback" id="feedback">Lost bot cooling system started.</div>
+      </section>
+    </div>
+
+    <script>
+      (() => {
+        "use strict";
+
+        /* =================== HELPERS =================== */
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const TAU = Math.PI * 2;
+        const $ = (id) => document.getElementById(id);
+        const approach = (cur, tgt, tau, dt) => tgt + (cur - tgt) * Math.exp(-dt / tau);
+        function rr(c, x, y, w, h, r) {
+          r = Math.min(r, w / 2, h / 2);
+          c.beginPath();
+          c.moveTo(x + r, y);
+          c.arcTo(x + w, y, x + w, y + h, r);
+          c.arcTo(x + w, y + h, x, y + h, r);
+          c.arcTo(x, y + h, x, y, r);
+          c.arcTo(x, y, x + w, y, r);
+          c.closePath();
+        }
+
+        /* =================== CONSTANTS =================== */
+        const AMBIENT = 22;
+        const HEAT_GEN = 0.5; // °C/s constant waste heat from motors & battery
+        // Cooling rates are paced so an extreme spike recovers in ~20s of watch time —
+        // fast enough to hold attention, slow enough to still read as gradual, not instant.
+        const COOL = { OFF: 0, LOW: 0.75, MEDIUM: 1.3, HIGH: 2.2, VENT: 1.05, EMERGENCY: 2.6 };
+        const BATT_DRAIN = { OFF: 0.006, LOW: 0.02, MEDIUM: 0.04, HIGH: 0.07, VENT: 0.05, EMERGENCY: 0.095 };
+        const MODE_COLOR = { OFF: "c-off", LOW: "c-low", MEDIUM: "c-med", HIGH: "c-high", VENT: "c-vent", EMERGENCY: "c-emg" };
+        const TEMP_MIN = 15, TEMP_MAX = 48;
+
+        const RULES = {
+          OFF: "Temperature below 30°C, no smoke → fan OFF",
+          LOW: "Temperature 30°C – 35°C, no smoke → fan LOW",
+          MEDIUM: "Temperature 35°C – 40°C, no smoke → fan MEDIUM",
+          HIGH: "Temperature above 40°C, no smoke → fan HIGH",
+          VENT: "Smoke detected → fan ON for ventilation (overrides temperature)",
+          EMERGENCY: "Smoke detected + critical heat → high-priority safety mode",
+        };
+        const FEEDBACK = {
+          OFF: ["Temperature safe. Fan remains OFF.", ""],
+          LOW: ["Mild heat detected. LOW fan active.", "warn"],
+          MEDIUM: ["Rising heat detected. MEDIUM fan active.", "warn"],
+          HIGH: ["Critical heat detected. HIGH fan active.", "bad"],
+          VENT: ["Smoke detected. Ventilation ON.", "gas"],
+          EMERGENCY: ["Heat and smoke detected together. Safety priority active.", "bad"],
+        };
+
+        /* =================== STATE =================== */
+        const S = {
+          started: false,
+          temp: 24,
+          gasDetected: false,
+          gasLevel: 0,
+          ventBlocked: false,
+          battery: 100,
+          paused: false,
+          mode: "OFF",
+          fanAngle: 0,
+          changeCount: 0,
+          peakTemp: 24,
+          dangerTime: 0,
+          missionRunning: false,
+          missionIdx: 0,
+          missionElapsed: 0,
+          missionStepStarted: false,
+        };
+
+        function tempZoneKey(t) {
+          if (t < 30) return "SAFE";
+          if (t < 35) return "MILD";
+          if (t < 40) return "RISING";
+          return "CRITICAL";
+        }
+        const ZONE_LABEL = { SAFE: "Safe", MILD: "Mild Heat", RISING: "Rising Heat", CRITICAL: "Critical Heat" };
+        const ZONE_TO_FAN = { SAFE: "OFF", MILD: "LOW", RISING: "MEDIUM", CRITICAL: "HIGH" };
+
+        function computeMode() {
+          const zone = tempZoneKey(S.temp);
+          if (S.gasDetected && zone === "CRITICAL") return "EMERGENCY";
+          if (S.gasDetected) return "VENT";
+          return ZONE_TO_FAN[zone];
+        }
+
+        /* =================== FEEDBACK =================== */
+        function setFeedback(msg, cls) {
+          const el = $("feedback");
+          el.textContent = msg;
+          el.className = "feedback" + (cls ? " " + cls : "");
+        }
+
+        function onModeChange(oldMode, newMode) {
+          S.changeCount++;
+          const [msg, cls] = FEEDBACK[newMode];
+          setFeedback(msg, cls);
+        }
+
+        /* =================== CONTROLS WIRING =================== */
+        function setSegOn(container, attr, value) {
+          container.querySelectorAll("button").forEach((b) => {
+            b.classList.toggle("on", b.dataset[attr] === value);
+          });
+        }
+
+        function quickTemp(band) {
+          const vals = { low: 24, mild: 32.5, rising: 37.5, critical: 43 };
+          S.temp = clamp(vals[band] + (Math.random() * 1.6 - 0.8), TEMP_MIN, TEMP_MAX);
+          $("r_temp").value = S.temp;
+          refreshTempUI();
+        }
+
+        function refreshTempUI() {
+          $("v_temp").textContent = S.temp.toFixed(1) + "°C";
+          const zone = tempZoneKey(S.temp);
+          const map = { SAFE: "low", MILD: "mild", RISING: "rising", CRITICAL: "critical" };
+          setSegOn($("segTemp"), "temp", map[zone]);
+        }
+
+        $("segTemp").addEventListener("click", (e) => {
+          const b = e.target.closest("button");
+          if (!b) return;
+          quickTemp(b.dataset.temp);
+        });
+        $("r_temp").addEventListener("input", (e) => {
+          S.temp = +e.target.value;
+          refreshTempUI();
+        });
+
+        const GAS_DETECT_THRESHOLD = 3; // smoke sensor reads this concentration or higher as "smoke present"
+
+        function refreshGasUI() {
+          $("v_gas").textContent = Math.round(S.gasLevel) + "%";
+          $("r_gas").value = S.gasLevel;
+          setSegOn($("tgGas"), "gas", S.gasDetected ? "on" : "off");
+        }
+        function setGasLevel(val) {
+          S.gasLevel = clamp(val, 0, 100);
+          S.gasDetected = S.gasLevel > GAS_DETECT_THRESHOLD;
+          refreshGasUI();
+        }
+        function setGas(on) {
+          setGasLevel(on ? 85 : 0);
+        }
+        $("tgGas").addEventListener("click", (e) => {
+          const b = e.target.closest("button");
+          if (!b) return;
+          setGas(b.dataset.gas === "on");
+        });
+        $("r_gas").addEventListener("input", (e) => {
+          setGasLevel(+e.target.value);
+        });
+
+        function setVentBlocked(blocked) {
+          S.ventBlocked = blocked;
+          setSegOn($("tgVent"), "vent", blocked ? "blocked" : "clear");
+        }
+        $("tgVent").addEventListener("click", (e) => {
+          const b = e.target.closest("button");
+          if (!b) return;
+          setVentBlocked(b.dataset.vent === "blocked");
+        });
+
+        function resetSystem() {
+          S.temp = 22;
+          S.gasDetected = false;
+          S.gasLevel = 0;
+          S.ventBlocked = false;
+          S.battery = 100;
+          S.mode = computeMode();
+          S.peakTemp = S.temp;
+          S.changeCount = 0;
+          S.dangerTime = 0;
+          $("r_temp").value = S.temp;
+          refreshTempUI();
+          refreshGasUI();
+          setSegOn($("tgVent"), "vent", "clear");
+          setFeedback("Lost bot cooling system started. Monitoring restarts.", "ok");
+        }
+        $("btnReset").addEventListener("click", () => {
+          resetSystem();
+          if (S.missionRunning) stopMission();
+        });
+
+        $("btnPause").addEventListener("click", (e) => {
+          S.paused = !S.paused;
+          e.currentTarget.classList.toggle("on", S.paused);
+          e.currentTarget.textContent = S.paused ? "Resume" : "Pause";
+        });
+
+        /* =================== MANUAL START =================== */
+        function beginSimulation() {
+          if (S.started) return;
+          S.started = true;
+          $("btnStart").disabled = true;
+        }
+        $("btnStart").addEventListener("click", beginSimulation);
+
+        /* =================== GUIDED MISSION =================== */
+        const MISSION = [
+          { label: "Starting from a safe baseline (below 30°C).", action: () => resetSystem(), hold: 2200 },
+          { label: "Temperature rises to 32°C — mild heat.", action: () => quickTemp("mild"), hold: 4200 },
+          { label: "Temperature rises further to 38°C — rising heat.", action: () => quickTemp("rising"), hold: 4200 },
+          { label: "Critical heat! Temperature crosses 40°C.", action: () => quickTemp("critical"), hold: 4200 },
+          {
+            label: "Smoke detected during critical heat — combined emergency.",
+            action: () => setGas(true),
+            hold: 0,
+            until: () => S.temp < 31 && !S.gasDetected,
+            timeout: 26000,
+          },
+          { label: "Heat and smoke cleared. System stabilising back to monitoring.", action: () => {}, hold: 2600 },
+        ];
+        function startMission() {
+          S.missionRunning = true;
+          S.missionIdx = 0;
+          S.missionElapsed = 0;
+          S.missionStepStarted = false;
+          $("btnMission").classList.add("on");
+          $("btnMission").textContent = "■ Stop Mission";
+        }
+        function stopMission() {
+          S.missionRunning = false;
+          $("btnMission").classList.remove("on");
+          $("btnMission").textContent = "▶ Run Guided Mission";
+          $("missionNote").textContent = "";
+        }
+        $("btnMission").addEventListener("click", () => {
+          beginSimulation();
+          if (S.missionRunning) stopMission();
+          else startMission();
+        });
+
+        function tickMission(dtMs) {
+          if (!S.started || !S.missionRunning) return;
+          const step = MISSION[S.missionIdx];
+          if (!step) {
+            stopMission();
+            return;
+          }
+          if (!S.missionStepStarted) {
+            step.action();
+            S.missionStepStarted = true;
+            S.missionElapsed = 0;
+          }
+          $("missionNote").textContent = "Mission " + (S.missionIdx + 1) + "/" + MISSION.length + " — " + step.label;
+          S.missionElapsed += dtMs;
+          let done;
+          if (step.until) done = step.until() || S.missionElapsed > step.timeout;
+          else done = S.missionElapsed >= step.hold;
+          if (done) {
+            S.missionIdx++;
+            S.missionStepStarted = false;
+            if (S.missionIdx >= MISSION.length) {
+              setFeedback("Mission complete. Lost bot protected successfully.", "ok");
+              stopMission();
+            }
+          }
+        }
+
+        /* =================== PHYSICS =================== */
+        function step(dt) {
+          if (!S.started || S.paused) return;
+
+          const newMode = computeMode();
+          if (newMode !== S.mode) {
+            const old = S.mode;
+            S.mode = newMode;
+            onModeChange(old, newMode);
+          }
+
+          const blockMult = S.ventBlocked ? 0.35 : 1;
+          const coolRate = COOL[S.mode] * blockMult;
+          S.temp += (HEAT_GEN - coolRate) * dt;
+          S.temp += (AMBIENT - S.temp) * 0.006 * dt;
+          S.temp = clamp(S.temp, TEMP_MIN, TEMP_MAX);
+          S.peakTemp = Math.max(S.peakTemp, S.temp);
+          if (S.temp >= 40 || (S.gasDetected && S.mode === "EMERGENCY")) S.dangerTime += dt;
+
+          if (S.gasDetected) {
+            const venting = S.mode === "VENT" || S.mode === "EMERGENCY";
+            const decay = (venting ? 16 : 1.2) * blockMult;
+            S.gasLevel = Math.max(0, S.gasLevel - decay * dt);
+            if (S.gasLevel <= 0.5) {
+              S.gasLevel = 0;
+              S.gasDetected = false;
+              refreshGasUI();
+            }
+          } else {
+            S.gasLevel = Math.max(0, S.gasLevel - 30 * dt);
+          }
+
+          const battDrain = S.battery > 0 ? BATT_DRAIN[S.mode] : 0;
+          S.battery = clamp(S.battery - battDrain * dt, 0, 100);
+
+          if (!S.paused) {
+            const rpm = { OFF: 0, LOW: 55, MEDIUM: 130, HIGH: 230, VENT: 190, EMERGENCY: 260 }[S.mode];
+            S.fanAngle += ((rpm * TAU) / 60) * dt;
+          }
+        }
+
+        /* =================== UI SYNC =================== */
+        const zoneClass = { SAFE: "c", MILD: "a", RISING: "w", CRITICAL: "d" };
+        const modeClass = { OFF: "c", LOW: "g", MEDIUM: "w", HIGH: "d", VENT: "g", EMERGENCY: "d" };
+
+        function updateDashboard() {
+          const zone = tempZoneKey(S.temp);
+          $("s_temp").textContent = S.temp.toFixed(1) + "°C";
+          $("s_temp").className = "v " + zoneClass[zone];
+          $("s_zone").textContent = ZONE_LABEL[zone];
+          $("s_zone").className = "v " + zoneClass[zone];
+
+          $("s_gas").textContent = S.gasDetected ? "Smoke Detected" : "Air Safe";
+          $("s_gas").className = "v " + (S.gasDetected ? "d" : "g");
+
+          $("s_vent").textContent = S.ventBlocked ? "Blocked" : "Clear";
+          $("s_vent").className = "v " + (S.ventBlocked ? "w" : "g");
+
+          $("s_fan").textContent = S.mode === "VENT" ? "VENTILATION" : S.mode === "EMERGENCY" ? "EMERGENCY" : S.mode;
+          $("s_fan").className = "v " + modeClass[S.mode];
+
+          const health = S.mode === "EMERGENCY" || S.battery < 15 ? ["Danger", "d"] : S.mode === "HIGH" || S.mode === "VENT" ? ["Warning", "w"] : ["Safe", "g"];
+          $("s_health").textContent = health[0];
+          $("s_health").className = "v " + health[1];
+
+          $("s_batt").textContent = Math.round(S.battery) + "%";
+          $("battFill").style.width = S.battery + "%";
+          $("battFill").style.background = S.battery < 15 ? "var(--danger)" : S.battery < 40 ? "var(--warn)" : "var(--gas)";
+
+          $("s_gasLevel").textContent = Math.round(S.gasLevel) + "%";
+          $("gasFill").style.width = S.gasLevel + "%";
+          $("gasFill").style.background = S.gasLevel > 40 ? "var(--danger)" : "var(--gas)";
+
+          $("s_trend").textContent = S.mode === "OFF" && zone === "SAFE" ? "stable" : COOL[S.mode] > HEAT_GEN ? "falling" : "rising";
+          $("s_changes").textContent = S.changeCount;
+          $("s_peak").textContent = S.peakTemp.toFixed(1) + "°C";
+          $("s_danger").textContent = Math.round(S.dangerTime) + "s";
+
+          $("bannerTxt").textContent = RULES[S.mode];
+          const chip = $("bannerChip");
+          chip.className = "chip " + MODE_COLOR[S.mode];
+          chip.textContent = S.mode === "VENT" ? "VENTILATION" : S.mode === "EMERGENCY" ? "EMERGENCY" : S.mode;
+        }
+
+        /* =================== CANVAS SCENE =================== */
+        const cv = $("core"),
+          ctx = cv.getContext("2d");
+        let CW = 900,
+          CH = 440,
+          DPR = Math.max(1, window.devicePixelRatio || 1);
+        function fit() {
+          DPR = Math.max(1, window.devicePixelRatio || 1);
+          const r = cv.parentElement.getBoundingClientRect();
+          cv.width = Math.max(1, r.width * DPR);
+          cv.height = Math.max(1, r.height * DPR);
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          CW = r.width;
+          CH = r.height;
+        }
+        window.addEventListener("resize", fit);
+
+        const gasDots = Array.from({ length: 22 }, (_, i) => ({
+          a: (i / 22) * TAU + i * 0.7,
+          r: 18 + (i % 5) * 6,
+          bob: Math.random() * 10,
+        }));
+        let airflow = [];
+
+        function heatColor(t) {
+          const p = clamp((t - 22) / (44 - 22), 0, 1);
+          const c1 = [8, 145, 178]; // cool
+          const c2 = [234, 88, 12]; // orange
+          const c3 = [220, 38, 38]; // red
+          let mix;
+          if (p < 0.55) mix = c1.map((v, i) => lerp(v, c2[i], p / 0.55));
+          else mix = c2.map((v, i) => lerp(v, c3[i], (p - 0.55) / 0.45));
+          return `rgb(${mix[0] | 0},${mix[1] | 0},${mix[2] | 0})`;
+        }
+
+        function drawScene(t) {
+          ctx.clearRect(0, 0, CW, CH);
+          // motherboard background
+          const g = ctx.createLinearGradient(0, 0, 0, CH);
+          g.addColorStop(0, "#0c1f16");
+          g.addColorStop(1, "#081712");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, CW, CH);
+
+          const pad = 16;
+          ctx.strokeStyle = "rgba(120,220,160,0.22)";
+          ctx.lineWidth = 2;
+          rr(ctx, pad, pad, CW - pad * 2, CH - pad * 2 - 34, 18);
+          ctx.stroke();
+
+          // ---- faint motherboard atmosphere: PCB traces + RAM slots, far right margin ----
+          ctx.strokeStyle = "rgba(120,220,160,0.12)";
+          ctx.lineWidth = 1.5;
+          [0.24, 0.32, 0.42].forEach((f) => {
+            ctx.beginPath();
+            ctx.moveTo(pad + 10, CH * f);
+            ctx.lineTo(CW * 0.9, CH * f);
+            ctx.lineTo(CW * 0.9, CH * (f + 0.05));
+            ctx.stroke();
+          });
+          const ramX = CW * 0.95;
+          for (let s = 0; s < 2; s++) {
+            const rx = ramX - s * 14;
+            ctx.fillStyle = "rgba(120,220,160,0.14)";
+            ctx.fillRect(rx, pad + 14, 6, CH * 0.34);
+            ctx.strokeStyle = "rgba(120,220,160,0.25)";
+            ctx.lineWidth = 1;
+            for (let n = 0; n < 8; n++) {
+              const ny = pad + 20 + n * (CH * 0.34 - 14) / 7;
+              ctx.beginPath();
+              ctx.moveTo(rx, ny);
+              ctx.lineTo(rx + 6, ny);
+              ctx.stroke();
+            }
+          }
+
+          // ---- layout: processor die + tower heatsink (left) -> side fan -> fan-control IC (lower right) ----
+          const cx1 = CW * 0.17,
+            cy1 = CH * 0.52; // processor die / socket
+          const finCX = cx1,
+            finBottomY = cy1 - 14,
+            finTopY = CH * 0.14,
+            finW = 62,
+            nFins = 9;
+          const cx3 = cx1 + 118,
+            cy3 = (finBottomY + finTopY) / 2; // side-mounted tower fan
+          const cx2 = CW * 0.56,
+            cy2 = CH * 0.68; // fan-control IC
+
+          // ---- processor die heat glow ----
+          const hc = heatColor(S.temp);
+          const pulse = S.mode === "EMERGENCY" || tempZoneKey(S.temp) === "CRITICAL" ? 1 + 0.08 * Math.sin(t * 6) : 1;
+          const glowR = (44 + clamp((S.temp - 22) * 2.4, 0, 66)) * pulse;
+          const rad = ctx.createRadialGradient(cx1, cy1, 4, cx1, cy1, glowR);
+          rad.addColorStop(0, hc);
+          rad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.globalAlpha = 0.55;
+          ctx.fillStyle = rad;
+          ctx.beginPath();
+          ctx.arc(cx1, cy1, glowR, 0, TAU);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+
+          // socket retention frame (ILM) + lever, like a real LGA processor socket
+          ctx.fillStyle = "#2b2f2a";
+          ctx.strokeStyle = "#5b6158";
+          ctx.lineWidth = 2;
+          rr(ctx, cx1 - 34, cy1 - 16, 68, 48, 5);
+          ctx.fill();
+          ctx.stroke();
+          ctx.save();
+          ctx.translate(cx1 + 34, cy1 - 8);
+          ctx.rotate(-0.2);
+          ctx.fillStyle = "#5b6158";
+          ctx.fillRect(-2, -11, 4, 22);
+          ctx.restore();
+          // socket pins peeking out from either side of the die
+          ctx.fillStyle = "#c9b880";
+          for (let i = -4; i <= 4; i++) {
+            ctx.fillRect(cx1 - 31, cy1 - 9 + i * 3.2, 7, 1.1);
+            ctx.fillRect(cx1 + 24, cy1 - 9 + i * 3.2, 7, 1.1);
+          }
+          // processor IHS (integrated heat spreader) — brushed metal, tinted hotter as it heats up
+          rr(ctx, cx1 - 26, cy1 - 12, 52, 30, 4);
+          ctx.fillStyle = "#c3cbd1";
+          ctx.fill();
+          ctx.save();
+          ctx.clip();
+          ctx.globalAlpha = clamp((S.temp - 24) / 22, 0, 0.8);
+          ctx.fillStyle = hc;
+          ctx.fillRect(cx1 - 26, cy1 - 12, 52, 30);
+          ctx.globalAlpha = 1;
+          ctx.restore();
+          ctx.strokeStyle = "#8b96a3";
+          ctx.lineWidth = 1.5;
+          rr(ctx, cx1 - 26, cy1 - 12, 52, 30, 4);
+          ctx.stroke();
+          // pin-1 corner notch
+          ctx.fillStyle = "#5b6158";
+          ctx.beginPath();
+          ctx.moveTo(cx1 - 26, cy1 - 12);
+          ctx.lineTo(cx1 - 19, cy1 - 12);
+          ctx.lineTo(cx1 - 26, cy1 - 5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.textAlign = "center";
+
+          ctx.fillStyle = hc;
+          ctx.font = "700 15px 'Orbitron', sans-serif";
+          ctx.fillText(S.temp.toFixed(1) + "°C", cx1, cy1 + 52);
+          ctx.fillStyle = "#dff7f0";
+          ctx.font = "700 10px 'Rajdhani', sans-serif";
+          ctx.fillText("INTERNAL TEMP SENSOR", cx1, cy1 + 66);
+
+          // ---- tower heatsink: fins carrying heat up from the die, cooling toward the top ----
+          ctx.strokeStyle = "rgba(220,150,90,0.55)";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(cx1 - 10, finBottomY);
+          ctx.lineTo(cx1 - 10, finTopY);
+          ctx.moveTo(cx1 + 10, finBottomY);
+          ctx.lineTo(cx1 + 10, finTopY);
+          ctx.stroke(); // heat pipes
+          for (let i = 0; i < nFins; i++) {
+            const fy = lerp(finBottomY, finTopY, i / (nFins - 1));
+            const heatT = clamp(1 - i / (nFins - 1) + 0.15, 0, 1); // hottest near the die, cools toward the top
+            const [r1, g1, b1] = [
+              lerp(203, 40, 1 - heatT),
+              lerp(213, 26, 1 - heatT),
+              lerp(201, 15, 1 - heatT),
+            ];
+            const base = heatColor(S.temp);
+            ctx.fillStyle = heatT > 0.6 ? base : `rgb(${r1 | 0},${g1 | 0},${b1 | 0})`;
+            ctx.globalAlpha = heatT > 0.6 ? 0.35 + heatT * 0.4 : 0.85;
+            rr(ctx, finCX - finW / 2, fy - 3, finW, 6, 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+          ctx.fillStyle = "#bfe9ff";
+          ctx.font = "700 10px 'Rajdhani', sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("HEATSINK", finCX, finTopY - 10);
+
+          // smoke sensor + cloud, upper right of the board
+          const gx = CW * 0.62,
+            gy = CH * 0.16;
+          ctx.strokeStyle = S.gasDetected ? "#dc2626" : "#67e8f9";
+          ctx.lineWidth = 2.5;
+          rr(ctx, gx - 21, gy - 12, 42, 24, 6);
+          ctx.fillStyle = "#0f2a28";
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#bfe9ff";
+          ctx.font = "700 9px 'Rajdhani', sans-serif";
+          ctx.fillText("SMOKE", gx, gy + 3);
+          if (S.gasLevel > 1) {
+            const n = Math.round((S.gasLevel / 100) * gasDots.length);
+            ctx.fillStyle = "rgba(134,239,172,0.55)";
+            for (let i = 0; i < n; i++) {
+              const d = gasDots[i];
+              const bob = Math.sin(t * 1.4 + d.bob) * 4;
+              const px = gx + Math.cos(d.a + t * 0.15) * d.r * 0.5;
+              const py = gy + Math.sin(d.a + t * 0.15) * d.r * 0.28 - 6 + bob;
+              ctx.beginPath();
+              ctx.arc(px, py, 3.2, 0, TAU);
+              ctx.fill();
+            }
+          }
+          // wire smoke sensor -> fan-control IC
+          ctx.strokeStyle = "rgba(150,200,190,0.3)";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(gx, gy + 12);
+          ctx.lineTo(cx2, cy2 - 30);
+          ctx.stroke();
+          // wire processor temp sensor -> fan-control IC
+          ctx.beginPath();
+          ctx.moveTo(cx1 + 26, cy1 + 30);
+          ctx.lineTo(cx2 - 34, cy2 - 4);
+          ctx.stroke();
+
+          // ---- fan-control IC ----
+          ctx.fillStyle = "#0f2422";
+          ctx.strokeStyle = "#3fd7b5";
+          ctx.lineWidth = 2;
+          rr(ctx, cx2 - 42, cy2 - 34, 84, 68, 10);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#bdf5e6";
+          ctx.font = "700 10px 'Rajdhani', sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("FAN CONTROLLER", cx2, cy2 - 40);
+          const zone = tempZoneKey(S.temp);
+          const leds = ["SAFE", "MILD", "RISING", "CRITICAL"];
+          leds.forEach((z, i) => {
+            const lx = cx2 - 28 + i * 19;
+            const ly = cy2 - 14;
+            ctx.beginPath();
+            ctx.arc(lx, ly, 5, 0, TAU);
+            ctx.fillStyle = z === zone ? heatColor(S.temp) : "#173430";
+            ctx.fill();
+            if (z === zone) {
+              ctx.strokeStyle = "rgba(255,255,255,0.6)";
+              ctx.lineWidth = 1.2;
+              ctx.stroke();
+            }
+          });
+          ctx.beginPath();
+          ctx.arc(cx2, cy2 + 10, 6, 0, TAU);
+          ctx.fillStyle = S.gasDetected ? "#dc2626" : "#16a34a";
+          ctx.fill();
+          ctx.fillStyle = "#8fd8c8";
+          ctx.font = "700 9px 'Rajdhani', sans-serif";
+          ctx.fillText("SMOKE", cx2, cy2 + 26);
+
+          // wire fan-control IC -> fan
+          ctx.strokeStyle = "rgba(150,200,190,0.3)";
+          ctx.beginPath();
+          ctx.moveTo(cx2, cy2 - 34);
+          ctx.lineTo(cx3, cy3 + 40);
+          ctx.stroke();
+
+          // ---- tower fan, mounted on the side of the heatsink ----
+          const speedFactor = { OFF: 0, LOW: 0.25, MEDIUM: 0.55, HIGH: 1, VENT: 0.8, EMERGENCY: 1 }[S.mode];
+          if (!S.ventBlocked && speedFactor > 0 && Math.random() < speedFactor * 0.9) {
+            airflow.push({ x: cx3 + 44, y: cy3 + (Math.random() * 30 - 15), v: 60 + speedFactor * 120, life: 0 });
+          }
+          airflow.forEach((p) => {
+            p.x += p.v * (1 / 60);
+            p.life += 1 / 60;
+          });
+          airflow = airflow.filter((p) => p.x < CW - 24 && p.life < 1.6);
+          ctx.strokeStyle = "rgba(103,232,249,0.55)";
+          ctx.lineWidth = 2;
+          airflow.forEach((p) => {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x + 14, p.y);
+            ctx.stroke();
+          });
+
+          // square fan frame with corner mounting screws, like a real PC fan
+          ctx.fillStyle = "#12211d";
+          ctx.strokeStyle = "#33443d";
+          ctx.lineWidth = 2;
+          rr(ctx, cx3 - 40, cy3 - 40, 80, 80, 8);
+          ctx.fill();
+          ctx.stroke();
+          [
+            [-32, -32],
+            [32, -32],
+            [-32, 32],
+            [32, 32],
+          ].forEach(([dx, dy]) => {
+            ctx.beginPath();
+            ctx.arc(cx3 + dx, cy3 + dy, 3.5, 0, TAU);
+            ctx.fillStyle = "#556862";
+            ctx.fill();
+          });
+
+          ctx.beginPath();
+          ctx.arc(cx3, cy3, 34, 0, TAU);
+          ctx.fillStyle = "#0f2a28";
+          ctx.fill();
+          ctx.strokeStyle = S.mode === "EMERGENCY" ? "#dc2626" : S.mode === "VENT" ? "#16a34a" : "#3fd7b5";
+          ctx.lineWidth = 3;
+          ctx.stroke();
+          ctx.save();
+          ctx.translate(cx3, cy3);
+          ctx.rotate(S.fanAngle);
+          ctx.fillStyle = "rgba(191,245,230,0.85)";
+          for (let b = 0; b < 4; b++) {
+            ctx.save();
+            ctx.rotate((b * TAU) / 4);
+            ctx.beginPath();
+            ctx.ellipse(14, 0, 16, 6, 0, 0, TAU);
+            ctx.fill();
+            ctx.restore();
+          }
+          ctx.restore();
+          ctx.beginPath();
+          ctx.arc(cx3, cy3, 5, 0, TAU);
+          ctx.fillStyle = "#556862";
+          ctx.fill();
+          ctx.fillStyle = "#dff7f0";
+          ctx.font = "700 10px 'Rajdhani', sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("COOLING FAN", cx3, cy3 + 55);
+
+          if (S.ventBlocked) {
+            ctx.strokeStyle = "#dc2626";
+            ctx.lineWidth = 4;
+            const bx = cx3 + 66,
+              by = cy3;
+            ctx.beginPath();
+            ctx.moveTo(bx - 10, by - 16);
+            ctx.lineTo(bx + 10, by + 16);
+            ctx.moveTo(bx + 10, by - 16);
+            ctx.lineTo(bx - 10, by + 16);
+            ctx.stroke();
+            ctx.fillStyle = "#dc2626";
+            ctx.font = "700 9px 'Rajdhani', sans-serif";
+            ctx.fillText("BLOCKED", bx, by + 32);
+          }
+
+          // ---- battery ----
+          const bx = CW * 0.87,
+            by = CH * 0.68;
+          ctx.strokeStyle = "#3fd7b5";
+          ctx.lineWidth = 2;
+          rr(ctx, bx - 20, by - 12, 40, 24, 4);
+          ctx.stroke();
+          ctx.fillStyle = "#3fd7b5";
+          ctx.fillRect(bx + 20, by - 5, 3, 10);
+          const bw = 36 * (S.battery / 100);
+          ctx.fillStyle = S.battery < 15 ? "#dc2626" : S.battery < 40 ? "#f59e0b" : "#16a34a";
+          ctx.fillRect(bx - 18, by - 10, bw, 20);
+          ctx.fillStyle = "#8fd8c8";
+          ctx.font = "700 10px 'Rajdhani', sans-serif";
+          ctx.fillText("BATTERY " + Math.round(S.battery) + "%", bx, by + 26);
+
+          // ---- threshold ladder along the bottom ----
+          const ly0 = CH - 34,
+            lx0 = pad + 10,
+            lw = CW - pad * 2 - 20,
+            lh = 14;
+          const zones = [
+            { k: "OFF", from: TEMP_MIN, to: 30, c: "#0891b2" },
+            { k: "LOW", from: 30, to: 35, c: "#65a30d" },
+            { k: "MEDIUM", from: 35, to: 40, c: "#ea580c" },
+            { k: "HIGH", from: 40, to: TEMP_MAX, c: "#dc2626" },
+          ];
+          zones.forEach((z) => {
+            const x0 = lx0 + ((z.from - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)) * lw;
+            const x1 = lx0 + ((z.to - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)) * lw;
+            ctx.fillStyle = z.c;
+            ctx.globalAlpha = ZONE_TO_FAN[zone] === z.k ? 0.95 : 0.35;
+            ctx.fillRect(x0, ly0, x1 - x0, lh);
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = "#dff7f0";
+            ctx.font = "700 9px 'Rajdhani', sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(z.k, (x0 + x1) / 2, ly0 + lh + 11);
+          });
+          const mx = lx0 + ((clamp(S.temp, TEMP_MIN, TEMP_MAX) - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)) * lw;
+          ctx.beginPath();
+          ctx.moveTo(mx, ly0 - 4);
+          ctx.lineTo(mx - 5, ly0 - 12);
+          ctx.lineTo(mx + 5, ly0 - 12);
+          ctx.closePath();
+          ctx.fillStyle = "#fff";
+          ctx.fill();
+        }
+
+        /* =================== MAIN LOOP =================== */
+        let last = performance.now();
+        function loop(now) {
+          const dt = clamp((now - last) / 1000, 0, 0.1);
+          last = now;
+          step(dt);
+          tickMission(dt * 1000);
+          updateDashboard();
+          drawScene(now / 1000);
+          requestAnimationFrame(loop);
+        }
+
+        /* =================== HELP TABS =================== */
+        function closeHelp() {
+          $("helpbar").classList.remove("show");
+          document.querySelectorAll(".helpbtn").forEach((b) => b.classList.remove("on"));
+          document.querySelectorAll(".tabpanel").forEach((p) => p.classList.remove("on"));
+        }
+        document.querySelectorAll(".helpbtn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const wasOn = btn.classList.contains("on");
+            closeHelp();
+            if (wasOn) return; // second click on the same tab just closes it
+            btn.classList.add("on");
+            $("helpbar").classList.add("show");
+            document.querySelector(`.tabpanel[data-panel="${btn.dataset.tab}"]`).classList.add("on");
+          });
+        });
+        $("helpClose").addEventListener("click", closeHelp);
+
+        /* =================== INIT =================== */
+        fit();
+        refreshTempUI();
+        refreshGasUI();
+        setFeedback("Lost bot cooling system on standby. Press Start to begin.", "ok");
+        S.mode = computeMode();
+        requestAnimationFrame(loop);
+      })();
+    </script>
+  </body>
+</html>
