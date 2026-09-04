@@ -105,6 +105,16 @@
           max-width: 560px;
           margin: 0 auto;
         }
+        /* Single-column: the stage card is no longer height-bounded by the grid
+           row, and its canvas is width:100%/height:100% — without an explicit
+           height here the canvas collapses to 0px tall on mobile. */
+        .card.stage {
+          width: 100%;
+          max-width: 560px;
+          margin: 0 auto;
+          flex: 0 0 auto;
+          height: clamp(280px, 78vw, 460px);
+        }
       }
       .card {
         background: var(--panel);
