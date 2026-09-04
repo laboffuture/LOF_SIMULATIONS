@@ -580,45 +580,48 @@
       }
 
       .spectrumrow {
-        display: flex;
-        align-items: flex-end;
-        gap: 5px;
-        height: 92px;
+        height: 150px;
         background: #10142c;
         border: 1.5px solid var(--line);
         border-radius: 10px;
-        padding: 8px 8px 4px;
+        padding: 6px 4px 2px;
         margin-top: 4px;
       }
-      .specbar {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-end;
-        height: 100%;
-      }
-      .specbar .fill {
+      .spectrumrow svg {
         width: 100%;
-        border-radius: 4px 4px 2px 2px;
-        background: var(--bc);
-        height: 2%;
-        transition: height 0.08s linear;
-        box-shadow:
-          0 0 8px var(--bc),
-          0 0 0 1px rgba(255, 255, 255, 0.25) inset;
+        height: 100%;
+        display: block;
+        overflow: visible;
       }
-      .specbar.dom .fill {
-        box-shadow:
-          0 0 16px var(--bc),
-          0 0 22px var(--bc),
-          0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+      .spec-grid {
+        stroke: rgba(255, 255, 255, 0.08);
+        stroke-width: 1;
       }
-      .specbar .lab {
-        font-size: 8px;
-        color: #9fa8cc;
-        font-weight: 700;
-        margin-top: 3px;
+      .spec-axislab {
+        fill: #7d87ad;
+        font: 700 7px "Rajdhani", sans-serif;
+      }
+      .spec-xlab {
+        fill: #9fa8cc;
+        font: 700 8px "Rajdhani", sans-serif;
+      }
+      .spec-line {
+        fill: none;
+        stroke-width: 2.4;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+        transition:
+          stroke 0.15s,
+          points 0.08s linear;
+      }
+      .spec-dot {
+        stroke: #0b0e22;
+        stroke-width: 1.2;
+        transition:
+          cx 0.08s linear,
+          cy 0.08s linear,
+          r 0.15s,
+          fill 0.15s;
       }
 
       .reading {
@@ -967,9 +970,8 @@
         }
 
         /* =================== STAR / SENSOR MODEL =================== */
-        // AS7341 visible-light channels F1..F8 (approx nm) and a swatch colour per channel
+        // AS7341 visible-light channels F1..F8 (approx nm)
         const WAVELEN = [415, 445, 480, 515, 555, 590, 630, 680];
-        const CH_COLOR = ["#8b5cf6", "#3b82f6", "#22d3ee", "#22c55e", "#facc15", "#fb923c", "#ef4444", "#dc2626"];
         const N_CH = 8;
 
         // Real AS7341 F1-F8 raw-count reference scans (0-30000, sensor's own ceiling),
@@ -1320,16 +1322,46 @@
         }
 
         /* =================== UI SYNC =================== */
-        function buildSpectrumBars() {
-          const row = $("spectrumRow");
-          row.innerHTML = "";
+        // Line-graph geometry (SVG viewBox units), matching the reference PDF's layout:
+        // raw counts 0-30000 on the y-axis, F1-F8 channels on the x-axis.
+        const CHART = { x0: 30, x1: 372, y0: 8, y1: 116, w: 400, h: 140 };
+        function buildSpectrumChart() {
+          const el = $("spectrumRow");
+          const stepX = (CHART.x1 - CHART.x0) / (N_CH - 1);
+          const gridVals = [0, 5000, 10000, 15000, 20000, 25000, 30000];
+          let grid = "";
+          gridVals.forEach((v) => {
+            const y = CHART.y1 - (v / 30000) * (CHART.y1 - CHART.y0);
+            grid += `<line class="spec-grid" x1="${CHART.x0}" y1="${y}" x2="${CHART.x1}" y2="${y}"/>`;
+            grid += `<text class="spec-axislab" x="${CHART.x0 - 3}" y="${y + 2.5}" text-anchor="end">${v / 1000}k</text>`;
+          });
+          let xlabels = "";
           for (let i = 0; i < N_CH; i++) {
-            const bar = document.createElement("div");
-            bar.className = "specbar";
-            bar.id = "spec" + i;
-            bar.innerHTML = `<div class="fill" id="specfill${i}" style="--bc:${CH_COLOR[i]}"></div><div class="lab">F${i + 1}</div>`;
-            row.appendChild(bar);
+            const x = CHART.x0 + i * stepX;
+            xlabels += `<text class="spec-xlab" x="${x}" y="${CHART.y1 + 12}" text-anchor="middle">F${i + 1}</text>`;
           }
+          const dots = Array.from({ length: N_CH }, (_, i) => `<circle id="specDot${i}" class="spec-dot" r="2.6" cx="${CHART.x0 + i * stepX}" cy="${CHART.y1}"></circle>`).join("");
+          el.innerHTML = `<svg viewBox="0 0 ${CHART.w} ${CHART.h}" preserveAspectRatio="none">${grid}${xlabels}<polyline id="specLine" class="spec-line" points=""></polyline>${dots}</svg>`;
+        }
+        function updateSpectrumChart(domIdx, domActive) {
+          const stepX = (CHART.x1 - CHART.x0) / (N_CH - 1);
+          const lineColor = S.color ? STARS[S.color].sw : "#67e8f9";
+          const pts = [];
+          for (let i = 0; i < N_CH; i++) {
+            const raw = clamp(S.displayReadings[i], 0, 1.4) * 30000; // raw-count scale, matching the reference PDF
+            const y = clamp(CHART.y1 - (clamp(raw, 0, 30000) / 30000) * (CHART.y1 - CHART.y0), CHART.y0 - 6, CHART.y1);
+            const x = CHART.x0 + i * stepX;
+            pts.push(x + "," + y.toFixed(1));
+            const dot = $("specDot" + i);
+            dot.setAttribute("cx", x);
+            dot.setAttribute("cy", y);
+            const isDom = domActive && i === domIdx;
+            dot.setAttribute("r", isDom ? 4.2 : 2.6);
+            dot.setAttribute("fill", isDom ? lineColor : "#94a3b8");
+          }
+          const line = $("specLine");
+          line.setAttribute("points", pts.join(" "));
+          line.setAttribute("stroke", lineColor);
         }
 
         function updateDashboard() {
@@ -1358,11 +1390,7 @@
             $("s_result").className = "v a";
           }
 
-          for (let i = 0; i < N_CH; i++) {
-            const pct = clamp(S.displayReadings[i] / 1.2, 0, 1) * 100;
-            $("specfill" + i).style.height = Math.max(2, pct) + "%";
-            $("spec" + i).classList.toggle("dom", domActive && i === domIdx);
-          }
+          updateSpectrumChart(domIdx, domActive);
 
           $("m_dist").textContent = Math.round(S.distance) + "%";
           $("distFill").style.width = S.distance + "%";
@@ -1762,7 +1790,7 @@
         $("helpClose").addEventListener("click", closeHelp);
 
         /* =================== INIT =================== */
-        buildSpectrumBars();
+        buildSpectrumChart();
         fit();
         setDistance(30);
         setBrightness(70);
