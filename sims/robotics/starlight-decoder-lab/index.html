@@ -743,8 +743,8 @@
             </li>
             <li>
               Set <b>distance</b>, <b>brightness</b>, and <b>interference</b> however
-              you like, then press <b>Start</b>. The girl swishes the wand through the
-              air on her own and points it at the decoder's sensor lens.
+              you like, then press <b>Start</b>. The astronaut swishes the wand through
+              the air on her own and points it at the decoder's sensor lens.
             </li>
             <li>
               Watch the <b>AS7341 channel bars</b> ramp up as the sensor reads —
@@ -1470,10 +1470,10 @@
           S.tipX = tipX;
           S.tipY = tipY;
 
-          // ---- chibi cartoon proportions: big round head, short chubby limbs ----
+          // ---- chibi cartoon proportions: big glass helmet, short chubby suited limbs ----
           // legs
           const hipY = shoulderY + 30 * scaleF;
-          ctx.strokeStyle = "#fbe0c4";
+          ctx.strokeStyle = "#e8edf5";
           ctx.lineWidth = 9 * scaleF;
           ctx.lineCap = "round";
           [-7, 7].forEach((dx) => {
@@ -1482,20 +1482,30 @@
             ctx.lineTo(shoulderX + dx * 1.5 * scaleF, hipY + 24 * scaleF);
             ctx.stroke();
           });
-          // little red shoes
-          ctx.fillStyle = "#dc2626";
-          ctx.strokeStyle = "#991b1b";
-          ctx.lineWidth = 1;
+          // dark astronaut boots with a red ankle trim band
           [-1, 1].forEach((s) => {
+            const bx = shoulderX + s * 10.5 * scaleF;
+            ctx.strokeStyle = "#dc2626";
+            ctx.lineWidth = 3.5 * scaleF;
             ctx.beginPath();
-            ctx.ellipse(shoulderX + s * 10.5 * scaleF, hipY + 26 * scaleF, 8 * scaleF, 5 * scaleF, 0, 0, TAU);
+            ctx.arc(bx, hipY + 21 * scaleF, 6 * scaleF, 0, TAU);
+            ctx.stroke();
+            ctx.fillStyle = "#1e293b";
+            ctx.strokeStyle = "#0f172a";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.ellipse(bx, hipY + 26 * scaleF, 8 * scaleF, 5 * scaleF, 0, 0, TAU);
             ctx.fill();
             ctx.stroke();
+            ctx.fillStyle = "#0f172a";
+            ctx.beginPath();
+            ctx.ellipse(bx, hipY + 29 * scaleF, 7.5 * scaleF, 2.2 * scaleF, 0, 0, Math.PI);
+            ctx.fill();
           });
 
-          // dress / torso — rounded, puffy cartoon silhouette (not a flat trapezoid)
-          ctx.fillStyle = "#6ee7b7";
-          ctx.strokeStyle = "#10b981";
+          // spacesuit torso — rounded, puffy silhouette (same build as before, resuited)
+          ctx.fillStyle = "#f1f5f9";
+          ctx.strokeStyle = "#94a3b8";
           ctx.lineWidth = 1.5;
           ctx.beginPath();
           ctx.moveTo(shoulderX - 14 * scaleF, shoulderY - 2 * scaleF);
@@ -1506,138 +1516,190 @@
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
-          // white collar
-          ctx.fillStyle = "#ffffff";
-          ctx.strokeStyle = "#cbd5e1";
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(shoulderX - 10 * scaleF, shoulderY - 4 * scaleF);
-          ctx.lineTo(shoulderX, shoulderY + 4 * scaleF);
-          ctx.lineTo(shoulderX + 10 * scaleF, shoulderY - 4 * scaleF);
-          ctx.closePath();
+          // mission badge — white patch, red frame, small logo mark (like a chest ID patch)
+          ctx.fillStyle = "#fefefe";
+          ctx.strokeStyle = "#dc2626";
+          ctx.lineWidth = 1.6;
+          rr(ctx, shoulderX - 9 * scaleF, shoulderY + 3 * scaleF, 18 * scaleF, 12 * scaleF, 2.5 * scaleF);
           ctx.fill();
           ctx.stroke();
-          // red neck ribbon
-          ctx.fillStyle = "#ef4444";
           ctx.beginPath();
-          ctx.moveTo(shoulderX, shoulderY - 1 * scaleF);
-          ctx.lineTo(shoulderX - 4.5 * scaleF, shoulderY + 5 * scaleF);
-          ctx.lineTo(shoulderX + 4.5 * scaleF, shoulderY + 5 * scaleF);
-          ctx.closePath();
+          ctx.arc(shoulderX - 3.5 * scaleF, shoulderY + 9 * scaleF, 2.6 * scaleF, 0, TAU);
+          ctx.fillStyle = "#0891b2";
+          ctx.fill();
+          ctx.fillStyle = "#1e293b";
+          ctx.font = "800 " + (6 * scaleF).toFixed(1) + "px 'Orbitron', sans-serif";
+          ctx.textAlign = "left";
+          ctx.fillText("LOF", shoulderX + 0.5 * scaleF, shoulderY + 11 * scaleF);
+          ctx.textAlign = "center";
+          // helmet collar ring
+          ctx.fillStyle = "#94a3b8";
+          ctx.beginPath();
+          ctx.arc(shoulderX, shoulderY - 2 * scaleF, 12 * scaleF, 0, TAU);
           ctx.fill();
 
           // other arm — mirrors the wand arm's shoulder offset, rests out to her opposite
-          // side (not through the dress) with a gentle idle sway, so she isn't one-armed
+          // side (not through the suit) with a gentle idle sway, so she isn't one-armed
           const otherShoulderX = shoulderX - 14 * scaleF,
             otherShoulderY = shoulderY - 2 * scaleF;
           const otherArmAngle = Math.PI - REST_ANGLE + Math.sin(t * 1.2) * 0.06;
           const otherArmLen = 30 * scaleF;
           const otherHandX = otherShoulderX + Math.cos(otherArmAngle) * otherArmLen;
           const otherHandY = otherShoulderY + Math.sin(otherArmAngle) * otherArmLen;
-          ctx.strokeStyle = "#fbe0c4";
+          ctx.strokeStyle = "#e8edf5";
           ctx.lineWidth = 8 * scaleF;
           ctx.lineCap = "round";
           ctx.beginPath();
           ctx.moveTo(otherShoulderX, otherShoulderY);
           ctx.lineTo(otherHandX, otherHandY);
           ctx.stroke();
-          ctx.fillStyle = "#fbe0c4";
+          // red wrist trim
+          ctx.strokeStyle = "#dc2626";
+          ctx.lineWidth = 3.5 * scaleF;
           ctx.beginPath();
-          ctx.arc(otherHandX, otherHandY, 4.2 * scaleF, 0, TAU);
-          ctx.fill();
-          ctx.fillStyle = "#6ee7b7";
-          ctx.strokeStyle = "#10b981";
+          ctx.arc(lerp(otherShoulderX, otherHandX, 0.78), lerp(otherShoulderY, otherHandY, 0.78), 4.4 * scaleF, 0, TAU);
+          ctx.stroke();
+          // black glove
+          ctx.fillStyle = "#1e293b";
+          ctx.strokeStyle = "#0f172a";
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(otherShoulderX, otherShoulderY, 8 * scaleF, 0, TAU);
+          ctx.arc(otherHandX, otherHandY, 5 * scaleF, 0, TAU);
+          ctx.fill();
+          ctx.stroke();
+          // shoulder pauldron
+          ctx.fillStyle = "#f1f5f9";
+          ctx.beginPath();
+          ctx.arc(otherShoulderX, otherShoulderY, 9 * scaleF, 0, TAU);
           ctx.fill();
           ctx.stroke();
 
           // arm (shoulder -> hand), rotates with the wand — short and chubby
-          ctx.strokeStyle = "#fbe0c4";
+          ctx.strokeStyle = "#e8edf5";
           ctx.lineWidth = 8.5 * scaleF;
           ctx.lineCap = "round";
           ctx.beginPath();
           ctx.moveTo(wandShoulderX, wandShoulderY);
           ctx.lineTo(handX, handY);
           ctx.stroke();
-          // sleeve puff at the shoulder
-          ctx.fillStyle = "#6ee7b7";
-          ctx.strokeStyle = "#10b981";
+          // red wrist trim
+          ctx.strokeStyle = "#dc2626";
+          ctx.lineWidth = 3.5 * scaleF;
+          ctx.beginPath();
+          ctx.arc(lerp(wandShoulderX, handX, 0.78), lerp(wandShoulderY, handY, 0.78), 4.4 * scaleF, 0, TAU);
+          ctx.stroke();
+          // black glove holding the wand
+          ctx.fillStyle = "#1e293b";
+          ctx.strokeStyle = "#0f172a";
           ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(handX, handY, 5 * scaleF, 0, TAU);
+          ctx.fill();
+          ctx.stroke();
+          // shoulder pauldron
+          ctx.fillStyle = "#f1f5f9";
           ctx.beginPath();
           ctx.arc(wandShoulderX, wandShoulderY, 9 * scaleF, 0, TAU);
           ctx.fill();
           ctx.stroke();
 
-          // head (big, chibi-style) + golden pigtail hair
+          // helmet (big glass dome, chibi-style — same scale the head used to be)
           const neckY = shoulderY - 12 * scaleF;
           const headR = 19 * scaleF;
           const headCY = neckY - headR * 0.65;
-          ctx.strokeStyle = "#fbe0c4";
+          ctx.strokeStyle = "#cbd5e1";
           ctx.lineWidth = 9 * scaleF;
           ctx.beginPath();
           ctx.moveTo(shoulderX, shoulderY);
           ctx.lineTo(shoulderX, neckY);
           ctx.stroke();
-          ctx.fillStyle = "#f5a623";
+          // ear pads (side of helmet, under the shell so the visor still reads on top)
           [-1, 1].forEach((s) => {
             ctx.beginPath();
-            ctx.moveTo(shoulderX + s * headR * 0.7, headCY);
-            ctx.quadraticCurveTo(shoulderX + s * headR * 2.15, headCY + 8 * scaleF, shoulderX + s * headR * 1.55, headCY + 26 * scaleF);
-            ctx.quadraticCurveTo(shoulderX + s * headR * 0.95, headCY + 14 * scaleF, shoulderX + s * headR * 0.6, headCY);
-            ctx.closePath();
+            ctx.arc(shoulderX + s * headR * 0.92, headCY + headR * 0.1, headR * 0.22, 0, TAU);
+            ctx.fillStyle = "#cbd5e1";
             ctx.fill();
+            ctx.strokeStyle = "#94a3b8";
+            ctx.lineWidth = 1;
+            ctx.stroke();
           });
+          // helmet shell
           ctx.beginPath();
           ctx.arc(shoulderX, headCY, headR, 0, TAU);
-          ctx.fillStyle = "#fbe0c4";
+          ctx.fillStyle = "#f8f7f4";
           ctx.fill();
-          ctx.strokeStyle = "#e8b98a";
-          ctx.lineWidth = 1;
+          ctx.strokeStyle = "#94a3b8";
+          ctx.lineWidth = 1.5;
           ctx.stroke();
-          ctx.fillStyle = "#f5a623";
+          // dark cosmic visor — a little starfield behind the glass, like a real helmet reflecting space
+          ctx.save();
           ctx.beginPath();
-          ctx.arc(shoulderX, headCY - headR * 0.32, headR * 0.98, Math.PI, TAU);
+          ctx.arc(shoulderX + headR * 0.05, headCY + headR * 0.05, headR * 0.78, 0, TAU);
+          ctx.clip();
+          const visorGrad = ctx.createRadialGradient(
+            shoulderX - headR * 0.1,
+            headCY - headR * 0.1,
+            headR * 0.1,
+            shoulderX + headR * 0.05,
+            headCY + headR * 0.05,
+            headR,
+          );
+          visorGrad.addColorStop(0, "#1e293b");
+          visorGrad.addColorStop(1, "#020617");
+          ctx.fillStyle = visorGrad;
+          ctx.fillRect(shoulderX - headR, headCY - headR, headR * 2, headR * 2);
+          // glowing planet peeking in the corner
+          const planetGrad = ctx.createRadialGradient(
+            shoulderX + headR * 0.32,
+            headCY - headR * 0.28,
+            0,
+            shoulderX + headR * 0.32,
+            headCY - headR * 0.28,
+            headR * 0.3,
+          );
+          planetGrad.addColorStop(0, "#fda4af");
+          planetGrad.addColorStop(1, "rgba(253,164,175,0)");
+          ctx.fillStyle = planetGrad;
+          ctx.beginPath();
+          ctx.arc(shoulderX + headR * 0.32, headCY - headR * 0.28, headR * 0.3, 0, TAU);
           ctx.fill();
-
-          // mint bow on top of the head
-          const bowY = headCY - headR * 1.15;
-          ctx.fillStyle = "#a7f3d0";
-          ctx.strokeStyle = "#10b981";
+          // tiny stars
+          ctx.fillStyle = "#fff";
+          for (let i = 0; i < 9; i++) {
+            const a = (i / 9) * TAU + 0.4;
+            const r = headR * (0.25 + 0.45 * ((i * 37) % 5) / 5);
+            const sx = shoulderX + Math.cos(a) * r,
+              sy = headCY + Math.sin(a) * r * 0.85;
+            ctx.globalAlpha = 0.5 + 0.5 * Math.sin(t * 3 + i);
+            ctx.beginPath();
+            ctx.arc(sx, sy, headR * 0.035, 0, TAU);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+          ctx.restore();
+          ctx.strokeStyle = "#0f172a";
           ctx.lineWidth = 1;
-          [-1, 1].forEach((s) => {
-            ctx.beginPath();
-            ctx.moveTo(shoulderX, bowY);
-            ctx.lineTo(shoulderX + s * headR * 1.05, bowY - headR * 0.5);
-            ctx.lineTo(shoulderX + s * headR * 1.05, bowY + headR * 0.5);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-          });
           ctx.beginPath();
-          ctx.arc(shoulderX, bowY, headR * 0.3, 0, TAU);
-          ctx.fill();
+          ctx.arc(shoulderX + headR * 0.05, headCY + headR * 0.05, headR * 0.78, 0, TAU);
           ctx.stroke();
-
-          // happy face: closed eyes, smile, rosy cheeks
-          ctx.fillStyle = "rgba(244,114,182,0.5)";
-          [-1, 1].forEach((s) => {
-            ctx.beginPath();
-            ctx.arc(shoulderX + s * headR * 0.6, headCY + headR * 0.3, headR * 0.22, 0, TAU);
-            ctx.fill();
-          });
-          ctx.strokeStyle = "#3a2a1a";
-          ctx.lineWidth = 1.3;
+          // visor reflection streak
+          ctx.strokeStyle = "rgba(255,255,255,0.6)";
+          ctx.lineWidth = headR * 0.14;
           ctx.lineCap = "round";
-          [-1, 1].forEach((s) => {
-            ctx.beginPath();
-            ctx.arc(shoulderX + s * headR * 0.42, headCY, headR * 0.26, Math.PI * 0.1, Math.PI * 0.9);
-            ctx.stroke();
-          });
           ctx.beginPath();
-          ctx.arc(shoulderX, headCY + headR * 0.42, headR * 0.3, Math.PI * 0.12, Math.PI * 0.88);
+          ctx.arc(shoulderX - headR * 0.15, headCY - headR * 0.1, headR * 0.5, -Math.PI * 0.85, -Math.PI * 0.35);
           ctx.stroke();
+          // antenna
+          ctx.strokeStyle = "#94a3b8";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(shoulderX + headR * 0.55, headCY - headR * 0.85);
+          ctx.lineTo(shoulderX + headR * 0.75, headCY - headR * 1.25);
+          ctx.stroke();
+          ctx.fillStyle = "#ef4444";
+          ctx.beginPath();
+          ctx.arc(shoulderX + headR * 0.75, headCY - headR * 1.25, 2.4 * scaleF, 0, TAU);
+          ctx.fill();
 
           // handle
           ctx.strokeStyle = "#8b6f4e";
