@@ -1473,7 +1473,7 @@
           // ---- chibi cartoon proportions: big glass helmet, short chubby suited limbs ----
           // legs
           const hipY = shoulderY + 30 * scaleF;
-          ctx.strokeStyle = "#e8edf5";
+          ctx.strokeStyle = "#f1f5f9";
           ctx.lineWidth = 9 * scaleF;
           ctx.lineCap = "round";
           [-7, 7].forEach((dx) => {
@@ -1548,7 +1548,7 @@
           const otherArmLen = 30 * scaleF;
           const otherHandX = otherShoulderX + Math.cos(otherArmAngle) * otherArmLen;
           const otherHandY = otherShoulderY + Math.sin(otherArmAngle) * otherArmLen;
-          ctx.strokeStyle = "#e8edf5";
+          ctx.strokeStyle = "#f1f5f9";
           ctx.lineWidth = 10 * scaleF;
           ctx.lineCap = "round";
           ctx.beginPath();
@@ -1569,17 +1569,9 @@
           ctx.arc(otherHandX, otherHandY, 6.2 * scaleF, 0, TAU);
           ctx.fill();
           ctx.stroke();
-          // puffy shoulder pauldron
-          ctx.fillStyle = "#f1f5f9";
-          ctx.strokeStyle = "#94a3b8";
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.arc(otherShoulderX, otherShoulderY, 13 * scaleF, 0, TAU);
-          ctx.fill();
-          ctx.stroke();
 
           // arm (shoulder -> hand), rotates with the wand — short and chubby
-          ctx.strokeStyle = "#e8edf5";
+          ctx.strokeStyle = "#f1f5f9";
           ctx.lineWidth = 10.5 * scaleF;
           ctx.lineCap = "round";
           ctx.beginPath();
@@ -1598,14 +1590,6 @@
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.arc(handX, handY, 6.2 * scaleF, 0, TAU);
-          ctx.fill();
-          ctx.stroke();
-          // puffy shoulder pauldron
-          ctx.fillStyle = "#f1f5f9";
-          ctx.strokeStyle = "#94a3b8";
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.arc(wandShoulderX, wandShoulderY, 13 * scaleF, 0, TAU);
           ctx.fill();
           ctx.stroke();
 
