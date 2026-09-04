@@ -1471,10 +1471,12 @@
           S.tipY = tipY;
 
           // ---- chibi cartoon proportions: big glass helmet, short chubby suited limbs ----
-          // legs
+          // legs — thick, suited columns (not thin sticks), sized to meet the torso's
+          // hip width edge-to-edge so the body reads as one continuous suit, not a
+          // wide skirt hem with legs poking out underneath
           const hipY = shoulderY + 30 * scaleF;
           ctx.strokeStyle = "#f1f5f9";
-          ctx.lineWidth = 9 * scaleF;
+          ctx.lineWidth = 15 * scaleF;
           ctx.lineCap = "round";
           [-7, 7].forEach((dx) => {
             ctx.beginPath();
@@ -1511,9 +1513,9 @@
           ctx.lineWidth = 1.5;
           ctx.beginPath();
           ctx.moveTo(shoulderX - 14 * scaleF, shoulderY - 2 * scaleF);
-          ctx.quadraticCurveTo(shoulderX - 20 * scaleF, shoulderY + 14 * scaleF, shoulderX - 16 * scaleF, hipY);
-          ctx.quadraticCurveTo(shoulderX, hipY + 6 * scaleF, shoulderX + 16 * scaleF, hipY);
-          ctx.quadraticCurveTo(shoulderX + 20 * scaleF, shoulderY + 14 * scaleF, shoulderX + 14 * scaleF, shoulderY - 2 * scaleF);
+          ctx.quadraticCurveTo(shoulderX - 19 * scaleF, shoulderY + 14 * scaleF, shoulderX - 14 * scaleF, hipY);
+          ctx.quadraticCurveTo(shoulderX, hipY + 4 * scaleF, shoulderX + 14 * scaleF, hipY);
+          ctx.quadraticCurveTo(shoulderX + 19 * scaleF, shoulderY + 14 * scaleF, shoulderX + 14 * scaleF, shoulderY - 2 * scaleF);
           ctx.quadraticCurveTo(shoulderX, shoulderY - 12 * scaleF, shoulderX - 14 * scaleF, shoulderY - 2 * scaleF);
           ctx.closePath();
           ctx.fill();
@@ -1679,17 +1681,6 @@
           ctx.beginPath();
           ctx.arc(shoulderX - headR * 0.15, headCY - headR * 0.1, headR * 0.5, -Math.PI * 0.85, -Math.PI * 0.35);
           ctx.stroke();
-          // antenna
-          ctx.strokeStyle = "#94a3b8";
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(shoulderX + headR * 0.55, headCY - headR * 0.85);
-          ctx.lineTo(shoulderX + headR * 0.75, headCY - headR * 1.25);
-          ctx.stroke();
-          ctx.fillStyle = "#ef4444";
-          ctx.beginPath();
-          ctx.arc(shoulderX + headR * 0.75, headCY - headR * 1.25, 2.4 * scaleF, 0, TAU);
-          ctx.fill();
 
           // handle
           ctx.strokeStyle = "#8b6f4e";
