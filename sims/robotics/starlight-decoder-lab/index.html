@@ -1503,16 +1503,18 @@
             ctx.fill();
           });
 
-          // spacesuit torso — rounded, puffy silhouette (same build as before, resuited)
+          // spacesuit torso — a rounded BARREL that bulges in the middle then narrows
+          // toward the hip (like a real puffy suit), NOT a flare that keeps widening
+          // toward the hem the way the old dress silhouette did
           ctx.fillStyle = "#f1f5f9";
           ctx.strokeStyle = "#94a3b8";
           ctx.lineWidth = 1.5;
           ctx.beginPath();
           ctx.moveTo(shoulderX - 14 * scaleF, shoulderY - 2 * scaleF);
-          ctx.quadraticCurveTo(shoulderX - 15 * scaleF, shoulderY + 12 * scaleF, shoulderX - 24 * scaleF, hipY);
-          ctx.quadraticCurveTo(shoulderX, hipY + 10 * scaleF, shoulderX + 24 * scaleF, hipY);
-          ctx.quadraticCurveTo(shoulderX + 15 * scaleF, shoulderY + 12 * scaleF, shoulderX + 14 * scaleF, shoulderY - 2 * scaleF);
-          ctx.quadraticCurveTo(shoulderX, shoulderY - 10 * scaleF, shoulderX - 14 * scaleF, shoulderY - 2 * scaleF);
+          ctx.quadraticCurveTo(shoulderX - 20 * scaleF, shoulderY + 14 * scaleF, shoulderX - 16 * scaleF, hipY);
+          ctx.quadraticCurveTo(shoulderX, hipY + 6 * scaleF, shoulderX + 16 * scaleF, hipY);
+          ctx.quadraticCurveTo(shoulderX + 20 * scaleF, shoulderY + 14 * scaleF, shoulderX + 14 * scaleF, shoulderY - 2 * scaleF);
+          ctx.quadraticCurveTo(shoulderX, shoulderY - 12 * scaleF, shoulderX - 14 * scaleF, shoulderY - 2 * scaleF);
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
@@ -1547,7 +1549,7 @@
           const otherHandX = otherShoulderX + Math.cos(otherArmAngle) * otherArmLen;
           const otherHandY = otherShoulderY + Math.sin(otherArmAngle) * otherArmLen;
           ctx.strokeStyle = "#e8edf5";
-          ctx.lineWidth = 8 * scaleF;
+          ctx.lineWidth = 10 * scaleF;
           ctx.lineCap = "round";
           ctx.beginPath();
           ctx.moveTo(otherShoulderX, otherShoulderY);
@@ -1555,28 +1557,30 @@
           ctx.stroke();
           // red wrist trim
           ctx.strokeStyle = "#dc2626";
-          ctx.lineWidth = 3.5 * scaleF;
+          ctx.lineWidth = 4 * scaleF;
           ctx.beginPath();
-          ctx.arc(lerp(otherShoulderX, otherHandX, 0.78), lerp(otherShoulderY, otherHandY, 0.78), 4.4 * scaleF, 0, TAU);
+          ctx.arc(lerp(otherShoulderX, otherHandX, 0.78), lerp(otherShoulderY, otherHandY, 0.78), 5.2 * scaleF, 0, TAU);
           ctx.stroke();
           // black glove
           ctx.fillStyle = "#1e293b";
           ctx.strokeStyle = "#0f172a";
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(otherHandX, otherHandY, 5 * scaleF, 0, TAU);
+          ctx.arc(otherHandX, otherHandY, 6.2 * scaleF, 0, TAU);
           ctx.fill();
           ctx.stroke();
-          // shoulder pauldron
+          // puffy shoulder pauldron
           ctx.fillStyle = "#f1f5f9";
+          ctx.strokeStyle = "#94a3b8";
+          ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(otherShoulderX, otherShoulderY, 9 * scaleF, 0, TAU);
+          ctx.arc(otherShoulderX, otherShoulderY, 13 * scaleF, 0, TAU);
           ctx.fill();
           ctx.stroke();
 
           // arm (shoulder -> hand), rotates with the wand — short and chubby
           ctx.strokeStyle = "#e8edf5";
-          ctx.lineWidth = 8.5 * scaleF;
+          ctx.lineWidth = 10.5 * scaleF;
           ctx.lineCap = "round";
           ctx.beginPath();
           ctx.moveTo(wandShoulderX, wandShoulderY);
@@ -1584,22 +1588,24 @@
           ctx.stroke();
           // red wrist trim
           ctx.strokeStyle = "#dc2626";
-          ctx.lineWidth = 3.5 * scaleF;
+          ctx.lineWidth = 4 * scaleF;
           ctx.beginPath();
-          ctx.arc(lerp(wandShoulderX, handX, 0.78), lerp(wandShoulderY, handY, 0.78), 4.4 * scaleF, 0, TAU);
+          ctx.arc(lerp(wandShoulderX, handX, 0.78), lerp(wandShoulderY, handY, 0.78), 5.2 * scaleF, 0, TAU);
           ctx.stroke();
           // black glove holding the wand
           ctx.fillStyle = "#1e293b";
           ctx.strokeStyle = "#0f172a";
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(handX, handY, 5 * scaleF, 0, TAU);
+          ctx.arc(handX, handY, 6.2 * scaleF, 0, TAU);
           ctx.fill();
           ctx.stroke();
-          // shoulder pauldron
+          // puffy shoulder pauldron
           ctx.fillStyle = "#f1f5f9";
+          ctx.strokeStyle = "#94a3b8";
+          ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(wandShoulderX, wandShoulderY, 9 * scaleF, 0, TAU);
+          ctx.arc(wandShoulderX, wandShoulderY, 13 * scaleF, 0, TAU);
           ctx.fill();
           ctx.stroke();
 
