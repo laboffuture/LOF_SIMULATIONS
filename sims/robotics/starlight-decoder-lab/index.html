@@ -759,7 +759,7 @@
               clean reading turn into a mixed, unclear one.
             </li>
             <li>
-              Use <b>Run Guided Decode</b> to watch all five colours scan back-to-back
+              Use <b>Run Guided Decode</b> to watch all six colours scan back-to-back
               and fill in the constellation.
             </li>
           </ol>
@@ -791,6 +791,7 @@
           <h4>Wand Colour</h4>
           <div class="colorpick" id="colorPick">
             <button class="swatch" data-color="blue" style="--sw:#3b82f6"><span class="dot"></span>Blue</button>
+            <button class="swatch" data-color="skyblue" style="--sw:#38bdf8"><span class="dot"></span>Sky Blue</button>
             <button class="swatch" data-color="white" style="--sw:#94a3b8"><span class="dot"></span>White</button>
             <button class="swatch" data-color="yellow" style="--sw:#facc15"><span class="dot"></span>Yellow</button>
             <button class="swatch" data-color="orange" style="--sw:#fb923c"><span class="dot"></span>Orange</button>
@@ -918,15 +919,18 @@
         <div class="hbar"><div class="fill" id="interfFill" style="background: var(--warn)"></div></div>
 
         <h3 style="margin-top: 14px">Star Mapping Reference</h3>
-        <div class="maprow"><span class="msw" style="background:#3b82f6"></span>Blue-dominant channels → Blue Star</div>
-        <div class="maprow"><span class="msw" style="background:#cbd5e1"></span>Balanced, bright channels → White Star</div>
-        <div class="maprow"><span class="msw" style="background:#facc15"></span>Yellow-warm dominant → Yellow Star</div>
-        <div class="maprow"><span class="msw" style="background:#fb923c"></span>Orange-warm dominant → Orange Star</div>
-        <div class="maprow"><span class="msw" style="background:#ef4444"></span>Red-dominant channels → Red Star</div>
+        <div class="maprow"><span class="msw" style="background:#3b82f6"></span>Blue-dominant channels → Rigel (Blue Star)</div>
+        <div class="maprow"><span class="msw" style="background:#38bdf8"></span>Saturated blue-white → Sirius (Sky Blue Star)</div>
+        <div class="maprow"><span class="msw" style="background:#cbd5e1"></span>Balanced, bright channels → Procyon (White Star)</div>
+        <div class="maprow"><span class="msw" style="background:#facc15"></span>Yellow-warm dominant → the Sun (Yellow Star)</div>
+        <div class="maprow"><span class="msw" style="background:#fb923c"></span>Orange-warm dominant → Arcturus (Orange Star)</div>
+        <div class="maprow"><span class="msw" style="background:#ef4444"></span>Red-dominant channels → Betelgeuse (Red Star)</div>
+        <div class="hint">Sirius and Procyon read almost identically to the AS7341 — both are bright enough to saturate most channels, a real sensor limitation, not a bug.</div>
 
         <h3 style="margin-top: 14px">Constellation Progress</h3>
         <div class="conperm" id="conperm">
           <div class="constar" id="con-blue" style="--sw:#3b82f6">✦</div>
+          <div class="constar" id="con-skyblue" style="--sw:#38bdf8">✦</div>
           <div class="constar" id="con-white" style="--sw:#94a3b8">✦</div>
           <div class="constar" id="con-yellow" style="--sw:#facc15">✦</div>
           <div class="constar" id="con-orange" style="--sw:#fb923c">✦</div>
@@ -968,14 +972,18 @@
         const CH_COLOR = ["#8b5cf6", "#3b82f6", "#22d3ee", "#22c55e", "#facc15", "#fb923c", "#ef4444", "#dc2626"];
         const N_CH = 8;
 
+        // Real AS7341 F1-F8 raw-count reference scans (0-30000, sensor's own ceiling),
+        // normalized to 0-1 so they drop straight into the existing distance/brightness
+        // model. Source: star_spectra_graphs.pdf reference dataset.
         const STARS = {
-          blue: { name: "Blue Star", sw: "#3b82f6", profile: [0.95, 0.92, 0.72, 0.32, 0.14, 0.1, 0.08, 0.05] },
-          white: { name: "White Star", sw: "#cbd5e1", profile: [0.68, 0.74, 0.78, 0.8, 0.78, 0.75, 0.72, 0.66] },
-          yellow: { name: "Yellow Star", sw: "#facc15", profile: [0.14, 0.18, 0.34, 0.68, 0.94, 0.58, 0.3, 0.15] },
-          orange: { name: "Orange Star", sw: "#fb923c", profile: [0.1, 0.12, 0.16, 0.3, 0.55, 0.94, 0.68, 0.34] },
-          red: { name: "Red Star", sw: "#ef4444", profile: [0.06, 0.06, 0.09, 0.13, 0.2, 0.44, 0.85, 0.94] },
+          blue: { name: "Blue Star", star: "Rigel", sw: "#3b82f6", profile: [0.0962, 1, 1, 0.4766, 0.4711, 0.4402, 0.409, 0.2101] },
+          skyblue: { name: "Sky Blue Star", star: "Sirius", sw: "#38bdf8", profile: [0.2166, 1, 1, 1, 0.7726, 1, 1, 0.3734] },
+          white: { name: "White Star", star: "Procyon", sw: "#cbd5e1", profile: [0.214, 1, 1, 1, 0.7903, 1, 1, 0.3749] },
+          yellow: { name: "Yellow Star", star: "the Sun", sw: "#facc15", profile: [0.1568, 0.3379, 1, 1, 0.7921, 1, 1, 0.272] },
+          orange: { name: "Orange Star", star: "Arcturus", sw: "#fb923c", profile: [0.1073, 0.2554, 0.6143, 1, 0.501, 1, 1, 0.1873] },
+          red: { name: "Red Star", star: "Betelgeuse", sw: "#ef4444", profile: [0.1007, 0.2953, 0.2453, 0.4288, 0.4537, 1, 1, 0.1941] },
         };
-        const COLOR_ORDER = ["blue", "white", "yellow", "orange", "red"];
+        const COLOR_ORDER = ["blue", "skyblue", "white", "yellow", "orange", "red"];
 
         function normalize(v) {
           const m = Math.sqrt(v.reduce((a, b) => a + b * b, 0)) || 1;
@@ -1001,19 +1009,31 @@
           const weakThreshold = 0.55 - (S.sensitivity / 100) * 0.35;
           const tooWeak = signalPeak < weakThreshold;
           let best = null,
-            bestScore = -1;
+            bestScore = -1,
+            secondBest = null,
+            secondScore = -1;
           for (const key of COLOR_ORDER) {
             const score = dotp(normalize(reading), normalize(STARS[key].profile));
             if (score > bestScore) {
+              secondScore = bestScore;
+              secondBest = best;
               bestScore = score;
               best = key;
+            } else if (score > secondScore) {
+              secondScore = score;
+              secondBest = key;
             }
           }
           const confThreshold = 0.985 - (S.sensitivity / 100) * 0.05;
           const noisy = bestScore < confThreshold;
+          // Some real reference stars (e.g. Sirius vs Procyon) saturate the sensor across
+          // almost every channel and become genuinely indistinguishable by shape alone —
+          // report that honestly instead of guessing between them.
+          const ambiguous = !noisy && bestScore - secondScore < 0.0015;
           if (saturated) return { key: "unclear", reason: "saturated" };
           if (tooWeak) return { key: "unclear", reason: "weak" };
           if (noisy) return { key: "unclear", reason: "mixed" };
+          if (ambiguous) return { key: "unclear", reason: "ambiguous", candidates: [best, secondBest] };
           return { key: best, reason: "match" };
         }
 
@@ -1026,14 +1046,15 @@
           sensitivity: 50,
           phase: "idle", // idle | swish | point | reading | result
           phaseT: 0,
-          wandAngle: -2.15, // radians, resting pose
+          wandAngle: 0.85, // radians, resting pose (matches REST_ANGLE below)
           displayReadings: new Array(N_CH).fill(0),
           targetReadings: new Array(N_CH).fill(0),
           signalPeak: 0,
           resultKey: null,
           resultReason: "",
+          resultCandidates: null,
           sparkles: [],
-          unlocked: { blue: false, white: false, yellow: false, orange: false, red: false },
+          unlocked: { blue: false, skyblue: false, white: false, yellow: false, orange: false, red: false },
           missionRunning: false,
           missionIdx: 0,
           missionElapsed: 0,
@@ -1144,6 +1165,7 @@
           S.displayReadings = new Array(N_CH).fill(0);
           S.targetReadings = new Array(N_CH).fill(0);
           S.resultKey = null;
+          S.resultCandidates = null;
           setSegOn($("colorPick"), "color", null);
           setDistance(30);
           setBrightness(70);
@@ -1252,6 +1274,7 @@
               const result = classify(S.targetReadings, S.signalPeak);
               S.resultKey = result.key;
               S.resultReason = result.reason;
+              S.resultCandidates = result.candidates || null;
               S.phase = "result";
               S.phaseT = 0;
               if (result.key !== "unclear") S.unlocked[result.key] = true;
@@ -1277,6 +1300,7 @@
           if (result.key !== "unclear") {
             const msgs = {
               blue: "Blue-dominant light detected.",
+              skyblue: "Saturated blue-white light detected.",
               white: "Balanced light pattern detected.",
               yellow: "Warm yellow pattern detected.",
               orange: "Orange-warm pattern detected.",
@@ -1287,6 +1311,9 @@
             setFeedback("Move the wand closer for stronger readings.", "warn");
           } else if (result.reason === "saturated") {
             setFeedback("Light too strong. Move the wand slightly away.", "warn");
+          } else if (result.reason === "ambiguous") {
+            const [a, b] = (result.candidates || []).map((k) => STARS[k].name);
+            setFeedback(`Reading matches ${a} and ${b} equally — the sensor can't tell these two apart.`, "bad");
           } else {
             setFeedback("Background light is affecting the scan. Reading is unclear — adjust and scan again.", "bad");
           }
@@ -1369,11 +1396,13 @@
                   ? "Signal too weak — move wand closer."
                   : S.resultReason === "saturated"
                     ? "Signal saturated — move wand away."
-                    : "Reading mixed by interference — rescan.";
+                    : S.resultReason === "ambiguous"
+                      ? "Two reference stars match equally — genuinely ambiguous."
+                      : "Reading mixed by interference — rescan.";
             } else {
               chip.className = "chip c-match";
               chip.textContent = "MATCHED";
-              txt.textContent = STARS[S.resultKey].name + " decoded from " + STARS[S.color].name.replace(" Star", "") + " light.";
+              txt.textContent = STARS[S.resultKey].name + " (" + STARS[S.resultKey].star + ") decoded from " + STARS[S.color].name.replace(" Star", "") + " light.";
             }
           }
           updateActionButton();
@@ -1604,14 +1633,23 @@
               ctx.font = "600 10px 'Rajdhani', sans-serif";
               ctx.fillStyle = "#cbd5e1";
               const hint =
-                S.resultReason === "weak" ? "move wand closer" : S.resultReason === "saturated" ? "move wand away" : "reduce interference";
+                S.resultReason === "weak"
+                  ? "move wand closer"
+                  : S.resultReason === "saturated"
+                    ? "move wand away"
+                    : S.resultReason === "ambiguous"
+                      ? "two stars match equally — real sensor limit"
+                      : "reduce interference";
               ctx.fillText(hint, oledX + oledW / 2, oledY + 50);
             } else {
               const st = STARS[S.resultKey];
               ctx.fillStyle = st.sw;
               ctx.font = "800 13px 'Orbitron', sans-serif";
-              ctx.fillText(st.name.toUpperCase(), oledX + oledW / 2, oledY + 16);
-              drawStarGraph(oledX + 10, oledY + 38, oledW - 20, oledH - 50);
+              ctx.fillText(st.name.toUpperCase(), oledX + oledW / 2, oledY + 15);
+              ctx.fillStyle = "#94a3b8";
+              ctx.font = "600 9px 'Rajdhani', sans-serif";
+              ctx.fillText(st.star, oledX + oledW / 2, oledY + 27);
+              drawStarGraph(oledX + 10, oledY + 42, oledW - 20, oledH - 54);
             }
           }
 
