@@ -28,7 +28,8 @@ const PROJECTS = [
   { id: "catapult-glider", title: "Catapult Glider", category: "aerospace", status: "live", url: "../sims/aerospace/CatapultGlider/CatapultGlider.html", description: "Launch a glider from a catapult and study its flight path." },
   { id: "uttm", title: "UTTM — Universal Thrust Testing Machine", category: "aerospace", status: "live", url: "../sims/aerospace/UTTM/UTTM.html", description: "Bench-test motor and propeller combinations to find the best safe thrust setup." },
   { id: "darrieus-turbine", title: "Darrieus Turbine", category: "aerospace", status: "live", url: "../sims/aerospace/DarrieusTurbine/DarrieusTurbine.html", description: "Spin up a helical vertical-axis wind turbine and charge a device with the power it generates." },
-  ...Array.from({ length: 26 }, (_, i) => ({
+  { id: "solar-charging-station", title: "Solar Charging Station", category: "aerospace", status: "live", url: "../sims/aerospace/SolarChargingStation/SolarChargingStation.html", description: "Angle a solar panel into the sun, charge a battery, then switch to stored power and keep a device running after dark." },
+  ...Array.from({ length: 25 }, (_, i) => ({
     id: `aerospace-coming-soon-${i + 2}`,
     title: `Aerospace Project ${String(i + 2).padStart(2, "0")}`,
     category: "aerospace",

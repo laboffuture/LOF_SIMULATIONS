@@ -1,0 +1,1280 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solar Charging Station · Sun to Stored Power</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #eef1f4;
+        --panel: #fcfdfe;
+        --panel2: #f3f6f8;
+        --line: #dbe2e8;
+        --txt: #17293b;
+        --mut: #4c5c6b;
+        --dim: #8a949d;
+        --accent: #e8590c;
+        --accent-press: #c94a08;
+        --sky: #2a78d6;
+        --sky-soft: #e3eefb;
+        --volt: #fab219;
+        --curr: #2a78d6;
+        --warn: #fab219;
+        --danger: #d03b3b;
+        --ok: #0ca30c;
+        --ok-ink: #006300;
+        --shadow: 0 1px 2px rgba(23, 41, 59, 0.08);
+        --r: 10px;
+        --head: "Orbitron", sans-serif;
+        --body: "Rajdhani", sans-serif;
+        --mono: "IBM Plex Mono", Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        font-family: var(--body);
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--txt);
+        background: var(--bg);
+        height: 100vh;
+        overflow: hidden;
+        padding: 12px clamp(12px, 2.4vw, 30px);
+        display: flex;
+        flex-direction: column;
+      }
+      h1,
+      h3,
+      .badge {
+        font-family: var(--head);
+      }
+      header.top {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+        flex: 0 0 auto;
+      }
+      .logo {
+        font-size: 26px;
+        line-height: 1;
+      }
+      .title h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--txt);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 290px 1fr 300px;
+        gap: 14px;
+        align-items: stretch;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      @media (max-width: 1180px) {
+        body {
+          overflow: auto;
+          height: auto;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+          flex: 0 0 auto;
+        }
+        .card.controls,
+        .card.readings {
+          width: 100%;
+        }
+        .card.stage {
+          width: 100%;
+          flex: 0 0 auto;
+          height: clamp(280px, 78vw, 460px);
+        }
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        box-shadow: var(--shadow);
+        padding: 16px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
+      }
+      .card.stage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .card.stage canvas {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .card h3 {
+        margin: 0 0 3px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--mut);
+      }
+      .card .sub {
+        font-size: 12.5px;
+        color: var(--mut);
+        margin: 0 0 10px;
+        line-height: 1.45;
+      }
+
+      .ctrl {
+        margin: 14px 0;
+      }
+      .ctrl .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+      }
+      .ctrl label {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--txt);
+      }
+      .ctrl .val {
+        font-family: var(--head);
+        font-size: 12px;
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .toggle {
+        display: flex;
+        gap: 8px;
+        margin-top: 5px;
+        flex-wrap: wrap;
+      }
+      .toggle button {
+        flex: 1;
+        min-width: 60px;
+        cursor: pointer;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--mut);
+        padding: 8px 6px;
+        border-radius: 8px;
+        font-size: 12.5px;
+        font-weight: 600;
+        transition: 0.15s;
+        font-family: var(--body);
+      }
+      .toggle button:hover {
+        border-color: var(--dim);
+        color: var(--txt);
+      }
+      .toggle button.on {
+        color: var(--txt);
+        border-color: var(--sky);
+        background: var(--sky-soft);
+        font-weight: 700;
+      }
+      .hint {
+        font-size: 11.5px;
+        color: var(--dim);
+        margin-top: 6px;
+        line-height: 1.4;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        accent-color: var(--sky);
+        height: 26px;
+        cursor: pointer;
+      }
+      .anglemarks {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--dim);
+        margin-top: -4px;
+      }
+
+      .stage-foot {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+      .btn {
+        cursor: pointer;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--txt);
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 12.5px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        transition: 0.15s;
+        font-family: var(--head);
+        display: flex;
+        gap: 7px;
+        align-items: center;
+      }
+      .btn:hover {
+        border-color: var(--dim);
+      }
+      .btn.start {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .btn.start:hover {
+        background: var(--accent-press);
+        border-color: var(--accent-press);
+      }
+      .btn.start.on {
+        background: var(--ok);
+        border-color: var(--ok);
+        color: #fff;
+      }
+      .btn.reset {
+        background: var(--panel);
+        border-color: var(--line);
+        color: var(--mut);
+      }
+
+      canvas {
+        width: 100%;
+        height: 100%;
+        aspect-ratio: 640 / 520;
+        object-fit: contain;
+        display: block;
+        border-radius: 8px;
+        background: var(--panel2);
+      }
+      .modechip {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.03em;
+        background: var(--panel2);
+        color: var(--mut);
+        border: 1px solid var(--line);
+      }
+      .modechip.run {
+        background: #e9f7e9;
+        color: var(--ok-ink);
+        border-color: #bfe3bb;
+      }
+
+      .reading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .reading:last-child {
+        border-bottom: none;
+      }
+      .reading .k {
+        font-size: 13px;
+        color: var(--mut);
+      }
+      .reading .v {
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--txt);
+      }
+
+      .meter {
+        height: 10px;
+        border-radius: 5px;
+        background: var(--panel2);
+        position: relative;
+        overflow: hidden;
+        margin: 6px 0 4px;
+        border: 1px solid var(--line);
+      }
+      .meter .fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0;
+        border-radius: 5px;
+        transition:
+          width 0.15s,
+          background 0.25s;
+      }
+      .meterlabels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--dim);
+        margin-bottom: 10px;
+      }
+
+      .badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 13.5px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        justify-content: center;
+        margin-top: 4px;
+        transition: 0.2s;
+      }
+      .b-off {
+        background: var(--panel2);
+        color: var(--dim);
+        border: 1px solid var(--line);
+      }
+      .b-on {
+        background: #e9f7e9;
+        color: var(--ok-ink);
+        border: 1px solid #bfe3bb;
+      }
+      .b-charge {
+        background: #fdf6e8;
+        color: #9a7008;
+        border: 1px solid #f2e0b8;
+      }
+      .devnote {
+        font-size: 11.5px;
+        color: var(--mut);
+        text-align: center;
+        margin-top: 6px;
+        line-height: 1.4;
+        min-height: 32px;
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 14px;
+        padding: 12px 8px;
+        border-radius: 8px;
+        background: var(--panel2);
+        border: 1px solid var(--line);
+      }
+      .flow .node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        flex: 1;
+        opacity: 0.4;
+        transition: 0.25s;
+      }
+      .flow .node.hot {
+        opacity: 1;
+      }
+      .flow .node .ic {
+        font-size: 19px;
+      }
+      .flow .node .lb {
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        color: var(--mut);
+        text-transform: uppercase;
+      }
+      .flow .arrow {
+        color: var(--dim);
+        font-size: 13px;
+        flex: 0 0 auto;
+        transition: 0.25s;
+      }
+      .flow .arrow.hot {
+        color: var(--accent);
+      }
+
+      .sect {
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid var(--line);
+      }
+      .sect-label {
+        display: block;
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--txt);
+        margin-bottom: 8px;
+      }
+
+      .helpwrap {
+        position: fixed;
+        top: 14px;
+        right: clamp(12px, 2.4vw, 30px);
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .helpbtns {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .helpbtn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head);
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #fff;
+        background: var(--sky);
+        border: 1px solid var(--sky);
+        border-radius: 8px;
+        padding: 8px 14px;
+        box-shadow: 0 6px 14px rgba(42, 120, 214, 0.24);
+        transition:
+          transform 0.15s ease,
+          background 0.15s ease;
+      }
+      .helpbtn:hover {
+        transform: translateY(-1px);
+      }
+      .helpbtn:focus-visible {
+        outline: 2px solid var(--txt);
+        outline-offset: 2px;
+      }
+      .helpbtn.on {
+        background: var(--accent);
+        border-color: var(--accent);
+        box-shadow: 0 6px 14px rgba(232, 89, 12, 0.26);
+      }
+      .helpbar {
+        display: none;
+        margin-top: 8px;
+        width: 380px;
+        max-width: min(380px, 88vw);
+        max-height: 72vh;
+        overflow-y: auto;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        box-shadow: 0 14px 30px rgba(23, 41, 59, 0.16);
+        padding: 14px 16px;
+        font-size: 13.5px;
+        line-height: 1.5;
+        color: var(--txt);
+      }
+      .helpbar.show {
+        display: block;
+      }
+      .tabpanel {
+        display: none;
+      }
+      .tabpanel.on {
+        display: block;
+      }
+      .tabpanel ol,
+      .tabpanel ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .tabpanel li {
+        margin-bottom: 6px;
+      }
+      .tabpanel li:last-child {
+        margin-bottom: 0;
+      }
+      .tabpanel b {
+        color: var(--sky);
+      }
+      @media (max-width: 900px) {
+        .helpwrap {
+          position: static;
+          align-items: stretch;
+          margin-bottom: 10px;
+          flex: 0 0 auto;
+        }
+        .helpbar {
+          width: 100%;
+          max-width: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .helpbtn {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="helpwrap">
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">
+          What You'll Learn
+        </button>
+      </div>
+      <div class="helpbar" id="helpbar">
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li>Pick <b>Day</b> or <b>Night</b> — solar power only exists by day.</li>
+            <li>
+              By day, set the <b>Sunlight Intensity</b> and drag the
+              <b>Panel Angle</b> slider — try to land near the sweet spot marked
+              on the dial.
+            </li>
+            <li>Choose the <b>Device Load</b> the station is powering.</li>
+            <li>
+              Set <b>Battery Mode</b> to <b>Charge</b> to fill the battery from
+              the panel, or <b>Use Stored Power</b> to run the device off the
+              battery.
+            </li>
+            <li>Press <b>Start</b> and watch the readings and energy flow.</li>
+            <li>
+              Try this: charge the battery during the <b>Day</b>, then switch to
+              <b>Night</b> and <b>Use Stored Power</b> — the device keeps running
+              on what you stored.
+            </li>
+            <li>Press <b>Reset</b> to clear the battery and start over.</li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <ul>
+            <li>Solar power is only generated when sunlight is available</li>
+            <li>Stronger sunlight and a correctly angled panel generate more power</li>
+            <li>A wrongly angled panel captures far less usable sunlight</li>
+            <li>Stored battery energy can be used anytime, including at night</li>
+            <li>A heavier device load drains a battery faster</li>
+            <li>A charging station must choose to charge or to use power — not both at once</li>
+            <li>How energy changes form: sunlight → electrical energy → stored energy → device power</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <header class="top">
+      <div class="logo">☀️</div>
+      <div class="title">
+        <h1>Solar Charging Station</h1>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card controls">
+        <h3>Charging Bench</h3>
+        <p class="sub">
+          Set the conditions, then press Start to see how sunlight becomes
+          stored, usable power.
+        </p>
+
+        <div class="ctrl">
+          <div class="row">
+            <label>Time Mode</label><span class="val" id="timeVal">Day</span>
+          </div>
+          <div class="toggle" id="timeToggle">
+            <button data-v="day">☀️ Day</button>
+            <button data-v="night">🌙 Night</button>
+          </div>
+          <p class="hint">At night the panel receives no sunlight at all.</p>
+        </div>
+
+        <div class="ctrl">
+          <div class="row">
+            <label>Sunlight Intensity</label
+            ><span class="val" id="sunVal">Medium</span>
+          </div>
+          <div class="toggle" id="sunToggle">
+            <button data-v="low">Low</button>
+            <button data-v="medium">Medium</button>
+            <button data-v="high">High</button>
+          </div>
+          <p class="hint">Only matters during the Day.</p>
+        </div>
+
+        <div class="ctrl">
+          <div class="row">
+            <label>Panel Angle</label><span class="val" id="angleVal">30°</span>
+          </div>
+          <input type="range" id="angleSlider" min="0" max="90" value="30" step="1" />
+          <div class="anglemarks"><span>0°</span><span>★ 45° optimal</span><span>90°</span></div>
+          <p class="hint">
+            Closer to the marked sweet spot faces the panel more directly at
+            the sun, so more sunlight is captured.
+          </p>
+        </div>
+
+        <div class="ctrl">
+          <div class="row"><label>Device Load</label></div>
+          <div class="toggle" id="loadToggle">
+            <button data-v="led">LED</button>
+            <button data-v="fan">Fan</button>
+            <button data-v="phone">Phone</button>
+            <button data-v="gadget">Gadget</button>
+          </div>
+          <p class="hint" id="loadNote">A small LED barely drains the battery.</p>
+        </div>
+
+        <div class="ctrl">
+          <div class="row"><label>Battery Mode</label></div>
+          <div class="toggle" id="modeToggle">
+            <button data-v="charge">⚡ Charge</button>
+            <button data-v="use">🔌 Use Stored Power</button>
+          </div>
+          <p class="hint">
+            Charge fills the battery from the panel. Use Stored Power runs the
+            device from the battery — day or night.
+          </p>
+        </div>
+
+        <div class="stage-foot">
+          <button class="btn start" id="startBtn">▶ Start</button>
+          <button class="btn reset" id="resetBtn">↺ Reset</button>
+        </div>
+        <p class="hint" id="statusHint" style="margin-top: 10px">
+          Set the conditions, then press Start.
+        </p>
+      </section>
+
+      <section class="card stage">
+        <canvas id="stage" width="640" height="520"></canvas>
+        <span class="modechip" id="modeChip">Idle — press Start</span>
+      </section>
+
+      <section class="card readings">
+        <h3>Live Readings</h3>
+        <p class="sub">What the station is generating, storing, and using.</p>
+
+        <div class="reading">
+          <span class="k">Solar Power Generated</span
+          ><span class="v" id="solarVal">Zero</span>
+        </div>
+
+        <div class="reading">
+          <span class="k">Battery Level</span
+          ><span class="v" id="battVal">0%</span>
+        </div>
+        <div class="meter">
+          <div class="fill" id="battFill" style="background: var(--ok)"></div>
+        </div>
+        <div class="meterlabels"><span>0%</span><span>50%</span><span>100%</span></div>
+
+        <div class="sect">
+          <label class="sect-label">Charging Status</label>
+          <div class="badge b-off" id="chargeBadge">Not Charging</div>
+        </div>
+
+        <div class="sect">
+          <label class="sect-label">Device Status</label>
+          <div class="badge b-off" id="deviceBadge">OFF</div>
+          <p class="devnote" id="devNote">Press Start to begin.</p>
+        </div>
+
+        <div class="sect">
+          <label class="sect-label">Energy Flow</label>
+          <div class="flow" id="flowRow">
+            <div class="node" data-n="sun">
+              <span class="ic">☀️</span><span class="lb">Sun</span>
+            </div>
+            <span class="arrow" data-a="1">→</span>
+            <div class="node" data-n="panel">
+              <span class="ic">🔆</span><span class="lb">Panel</span>
+            </div>
+            <span class="arrow" data-a="2">→</span>
+            <div class="node" data-n="battery">
+              <span class="ic">🔋</span><span class="lb">Battery</span>
+            </div>
+            <span class="arrow" data-a="3">→</span>
+            <div class="node" data-n="device">
+              <span class="ic">📱</span><span class="lb">Device</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      (function () {
+        var bar = document.getElementById("helpbar");
+        var btns = document.querySelectorAll(".helpbtn");
+        var panels = document.querySelectorAll(".tabpanel");
+        function closeAll() {
+          bar.classList.remove("show");
+          btns.forEach(function (b) {
+            b.classList.remove("on");
+          });
+          panels.forEach(function (p) {
+            p.classList.remove("on");
+          });
+        }
+        btns.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var already = btn.classList.contains("on");
+            closeAll();
+            if (already) return;
+            btn.classList.add("on");
+            document
+              .querySelector('.tabpanel[data-panel="' + btn.dataset.tab + '"]')
+              .classList.add("on");
+            bar.classList.add("show");
+          });
+        });
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && bar.classList.contains("show")) closeAll();
+        });
+      })();
+    </script>
+
+    <script>
+      (() => {
+        "use strict";
+
+        const SUN = {
+          low: { label: "Low", power: 30 },
+          medium: { label: "Medium", power: 65 },
+          high: { label: "High", power: 100 },
+        };
+        const OPTIMAL_ANGLE = 45;
+        const LOADS = {
+          led: { label: "LED", drain: 0.6, chargingLabel: false, note: "A small LED barely drains the battery." },
+          fan: { label: "Fan", drain: 1.6, chargingLabel: false, note: "A motorized fan pulls noticeably more current." },
+          phone: { label: "Phone", drain: 1.0, chargingLabel: true, note: "The phone itself shows as Charging while it draws power." },
+          gadget: { label: "Small Gadget", drain: 2.3, chargingLabel: false, note: "The heaviest load here — it drains the battery fastest." },
+        };
+        const CHARGE_RATE = 5.5; // %/sec at 100% solar power
+        const LOW_BATTERY_CUTOFF = 1; // % — below this, the device can't be powered
+
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const TAU = Math.PI * 2;
+        const $ = (id) => document.getElementById(id);
+        function rr(c, x, y, w, h, r) {
+          r = Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2);
+          c.beginPath();
+          c.moveTo(x + r, y);
+          c.arcTo(x + w, y, x + w, y + h, r);
+          c.arcTo(x + w, y + h, x, y + h, r);
+          c.arcTo(x, y + h, x, y, r);
+          c.arcTo(x, y, x + w, y, r);
+          c.closePath();
+        }
+
+        const S = {
+          timeMode: "day",
+          sunlight: "medium",
+          panelAngle: 30,
+          device: "led",
+          batteryMode: "charge",
+          running: false,
+          battery: 0,
+          solarRaw: 0,
+          deviceOn: false,
+          chargingStatus: "Not Charging",
+          fanAngle: 0,
+          particles: [],
+        };
+
+        function computeSolarRaw() {
+          if (S.timeMode !== "day") return 0;
+          const base = SUN[S.sunlight].power;
+          const angleDiff = Math.abs(S.panelAngle - OPTIMAL_ANGLE);
+          const eff = clamp(1 - angleDiff / 90, 0.15, 1);
+          return base * eff;
+        }
+        function solarLabel(raw) {
+          if (raw <= 0.5) return "Zero";
+          if (raw < 35) return "Low";
+          if (raw < 70) return "Medium";
+          return "High";
+        }
+
+        /* ---------- controls ---------- */
+        function wireToggle(id, onPick) {
+          const el = $(id);
+          el.querySelectorAll("button").forEach((b) => {
+            b.addEventListener("click", () => {
+              el.querySelectorAll("button").forEach((x) => x.classList.remove("on"));
+              b.classList.add("on");
+              onPick(b.dataset.v);
+            });
+          });
+        }
+        wireToggle("timeToggle", (v) => {
+          S.timeMode = v;
+          $("timeVal").textContent = v === "day" ? "Day" : "Night";
+        });
+        wireToggle("sunToggle", (v) => {
+          S.sunlight = v;
+          $("sunVal").textContent = SUN[v].label;
+        });
+        wireToggle("loadToggle", (v) => {
+          S.device = v;
+          $("loadNote").textContent = LOADS[v].note;
+        });
+        wireToggle("modeToggle", (v) => {
+          S.batteryMode = v;
+        });
+        $("angleSlider").addEventListener("input", (e) => {
+          S.panelAngle = Number(e.target.value);
+          $("angleVal").textContent = S.panelAngle + "°";
+        });
+        document.querySelector('#timeToggle button[data-v="day"]').classList.add("on");
+        document.querySelector('#sunToggle button[data-v="medium"]').classList.add("on");
+        document.querySelector('#loadToggle button[data-v="led"]').classList.add("on");
+        document.querySelector('#modeToggle button[data-v="charge"]').classList.add("on");
+
+        const startBtn = $("startBtn");
+        startBtn.addEventListener("click", () => {
+          S.running = !S.running;
+          startBtn.classList.toggle("on", S.running);
+          startBtn.textContent = S.running ? "⏸ Pause" : "▶ Start";
+          $("statusHint").textContent = S.running
+            ? "Running — change settings any time to see the effect."
+            : "Paused. Press Start to continue.";
+        });
+        $("resetBtn").addEventListener("click", () => {
+          S.running = false;
+          S.battery = 0;
+          S.solarRaw = 0;
+          S.deviceOn = false;
+          S.chargingStatus = "Not Charging";
+          S.particles = [];
+          startBtn.classList.remove("on");
+          startBtn.textContent = "▶ Start";
+          $("statusHint").textContent = "Set the conditions, then press Start.";
+        });
+
+        /* ---------- simulation update ---------- */
+        function update(dt) {
+          S.solarRaw = computeSolarRaw();
+
+          if (!S.running) {
+            $("modeChip").textContent = "Idle — press Start";
+            $("modeChip").classList.remove("run");
+            return;
+          }
+          $("modeChip").textContent = S.timeMode === "day" ? "Running — Daytime" : "Running — Nighttime";
+          $("modeChip").classList.add("run");
+
+          if (S.batteryMode === "charge") {
+            S.deviceOn = false;
+            if (S.solarRaw > 0 && S.battery < 100) {
+              S.battery = clamp(S.battery + CHARGE_RATE * (S.solarRaw / 100) * dt, 0, 100);
+              S.chargingStatus = S.battery >= 100 ? "Fully Charged" : "Charging";
+            } else if (S.battery >= 100) {
+              S.chargingStatus = "Fully Charged";
+            } else {
+              S.chargingStatus = "Not Charging";
+            }
+          } else {
+            S.chargingStatus = "Not Charging";
+            if (S.battery > LOW_BATTERY_CUTOFF) {
+              S.deviceOn = true;
+              S.battery = clamp(S.battery - LOADS[S.device].drain * dt, 0, 100);
+              if (S.battery <= LOW_BATTERY_CUTOFF) S.deviceOn = false;
+            } else {
+              S.deviceOn = false;
+            }
+          }
+
+          if (S.device === "fan" && S.deviceOn) S.fanAngle += dt * 260;
+
+          // wire particles — panel->battery while charging, battery->device while powering
+          if (Math.random() < (S.batteryMode === "charge" && S.solarRaw > 0 ? 0.35 : 0)) {
+            S.particles.push({ seg: "charge", u: 0 });
+          }
+          if (Math.random() < (S.batteryMode === "use" && S.deviceOn ? 0.35 : 0)) {
+            S.particles.push({ seg: "use", u: 0 });
+          }
+          S.particles.forEach((p) => (p.u += dt * 0.9));
+          S.particles = S.particles.filter((p) => p.u < 1);
+        }
+
+        function updateUI() {
+          $("solarVal").textContent = solarLabel(S.solarRaw);
+          $("battVal").textContent = Math.round(S.battery) + "%";
+          const bf = $("battFill");
+          bf.style.width = S.battery + "%";
+          bf.style.background = S.battery < 20 ? "var(--danger)" : S.battery < 100 ? "var(--volt)" : "var(--ok)";
+
+          const cb = $("chargeBadge");
+          cb.textContent = S.chargingStatus;
+          cb.className = "badge " + (S.chargingStatus === "Fully Charged" ? "b-on" : S.chargingStatus === "Charging" ? "b-charge" : "b-off");
+
+          const db = $("deviceBadge");
+          const devText = S.deviceOn ? (LOADS[S.device].chargingLabel ? "Charging" : "ON") : "OFF";
+          db.textContent = devText;
+          db.className = "badge " + (S.deviceOn ? "b-on" : "b-off");
+
+          let note;
+          if (!S.running) note = "Press Start to begin.";
+          else if (S.batteryMode === "charge") note = S.solarRaw > 0 ? "Battery is charging from the panel. The device stays off in Charge mode." : "No sunlight right now, so nothing is charging.";
+          else if (S.deviceOn) note = "Running the " + LOADS[S.device].label + " from stored battery power.";
+          else note = "Battery is too low to power the device. Switch to Charge mode.";
+          $("devNote").textContent = note;
+
+          const sunHot = S.timeMode === "day" && S.solarRaw > 0;
+          const chargeHot = S.batteryMode === "charge" && S.solarRaw > 0;
+          const useHot = S.batteryMode === "use" && S.deviceOn;
+          document.querySelector('.node[data-n="sun"]').classList.toggle("hot", sunHot);
+          document.querySelector('.node[data-n="panel"]').classList.toggle("hot", sunHot);
+          document.querySelector('.arrow[data-a="1"]').classList.toggle("hot", sunHot);
+          document.querySelector('.arrow[data-a="2"]').classList.toggle("hot", chargeHot);
+          document.querySelector('.node[data-n="battery"]').classList.toggle("hot", S.battery > 0);
+          document.querySelector('.arrow[data-a="3"]').classList.toggle("hot", useHot);
+          document.querySelector('.node[data-n="device"]').classList.toggle("hot", S.deviceOn);
+        }
+
+        /* ---------- canvas ---------- */
+        const canvas = $("stage");
+        const ctx = canvas.getContext("2d");
+        const DESIGN_W = 640,
+          DESIGN_H = 520;
+        let W, H, GROUND, PANEL_PX, PANEL_PY, BATT_X, BATT_Y, DEV_X, DEV_Y, SUN_X, SUN_Y;
+
+        function layout() {
+          const cw = Math.max(360, Math.round(canvas.clientWidth || DESIGN_W));
+          const ch = Math.max(300, Math.round(canvas.clientHeight || DESIGN_H));
+          const dpr = (window.devicePixelRatio || 1) * 1.5;
+          canvas.width = Math.round(cw * dpr);
+          canvas.height = Math.round(ch * dpr);
+          const k = Math.min(cw / DESIGN_W, ch / DESIGN_H);
+          ctx.setTransform(dpr * k, 0, 0, dpr * k, 0, 0);
+          W = cw / k;
+          H = ch / k;
+
+          GROUND = H * 0.86;
+          PANEL_PX = W * 0.28;
+          PANEL_PY = GROUND - 6;
+          BATT_X = W * 0.5;
+          BATT_Y = GROUND - 74;
+          DEV_X = W * 0.78;
+          DEV_Y = GROUND - 90;
+          SUN_X = W * 0.16;
+          SUN_Y = H * 0.16;
+        }
+
+        function drawSky() {
+          const g = ctx.createLinearGradient(0, 0, 0, H);
+          if (S.timeMode === "day") {
+            g.addColorStop(0, "#bfe0f7");
+            g.addColorStop(1, "#eef7fb");
+          } else {
+            g.addColorStop(0, "#0c1530");
+            g.addColorStop(1, "#1c2b4d");
+          }
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, W, H);
+
+          if (S.timeMode === "night") {
+            ctx.fillStyle = "rgba(255,255,255,0.85)";
+            for (let i = 0; i < 40; i++) {
+              const sx = (i * 97.3) % W;
+              const sy = (i * 53.7) % (GROUND * 0.7);
+              ctx.globalAlpha = 0.3 + 0.5 * Math.abs(Math.sin(i * 12.9));
+              ctx.beginPath();
+              ctx.arc(sx, sy, 1.2, 0, TAU);
+              ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+          }
+
+          ctx.fillStyle = S.timeMode === "day" ? "#bcd98a" : "#141f38";
+          ctx.fillRect(0, GROUND, W, H - GROUND);
+        }
+
+        function drawSunOrMoon(t) {
+          if (S.timeMode === "day") {
+            const r = 26 + Math.sin(t * 1.5) * 1.5;
+            const rayLen = { low: 8, medium: 14, high: 22 }[S.sunlight];
+            ctx.strokeStyle = "#f6b93b";
+            ctx.lineWidth = 3;
+            ctx.lineCap = "round";
+            for (let i = 0; i < 8; i++) {
+              const a = (i / 8) * TAU + t * 0.3;
+              ctx.beginPath();
+              ctx.moveTo(SUN_X + Math.cos(a) * (r + 4), SUN_Y + Math.sin(a) * (r + 4));
+              ctx.lineTo(SUN_X + Math.cos(a) * (r + 4 + rayLen), SUN_Y + Math.sin(a) * (r + 4 + rayLen));
+              ctx.stroke();
+            }
+            ctx.fillStyle = "#fbc531";
+            ctx.beginPath();
+            ctx.arc(SUN_X, SUN_Y, r, 0, TAU);
+            ctx.fill();
+          } else {
+            ctx.fillStyle = "#e9edf6";
+            ctx.beginPath();
+            ctx.arc(SUN_X, SUN_Y, 22, 0, TAU);
+            ctx.fill();
+            ctx.fillStyle = "#1c2b4d";
+            ctx.beginPath();
+            ctx.arc(SUN_X + 10, SUN_Y - 6, 20, 0, TAU);
+            ctx.fill();
+          }
+        }
+
+        function drawPanel() {
+          const angleRad = (S.panelAngle * Math.PI) / 180;
+          const panelLen = H * 0.3;
+          const panelThick = 14;
+
+          // stand
+          ctx.strokeStyle = "#8a949d";
+          ctx.lineWidth = 6;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(PANEL_PX, PANEL_PY);
+          ctx.lineTo(PANEL_PX, PANEL_PY + 20);
+          ctx.stroke();
+
+          // sweet-spot guide arc
+          ctx.strokeStyle = "rgba(42,120,214,0.35)";
+          ctx.setLineDash([3, 4]);
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(PANEL_PX, PANEL_PY, panelLen + 14, -Math.PI / 2 - (OPTIMAL_ANGLE * Math.PI) / 180 - 0.05, -Math.PI / 2 - (OPTIMAL_ANGLE * Math.PI) / 180 + 0.05);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.save();
+          ctx.translate(PANEL_PX, PANEL_PY);
+          ctx.rotate(-Math.PI / 2 - angleRad);
+          const onSun = S.timeMode === "day" && S.solarRaw > 0;
+          ctx.fillStyle = onSun ? "#2455a4" : "#3a4f6b";
+          rr(ctx, -panelThick / 2, -panelLen, panelThick, panelLen, 3);
+          ctx.fill();
+          // cell grid lines
+          ctx.strokeStyle = "rgba(255,255,255,0.35)";
+          ctx.lineWidth = 1;
+          for (let i = 1; i < 5; i++) {
+            const y = -panelLen + (panelLen / 5) * i;
+            ctx.beginPath();
+            ctx.moveTo(-panelThick / 2, y);
+            ctx.lineTo(panelThick / 2, y);
+            ctx.stroke();
+          }
+          if (onSun) {
+            ctx.fillStyle = "rgba(255, 220, 130, 0.35)";
+            rr(ctx, -panelThick / 2, -panelLen, panelThick, panelLen, 3);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        function batteryWireStart() {
+          const angleRad = (S.panelAngle * Math.PI) / 180;
+          const panelLen = H * 0.3;
+          const a = -Math.PI / 2 - angleRad;
+          return { x: PANEL_PX + Math.cos(a) * panelLen * 0.15, y: PANEL_PY + Math.sin(a) * panelLen * 0.15 };
+        }
+
+        function drawWire(x1, y1, x2, y2, active) {
+          ctx.strokeStyle = active ? "#e8590c" : "#aab3c2";
+          ctx.lineWidth = 3;
+          ctx.setLineDash(active ? [] : [5, 5]);
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        function drawBattery() {
+          const w = 54,
+            h = 78;
+          const x = BATT_X - w / 2,
+            y = BATT_Y - h;
+          ctx.fillStyle = "#22314a";
+          rr(ctx, x, y, w, h, 6);
+          ctx.fill();
+          ctx.fillStyle = "#22314a";
+          rr(ctx, BATT_X - 10, y - 8, 20, 8, 2);
+          ctx.fill();
+
+          const pad = 5;
+          const innerH = h - pad * 2;
+          const fillH = innerH * clamp(S.battery / 100, 0, 1);
+          ctx.fillStyle = S.battery < 20 ? "#d03b3b" : S.battery < 100 ? "#fab219" : "#0ca30c";
+          rr(ctx, x + pad, y + pad + (innerH - fillH), w - pad * 2, fillH, 3);
+          ctx.fill();
+
+          ctx.fillStyle = "#fff";
+          ctx.font = "700 11px 'IBM Plex Mono', monospace";
+          ctx.textAlign = "center";
+          ctx.fillText(Math.round(S.battery) + "%", BATT_X, y + h + 16);
+        }
+
+        function drawDevice(t) {
+          const x = DEV_X,
+            y = DEV_Y;
+          const on = S.deviceOn;
+          ctx.save();
+          ctx.translate(x, y);
+
+          if (S.device === "led") {
+            ctx.fillStyle = on ? "#fde68a" : "#c7cdd6";
+            ctx.beginPath();
+            ctx.arc(0, 0, 16, 0, TAU);
+            ctx.fill();
+            if (on) {
+              ctx.strokeStyle = "rgba(250, 204, 21, 0.6)";
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.arc(0, 0, 22 + Math.sin(t * 6) * 2, 0, TAU);
+              ctx.stroke();
+            }
+            ctx.fillStyle = "#8a949d";
+            rr(ctx, -6, 14, 12, 10, 2);
+            ctx.fill();
+          } else if (S.device === "fan") {
+            ctx.fillStyle = "#4c5c6b";
+            ctx.beginPath();
+            ctx.arc(0, 0, 6, 0, TAU);
+            ctx.fill();
+            ctx.save();
+            ctx.rotate(S.fanAngle);
+            ctx.fillStyle = on ? "#2a78d6" : "#aab3c2";
+            for (let i = 0; i < 3; i++) {
+              ctx.save();
+              ctx.rotate((i / 3) * TAU);
+              rr(ctx, -5, -30, 10, 28, 5);
+              ctx.fill();
+              ctx.restore();
+            }
+            ctx.restore();
+          } else if (S.device === "phone") {
+            ctx.fillStyle = "#1c2733";
+            rr(ctx, -14, -26, 28, 52, 6);
+            ctx.fill();
+            ctx.fillStyle = on ? "#7fd858" : "#3a4657";
+            rr(ctx, -11, -22, 22, 44, 3);
+            ctx.fill();
+            if (on) {
+              ctx.fillStyle = "#fff";
+              ctx.beginPath();
+              ctx.moveTo(2, -14);
+              ctx.lineTo(-6, 2);
+              ctx.lineTo(0, 2);
+              ctx.lineTo(-3, 16);
+              ctx.lineTo(8, -2);
+              ctx.lineTo(2, -2);
+              ctx.closePath();
+              ctx.fill();
+            }
+          } else {
+            ctx.fillStyle = "#3a4657";
+            rr(ctx, -20, -16, 40, 32, 5);
+            ctx.fill();
+            ctx.fillStyle = on ? "#7fd858" : "#8a949d";
+            ctx.globalAlpha = on ? 0.5 + 0.5 * Math.abs(Math.sin(t * 5)) : 1;
+            ctx.beginPath();
+            ctx.arc(10, -4, 4, 0, TAU);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.strokeStyle = "#8a949d";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(-12, 6);
+            ctx.lineTo(6, 6);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        function drawParticles() {
+          const c0 = batteryWireStart();
+          S.particles.forEach((p) => {
+            let x, y, color;
+            if (p.seg === "charge") {
+              x = lerp(c0.x, BATT_X, p.u);
+              y = lerp(c0.y, BATT_Y - 40, p.u);
+              color = "#f6b93b";
+            } else {
+              x = lerp(BATT_X, DEV_X, p.u);
+              y = lerp(BATT_Y - 40, DEV_Y, p.u);
+              color = "#2a78d6";
+            }
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 1 - p.u * 0.3;
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, TAU);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          });
+        }
+
+        function draw(t) {
+          drawSky();
+          drawSunOrMoon(t);
+          drawPanel();
+          const c0 = batteryWireStart();
+          drawWire(c0.x, c0.y, BATT_X, BATT_Y - 40, S.batteryMode === "charge" && S.solarRaw > 0);
+          drawWire(BATT_X, BATT_Y - 40, DEV_X, DEV_Y, S.batteryMode === "use" && S.deviceOn);
+          drawBattery();
+          drawDevice(t);
+          drawParticles();
+        }
+
+        /* ---------- loop ---------- */
+        let lastT = null;
+        function loop(t) {
+          if (lastT == null) lastT = t;
+          const dt = Math.min(0.05, (t - lastT) / 1000);
+          lastT = t;
+          update(dt);
+          updateUI();
+          draw(t / 1000);
+          requestAnimationFrame(loop);
+        }
+        layout();
+        updateUI();
+        draw(0);
+        requestAnimationFrame(loop);
+
+        if (window.ResizeObserver) {
+          let first = true;
+          new ResizeObserver(() => {
+            if (first) {
+              first = false;
+              return;
+            }
+            layout();
+          }).observe(canvas.parentElement);
+        }
+        window.addEventListener("resize", layout);
+      })();
+    </script>
+  </body>
+</html>
