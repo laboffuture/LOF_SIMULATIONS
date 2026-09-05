@@ -1340,7 +1340,7 @@
           rr(ctx, pad, pad, CW - pad * 2, CH - pad * 2, 18);
           ctx.stroke();
 
-          // ---- floating wand (no character — just the wand itself) ----
+          // ---- astronaut mascot holding the wand ----
           const pivotX = CW * 0.25,
             pivotY = CH * 0.62;
           const consoleX = CW * 0.67,
@@ -1375,6 +1375,8 @@
           const tipY = handY + Math.sin(S.wandAngle) * wandLen;
           S.tipX = tipX;
           S.tipY = tipY;
+
+          drawAstronaut(handX, handY);
 
           // handle
           ctx.strokeStyle = "#8b6f4e";
@@ -1541,6 +1543,191 @@
           ctx.fillStyle = "#7c8ac0";
           ctx.font = "700 9px 'Rajdhani', sans-serif";
           ctx.fillText("DECODER CONSOLE", consoleX, consoleY + cHalfH + 18);
+        }
+
+        // Chibi astronaut mascot — front-facing, matching the LOF reference art (white suit,
+        // red wrist/waist/ankle bands, black gloves & boots, dark starry visor, LOF chest badge).
+        // gripX/gripY is the fixed point where the wand-hand glove sits; the wand itself rotates
+        // in that glove (a wrist flourish), so the body/arms stay in this one static pose.
+        function drawAstronaut(gripX, gripY) {
+          const au = Math.min(CW, CH) * 0.013;
+          const armLen = 11 * au;
+          const torsoW = 16 * au,
+            torsoH = 18 * au;
+          const shoulderInsetX = 1.8 * au,
+            shoulderInsetY = 2.6 * au;
+
+          const rShoulderX = gripX - armLen * Math.cos(REST_ANGLE),
+            rShoulderY = gripY - armLen * Math.sin(REST_ANGLE);
+          const bodyCenterX = rShoulderX - torsoW / 2 + shoulderInsetX;
+          const bodyCenterY = rShoulderY + torsoH / 2 - shoulderInsetY;
+          const torsoTop = bodyCenterY - torsoH / 2,
+            torsoBottom = bodyCenterY + torsoH / 2;
+          const lShoulderX = bodyCenterX - torsoW / 2 + shoulderInsetX,
+            lShoulderY = torsoTop + shoulderInsetY;
+
+          const white = "#e9edf6",
+            edge = "#aab3cc",
+            black = "#14161d",
+            red = "#dc2626";
+
+          // ---- legs & boots ----
+          const legW = 5.5 * au,
+            legGap = 2 * au,
+            legH = 12 * au,
+            bootW = 8 * au,
+            bootH = 5 * au;
+          const hipY = torsoBottom - au;
+          const legBottomY = hipY + legH;
+          [bodyCenterX - legGap / 2 - legW / 2, bodyCenterX + legGap / 2 + legW / 2].forEach((lx) => {
+            ctx.fillStyle = white;
+            ctx.strokeStyle = edge;
+            ctx.lineWidth = 1.4;
+            rr(ctx, lx - legW / 2, hipY, legW, legH, legW * 0.35);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = red;
+            rr(ctx, lx - legW / 2 - 0.4 * au, legBottomY - 2.6 * au, legW + 0.8 * au, 2.6 * au, 1.4 * au);
+            ctx.fill();
+            ctx.fillStyle = black;
+            rr(ctx, lx - bootW / 2, legBottomY, bootW, bootH, bootH * 0.4);
+            ctx.fill();
+          });
+
+          // ---- idle (left) arm, gentle sway ----
+          const sway = Math.sin(performance.now() / 900) * 0.06;
+          const idleAngle = 1.4 + sway,
+            idleLen = 10 * au;
+          const lHandX = lShoulderX + Math.cos(idleAngle) * idleLen,
+            lHandY = lShoulderY + Math.sin(idleAngle) * idleLen;
+          ctx.strokeStyle = white;
+          ctx.lineWidth = 5.4 * (au / 5.7);
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(lShoulderX, lShoulderY);
+          ctx.lineTo(lHandX, lHandY);
+          ctx.stroke();
+          ctx.fillStyle = red;
+          ctx.beginPath();
+          ctx.arc(lerp(lShoulderX, lHandX, 0.8), lerp(lShoulderY, lHandY, 0.8), 1.6 * au, 0, TAU);
+          ctx.fill();
+          ctx.fillStyle = black;
+          ctx.beginPath();
+          ctx.arc(lHandX, lHandY, 3 * au, 0, TAU);
+          ctx.fill();
+
+          // ---- wand (right) arm — static pose reaching to the fixed glove/grip point ----
+          ctx.strokeStyle = white;
+          ctx.lineWidth = 5.4 * (au / 5.7);
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(rShoulderX, rShoulderY);
+          ctx.lineTo(gripX, gripY);
+          ctx.stroke();
+          ctx.fillStyle = "#d7deee";
+          ctx.beginPath();
+          ctx.arc(lerp(rShoulderX, gripX, 0.55), lerp(rShoulderY, gripY, 0.55), 2.6 * au, 0, TAU);
+          ctx.fill();
+          ctx.fillStyle = red;
+          ctx.beginPath();
+          ctx.arc(lerp(rShoulderX, gripX, 0.85), lerp(rShoulderY, gripY, 0.85), 1.6 * au, 0, TAU);
+          ctx.fill();
+          ctx.fillStyle = black;
+          ctx.beginPath();
+          ctx.arc(gripX, gripY, 3.2 * au, 0, TAU);
+          ctx.fill();
+
+          // ---- torso ----
+          ctx.fillStyle = "#eef2fa";
+          ctx.strokeStyle = edge;
+          ctx.lineWidth = 1.6;
+          rr(ctx, bodyCenterX - torsoW / 2, torsoTop, torsoW, torsoH, torsoW * 0.3);
+          ctx.fill();
+          ctx.stroke();
+
+          // waist band
+          ctx.fillStyle = red;
+          rr(ctx, bodyCenterX - torsoW / 2 - 0.4 * au, torsoBottom - 2.8 * au, torsoW + 0.8 * au, 2.8 * au, 1.6 * au);
+          ctx.fill();
+
+          // LOF chest badge
+          const badgeW = 6.4 * au,
+            badgeH = 4.6 * au;
+          const badgeX = bodyCenterX - badgeW / 2,
+            badgeY = torsoTop + torsoH * 0.3;
+          ctx.fillStyle = "#ffffff";
+          ctx.strokeStyle = "#8891a8";
+          ctx.lineWidth = 1;
+          rr(ctx, badgeX, badgeY, badgeW, badgeH, au);
+          ctx.fill();
+          ctx.stroke();
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.font = `800 ${Math.max(6, Math.round(4 * au))}px 'Orbitron', sans-serif`;
+          const badgeMidY = badgeY + badgeH / 2 + 0.4 * au;
+          ctx.fillStyle = "#2563eb";
+          ctx.fillText("L", bodyCenterX - 2 * au, badgeMidY);
+          ctx.fillStyle = "#ef4444";
+          ctx.fillText("O", bodyCenterX, badgeMidY);
+          ctx.fillStyle = "#2563eb";
+          ctx.fillText("F", bodyCenterX + 2 * au, badgeMidY);
+          ctx.textBaseline = "alphabetic";
+
+          // ---- helmet ----
+          const helmetR = 10.5 * au;
+          const helmetCenterX = bodyCenterX,
+            helmetCenterY = torsoTop - helmetR * 0.55;
+          ctx.fillStyle = "#f3f5fa";
+          ctx.strokeStyle = edge;
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.arc(helmetCenterX, helmetCenterY, helmetR, 0, TAU);
+          ctx.fill();
+          ctx.stroke();
+
+          // visor — dark, starry, with a small pale "moon"
+          const visorR = helmetR * 0.72;
+          const visorCX = helmetCenterX,
+            visorCY = helmetCenterY + helmetR * 0.06;
+          const vg = ctx.createRadialGradient(visorCX - visorR * 0.3, visorCY - visorR * 0.3, visorR * 0.1, visorCX, visorCY, visorR);
+          vg.addColorStop(0, "#161d38");
+          vg.addColorStop(1, "#05060f");
+          ctx.fillStyle = vg;
+          ctx.beginPath();
+          ctx.arc(visorCX, visorCY, visorR, 0, TAU);
+          ctx.fill();
+          ctx.strokeStyle = "#9aa5c4";
+          ctx.lineWidth = 1.4;
+          ctx.stroke();
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(visorCX, visorCY, visorR, 0, TAU);
+          ctx.clip();
+          ctx.fillStyle = "#fbbf24";
+          ctx.beginPath();
+          ctx.arc(visorCX + visorR * 0.35, visorCY - visorR * 0.4, visorR * 0.26, 0, TAU);
+          ctx.fill();
+          ctx.fillStyle = "rgba(255,255,255,0.9)";
+          [
+            [-0.4, -0.1, 0.055],
+            [0.1, 0.35, 0.04],
+            [-0.15, 0.5, 0.055],
+            [0.35, 0.15, 0.04],
+            [-0.5, 0.3, 0.045],
+          ].forEach(([dx, dy, r]) => {
+            ctx.beginPath();
+            ctx.arc(visorCX + dx * visorR, visorCY + dy * visorR, r * visorR, 0, TAU);
+            ctx.fill();
+          });
+          ctx.restore();
+
+          ctx.strokeStyle = "rgba(255,255,255,0.35)";
+          ctx.lineWidth = visorR * 0.14;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.arc(visorCX, visorCY, visorR * 0.78, Math.PI * 1.1, Math.PI * 1.35);
+          ctx.stroke();
         }
 
         // AS7341 channel readings (F1-F8), drawn straight onto the decoder console OLED.
