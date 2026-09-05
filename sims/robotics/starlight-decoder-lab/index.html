@@ -1569,7 +1569,8 @@
 
           const white = "#e9edf6",
             edge = "#aab3cc",
-            black = "#14161d",
+            black = "#30354a", // lighter than pure black so it still reads against the dark space backdrop
+            blackEdge = "#8b93b8",
             red = "#dc2626";
 
           // ---- legs & boots ----
@@ -1591,8 +1592,11 @@
             rr(ctx, lx - legW / 2 - 0.4 * au, legBottomY - 2.6 * au, legW + 0.8 * au, 2.6 * au, 1.4 * au);
             ctx.fill();
             ctx.fillStyle = black;
+            ctx.strokeStyle = blackEdge;
+            ctx.lineWidth = 1.2;
             rr(ctx, lx - bootW / 2, legBottomY, bootW, bootH, bootH * 0.4);
             ctx.fill();
+            ctx.stroke();
           });
 
           // ---- both arms hang naturally at the sides ----
@@ -1615,9 +1619,12 @@
             ctx.arc(lerp(sx, hx, 0.82), lerp(sy, hy, 0.82), 1.6 * au, 0, TAU);
             ctx.fill();
             ctx.fillStyle = black;
+            ctx.strokeStyle = blackEdge;
+            ctx.lineWidth = 1.2;
             ctx.beginPath();
             ctx.arc(hx, hy, 3 * au, 0, TAU);
             ctx.fill();
+            ctx.stroke();
           });
 
           // ---- torso ----
