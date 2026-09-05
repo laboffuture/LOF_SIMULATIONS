@@ -1551,15 +1551,15 @@
         // Returns the right-hand glove position so the caller can anchor the wand there.
         function drawAstronaut(bodyCenterX, bodyCenterY) {
           const au = Math.min(CW, CH) * 0.0095;
-          // Kid proportions: a big head, a short pudgy torso, and stubby limbs
-          // — not a scaled-down adult.
-          const armLen = 8 * au;
+          // Kid proportions, but tall enough that the torso, arms, and legs are
+          // all clearly their own separate, visible parts.
+          const armLen = 9 * au;
           const torsoW = 15 * au,
-            torsoH = 13 * au;
+            torsoH = 16 * au;
           // Negative inset so the shoulder sits just outside the torso's edge —
           // otherwise the torso (drawn afterward, in front) paints over the arm.
           const shoulderInsetX = -1 * au,
-            shoulderInsetY = 2 * au;
+            shoulderInsetY = 2.4 * au;
 
           const torsoTop = bodyCenterY - torsoH / 2,
             torsoBottom = bodyCenterY + torsoH / 2;
@@ -1578,10 +1578,10 @@
             blackEdge = "#8b93b8",
             red = "#dc2626";
 
-          // ---- legs & boots — short and stubby, with chunky kid-sized boots ----
+          // ---- legs & boots — stubby but long enough to clearly read as legs ----
           const legW = 6.5 * au,
             legGap = 2 * au,
-            legH = 7 * au,
+            legH = 10 * au,
             bootW = 9.5 * au,
             bootH = 5.5 * au;
           const hipY = torsoBottom - au;
