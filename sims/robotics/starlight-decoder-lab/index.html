@@ -946,10 +946,12 @@
           }
           const confThreshold = 0.985 - (S.sensitivity / 100) * 0.05;
           const noisy = bestScore < confThreshold;
-          // Some real reference stars (e.g. Sirius vs Procyon) saturate the sensor across
-          // almost every channel and become genuinely indistinguishable by shape alone —
-          // report that honestly instead of guessing between them.
-          const ambiguous = !noisy && bestScore - secondScore < 0.0015;
+          // Sirius vs Procyon's real reference profiles are so close (cosine similarity
+          // ~0.999975, i.e. a score gap of only ~0.000025 even on a perfectly clean
+          // reading) that a larger threshold here would make those two colours never
+          // resolve to a match at all, only ever "unclear". Kept below that clean-reading
+          // gap so a clear scan still correctly identifies the star.
+          const ambiguous = !noisy && bestScore - secondScore < 0.00001;
           if (saturated) return { key: "unclear", reason: "saturated" };
           if (tooWeak) return { key: "unclear", reason: "weak" };
           if (noisy) return { key: "unclear", reason: "mixed" };
