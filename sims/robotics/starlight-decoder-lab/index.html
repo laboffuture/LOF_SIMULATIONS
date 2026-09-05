@@ -1356,7 +1356,9 @@
             oledY = consoleY - cHalfH + 34,
             oledW = consoleW - 32,
             oledH = consoleH - 76;
-          const pointAngle = Math.atan2(lensY - pivotY, lensX - pivotX);
+
+          const { handX, handY } = drawAstronaut(pivotX, pivotY);
+          const pointAngle = Math.atan2(lensY - handY, lensX - handX);
 
           let angleTarget;
           if (S.phase === "swish") {
@@ -1368,15 +1370,11 @@
             S.wandAngle = approach(S.wandAngle, angleTarget, 0.18, 1 / 60);
           }
 
-          const handX = pivotX,
-            handY = pivotY;
           const wandLen = Math.min(CW, CH) * 0.2;
           const tipX = handX + Math.cos(S.wandAngle) * wandLen;
           const tipY = handY + Math.sin(S.wandAngle) * wandLen;
           S.tipX = tipX;
           S.tipY = tipY;
-
-          drawAstronaut(handX, handY);
 
           // handle
           ctx.strokeStyle = "#8b6f4e";
@@ -1547,24 +1545,27 @@
 
         // Chibi astronaut mascot — front-facing, matching the LOF reference art (white suit,
         // red wrist/waist/ankle bands, black gloves & boots, dark starry visor, LOF chest badge).
-        // gripX/gripY is the fixed point where the wand-hand glove sits; the wand itself rotates
-        // in that glove (a wrist flourish), so the body/arms stay in this one static pose.
-        function drawAstronaut(gripX, gripY) {
-          const au = Math.min(CW, CH) * 0.013;
-          const armLen = 11 * au;
+        // Both arms hang naturally at the sides; the wand rotates inside the right glove (a
+        // wrist flourish) so it can still swish/point without the arm itself having to move.
+        // Returns the right-hand glove position so the caller can anchor the wand there.
+        function drawAstronaut(bodyCenterX, bodyCenterY) {
+          const au = Math.min(CW, CH) * 0.0095;
+          const armLen = 10 * au;
           const torsoW = 16 * au,
             torsoH = 18 * au;
           const shoulderInsetX = 1.8 * au,
             shoulderInsetY = 2.6 * au;
 
-          const rShoulderX = gripX - armLen * Math.cos(REST_ANGLE),
-            rShoulderY = gripY - armLen * Math.sin(REST_ANGLE);
-          const bodyCenterX = rShoulderX - torsoW / 2 + shoulderInsetX;
-          const bodyCenterY = rShoulderY + torsoH / 2 - shoulderInsetY;
           const torsoTop = bodyCenterY - torsoH / 2,
             torsoBottom = bodyCenterY + torsoH / 2;
+          const rShoulderX = bodyCenterX + torsoW / 2 - shoulderInsetX,
+            rShoulderY = torsoTop + shoulderInsetY;
           const lShoulderX = bodyCenterX - torsoW / 2 + shoulderInsetX,
             lShoulderY = torsoTop + shoulderInsetY;
+          const rAngle = 1.48; // just off straight-down, so the hand clears the hip
+          const lAngle = Math.PI - rAngle; // mirrored to the other side
+          const gripX = rShoulderX + Math.cos(rAngle) * armLen,
+            gripY = rShoulderY + Math.sin(rAngle) * armLen;
 
           const white = "#e9edf6",
             edge = "#aab3cc",
@@ -1594,48 +1595,30 @@
             ctx.fill();
           });
 
-          // ---- idle (left) arm, gentle sway ----
-          const sway = Math.sin(performance.now() / 900) * 0.06;
-          const idleAngle = 1.4 + sway,
-            idleLen = 10 * au;
-          const lHandX = lShoulderX + Math.cos(idleAngle) * idleLen,
-            lHandY = lShoulderY + Math.sin(idleAngle) * idleLen;
-          ctx.strokeStyle = white;
-          ctx.lineWidth = 5.4 * (au / 5.7);
-          ctx.lineCap = "round";
-          ctx.beginPath();
-          ctx.moveTo(lShoulderX, lShoulderY);
-          ctx.lineTo(lHandX, lHandY);
-          ctx.stroke();
-          ctx.fillStyle = red;
-          ctx.beginPath();
-          ctx.arc(lerp(lShoulderX, lHandX, 0.8), lerp(lShoulderY, lHandY, 0.8), 1.6 * au, 0, TAU);
-          ctx.fill();
-          ctx.fillStyle = black;
-          ctx.beginPath();
-          ctx.arc(lHandX, lHandY, 3 * au, 0, TAU);
-          ctx.fill();
-
-          // ---- wand (right) arm — static pose reaching to the fixed glove/grip point ----
-          ctx.strokeStyle = white;
-          ctx.lineWidth = 5.4 * (au / 5.7);
-          ctx.lineCap = "round";
-          ctx.beginPath();
-          ctx.moveTo(rShoulderX, rShoulderY);
-          ctx.lineTo(gripX, gripY);
-          ctx.stroke();
-          ctx.fillStyle = "#d7deee";
-          ctx.beginPath();
-          ctx.arc(lerp(rShoulderX, gripX, 0.55), lerp(rShoulderY, gripY, 0.55), 2.6 * au, 0, TAU);
-          ctx.fill();
-          ctx.fillStyle = red;
-          ctx.beginPath();
-          ctx.arc(lerp(rShoulderX, gripX, 0.85), lerp(rShoulderY, gripY, 0.85), 1.6 * au, 0, TAU);
-          ctx.fill();
-          ctx.fillStyle = black;
-          ctx.beginPath();
-          ctx.arc(gripX, gripY, 3.2 * au, 0, TAU);
-          ctx.fill();
+          // ---- both arms hang naturally at the sides ----
+          const sway = Math.sin(performance.now() / 900) * 0.04;
+          const lHandX = lShoulderX + Math.cos(lAngle + sway) * armLen,
+            lHandY = lShoulderY + Math.sin(lAngle + sway) * armLen;
+          [
+            [lShoulderX, lShoulderY, lHandX, lHandY],
+            [rShoulderX, rShoulderY, gripX, gripY],
+          ].forEach(([sx, sy, hx, hy]) => {
+            ctx.strokeStyle = white;
+            ctx.lineWidth = 3.6 * au;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(hx, hy);
+            ctx.stroke();
+            ctx.fillStyle = red;
+            ctx.beginPath();
+            ctx.arc(lerp(sx, hx, 0.82), lerp(sy, hy, 0.82), 1.6 * au, 0, TAU);
+            ctx.fill();
+            ctx.fillStyle = black;
+            ctx.beginPath();
+            ctx.arc(hx, hy, 3 * au, 0, TAU);
+            ctx.fill();
+          });
 
           // ---- torso ----
           ctx.fillStyle = "#eef2fa";
@@ -1728,6 +1711,8 @@
           ctx.beginPath();
           ctx.arc(visorCX, visorCY, visorR * 0.78, Math.PI * 1.1, Math.PI * 1.35);
           ctx.stroke();
+
+          return { handX: gripX, handY: gripY };
         }
 
         // AS7341 channel readings (F1-F8), drawn straight onto the decoder console OLED.
