@@ -739,11 +739,7 @@
             <button data-interf="on">On</button>
             <button data-interf="off" class="on">Off</button>
           </div>
-          <div class="ctrl">
-            <div class="row"><label>Interference Level</label><span class="val" id="v_interf">0%</span></div>
-            <input type="range" id="r_interf" min="0" max="100" step="1" value="0" />
-          </div>
-          <div class="hint">Stray light washes into every channel and can flip a clean reading into a mixed one.</div>
+          <div class="hint">On washes the whole scene bright with stray light and glitches the decoded graph; Off keeps a clean, dark reading.</div>
         </div>
 
         <div class="cmdgroup">
@@ -1032,15 +1028,12 @@
 
         function setInterference(v) {
           S.interference = clamp(v, 0, 100);
-          $("r_interf").value = S.interference;
-          $("v_interf").textContent = Math.round(S.interference) + "%";
           setSegOn($("tgInterf"), "interf", S.interference > 3 ? "on" : "off");
         }
-        $("r_interf").addEventListener("input", (e) => setInterference(+e.target.value));
         $("tgInterf").addEventListener("click", (e) => {
           const b = e.target.closest("button");
           if (!b) return;
-          setInterference(b.dataset.interf === "on" ? 60 : 0);
+          setInterference(b.dataset.interf === "on" ? 100 : 0);
         });
 
         function setSensitivity(v) {
@@ -1342,12 +1335,11 @@
           }
           ctx.globalAlpha = 1;
 
-          // Background Interference: visibly darkens the whole backdrop toward black
-          // as it rises — kept dark (not white) so every label/status text drawn in
-          // light colours everywhere else in the scene stays readable either way.
-          const interfWash = clamp((S.interference / 100) * 1.4, 0, 0.92);
-          if (interfWash > 0) {
-            ctx.fillStyle = `rgba(0,0,0,${interfWash})`;
+          // Background Interference is a straight on/off: dark space when off,
+          // bright white stray light washing the scene when on.
+          const interferenceOn = S.interference > 3;
+          if (interferenceOn) {
+            ctx.fillStyle = "rgba(255,255,255,0.92)";
             ctx.fillRect(0, 0, CW, CH);
           }
 
@@ -1782,6 +1774,7 @@
           const st = STARS[S.resultKey];
           const profile = st.profile;
           const n = profile.length;
+          const interferenceOn = S.interference > 3;
           const padL = 24,
             padR = 4,
             padT = 4,
@@ -1818,7 +1811,10 @@
           for (let i = 0; i < n; i++) {
             if (profile[i] > profile[domI]) domI = i;
             const raw = applyIntensity(profile[i] * 30000, S.brightness);
-            const y = clamp(y1 - (raw / 30000) * (y1 - y0), y0 - 4, y1);
+            let y = clamp(y1 - (raw / 30000) * (y1 - y0), y0 - 4, y1);
+            // Interference glitch: stray light jitters the trace channel-by-channel,
+            // redrawn fresh every frame so it visibly flickers rather than sitting still.
+            if (interferenceOn) y = clamp(y + (Math.random() * 2 - 1) * 7, y0 - 4, y1);
             pts.push([x0 + i * stepX, y]);
           }
 
@@ -1827,7 +1823,9 @@
           ctx.fillStyle = "#9fa8cc";
           pts.forEach(([x], i) => ctx.fillText("F" + (i + 1), x, y1 + 10));
 
-          ctx.strokeStyle = st.sw;
+          // A corrupted signal randomly flickers to white instead of holding its colour
+          const lineColor = interferenceOn && Math.random() < 0.25 ? "#ffffff" : st.sw;
+          ctx.strokeStyle = lineColor;
           ctx.lineWidth = 2;
           ctx.lineJoin = "round";
           ctx.lineCap = "round";
@@ -1838,12 +1836,33 @@
           pts.forEach(([x, y], i) => {
             ctx.beginPath();
             ctx.arc(x, y, i === domI ? 3.2 : 2, 0, TAU);
-            ctx.fillStyle = st.sw;
+            ctx.fillStyle = lineColor;
             ctx.fill();
             ctx.strokeStyle = "#0b0e22";
             ctx.lineWidth = 1;
             ctx.stroke();
           });
+
+          // Glitch tear bars — a couple of thin horizontal slices sheared sideways,
+          // reshuffled every frame so it reads as static/interference, not decoration.
+          if (interferenceOn) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(gx, gy, gw, gh);
+            ctx.clip();
+            for (let g = 0; g < 3; g++) {
+              if (Math.random() < 0.45) {
+                const barY = lerp(y0, y1, Math.random());
+                const barH = 1.5 + Math.random() * 3;
+                const shift = (Math.random() * 2 - 1) * 12;
+                ctx.globalAlpha = 0.35 + Math.random() * 0.35;
+                ctx.fillStyle = Math.random() < 0.5 ? "#ffffff" : st.sw;
+                ctx.fillRect(x0 + shift, barY, x1 - x0, barH);
+              }
+            }
+            ctx.globalAlpha = 1;
+            ctx.restore();
+          }
         }
 
         /* =================== MAIN LOOP =================== */
