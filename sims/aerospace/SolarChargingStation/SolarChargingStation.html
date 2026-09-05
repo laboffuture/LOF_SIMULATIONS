@@ -558,17 +558,16 @@
               rover will turn toward that instead if it's the stronger source.
             </li>
             <li>Choose the <b>Device Load</b> the station is powering.</li>
-            <li>
-              Set <b>Battery Mode</b> to <b>Charge</b> to fill the battery
-              from the rover's panel, or <b>Use Stored Power</b> to run the
-              device off the battery.
+            <li>Press <b>Start</b>. Nothing else to set — the battery charges
+              automatically whenever there's usable light, and the device
+              runs automatically off the battery as long as it has charge.
             </li>
-            <li>Press <b>Start</b> and watch the readings and energy flow.</li>
+            <li>Watch the readings and energy flow.</li>
             <li>
-              Try this: charge outdoors at Noon, then go Indoor with the lamp
-              off and the rover away from the window, and switch to
-              <b>Use Stored Power</b> — the device keeps running on what you
-              stored, with zero light anywhere nearby.
+              Try this: charge outdoors at Noon until the battery is full,
+              then switch to Indoor with the lamp off and the rover away from
+              the window — the device keeps running on what you stored, with
+              zero light anywhere nearby, until the battery runs out.
             </li>
             <li>Press <b>Reset</b> to clear the battery and start over.</li>
           </ol>
@@ -579,9 +578,9 @@
             <li>A rover with a light sensor can automatically turn to track the strongest light</li>
             <li>While it's still turning toward a new light direction, less power is captured</li>
             <li>Indoors, natural light comes through windows and falls off with distance</li>
-            <li>Stored battery energy can be used anytime, even with no light source nearby</li>
+            <li>A device can keep running on stored battery energy even with no light nearby</li>
             <li>A heavier device load drains a battery faster</li>
-            <li>A charging station must choose to charge or to use power — not both at once</li>
+            <li>Charging and using power can happen at the same time — the battery is just the balance of the two</li>
             <li>How energy changes form: light → electrical energy → stored energy → device power</li>
           </ul>
         </div>
@@ -648,18 +647,6 @@
             <button data-v="gadget">Gadget</button>
           </div>
           <p class="hint" id="loadNote">A small LED barely drains the battery.</p>
-        </div>
-
-        <div class="ctrl">
-          <div class="row"><label>Battery Mode</label></div>
-          <div class="toggle" id="modeToggle">
-            <button data-v="charge">⚡ Charge</button>
-            <button data-v="use">🔌 Use Stored Power</button>
-          </div>
-          <p class="hint">
-            Charge fills the battery from the rover's panel. Use Stored Power
-            runs the device from the battery, no matter where the rover is.
-          </p>
         </div>
 
         <div class="stage-foot">
@@ -824,13 +811,14 @@
           roverAngle: -Math.PI / 2,
           dragging: false,
           device: "led",
-          batteryMode: "charge",
           running: false,
           battery: 0,
           solarRaw: 0,
           sourceStrength: 0,
           alignment: 0,
           deviceOn: false,
+          chargeActive: false,
+          useActive: false,
           chargingStatus: "Not Charging",
           fanAngle: 0,
           particles: [],
@@ -858,12 +846,8 @@
           S.device = v;
           $("loadNote").textContent = LOADS[v].note;
         });
-        wireToggle("modeToggle", (v) => {
-          S.batteryMode = v;
-        });
         document.querySelector('#sceneToggle button[data-v="outdoor"]').classList.add("on");
         document.querySelector('#loadToggle button[data-v="led"]').classList.add("on");
-        document.querySelector('#modeToggle button[data-v="charge"]').classList.add("on");
 
         $("moveSunBtn").addEventListener("click", () => {
           S.sunIdx = (S.sunIdx + 1) % SUN_POSITIONS.length;
@@ -1028,33 +1012,27 @@
           $("modeChip").textContent = "Running — " + (S.scene === "outdoor" ? "Outdoor" : "Indoor");
           $("modeChip").classList.add("run");
 
-          if (S.batteryMode === "charge") {
-            S.deviceOn = false;
-            if (S.solarRaw > 0 && S.battery < 100) {
-              S.battery = clamp(S.battery + CHARGE_RATE * (S.solarRaw / 100) * dt, 0, 100);
-              S.chargingStatus = S.battery >= 100 ? "Fully Charged" : "Charging";
-            } else if (S.battery >= 100) {
-              S.chargingStatus = "Fully Charged";
-            } else {
-              S.chargingStatus = "Not Charging";
-            }
-          } else {
-            S.chargingStatus = "Not Charging";
-            if (S.battery > LOW_BATTERY_CUTOFF) {
-              S.deviceOn = true;
-              S.battery = clamp(S.battery - LOADS[S.device].drain * dt, 0, 100);
-              if (S.battery <= LOW_BATTERY_CUTOFF) S.deviceOn = false;
-            } else {
-              S.deviceOn = false;
-            }
+          // Charging and using both happen automatically, at the same time —
+          // the battery level is just the balance between the two.
+          S.chargeActive = S.solarRaw > 0 && S.battery < 100;
+          if (S.chargeActive) {
+            S.battery = clamp(S.battery + CHARGE_RATE * (S.solarRaw / 100) * dt, 0, 100);
+          }
+          S.chargingStatus = S.battery >= 100 ? "Fully Charged" : S.chargeActive ? "Charging" : "Not Charging";
+
+          S.useActive = S.battery > LOW_BATTERY_CUTOFF;
+          S.deviceOn = S.useActive;
+          if (S.useActive) {
+            S.battery = clamp(S.battery - LOADS[S.device].drain * dt, 0, 100);
+            if (S.battery <= LOW_BATTERY_CUTOFF) S.deviceOn = false;
           }
 
           if (S.device === "fan" && S.deviceOn) S.fanAngle += dt * 260;
 
-          if (Math.random() < (S.batteryMode === "charge" && S.solarRaw > 0 ? 0.35 : 0)) {
+          if (Math.random() < (S.chargeActive ? 0.35 : 0)) {
             S.particles.push({ seg: "charge", u: 0 });
           }
-          if (Math.random() < (S.batteryMode === "use" && S.deviceOn ? 0.35 : 0)) {
+          if (Math.random() < (S.deviceOn ? 0.35 : 0)) {
             S.particles.push({ seg: "use", u: 0 });
           }
           S.particles.forEach((p) => (p.u += dt * 0.9));
@@ -1091,14 +1069,15 @@
 
           let note;
           if (!S.running) note = "Press Start to begin.";
-          else if (S.batteryMode === "charge") note = S.solarRaw > 0 ? "Battery is charging from the rover's panel. The device stays off in Charge mode." : "No usable light right now, so nothing is charging.";
-          else if (S.deviceOn) note = "Running the " + LOADS[S.device].label + " from stored battery power.";
-          else note = "Battery is too low to power the device. Switch to Charge mode.";
+          else if (S.chargeActive && S.deviceOn) note = "Charging the battery from the rover's panel while running the " + LOADS[S.device].label + " at the same time.";
+          else if (S.deviceOn) note = "Running the " + LOADS[S.device].label + " from stored battery power — no light source is charging it right now.";
+          else if (S.chargeActive) note = "Battery is charging, but doesn't have enough charge yet to run the device.";
+          else note = "No light and the battery is empty — nothing is happening.";
           $("devNote").textContent = note;
 
           const sunHot = S.solarRaw > 0;
-          const chargeHot = S.batteryMode === "charge" && S.solarRaw > 0;
-          const useHot = S.batteryMode === "use" && S.deviceOn;
+          const chargeHot = S.chargeActive;
+          const useHot = S.deviceOn;
           document.querySelector('.node[data-n="sun"]').classList.toggle("hot", sunHot);
           document.querySelector('.node[data-n="panel"]').classList.toggle("hot", sunHot);
           document.querySelector('.arrow[data-a="1"]').classList.toggle("hot", sunHot);
@@ -1325,8 +1304,8 @@
           ctx.arc(sunX, sunY, r, 0, TAU);
           ctx.fill();
 
-          drawWire(OUT_ROVER_X, OUT_ROVER_Y - 26, BATT_X, BATT_Y - 30, S.batteryMode === "charge" && S.solarRaw > 0);
-          drawWire(BATT_X, BATT_Y - 30, DEV_X, DEV_Y, S.batteryMode === "use" && S.deviceOn);
+          drawWire(OUT_ROVER_X, OUT_ROVER_Y - 26, BATT_X, BATT_Y - 30, S.chargeActive);
+          drawWire(BATT_X, BATT_Y - 30, DEV_X, DEV_Y, S.deviceOn);
           drawBattery();
           drawDevice(t);
           drawParticles(OUT_ROVER_X, OUT_ROVER_Y - 26);
@@ -1382,8 +1361,8 @@
           ctx.closePath();
           ctx.fill();
 
-          drawWire(S.roverX, S.roverY - 26, BATT_X, BATT_Y - 30, S.batteryMode === "charge" && S.solarRaw > 0);
-          drawWire(BATT_X, BATT_Y - 30, DEV_X, DEV_Y, S.batteryMode === "use" && S.deviceOn);
+          drawWire(S.roverX, S.roverY - 26, BATT_X, BATT_Y - 30, S.chargeActive);
+          drawWire(BATT_X, BATT_Y - 30, DEV_X, DEV_Y, S.deviceOn);
           drawBattery();
           drawDevice(t);
           drawParticles(S.roverX, S.roverY - 26);
