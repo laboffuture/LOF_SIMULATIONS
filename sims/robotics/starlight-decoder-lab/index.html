@@ -1553,7 +1553,9 @@
           const armLen = 10 * au;
           const torsoW = 16 * au,
             torsoH = 18 * au;
-          const shoulderInsetX = 1.8 * au,
+          // Negative inset so the shoulder sits just outside the torso's edge —
+          // otherwise the torso (drawn afterward, in front) paints over the arm.
+          const shoulderInsetX = -1 * au,
             shoulderInsetY = 2.6 * au;
 
           const torsoTop = bodyCenterY - torsoH / 2,
@@ -1591,39 +1593,25 @@
             ctx.fillStyle = red;
             rr(ctx, lx - legW / 2 - 0.4 * au, legBottomY - 2.6 * au, legW + 0.8 * au, 2.6 * au, 1.4 * au);
             ctx.fill();
+            // boot: ankle cuff + a separate, wider sole so it reads as a boot
+            // shape rather than a plain rounded box
             ctx.fillStyle = black;
             ctx.strokeStyle = blackEdge;
             ctx.lineWidth = 1.2;
-            rr(ctx, lx - bootW / 2, legBottomY, bootW, bootH, bootH * 0.4);
+            rr(ctx, lx - bootW / 2, legBottomY, bootW, bootH * 0.62, bootH * 0.28);
             ctx.fill();
             ctx.stroke();
-          });
-
-          // ---- both arms hang naturally at the sides ----
-          const sway = Math.sin(performance.now() / 900) * 0.04;
-          const lHandX = lShoulderX + Math.cos(lAngle + sway) * armLen,
-            lHandY = lShoulderY + Math.sin(lAngle + sway) * armLen;
-          [
-            [lShoulderX, lShoulderY, lHandX, lHandY],
-            [rShoulderX, rShoulderY, gripX, gripY],
-          ].forEach(([sx, sy, hx, hy]) => {
-            ctx.strokeStyle = white;
-            ctx.lineWidth = 3.6 * au;
-            ctx.lineCap = "round";
-            ctx.beginPath();
-            ctx.moveTo(sx, sy);
-            ctx.lineTo(hx, hy);
+            const soleW = bootW + 2.6 * au,
+              soleY = legBottomY + bootH * 0.5,
+              soleH = bootH * 0.6;
+            rr(ctx, lx - soleW / 2, soleY, soleW, soleH, soleH * 0.5);
+            ctx.fill();
             ctx.stroke();
-            ctx.fillStyle = red;
+            ctx.strokeStyle = "rgba(255,255,255,0.18)";
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.arc(lerp(sx, hx, 0.82), lerp(sy, hy, 0.82), 1.6 * au, 0, TAU);
-            ctx.fill();
-            ctx.fillStyle = black;
-            ctx.strokeStyle = blackEdge;
-            ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.arc(hx, hy, 3 * au, 0, TAU);
-            ctx.fill();
+            ctx.moveTo(lx - bootW / 2 + 1, legBottomY + bootH * 0.28);
+            ctx.lineTo(lx + bootW / 2 - 1, legBottomY + bootH * 0.28);
             ctx.stroke();
           });
 
@@ -1662,6 +1650,35 @@
           ctx.fillStyle = "#2563eb";
           ctx.fillText("F", bodyCenterX + 2 * au, badgeMidY);
           ctx.textBaseline = "alphabetic";
+
+          // ---- both arms hang naturally at the sides — drawn after the torso
+          // so they sit in front of it instead of being painted over ----
+          const sway = Math.sin(performance.now() / 900) * 0.04;
+          const lHandX = lShoulderX + Math.cos(lAngle + sway) * armLen,
+            lHandY = lShoulderY + Math.sin(lAngle + sway) * armLen;
+          [
+            [lShoulderX, lShoulderY, lHandX, lHandY],
+            [rShoulderX, rShoulderY, gripX, gripY],
+          ].forEach(([sx, sy, hx, hy]) => {
+            ctx.strokeStyle = white;
+            ctx.lineWidth = 3.6 * au;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(hx, hy);
+            ctx.stroke();
+            ctx.fillStyle = red;
+            ctx.beginPath();
+            ctx.arc(lerp(sx, hx, 0.82), lerp(sy, hy, 0.82), 1.6 * au, 0, TAU);
+            ctx.fill();
+            ctx.fillStyle = black;
+            ctx.strokeStyle = blackEdge;
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(hx, hy, 3 * au, 0, TAU);
+            ctx.fill();
+            ctx.stroke();
+          });
 
           // ---- helmet ----
           const helmetR = 10.5 * au;
