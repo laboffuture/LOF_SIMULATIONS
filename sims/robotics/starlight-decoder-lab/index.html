@@ -579,43 +579,6 @@
         color: var(--mut);
       }
 
-      .reading {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 6px 0;
-        border-bottom: 1.5px dashed var(--line);
-        font-size: 12.5px;
-      }
-      .reading:last-child {
-        border-bottom: none;
-      }
-      .reading .k {
-        color: var(--mut);
-      }
-      .reading .v {
-        font-weight: 700;
-        font-size: 13px;
-      }
-      .hbar {
-        height: 12px;
-        border-radius: 8px;
-        background: var(--panel2);
-        border: 1.5px solid var(--line);
-        position: relative;
-        overflow: hidden;
-        margin: 4px 0 8px;
-      }
-      .hbar .fill {
-        position: absolute;
-        inset: 0 auto 0 0;
-        width: 0;
-        border-radius: 7px;
-        transition:
-          width 0.15s,
-          background 0.2s;
-      }
-
       .maprow {
         display: flex;
         align-items: center;
@@ -865,14 +828,6 @@
             <div class="v n" id="s_result">—</div>
           </div>
         </div>
-
-        <h3 style="margin-top: 14px">Signal Meters</h3>
-        <div class="reading"><span class="k">Distance</span><span class="v" id="m_dist">30%</span></div>
-        <div class="hbar"><div class="fill" id="distFill" style="background: var(--accent)"></div></div>
-        <div class="reading"><span class="k">Brightness</span><span class="v" id="m_bright">70%</span></div>
-        <div class="hbar"><div class="fill" id="brightFill" style="background: var(--accent)"></div></div>
-        <div class="reading"><span class="k">Interference</span><span class="v" id="m_interf">0%</span></div>
-        <div class="hbar"><div class="fill" id="interfFill" style="background: var(--warn)"></div></div>
 
         <h3 style="margin-top: 14px">Star Mapping Reference</h3>
         <div class="maprow"><span class="msw" style="background:#3b82f6"></span>Blue-dominant channels → Rigel (Blue Star)</div>
@@ -1301,14 +1256,6 @@
             $("s_result").className = "v a";
           }
 
-          $("m_dist").textContent = Math.round(S.distance) + "%";
-          $("distFill").style.width = S.distance + "%";
-          $("m_bright").textContent = Math.round(S.brightness) + "%";
-          $("brightFill").style.width = S.brightness + "%";
-          $("m_interf").textContent = Math.round(S.interference) + "%";
-          $("interfFill").style.width = S.interference + "%";
-          $("interfFill").style.background = S.interference > 45 ? "var(--danger)" : "var(--warn)";
-
           COLOR_ORDER.forEach((key) => {
             $("con-" + key).classList.toggle("on", S.unlocked[key]);
           });
@@ -1399,8 +1346,8 @@
           const consoleX = CW * 0.67,
             consoleY = CH * 0.48;
           // big decoder console — sized off the canvas so it stays a dominant, readable monitor
-          const consoleW = clamp(CW * 0.42, 300, 420);
-          const consoleH = clamp(CH * 0.72, 250, 330);
+          const consoleW = clamp(CW * 0.46, 300, 460);
+          const consoleH = clamp(CH * 0.8, 250, 360);
           const cHalfW = consoleW / 2,
             cHalfH = consoleH / 2;
           const lensX = consoleX - cHalfW + 26,
