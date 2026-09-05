@@ -679,8 +679,9 @@
               comes back too weak to classify.
             </li>
             <li>
-              Turn <b>interference</b> up and scan a colour you already know — watch a
-              clean reading turn into a mixed, unclear one.
+              Turn <b>interference</b> on and scan a colour — the star is still
+              correctly decoded, but the scene washes bright and the graph glitches
+              while it reads.
             </li>
             <li>
               Use <b>Run Guided Decode</b> to watch all six colours scan back-to-back
@@ -916,9 +917,10 @@
           const distFactor = clamp(1.25 - (S.distance / 100) * 1.15, 0, 1.3);
           const brightFactor = 0.15 + (S.brightness / 100) * 1.0;
           const signal = profile.map((p) => p * distFactor * brightFactor);
-          const noiseAmp = (S.interference / 100) * 0.55;
-          const bg = (S.interference / 100) * 0.3;
-          const reading = signal.map((v) => clamp(v + bg + (Math.random() * 2 - 1) * noiseAmp, 0, 1.4));
+          // Interference no longer corrupts the actual reading/classification — a scan
+          // still correctly identifies the star with interference on. It only drives
+          // the visual: the scene washes white and the decoded graph glitches.
+          const reading = signal.map((v) => clamp(v, 0, 1.4));
           return { reading, signalPeak: Math.max(...signal) };
         }
 
