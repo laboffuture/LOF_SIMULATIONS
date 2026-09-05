@@ -724,11 +724,7 @@
 
         <div class="cmdgroup">
           <h4>LED Intensity</h4>
-          <div class="steprow">
-            <button class="stepbtn" id="btnDimmer">−10%</button>
-            <button class="stepbtn" id="btnBrighter">+10%</button>
-          </div>
-          <div class="ctrl">
+          <div class="ctrl" style="margin-top: 0">
             <div class="row"><label>Intensity</label><span class="val" id="v_bright">80%</span></div>
             <input type="range" id="r_bright" min="0" max="100" step="1" value="80" />
           </div>
@@ -1005,8 +1001,6 @@
           $("v_bright").textContent = Math.round(S.brightness) + "%";
         }
         $("r_bright").addEventListener("input", (e) => setBrightness(+e.target.value));
-        $("btnDimmer").addEventListener("click", () => setBrightness(S.brightness - 10));
-        $("btnBrighter").addEventListener("click", () => setBrightness(S.brightness + 10));
 
         function setInterference(v) {
           S.interference = clamp(v, 0, 100);
@@ -1319,6 +1313,15 @@
             ctx.fill();
           }
           ctx.globalAlpha = 1;
+
+          // Background Interference: stray light visibly washes the whole backdrop
+          // out — fully dark space when off, bright and washed-out (stars barely
+          // visible) when on, scaling with the interference level in between.
+          const interfWash = clamp((S.interference / 100) * 1.4, 0, 0.92);
+          if (interfWash > 0) {
+            ctx.fillStyle = `rgba(255,255,255,${interfWash})`;
+            ctx.fillRect(0, 0, CW, CH);
+          }
 
           const pad = 16;
           ctx.strokeStyle = "rgba(140,170,255,0.2)";
