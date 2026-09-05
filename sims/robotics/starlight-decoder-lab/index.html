@@ -1098,7 +1098,9 @@
           action: () => {
             setDistance(30);
             setBrightness(100);
-            setInterference(0);
+            // Interference is intentionally left alone here — whatever the student
+            // has the toggle set to (including the glitch effect) carries into
+            // Guided Decode instead of being silently forced off.
             selectColor(key);
           },
           hold: 400,
