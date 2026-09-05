@@ -579,51 +579,6 @@
         color: var(--mut);
       }
 
-      .spectrumrow {
-        height: 150px;
-        background: #10142c;
-        border: 1.5px solid var(--line);
-        border-radius: 10px;
-        padding: 6px 4px 2px;
-        margin-top: 4px;
-      }
-      .spectrumrow svg {
-        width: 100%;
-        height: 100%;
-        display: block;
-        overflow: visible;
-      }
-      .spec-grid {
-        stroke: rgba(255, 255, 255, 0.08);
-        stroke-width: 1;
-      }
-      .spec-axislab {
-        fill: #7d87ad;
-        font: 700 7px "Rajdhani", sans-serif;
-      }
-      .spec-xlab {
-        fill: #9fa8cc;
-        font: 700 8px "Rajdhani", sans-serif;
-      }
-      .spec-line {
-        fill: none;
-        stroke-width: 2.4;
-        stroke-linejoin: round;
-        stroke-linecap: round;
-        transition:
-          stroke 0.15s,
-          points 0.08s linear;
-      }
-      .spec-dot {
-        stroke: #0b0e22;
-        stroke-width: 1.2;
-        transition:
-          cx 0.08s linear,
-          cy 0.08s linear,
-          r 0.15s,
-          fill 0.15s;
-      }
-
       .reading {
         display: flex;
         justify-content: space-between;
@@ -750,8 +705,9 @@
               own and points itself at the decoder's sensor lens.
             </li>
             <li>
-              Watch the <b>AS7341 channel bars</b> ramp up as the sensor reads —
-              the tallest bars are what the controller compares against its colour map.
+              Watch the decoder console's <b>AS7341 channel graph</b> plot F1-F8 once a
+              star is identified — the tallest points are what the controller compares
+              against its colour map.
             </li>
             <li>
               Move the wand <b>far away</b> or dim it right down and scan again — the
@@ -771,7 +727,7 @@
           <ul>
             <li>How LED colour can be used as a light signal</li>
             <li>How a spectral colour sensor reads incoming light</li>
-            <li>How AS7341 readings can be shown as spectrum bars</li>
+            <li>How AS7341 readings can be shown as a spectral line graph</li>
             <li>How colour intensity affects detection</li>
             <li>Why wand distance changes sensor accuracy</li>
             <li>Why brightness affects graph strength</li>
@@ -909,9 +865,6 @@
             <div class="v n" id="s_result">—</div>
           </div>
         </div>
-
-        <h3 style="margin-top: 14px">AS7341 Channel Readings</h3>
-        <div class="spectrumrow" id="spectrumRow"></div>
 
         <h3 style="margin-top: 14px">Signal Meters</h3>
         <div class="reading"><span class="k">Distance</span><span class="v" id="m_dist">30%</span></div>
@@ -1322,48 +1275,6 @@
         }
 
         /* =================== UI SYNC =================== */
-        // Line-graph geometry (SVG viewBox units), matching the reference PDF's layout:
-        // raw counts 0-30000 on the y-axis, F1-F8 channels on the x-axis.
-        const CHART = { x0: 30, x1: 372, y0: 8, y1: 116, w: 400, h: 140 };
-        function buildSpectrumChart() {
-          const el = $("spectrumRow");
-          const stepX = (CHART.x1 - CHART.x0) / (N_CH - 1);
-          const gridVals = [0, 5000, 10000, 15000, 20000, 25000, 30000];
-          let grid = "";
-          gridVals.forEach((v) => {
-            const y = CHART.y1 - (v / 30000) * (CHART.y1 - CHART.y0);
-            grid += `<line class="spec-grid" x1="${CHART.x0}" y1="${y}" x2="${CHART.x1}" y2="${y}"/>`;
-            grid += `<text class="spec-axislab" x="${CHART.x0 - 3}" y="${y + 2.5}" text-anchor="end">${v / 1000}k</text>`;
-          });
-          let xlabels = "";
-          for (let i = 0; i < N_CH; i++) {
-            const x = CHART.x0 + i * stepX;
-            xlabels += `<text class="spec-xlab" x="${x}" y="${CHART.y1 + 12}" text-anchor="middle">F${i + 1}</text>`;
-          }
-          const dots = Array.from({ length: N_CH }, (_, i) => `<circle id="specDot${i}" class="spec-dot" r="2.6" cx="${CHART.x0 + i * stepX}" cy="${CHART.y1}"></circle>`).join("");
-          el.innerHTML = `<svg viewBox="0 0 ${CHART.w} ${CHART.h}" preserveAspectRatio="none">${grid}${xlabels}<polyline id="specLine" class="spec-line" points=""></polyline>${dots}</svg>`;
-        }
-        function updateSpectrumChart(domIdx, domActive) {
-          const stepX = (CHART.x1 - CHART.x0) / (N_CH - 1);
-          const lineColor = S.color ? STARS[S.color].sw : "#67e8f9";
-          const pts = [];
-          for (let i = 0; i < N_CH; i++) {
-            const raw = clamp(S.displayReadings[i], 0, 1.4) * 30000; // raw-count scale, matching the reference PDF
-            const y = clamp(CHART.y1 - (clamp(raw, 0, 30000) / 30000) * (CHART.y1 - CHART.y0), CHART.y0 - 6, CHART.y1);
-            const x = CHART.x0 + i * stepX;
-            pts.push(x + "," + y.toFixed(1));
-            const dot = $("specDot" + i);
-            dot.setAttribute("cx", x);
-            dot.setAttribute("cy", y);
-            const isDom = domActive && i === domIdx;
-            dot.setAttribute("r", isDom ? 4.2 : 2.6);
-            dot.setAttribute("fill", isDom ? lineColor : "#94a3b8");
-          }
-          const line = $("specLine");
-          line.setAttribute("points", pts.join(" "));
-          line.setAttribute("stroke", lineColor);
-        }
-
         function updateDashboard() {
           $("s_color").textContent = S.color ? STARS[S.color].name.replace(" Star", "") : "None";
 
@@ -1389,8 +1300,6 @@
             $("s_result").textContent = "Scanning…";
             $("s_result").className = "v a";
           }
-
-          updateSpectrumChart(domIdx, domActive);
 
           $("m_dist").textContent = Math.round(S.distance) + "%";
           $("distFill").style.width = S.distance + "%";
@@ -1677,7 +1586,7 @@
               ctx.fillStyle = "#94a3b8";
               ctx.font = "600 9px 'Rajdhani', sans-serif";
               ctx.fillText(st.star, oledX + oledW / 2, oledY + 27);
-              drawStarGraph(oledX + 10, oledY + 42, oledW - 20, oledH - 54);
+              drawSpectralGraph(oledX + 10, oledY + 42, oledW - 20, oledH - 54);
             }
           }
 
@@ -1687,76 +1596,75 @@
           ctx.fillText("DECODER CONSOLE", consoleX, consoleY + cHalfH + 18);
         }
 
-        // Real astronomy reference: stars are classified by colour/temperature exactly like this
-        // (a simplified Hertzsprung–Russell-style chart) — hot/blue on the left to cool/red on the right.
-        function starPath(cx, cy, rOuter, rInner) {
-          ctx.beginPath();
-          for (let i = 0; i < 10; i++) {
-            const rad = i % 2 === 0 ? rOuter : rInner;
-            const a = -Math.PI / 2 + (i * Math.PI) / 5;
-            const x = cx + Math.cos(a) * rad,
-              y = cy + Math.sin(a) * rad;
-            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-          }
-          ctx.closePath();
-        }
+        // AS7341 channel readings (F1-F8), drawn straight onto the decoder console OLED.
+        // Uses the confirmed star's pure reference profile (from the real sensor PDF), not the
+        // live noisy scan reading, so the same star always redraws the exact same graph.
+        function drawSpectralGraph(gx, gy, gw, gh) {
+          const st = STARS[S.resultKey];
+          const profile = st.profile;
+          const n = profile.length;
+          const padL = 24,
+            padR = 4,
+            padT = 4,
+            padB = 12;
+          const x0 = gx + padL,
+            x1 = gx + gw - padR;
+          const y0 = gy + padT,
+            y1 = gy + gh - padB;
 
-        function drawStarGraph(gx, gy, gw, gh) {
           ctx.fillStyle = "#02030a";
           ctx.fillRect(gx, gy, gw, gh);
-          ctx.strokeStyle = "#475569";
+          ctx.strokeStyle = "#334155";
           ctx.lineWidth = 1;
           ctx.strokeRect(gx, gy, gw, gh);
 
-          const zoneW = gw / COLOR_ORDER.length;
-          COLOR_ORDER.forEach((key, i) => {
-            ctx.fillStyle = STARS[key].sw;
-            ctx.globalAlpha = 0.4;
-            ctx.fillRect(gx + i * zoneW, gy, zoneW, gh);
-            ctx.globalAlpha = 1;
-            if (i > 0) {
-              ctx.strokeStyle = "rgba(226,232,240,0.4)";
-              ctx.beginPath();
-              ctx.moveTo(gx + i * zoneW, gy);
-              ctx.lineTo(gx + i * zoneW, gy + gh);
-              ctx.stroke();
-            }
-            ctx.fillStyle = "#e2e8f0";
-            ctx.font = "800 8.5px 'Rajdhani', sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText(STARS[key].name.replace(" Star", ""), gx + i * zoneW + zoneW / 2, gy + gh + 13);
-          });
-          ctx.fillStyle = "#cbd5e1";
-          ctx.font = "700 8px 'Rajdhani', sans-serif";
-          ctx.fillText("HOTTER  ←  SPECTRAL COLOUR  →  COOLER", gx + gw / 2, gy - 7);
-
-          if (S.resultKey && S.resultKey !== "unclear") {
-            const idx = COLOR_ORDER.indexOf(S.resultKey);
-            const mx = gx + idx * zoneW + zoneW / 2;
-            const brightPos = clamp(S.signalPeak / 1.15, 0.08, 0.92);
-            const my = gy + gh - brightPos * gh;
-            const sw = STARS[S.resultKey].sw;
-            const pulse = 1 + 0.15 * Math.sin(performance.now() / 260);
-            const rad = ctx.createRadialGradient(mx, my, 1, mx, my, 26 * pulse);
-            rad.addColorStop(0, sw);
-            rad.addColorStop(0.5, sw);
-            rad.addColorStop(1, "rgba(0,0,0,0)");
-            ctx.globalAlpha = 0.85;
-            ctx.fillStyle = rad;
+          // gridlines + raw-count axis labels (0 / 15k / 30k), matching the reference PDF's scale
+          ctx.font = "600 6.5px 'Rajdhani', sans-serif";
+          ctx.textAlign = "right";
+          [0, 15000, 30000].forEach((v) => {
+            const y = y1 - (v / 30000) * (y1 - y0);
+            ctx.strokeStyle = "rgba(255,255,255,0.1)";
             ctx.beginPath();
-            ctx.arc(mx, my, 26 * pulse, 0, TAU);
-            ctx.fill();
-            ctx.globalAlpha = 1;
-            starPath(mx, my, 9.5, 4);
-            ctx.fillStyle = sw;
-            ctx.shadowColor = sw;
-            ctx.shadowBlur = 14;
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            ctx.strokeStyle = "#ffffff";
-            ctx.lineWidth = 1.4;
+            ctx.moveTo(x0, y);
+            ctx.lineTo(x1, y);
             ctx.stroke();
+            ctx.fillStyle = "#7d87ad";
+            ctx.fillText(v / 1000 + "k", x0 - 3, y + 2.5);
+          });
+
+          // F1-F8 points from the pure reference profile
+          const stepX = (x1 - x0) / (n - 1);
+          const pts = [];
+          let domI = 0;
+          for (let i = 0; i < n; i++) {
+            if (profile[i] > profile[domI]) domI = i;
+            const raw = profile[i] * 30000;
+            const y = clamp(y1 - (raw / 30000) * (y1 - y0), y0 - 4, y1);
+            pts.push([x0 + i * stepX, y]);
           }
+
+          ctx.textAlign = "center";
+          ctx.font = "700 6.5px 'Rajdhani', sans-serif";
+          ctx.fillStyle = "#9fa8cc";
+          pts.forEach(([x], i) => ctx.fillText("F" + (i + 1), x, y1 + 10));
+
+          ctx.strokeStyle = st.sw;
+          ctx.lineWidth = 2;
+          ctx.lineJoin = "round";
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          pts.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
+          ctx.stroke();
+
+          pts.forEach(([x, y], i) => {
+            ctx.beginPath();
+            ctx.arc(x, y, i === domI ? 3.2 : 2, 0, TAU);
+            ctx.fillStyle = st.sw;
+            ctx.fill();
+            ctx.strokeStyle = "#0b0e22";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          });
         }
 
         /* =================== MAIN LOOP =================== */
@@ -1790,7 +1698,6 @@
         $("helpClose").addEventListener("click", closeHelp);
 
         /* =================== INIT =================== */
-        buildSpectrumChart();
         fit();
         setDistance(30);
         setBrightness(70);
