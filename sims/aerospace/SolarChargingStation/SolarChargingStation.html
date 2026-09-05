@@ -206,20 +206,6 @@
         line-height: 1.4;
       }
 
-      input[type="range"] {
-        width: 100%;
-        accent-color: var(--sky);
-        height: 26px;
-        cursor: pointer;
-      }
-      .anglemarks {
-        display: flex;
-        justify-content: space-between;
-        font-size: 10px;
-        color: var(--dim);
-        margin-top: -4px;
-      }
-
       .stage-foot {
         display: flex;
         gap: 8px;
@@ -244,9 +230,13 @@
         display: flex;
         gap: 7px;
         align-items: center;
+        justify-content: center;
       }
       .btn:hover {
         border-color: var(--dim);
+      }
+      .btn.wide {
+        width: 100%;
       }
       .btn.start {
         background: var(--accent);
@@ -276,6 +266,7 @@
         display: block;
         border-radius: 8px;
         background: var(--panel2);
+        touch-action: none;
       }
       .modechip {
         display: inline-block;
@@ -550,36 +541,48 @@
       <div class="helpbar" id="helpbar">
         <div class="tabpanel" data-panel="use">
           <ol>
-            <li>Pick <b>Day</b> or <b>Night</b> — solar power only exists by day.</li>
             <li>
-              By day, set the <b>Sunlight Intensity</b> and drag the
-              <b>Panel Angle</b> slider — try to land near the sweet spot marked
-              on the dial.
+              Pick <b>Outdoor</b> or <b>Indoor</b>. The rover always turns on
+              its own to face whatever light source is strongest — you never
+              aim it by hand.
+            </li>
+            <li>
+              <b>Outdoor:</b> press <b>Move Sun</b> to step the sun across the
+              sky. Watch the rover swing around to keep facing it — for a
+              moment right after it moves, the rover is still turning and
+              generation dips.
+            </li>
+            <li>
+              <b>Indoor:</b> drag the rover around the room. Near the window
+              it catches daylight leaking in; turn on the <b>Lamp</b> and the
+              rover will turn toward that instead if it's the stronger source.
             </li>
             <li>Choose the <b>Device Load</b> the station is powering.</li>
             <li>
-              Set <b>Battery Mode</b> to <b>Charge</b> to fill the battery from
-              the panel, or <b>Use Stored Power</b> to run the device off the
-              battery.
+              Set <b>Battery Mode</b> to <b>Charge</b> to fill the battery
+              from the rover's panel, or <b>Use Stored Power</b> to run the
+              device off the battery.
             </li>
             <li>Press <b>Start</b> and watch the readings and energy flow.</li>
             <li>
-              Try this: charge the battery during the <b>Day</b>, then switch to
-              <b>Night</b> and <b>Use Stored Power</b> — the device keeps running
-              on what you stored.
+              Try this: charge outdoors at Noon, then go Indoor with the lamp
+              off and the rover away from the window, and switch to
+              <b>Use Stored Power</b> — the device keeps running on what you
+              stored, with zero light anywhere nearby.
             </li>
             <li>Press <b>Reset</b> to clear the battery and start over.</li>
           </ol>
         </div>
         <div class="tabpanel" data-panel="learn">
           <ul>
-            <li>Solar power is only generated when sunlight is available</li>
-            <li>Stronger sunlight and a correctly angled panel generate more power</li>
-            <li>A wrongly angled panel captures far less usable sunlight</li>
-            <li>Stored battery energy can be used anytime, including at night</li>
+            <li>Solar power is only generated when a light source is actually available</li>
+            <li>A rover with a light sensor can automatically turn to track the strongest light</li>
+            <li>While it's still turning toward a new light direction, less power is captured</li>
+            <li>Indoors, natural light comes through windows and falls off with distance</li>
+            <li>Stored battery energy can be used anytime, even with no light source nearby</li>
             <li>A heavier device load drains a battery faster</li>
             <li>A charging station must choose to charge or to use power — not both at once</li>
-            <li>How energy changes form: sunlight → electrical energy → stored energy → device power</li>
+            <li>How energy changes form: light → electrical energy → stored energy → device power</li>
           </ul>
         </div>
       </div>
@@ -596,43 +599,43 @@
       <section class="card controls">
         <h3>Charging Bench</h3>
         <p class="sub">
-          Set the conditions, then press Start to see how sunlight becomes
-          stored, usable power.
+          The rover hunts for the strongest light on its own — set the scene,
+          then press Start.
         </p>
 
         <div class="ctrl">
           <div class="row">
-            <label>Time Mode</label><span class="val" id="timeVal">Day</span>
+            <label>Scene</label><span class="val" id="sceneVal">Outdoor</span>
           </div>
-          <div class="toggle" id="timeToggle">
-            <button data-v="day">☀️ Day</button>
-            <button data-v="night">🌙 Night</button>
+          <div class="toggle" id="sceneToggle">
+            <button data-v="outdoor">🌳 Outdoor</button>
+            <button data-v="indoor">🏠 Indoor</button>
           </div>
-          <p class="hint">At night the panel receives no sunlight at all.</p>
-        </div>
-
-        <div class="ctrl">
-          <div class="row">
-            <label>Sunlight Intensity</label
-            ><span class="val" id="sunVal">Medium</span>
-          </div>
-          <div class="toggle" id="sunToggle">
-            <button data-v="low">Low</button>
-            <button data-v="medium">Medium</button>
-            <button data-v="high">High</button>
-          </div>
-          <p class="hint">Only matters during the Day.</p>
-        </div>
-
-        <div class="ctrl">
-          <div class="row">
-            <label>Panel Angle</label><span class="val" id="angleVal">30°</span>
-          </div>
-          <input type="range" id="angleSlider" min="0" max="90" value="30" step="1" />
-          <div class="anglemarks"><span>0°</span><span>★ 45° optimal</span><span>90°</span></div>
           <p class="hint">
-            Closer to the marked sweet spot faces the panel more directly at
-            the sun, so more sunlight is captured.
+            The rover's panel always tries to face the strongest light it can
+            detect.
+          </p>
+        </div>
+
+        <div class="ctrl" id="outdoorCtrl">
+          <div class="row">
+            <label>Sun Position</label><span class="val" id="sunPosVal">Noon</span>
+          </div>
+          <button type="button" class="btn wide" id="moveSunBtn">☀️ Move Sun</button>
+          <p class="hint">
+            Each press steps the sun to a new spot in the sky. The rover turns
+            to keep tracking it.
+          </p>
+        </div>
+
+        <div class="ctrl" id="indoorCtrl" style="display: none">
+          <div class="row">
+            <label>Lamp</label><span class="val" id="lampVal">Off</span>
+          </div>
+          <button type="button" class="btn wide" id="lampBtn">💡 Toggle Lamp</button>
+          <p class="hint">
+            Drag the rover in the stage — near the window, or near the lit
+            lamp, it turns to face whichever is stronger.
           </p>
         </div>
 
@@ -654,8 +657,8 @@
             <button data-v="use">🔌 Use Stored Power</button>
           </div>
           <p class="hint">
-            Charge fills the battery from the panel. Use Stored Power runs the
-            device from the battery — day or night.
+            Charge fills the battery from the rover's panel. Use Stored Power
+            runs the device from the battery, no matter where the rover is.
           </p>
         </div>
 
@@ -664,7 +667,7 @@
           <button class="btn reset" id="resetBtn">↺ Reset</button>
         </div>
         <p class="hint" id="statusHint" style="margin-top: 10px">
-          Set the conditions, then press Start.
+          Set the scene, then press Start.
         </p>
       </section>
 
@@ -675,11 +678,16 @@
 
       <section class="card readings">
         <h3>Live Readings</h3>
-        <p class="sub">What the station is generating, storing, and using.</p>
+        <p class="sub">What the rover is sensing, storing, and using.</p>
 
         <div class="reading">
           <span class="k">Solar Power Generated</span
           ><span class="v" id="solarVal">Zero</span>
+        </div>
+
+        <div class="reading">
+          <span class="k">Panel Alignment</span
+          ><span class="v" id="alignVal">No Light</span>
         </div>
 
         <div class="reading">
@@ -706,11 +714,11 @@
           <label class="sect-label">Energy Flow</label>
           <div class="flow" id="flowRow">
             <div class="node" data-n="sun">
-              <span class="ic">☀️</span><span class="lb">Sun</span>
+              <span class="ic" id="sunIcon">☀️</span><span class="lb" id="sunLabel">Light</span>
             </div>
             <span class="arrow" data-a="1">→</span>
             <div class="node" data-n="panel">
-              <span class="ic">🔆</span><span class="lb">Panel</span>
+              <span class="ic">🤖</span><span class="lb">Rover</span>
             </div>
             <span class="arrow" data-a="2">→</span>
             <div class="node" data-n="battery">
@@ -761,12 +769,6 @@
       (() => {
         "use strict";
 
-        const SUN = {
-          low: { label: "Low", power: 30 },
-          medium: { label: "Medium", power: 65 },
-          high: { label: "High", power: 100 },
-        };
-        const OPTIMAL_ANGLE = 45;
         const LOADS = {
           led: { label: "LED", drain: 0.6, chargingLabel: false, note: "A small LED barely drains the battery." },
           fan: { label: "Fan", drain: 1.6, chargingLabel: false, note: "A motorized fan pulls noticeably more current." },
@@ -775,6 +777,21 @@
         };
         const CHARGE_RATE = 5.5; // %/sec at 100% solar power
         const LOW_BATTERY_CUTOFF = 1; // % — below this, the device can't be powered
+        const ALIGN_GOOD = 0.85;
+
+        // Sun positions across the outdoor sky — weak and low at the ends,
+        // strongest overhead at Noon. u=0..1 places it along the arc.
+        const SUN_POSITIONS = [
+          { label: "Sunrise", u: 0.05, strength: 22 },
+          { label: "Morning", u: 0.28, strength: 58 },
+          { label: "Noon", u: 0.5, strength: 100 },
+          { label: "Afternoon", u: 0.72, strength: 58 },
+          { label: "Sunset", u: 0.95, strength: 22 },
+        ];
+        const WINDOW_MAX = 55, // strongest light the window gives right next to it
+          WINDOW_FALLOFF = 0.38, // per design-unit of distance
+          LAMP_MAX = 62,
+          LAMP_FALLOFF = 0.42;
 
         const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
         const lerp = (a, b, t) => a + (b - a) * t;
@@ -790,35 +807,34 @@
           c.arcTo(x, y, x + w, y, r);
           c.closePath();
         }
+        function angleDiff(a, b) {
+          let d = (a - b) % TAU;
+          if (d > Math.PI) d -= TAU;
+          if (d < -Math.PI) d += TAU;
+          return d;
+        }
+        const approach = (cur, tgt, tau, dt) => tgt + (cur - tgt) * Math.exp(-dt / tau);
 
         const S = {
-          timeMode: "day",
-          sunlight: "medium",
-          panelAngle: 30,
+          scene: "outdoor",
+          sunIdx: 2,
+          lampOn: false,
+          roverX: 0,
+          roverY: 0, // set once layout() knows the room size
+          roverAngle: -Math.PI / 2,
+          dragging: false,
           device: "led",
           batteryMode: "charge",
           running: false,
           battery: 0,
           solarRaw: 0,
+          sourceStrength: 0,
+          alignment: 0,
           deviceOn: false,
           chargingStatus: "Not Charging",
           fanAngle: 0,
           particles: [],
         };
-
-        function computeSolarRaw() {
-          if (S.timeMode !== "day") return 0;
-          const base = SUN[S.sunlight].power;
-          const angleDiff = Math.abs(S.panelAngle - OPTIMAL_ANGLE);
-          const eff = clamp(1 - angleDiff / 90, 0.15, 1);
-          return base * eff;
-        }
-        function solarLabel(raw) {
-          if (raw <= 0.5) return "Zero";
-          if (raw < 35) return "Low";
-          if (raw < 70) return "Medium";
-          return "High";
-        }
 
         /* ---------- controls ---------- */
         function wireToggle(id, onPick) {
@@ -831,13 +847,12 @@
             });
           });
         }
-        wireToggle("timeToggle", (v) => {
-          S.timeMode = v;
-          $("timeVal").textContent = v === "day" ? "Day" : "Night";
-        });
-        wireToggle("sunToggle", (v) => {
-          S.sunlight = v;
-          $("sunVal").textContent = SUN[v].label;
+        wireToggle("sceneToggle", (v) => {
+          S.scene = v;
+          $("sceneVal").textContent = v === "outdoor" ? "Outdoor" : "Indoor";
+          $("outdoorCtrl").style.display = v === "outdoor" ? "" : "none";
+          $("indoorCtrl").style.display = v === "indoor" ? "" : "none";
+          $("sunIcon").textContent = v === "outdoor" ? "☀️" : "💡";
         });
         wireToggle("loadToggle", (v) => {
           S.device = v;
@@ -846,14 +861,18 @@
         wireToggle("modeToggle", (v) => {
           S.batteryMode = v;
         });
-        $("angleSlider").addEventListener("input", (e) => {
-          S.panelAngle = Number(e.target.value);
-          $("angleVal").textContent = S.panelAngle + "°";
-        });
-        document.querySelector('#timeToggle button[data-v="day"]').classList.add("on");
-        document.querySelector('#sunToggle button[data-v="medium"]').classList.add("on");
+        document.querySelector('#sceneToggle button[data-v="outdoor"]').classList.add("on");
         document.querySelector('#loadToggle button[data-v="led"]').classList.add("on");
         document.querySelector('#modeToggle button[data-v="charge"]').classList.add("on");
+
+        $("moveSunBtn").addEventListener("click", () => {
+          S.sunIdx = (S.sunIdx + 1) % SUN_POSITIONS.length;
+          $("sunPosVal").textContent = SUN_POSITIONS[S.sunIdx].label;
+        });
+        $("lampBtn").addEventListener("click", () => {
+          S.lampOn = !S.lampOn;
+          $("lampVal").textContent = S.lampOn ? "On" : "Off";
+        });
 
         const startBtn = $("startBtn");
         startBtn.addEventListener("click", () => {
@@ -861,7 +880,7 @@
           startBtn.classList.toggle("on", S.running);
           startBtn.textContent = S.running ? "⏸ Pause" : "▶ Start";
           $("statusHint").textContent = S.running
-            ? "Running — change settings any time to see the effect."
+            ? "Running — change the scene any time to see the rover react."
             : "Paused. Press Start to continue.";
         });
         $("resetBtn").addEventListener("click", () => {
@@ -871,21 +890,142 @@
           S.deviceOn = false;
           S.chargingStatus = "Not Charging";
           S.particles = [];
+          S.roverX = ROOM_ROVER_HOME_X;
+          S.roverY = ROOM_ROVER_HOME_Y;
           startBtn.classList.remove("on");
           startBtn.textContent = "▶ Start";
-          $("statusHint").textContent = "Set the conditions, then press Start.";
+          $("statusHint").textContent = "Set the scene, then press Start.";
         });
 
-        /* ---------- simulation update ---------- */
+        /* ---------- canvas & layout ---------- */
+        const canvas = $("stage");
+        const ctx = canvas.getContext("2d");
+        const DESIGN_W = 640,
+          DESIGN_H = 520;
+        let W, H, GROUND;
+        let OUT_ROVER_X, OUT_ROVER_Y, SUN_ARC_Y, SUN_ARC_LEFT, SUN_ARC_RIGHT, SUN_ARC_HEIGHT;
+        let WINDOW_X, WINDOW_Y, LAMP_X, LAMP_Y, ROOM_FLOOR_TOP, ROOM_FLOOR_BOTTOM, ROOM_FLOOR_LEFT, ROOM_FLOOR_RIGHT;
+        let ROOM_ROVER_HOME_X, ROOM_ROVER_HOME_Y;
+        let BATT_X, BATT_Y, DEV_X, DEV_Y;
+
+        function layout() {
+          const cw = Math.max(360, Math.round(canvas.clientWidth || DESIGN_W));
+          const ch = Math.max(300, Math.round(canvas.clientHeight || DESIGN_H));
+          const dpr = (window.devicePixelRatio || 1) * 1.5;
+          canvas.width = Math.round(cw * dpr);
+          canvas.height = Math.round(ch * dpr);
+          const k = Math.min(cw / DESIGN_W, ch / DESIGN_H);
+          ctx.setTransform(dpr * k, 0, 0, dpr * k, 0, 0);
+          W = cw / k;
+          H = ch / k;
+
+          GROUND = H * 0.82;
+          BATT_X = W * 0.82;
+          BATT_Y = GROUND - 62;
+          DEV_X = W * 0.94;
+          DEV_Y = GROUND - 78;
+
+          // outdoor
+          OUT_ROVER_X = W * 0.32;
+          OUT_ROVER_Y = GROUND;
+          SUN_ARC_LEFT = W * 0.06;
+          SUN_ARC_RIGHT = W * 0.62;
+          SUN_ARC_Y = GROUND;
+          SUN_ARC_HEIGHT = H * 0.55;
+
+          // indoor room
+          ROOM_FLOOR_LEFT = W * 0.06;
+          ROOM_FLOOR_RIGHT = W * 0.68;
+          ROOM_FLOOR_TOP = H * 0.18;
+          ROOM_FLOOR_BOTTOM = GROUND;
+          WINDOW_X = ROOM_FLOOR_LEFT + 6;
+          WINDOW_Y = H * 0.42;
+          LAMP_X = ROOM_FLOOR_RIGHT - 30;
+          LAMP_Y = H * 0.28;
+          ROOM_ROVER_HOME_X = (ROOM_FLOOR_LEFT + ROOM_FLOOR_RIGHT) / 2;
+          ROOM_ROVER_HOME_Y = ROOM_FLOOR_BOTTOM - 10;
+
+          if (!S.roverX) {
+            S.roverX = ROOM_ROVER_HOME_X;
+            S.roverY = ROOM_ROVER_HOME_Y;
+          }
+        }
+
+        /* ---------- drag handling (indoor rover) ---------- */
+        function toDesign(evt) {
+          const rect = canvas.getBoundingClientRect();
+          const cx = evt.clientX - rect.left,
+            cy = evt.clientY - rect.top;
+          return { x: (cx / rect.width) * W, y: (cy / rect.height) * H };
+        }
+        canvas.addEventListener("pointerdown", (e) => {
+          if (S.scene !== "indoor") return;
+          const p = toDesign(e);
+          const d = Math.hypot(p.x - S.roverX, p.y - S.roverY);
+          if (d < 34) {
+            S.dragging = true;
+            canvas.setPointerCapture(e.pointerId);
+          }
+        });
+        canvas.addEventListener("pointermove", (e) => {
+          if (!S.dragging) return;
+          const p = toDesign(e);
+          S.roverX = clamp(p.x, ROOM_FLOOR_LEFT + 16, ROOM_FLOOR_RIGHT - 16);
+          S.roverY = clamp(p.y, ROOM_FLOOR_TOP + 16, ROOM_FLOOR_BOTTOM - 4);
+        });
+        function endDrag() {
+          S.dragging = false;
+        }
+        canvas.addEventListener("pointerup", endDrag);
+        canvas.addEventListener("pointercancel", endDrag);
+
+        /* ---------- simulation logic ---------- */
+        function computeTarget() {
+          if (S.scene === "outdoor") {
+            const preset = SUN_POSITIONS[S.sunIdx];
+            const sunX = lerp(SUN_ARC_LEFT, SUN_ARC_RIGHT, preset.u);
+            const sunY = SUN_ARC_Y - Math.sin(preset.u * Math.PI) * SUN_ARC_HEIGHT;
+            return {
+              angle: Math.atan2(sunY - OUT_ROVER_Y, sunX - OUT_ROVER_X),
+              strength: preset.strength,
+              sourceX: sunX,
+              sourceY: sunY,
+            };
+          }
+          const dWin = Math.hypot(WINDOW_X - S.roverX, WINDOW_Y - S.roverY);
+          const winStrength = clamp(WINDOW_MAX - dWin * WINDOW_FALLOFF, 0, WINDOW_MAX);
+          let lampStrength = 0;
+          if (S.lampOn) {
+            const dLamp = Math.hypot(LAMP_X - S.roverX, LAMP_Y - S.roverY);
+            lampStrength = clamp(LAMP_MAX - dLamp * LAMP_FALLOFF, 0, LAMP_MAX);
+          }
+          if (lampStrength > winStrength) {
+            return { angle: Math.atan2(LAMP_Y - S.roverY, LAMP_X - S.roverX), strength: lampStrength, sourceX: LAMP_X, sourceY: LAMP_Y };
+          }
+          return { angle: Math.atan2(WINDOW_Y - S.roverY, WINDOW_X - S.roverX), strength: winStrength, sourceX: WINDOW_X, sourceY: WINDOW_Y };
+        }
+
+        function solarLabel(raw) {
+          if (raw <= 0.5) return "Zero";
+          if (raw < 35) return "Low";
+          if (raw < 70) return "Medium";
+          return "High";
+        }
+
         function update(dt) {
-          S.solarRaw = computeSolarRaw();
+          const target = computeTarget();
+          S.roverAngle = approach(S.roverAngle, target.angle, 0.35, dt);
+          const diff = Math.abs(angleDiff(S.roverAngle, target.angle));
+          S.alignment = clamp(1 - diff / Math.PI, 0.15, 1);
+          S.sourceStrength = target.strength;
+          S.solarRaw = target.strength > 0.5 ? target.strength * S.alignment : 0;
 
           if (!S.running) {
             $("modeChip").textContent = "Idle — press Start";
             $("modeChip").classList.remove("run");
             return;
           }
-          $("modeChip").textContent = S.timeMode === "day" ? "Running — Daytime" : "Running — Nighttime";
+          $("modeChip").textContent = "Running — " + (S.scene === "outdoor" ? "Outdoor" : "Indoor");
           $("modeChip").classList.add("run");
 
           if (S.batteryMode === "charge") {
@@ -911,7 +1051,6 @@
 
           if (S.device === "fan" && S.deviceOn) S.fanAngle += dt * 260;
 
-          // wire particles — panel->battery while charging, battery->device while powering
           if (Math.random() < (S.batteryMode === "charge" && S.solarRaw > 0 ? 0.35 : 0)) {
             S.particles.push({ seg: "charge", u: 0 });
           }
@@ -924,6 +1063,18 @@
 
         function updateUI() {
           $("solarVal").textContent = solarLabel(S.solarRaw);
+          const av = $("alignVal");
+          if (S.sourceStrength <= 0.5) {
+            av.textContent = "No Light";
+            av.style.color = "var(--dim)";
+          } else if (S.alignment >= ALIGN_GOOD) {
+            av.textContent = "Aligned";
+            av.style.color = "var(--ok-ink)";
+          } else {
+            av.textContent = "Turning…";
+            av.style.color = "#9a7008";
+          }
+
           $("battVal").textContent = Math.round(S.battery) + "%";
           const bf = $("battFill");
           bf.style.width = S.battery + "%";
@@ -940,12 +1091,12 @@
 
           let note;
           if (!S.running) note = "Press Start to begin.";
-          else if (S.batteryMode === "charge") note = S.solarRaw > 0 ? "Battery is charging from the panel. The device stays off in Charge mode." : "No sunlight right now, so nothing is charging.";
+          else if (S.batteryMode === "charge") note = S.solarRaw > 0 ? "Battery is charging from the rover's panel. The device stays off in Charge mode." : "No usable light right now, so nothing is charging.";
           else if (S.deviceOn) note = "Running the " + LOADS[S.device].label + " from stored battery power.";
           else note = "Battery is too low to power the device. Switch to Charge mode.";
           $("devNote").textContent = note;
 
-          const sunHot = S.timeMode === "day" && S.solarRaw > 0;
+          const sunHot = S.solarRaw > 0;
           const chargeHot = S.batteryMode === "charge" && S.solarRaw > 0;
           const useHot = S.batteryMode === "use" && S.deviceOn;
           document.querySelector('.node[data-n="sun"]').classList.toggle("hot", sunHot);
@@ -957,149 +1108,7 @@
           document.querySelector('.node[data-n="device"]').classList.toggle("hot", S.deviceOn);
         }
 
-        /* ---------- canvas ---------- */
-        const canvas = $("stage");
-        const ctx = canvas.getContext("2d");
-        const DESIGN_W = 640,
-          DESIGN_H = 520;
-        let W, H, GROUND, PANEL_PX, PANEL_PY, BATT_X, BATT_Y, DEV_X, DEV_Y, SUN_X, SUN_Y;
-
-        function layout() {
-          const cw = Math.max(360, Math.round(canvas.clientWidth || DESIGN_W));
-          const ch = Math.max(300, Math.round(canvas.clientHeight || DESIGN_H));
-          const dpr = (window.devicePixelRatio || 1) * 1.5;
-          canvas.width = Math.round(cw * dpr);
-          canvas.height = Math.round(ch * dpr);
-          const k = Math.min(cw / DESIGN_W, ch / DESIGN_H);
-          ctx.setTransform(dpr * k, 0, 0, dpr * k, 0, 0);
-          W = cw / k;
-          H = ch / k;
-
-          GROUND = H * 0.86;
-          PANEL_PX = W * 0.28;
-          PANEL_PY = GROUND - 6;
-          BATT_X = W * 0.5;
-          BATT_Y = GROUND - 74;
-          DEV_X = W * 0.78;
-          DEV_Y = GROUND - 90;
-          SUN_X = W * 0.16;
-          SUN_Y = H * 0.16;
-        }
-
-        function drawSky() {
-          const g = ctx.createLinearGradient(0, 0, 0, H);
-          if (S.timeMode === "day") {
-            g.addColorStop(0, "#bfe0f7");
-            g.addColorStop(1, "#eef7fb");
-          } else {
-            g.addColorStop(0, "#0c1530");
-            g.addColorStop(1, "#1c2b4d");
-          }
-          ctx.fillStyle = g;
-          ctx.fillRect(0, 0, W, H);
-
-          if (S.timeMode === "night") {
-            ctx.fillStyle = "rgba(255,255,255,0.85)";
-            for (let i = 0; i < 40; i++) {
-              const sx = (i * 97.3) % W;
-              const sy = (i * 53.7) % (GROUND * 0.7);
-              ctx.globalAlpha = 0.3 + 0.5 * Math.abs(Math.sin(i * 12.9));
-              ctx.beginPath();
-              ctx.arc(sx, sy, 1.2, 0, TAU);
-              ctx.fill();
-            }
-            ctx.globalAlpha = 1;
-          }
-
-          ctx.fillStyle = S.timeMode === "day" ? "#bcd98a" : "#141f38";
-          ctx.fillRect(0, GROUND, W, H - GROUND);
-        }
-
-        function drawSunOrMoon(t) {
-          if (S.timeMode === "day") {
-            const r = 26 + Math.sin(t * 1.5) * 1.5;
-            const rayLen = { low: 8, medium: 14, high: 22 }[S.sunlight];
-            ctx.strokeStyle = "#f6b93b";
-            ctx.lineWidth = 3;
-            ctx.lineCap = "round";
-            for (let i = 0; i < 8; i++) {
-              const a = (i / 8) * TAU + t * 0.3;
-              ctx.beginPath();
-              ctx.moveTo(SUN_X + Math.cos(a) * (r + 4), SUN_Y + Math.sin(a) * (r + 4));
-              ctx.lineTo(SUN_X + Math.cos(a) * (r + 4 + rayLen), SUN_Y + Math.sin(a) * (r + 4 + rayLen));
-              ctx.stroke();
-            }
-            ctx.fillStyle = "#fbc531";
-            ctx.beginPath();
-            ctx.arc(SUN_X, SUN_Y, r, 0, TAU);
-            ctx.fill();
-          } else {
-            ctx.fillStyle = "#e9edf6";
-            ctx.beginPath();
-            ctx.arc(SUN_X, SUN_Y, 22, 0, TAU);
-            ctx.fill();
-            ctx.fillStyle = "#1c2b4d";
-            ctx.beginPath();
-            ctx.arc(SUN_X + 10, SUN_Y - 6, 20, 0, TAU);
-            ctx.fill();
-          }
-        }
-
-        function drawPanel() {
-          const angleRad = (S.panelAngle * Math.PI) / 180;
-          const panelLen = H * 0.3;
-          const panelThick = 14;
-
-          // stand
-          ctx.strokeStyle = "#8a949d";
-          ctx.lineWidth = 6;
-          ctx.lineCap = "round";
-          ctx.beginPath();
-          ctx.moveTo(PANEL_PX, PANEL_PY);
-          ctx.lineTo(PANEL_PX, PANEL_PY + 20);
-          ctx.stroke();
-
-          // sweet-spot guide arc
-          ctx.strokeStyle = "rgba(42,120,214,0.35)";
-          ctx.setLineDash([3, 4]);
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.arc(PANEL_PX, PANEL_PY, panelLen + 14, -Math.PI / 2 - (OPTIMAL_ANGLE * Math.PI) / 180 - 0.05, -Math.PI / 2 - (OPTIMAL_ANGLE * Math.PI) / 180 + 0.05);
-          ctx.stroke();
-          ctx.setLineDash([]);
-
-          ctx.save();
-          ctx.translate(PANEL_PX, PANEL_PY);
-          ctx.rotate(-Math.PI / 2 - angleRad);
-          const onSun = S.timeMode === "day" && S.solarRaw > 0;
-          ctx.fillStyle = onSun ? "#2455a4" : "#3a4f6b";
-          rr(ctx, -panelThick / 2, -panelLen, panelThick, panelLen, 3);
-          ctx.fill();
-          // cell grid lines
-          ctx.strokeStyle = "rgba(255,255,255,0.35)";
-          ctx.lineWidth = 1;
-          for (let i = 1; i < 5; i++) {
-            const y = -panelLen + (panelLen / 5) * i;
-            ctx.beginPath();
-            ctx.moveTo(-panelThick / 2, y);
-            ctx.lineTo(panelThick / 2, y);
-            ctx.stroke();
-          }
-          if (onSun) {
-            ctx.fillStyle = "rgba(255, 220, 130, 0.35)";
-            rr(ctx, -panelThick / 2, -panelLen, panelThick, panelLen, 3);
-            ctx.fill();
-          }
-          ctx.restore();
-        }
-
-        function batteryWireStart() {
-          const angleRad = (S.panelAngle * Math.PI) / 180;
-          const panelLen = H * 0.3;
-          const a = -Math.PI / 2 - angleRad;
-          return { x: PANEL_PX + Math.cos(a) * panelLen * 0.15, y: PANEL_PY + Math.sin(a) * panelLen * 0.15 };
-        }
-
+        /* ---------- drawing ---------- */
         function drawWire(x1, y1, x2, y2, active) {
           ctx.strokeStyle = active ? "#e8590c" : "#aab3c2";
           ctx.lineWidth = 3;
@@ -1112,15 +1121,14 @@
         }
 
         function drawBattery() {
-          const w = 54,
-            h = 78;
+          const w = 46,
+            h = 66;
           const x = BATT_X - w / 2,
             y = BATT_Y - h;
           ctx.fillStyle = "#22314a";
           rr(ctx, x, y, w, h, 6);
           ctx.fill();
-          ctx.fillStyle = "#22314a";
-          rr(ctx, BATT_X - 10, y - 8, 20, 8, 2);
+          rr(ctx, BATT_X - 9, y - 7, 18, 7, 2);
           ctx.fill();
 
           const pad = 5;
@@ -1130,10 +1138,10 @@
           rr(ctx, x + pad, y + pad + (innerH - fillH), w - pad * 2, fillH, 3);
           ctx.fill();
 
-          ctx.fillStyle = "#fff";
-          ctx.font = "700 11px 'IBM Plex Mono', monospace";
+          ctx.fillStyle = "#1c2733";
+          ctx.font = "700 10px 'IBM Plex Mono', monospace";
           ctx.textAlign = "center";
-          ctx.fillText(Math.round(S.battery) + "%", BATT_X, y + h + 16);
+          ctx.fillText(Math.round(S.battery) + "%", BATT_X, y + h + 14);
         }
 
         function drawDevice(t) {
@@ -1142,6 +1150,7 @@
           const on = S.deviceOn;
           ctx.save();
           ctx.translate(x, y);
+          ctx.scale(0.78, 0.78);
 
           if (S.device === "led") {
             ctx.fillStyle = on ? "#fde68a" : "#c7cdd6";
@@ -1213,17 +1222,16 @@
           ctx.restore();
         }
 
-        function drawParticles() {
-          const c0 = batteryWireStart();
+        function drawParticles(originX, originY) {
           S.particles.forEach((p) => {
             let x, y, color;
             if (p.seg === "charge") {
-              x = lerp(c0.x, BATT_X, p.u);
-              y = lerp(c0.y, BATT_Y - 40, p.u);
+              x = lerp(originX, BATT_X, p.u);
+              y = lerp(originY, BATT_Y - 30, p.u);
               color = "#f6b93b";
             } else {
               x = lerp(BATT_X, DEV_X, p.u);
-              y = lerp(BATT_Y - 40, DEV_Y, p.u);
+              y = lerp(BATT_Y - 30, DEV_Y, p.u);
               color = "#2a78d6";
             }
             ctx.fillStyle = color;
@@ -1235,16 +1243,166 @@
           });
         }
 
-        function draw(t) {
-          drawSky();
-          drawSunOrMoon(t);
-          drawPanel();
-          const c0 = batteryWireStart();
-          drawWire(c0.x, c0.y, BATT_X, BATT_Y - 40, S.batteryMode === "charge" && S.solarRaw > 0);
-          drawWire(BATT_X, BATT_Y - 40, DEV_X, DEV_Y, S.batteryMode === "use" && S.deviceOn);
+        // The rover: wheeled chassis with a solar panel that always points the
+        // way S.roverAngle currently faces, aimed at the tracked light source.
+        function drawRover(x, y, angle) {
+          ctx.save();
+          ctx.translate(x, y);
+
+          // wheels/chassis shadow
+          ctx.fillStyle = "rgba(23,41,59,0.14)";
+          ctx.beginPath();
+          ctx.ellipse(0, 4, 24, 7, 0, 0, TAU);
+          ctx.fill();
+
+          ctx.fillStyle = "#3a4657";
+          rr(ctx, -20, -10, 40, 16, 5);
+          ctx.fill();
+          ctx.fillStyle = "#22314a";
+          [-14, 14].forEach((wx) => {
+            ctx.beginPath();
+            ctx.arc(wx, 6, 6, 0, TAU);
+            ctx.fill();
+          });
+
+          // panel + sensor mast rotate to face the light
+          ctx.rotate(angle + Math.PI / 2);
+          const onSun = S.solarRaw > 0;
+          ctx.strokeStyle = "#8a949d";
+          ctx.lineWidth = 4;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(0, -8);
+          ctx.lineTo(0, -30);
+          ctx.stroke();
+
+          ctx.fillStyle = onSun ? "#2455a4" : "#3a4f6b";
+          rr(ctx, -16, -46, 32, 18, 3);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255,255,255,0.35)";
+          ctx.lineWidth = 1;
+          for (let i = 1; i < 4; i++) {
+            ctx.beginPath();
+            ctx.moveTo(-16 + i * 8, -46);
+            ctx.lineTo(-16 + i * 8, -28);
+            ctx.stroke();
+          }
+          if (onSun) {
+            ctx.fillStyle = "rgba(255, 220, 130, 0.4)";
+            rr(ctx, -16, -46, 32, 18, 3);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        function drawOutdoorScene(t) {
+          const g = ctx.createLinearGradient(0, 0, 0, H);
+          g.addColorStop(0, "#bfe0f7");
+          g.addColorStop(1, "#eef7fb");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = "#bcd98a";
+          ctx.fillRect(0, GROUND, W, H - GROUND);
+
+          const preset = SUN_POSITIONS[S.sunIdx];
+          const sunX = lerp(SUN_ARC_LEFT, SUN_ARC_RIGHT, preset.u);
+          const sunY = SUN_ARC_Y - Math.sin(preset.u * Math.PI) * SUN_ARC_HEIGHT;
+
+          const r = 24 + Math.sin(t * 1.5) * 1.5;
+          const rayLen = lerp(6, 20, preset.strength / 100);
+          ctx.strokeStyle = "#f6b93b";
+          ctx.lineWidth = 3;
+          ctx.lineCap = "round";
+          for (let i = 0; i < 8; i++) {
+            const a = (i / 8) * TAU + t * 0.3;
+            ctx.beginPath();
+            ctx.moveTo(sunX + Math.cos(a) * (r + 4), sunY + Math.sin(a) * (r + 4));
+            ctx.lineTo(sunX + Math.cos(a) * (r + 4 + rayLen), sunY + Math.sin(a) * (r + 4 + rayLen));
+            ctx.stroke();
+          }
+          ctx.fillStyle = "#fbc531";
+          ctx.beginPath();
+          ctx.arc(sunX, sunY, r, 0, TAU);
+          ctx.fill();
+
+          drawWire(OUT_ROVER_X, OUT_ROVER_Y - 26, BATT_X, BATT_Y - 30, S.batteryMode === "charge" && S.solarRaw > 0);
+          drawWire(BATT_X, BATT_Y - 30, DEV_X, DEV_Y, S.batteryMode === "use" && S.deviceOn);
           drawBattery();
           drawDevice(t);
-          drawParticles();
+          drawParticles(OUT_ROVER_X, OUT_ROVER_Y - 26);
+          drawRover(OUT_ROVER_X, OUT_ROVER_Y, S.roverAngle);
+        }
+
+        function drawIndoorScene(t) {
+          ctx.fillStyle = "#efe6d8";
+          ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = "#d8cdb8";
+          ctx.fillRect(0, GROUND, W, H - GROUND);
+          ctx.strokeStyle = "#c9bda3";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(ROOM_FLOOR_LEFT - 4, ROOM_FLOOR_TOP - 4, ROOM_FLOOR_RIGHT - ROOM_FLOOR_LEFT + 8, GROUND - ROOM_FLOOR_TOP + 4);
+
+          // window — brighter near it, simulating daylight coming through
+          const winGlow = ctx.createRadialGradient(WINDOW_X, WINDOW_Y, 4, WINDOW_X, WINDOW_Y, 90);
+          winGlow.addColorStop(0, "rgba(191,224,247,0.85)");
+          winGlow.addColorStop(1, "rgba(191,224,247,0)");
+          ctx.fillStyle = winGlow;
+          ctx.fillRect(WINDOW_X - 90, WINDOW_Y - 90, 180, 180);
+          ctx.fillStyle = "#bfe0f7";
+          rr(ctx, WINDOW_X - 8, WINDOW_Y - 34, 16, 68, 2);
+          ctx.fill();
+          ctx.strokeStyle = "#8a949d";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(WINDOW_X - 8, WINDOW_Y - 34, 16, 68);
+          ctx.beginPath();
+          ctx.moveTo(WINDOW_X - 8, WINDOW_Y);
+          ctx.lineTo(WINDOW_X + 8, WINDOW_Y);
+          ctx.stroke();
+
+          // lamp
+          if (S.lampOn) {
+            const lampGlow = ctx.createRadialGradient(LAMP_X, LAMP_Y, 2, LAMP_X, LAMP_Y, 80);
+            lampGlow.addColorStop(0, "rgba(255,224,130,0.75)");
+            lampGlow.addColorStop(1, "rgba(255,224,130,0)");
+            ctx.fillStyle = lampGlow;
+            ctx.fillRect(LAMP_X - 80, LAMP_Y - 80, 160, 160);
+          }
+          ctx.strokeStyle = "#8a949d";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(LAMP_X, LAMP_Y + 14);
+          ctx.lineTo(LAMP_X, ROOM_FLOOR_TOP - 4);
+          ctx.stroke();
+          ctx.fillStyle = S.lampOn ? "#ffdd66" : "#c7cdd6";
+          ctx.beginPath();
+          ctx.moveTo(LAMP_X - 12, LAMP_Y + 14);
+          ctx.lineTo(LAMP_X + 12, LAMP_Y + 14);
+          ctx.lineTo(LAMP_X + 6, LAMP_Y - 6);
+          ctx.lineTo(LAMP_X - 6, LAMP_Y - 6);
+          ctx.closePath();
+          ctx.fill();
+
+          drawWire(S.roverX, S.roverY - 26, BATT_X, BATT_Y - 30, S.batteryMode === "charge" && S.solarRaw > 0);
+          drawWire(BATT_X, BATT_Y - 30, DEV_X, DEV_Y, S.batteryMode === "use" && S.deviceOn);
+          drawBattery();
+          drawDevice(t);
+          drawParticles(S.roverX, S.roverY - 26);
+          drawRover(S.roverX, S.roverY, S.roverAngle);
+
+          if (!S.dragging) {
+            ctx.strokeStyle = "rgba(42,120,214,0.45)";
+            ctx.setLineDash([3, 4]);
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(S.roverX, S.roverY, 30, 0, TAU);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+        }
+
+        function draw(t) {
+          if (S.scene === "outdoor") drawOutdoorScene(t);
+          else drawIndoorScene(t);
         }
 
         /* ---------- loop ---------- */
