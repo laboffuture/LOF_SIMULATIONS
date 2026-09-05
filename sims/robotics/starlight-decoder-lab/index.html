@@ -746,10 +746,10 @@
         <div class="cmdgroup">
           <h4>Sensor Sensitivity</h4>
           <div class="ctrl" style="margin-top: 0">
-            <div class="row"><label>Sensitivity</label><span class="val" id="v_sens">50%</span></div>
-            <input type="range" id="r_sens" min="0" max="100" step="1" value="50" />
+            <div class="row"><label>Sensitivity</label><span class="val" id="v_sens">100%</span></div>
+            <input type="range" id="r_sens" min="0" max="100" step="1" value="100" />
           </div>
-          <div class="hint">Higher catches dim colours sooner, but accepts noisier matches too.</div>
+          <div class="hint">100% gives a normal, clean graph. Lower it and the graph shrinks and gets shakier — a poorly-sensitive sensor gives a noisier reading, even with interference off.</div>
         </div>
 
         <div class="cmdgroup">
@@ -1074,7 +1074,7 @@
           S.distance = 30;
           S.brightness = 100;
           S.interference = 0;
-          S.sensitivity = 50;
+          S.sensitivity = 100;
           S.phase = "idle";
           S.phaseT = 0;
           S.displayReadings = new Array(N_CH).fill(0);
@@ -1085,7 +1085,7 @@
           setDistance(30);
           setBrightness(100);
           setInterference(0);
-          setSensitivity(50);
+          setSensitivity(100);
           updateActionButton();
           setFeedback("StarLight Decoder Lab started.", "ok");
         }
@@ -1781,6 +1781,13 @@
           const profile = st.profile;
           const n = profile.length;
           const interferenceOn = S.interference > 3;
+          // Sensitivity behaves like Intensity for the graph — 100% is the ideal (full,
+          // clean reading), and it shrinks toward the noise floor as sensitivity drops.
+          // It also has its own glitch: a poorly-sensitive sensor gets progressively
+          // shakier readings even with Background Interference off ("in dark mode").
+          const sensFactor = clamp(S.sensitivity / 100, 0, 1);
+          const sensGlitch = 1 - sensFactor;
+          const glitchStrength = Math.max(interferenceOn ? 1 : 0, sensGlitch);
           const padL = 24,
             padR = 4,
             padT = 4,
@@ -1816,11 +1823,13 @@
           let domI = 0;
           for (let i = 0; i < n; i++) {
             if (profile[i] > profile[domI]) domI = i;
-            const raw = applyIntensity(profile[i] * 30000, S.brightness);
+            let raw = applyIntensity(profile[i] * 30000, S.brightness);
+            raw = NOISE_FLOOR + (raw - NOISE_FLOOR) * sensFactor;
             let y = clamp(y1 - (raw / 30000) * (y1 - y0), y0 - 4, y1);
-            // Interference glitch: stray light jitters the trace channel-by-channel,
-            // redrawn fresh every frame so it visibly flickers rather than sitting still.
-            if (interferenceOn) y = clamp(y + (Math.random() * 2 - 1) * 7, y0 - 4, y1);
+            // Glitch: jitters the trace channel-by-channel, redrawn fresh every frame
+            // so it visibly flickers rather than sitting still. Strength scales with
+            // how bad things are (interference and/or low sensitivity).
+            if (glitchStrength > 0) y = clamp(y + (Math.random() * 2 - 1) * 7 * glitchStrength, y0 - 4, y1);
             pts.push([x0 + i * stepX, y]);
           }
 
@@ -1830,7 +1839,7 @@
           pts.forEach(([x], i) => ctx.fillText("F" + (i + 1), x, y1 + 10));
 
           // A corrupted signal randomly flickers to white instead of holding its colour
-          const lineColor = interferenceOn && Math.random() < 0.25 ? "#ffffff" : st.sw;
+          const lineColor = Math.random() < 0.25 * glitchStrength ? "#ffffff" : st.sw;
           ctx.strokeStyle = lineColor;
           ctx.lineWidth = 2;
           ctx.lineJoin = "round";
@@ -1850,18 +1859,19 @@
           });
 
           // Glitch tear bars — a couple of thin horizontal slices sheared sideways,
-          // reshuffled every frame so it reads as static/interference, not decoration.
-          if (interferenceOn) {
+          // reshuffled every frame so it reads as static, not decoration. More
+          // frequent and more visible the worse interference/sensitivity get.
+          if (glitchStrength > 0) {
             ctx.save();
             ctx.beginPath();
             ctx.rect(gx, gy, gw, gh);
             ctx.clip();
             for (let g = 0; g < 3; g++) {
-              if (Math.random() < 0.45) {
+              if (Math.random() < 0.45 * glitchStrength) {
                 const barY = lerp(y0, y1, Math.random());
                 const barH = 1.5 + Math.random() * 3;
-                const shift = (Math.random() * 2 - 1) * 12;
-                ctx.globalAlpha = 0.35 + Math.random() * 0.35;
+                const shift = (Math.random() * 2 - 1) * 12 * glitchStrength;
+                ctx.globalAlpha = (0.35 + Math.random() * 0.35) * glitchStrength;
                 ctx.fillStyle = Math.random() < 0.5 ? "#ffffff" : st.sw;
                 ctx.fillRect(x0 + shift, barY, x1 - x0, barH);
               }
@@ -1906,7 +1916,7 @@
         setDistance(30);
         setBrightness(100);
         setInterference(0);
-        setSensitivity(50);
+        setSensitivity(100);
         updateActionButton();
         requestAnimationFrame(loop);
       })();
