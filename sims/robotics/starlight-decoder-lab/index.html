@@ -1556,9 +1556,10 @@
           const armLen = 9 * au;
           const torsoW = 15 * au,
             torsoH = 16 * au;
-          // Negative inset so the shoulder sits just outside the torso's edge —
-          // otherwise the torso (drawn afterward, in front) paints over the arm.
-          const shoulderInsetX = -1 * au,
+          // Negative inset so the shoulder sits clearly outside the torso's edge,
+          // with enough margin that the arm's own stroke width (plus its outline)
+          // never creeps back into the torso's fill.
+          const shoulderInsetX = -2.5 * au,
             shoulderInsetY = 2.4 * au;
 
           const torsoTop = bodyCenterY - torsoH / 2,
@@ -1663,6 +1664,15 @@
             [lShoulderX, lShoulderY, lHandX, lHandY],
             [rShoulderX, rShoulderY, gripX, gripY],
           ].forEach(([sx, sy, hx, hy]) => {
+            // outline pass first, so the sleeve has a visible edge against the
+            // torso even where the two are right next to each other
+            ctx.strokeStyle = edge;
+            ctx.lineWidth = 3.6 * au + 2;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(hx, hy);
+            ctx.stroke();
             ctx.strokeStyle = white;
             ctx.lineWidth = 3.6 * au;
             ctx.lineCap = "round";
