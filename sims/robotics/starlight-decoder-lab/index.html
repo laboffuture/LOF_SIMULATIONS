@@ -670,8 +670,9 @@
             <li>
               Watch the decoder console's <b>AS7341 channel graph</b> plot F1-F8 once a
               star is identified — the tallest points are what the controller compares
-              against its colour map. 80% intensity is the ideal for every colour;
-              dim it below that and the whole graph shrinks down with it.
+              against its colour map. 100% intensity shows the full reference reading;
+              dim it down and the graph dims with it, right down to a small sensor
+              noise floor instead of dropping to zero.
             </li>
             <li>
               Dim the LED <b>Intensity</b> right down and scan again — the reading
@@ -693,7 +694,8 @@
             <li>How a spectral colour sensor reads incoming light</li>
             <li>How AS7341 readings can be shown as a spectral line graph</li>
             <li>How colour intensity affects detection</li>
-            <li>Why 80% LED intensity is the ideal reading for every colour, and why dimming it shrinks the whole graph</li>
+            <li>Why a dimmer light still doesn't read as zero — sensors have a small noise floor</li>
+            <li>Why a channel already at the sensor's maximum stays clipped until the light dims enough to reveal its real value</li>
             <li>How background light can interfere with colour detection</li>
             <li>How colour mapping converts sensor readings into star identities</li>
             <li>How OLED display can show both text and graph output</li>
@@ -725,10 +727,10 @@
         <div class="cmdgroup">
           <h4>LED Intensity</h4>
           <div class="ctrl" style="margin-top: 0">
-            <div class="row"><label>Intensity</label><span class="val" id="v_bright">80%</span></div>
-            <input type="range" id="r_bright" min="0" max="100" step="1" value="80" />
+            <div class="row"><label>Intensity</label><span class="val" id="v_bright">100%</span></div>
+            <input type="range" id="r_bright" min="0" max="100" step="1" value="100" />
           </div>
-          <div class="hint">80% is the ideal intensity for every colour. Below that, the signal — and the decoded graph — shrink with it.</div>
+          <div class="hint">100% shows the full reference reading for every colour. Dim it and the signal — and the decoded graph — dim with it, down to a small sensor noise floor.</div>
         </div>
 
         <div class="cmdgroup">
@@ -846,6 +848,32 @@
         const lerp = (a, b, t) => a + (b - a) * t;
         const TAU = Math.PI * 2;
         const $ = (id) => document.getElementById(id);
+
+        // Simulates what one AS7341 channel would actually read if the same star's
+        // light were dimmer, given its raw count at 100% intensity. Kept separate
+        // from the render code so the noise floor / saturation behavior can be
+        // tuned independently.
+        //   baseCounts       — this channel's raw count (0-30000) at 100% intensity
+        //   intensityPercent — 0-100
+        const ADC_MAX = 30000;
+        const NOISE_FLOOR = 60; // dark-current/ambient floor counts never fall below
+        function applyIntensity(baseCounts, intensityPercent) {
+          const t = clamp(intensityPercent, 0, 100) / 100;
+          if (t >= 1) return baseCounts;
+
+          // A channel already pinned near the ADC ceiling doesn't un-saturate the
+          // instant the source dims a little — it stays clipped until intensity
+          // drops far enough, then reveals its real shape over the rest of the range.
+          const satFrac = clamp(baseCounts / ADC_MAX, 0, 1);
+          const headroom = clamp((satFrac - 0.85) / 0.15, 0, 1); // 0 below 85% of ADC, 1 at the ceiling
+          const releaseAt = 1 - headroom * 0.35; // saturated channels hold until ~65% intensity
+
+          if (t >= releaseAt) return baseCounts;
+
+          const u = releaseAt > 0 ? t / releaseAt : t;
+          const shaped = Math.pow(clamp(u, 0, 1), 1.15); // slightly non-linear falloff
+          return NOISE_FLOOR + (baseCounts - NOISE_FLOOR) * shaped;
+        }
         const approach = (cur, tgt, tau, dt) => tgt + (cur - tgt) * Math.exp(-dt / tau);
         function rr(c, x, y, w, h, r) {
           r = Math.min(r, w / 2, h / 2);
@@ -1047,7 +1075,7 @@
         function resetSystem() {
           S.color = null;
           S.distance = 30;
-          S.brightness = 80;
+          S.brightness = 100;
           S.interference = 0;
           S.sensitivity = 50;
           S.phase = "idle";
@@ -1058,7 +1086,7 @@
           S.resultCandidates = null;
           setSegOn($("colorPick"), "color", null);
           setDistance(30);
-          setBrightness(80);
+          setBrightness(100);
           setInterference(0);
           setSensitivity(50);
           updateActionButton();
@@ -1074,7 +1102,7 @@
           label: "Scanning " + STARS[key].name + "…",
           action: () => {
             setDistance(30);
-            setBrightness(80);
+            setBrightness(100);
             setInterference(0);
             selectColor(key);
           },
@@ -1746,15 +1774,14 @@
         }
 
         // AS7341 channel readings (F1-F8), drawn straight onto the decoder console OLED.
-        // Uses the confirmed star's pure reference profile (from the real sensor PDF) — the
-        // shape is always the same for a given star, but its height scales with LED
-        // Intensity: 80% is the ideal for every colour (full-height, matching the reference
-        // exactly); below that the whole graph shrinks down with it.
+        // Uses the confirmed star's pure reference profile (from the real sensor PDF) as
+        // each channel's 100%-intensity raw count; LED Intensity then dims it per-channel
+        // through applyIntensity() — full reference values at 100%, dimmer (with a noise
+        // floor and saturation-release behavior) as intensity drops.
         function drawSpectralGraph(gx, gy, gw, gh) {
           const st = STARS[S.resultKey];
           const profile = st.profile;
           const n = profile.length;
-          const intensityFactor = clamp(S.brightness / 80, 0, 1);
           const padL = 24,
             padR = 4,
             padT = 4,
@@ -1790,7 +1817,7 @@
           let domI = 0;
           for (let i = 0; i < n; i++) {
             if (profile[i] > profile[domI]) domI = i;
-            const raw = profile[i] * 30000 * intensityFactor;
+            const raw = applyIntensity(profile[i] * 30000, S.brightness);
             const y = clamp(y1 - (raw / 30000) * (y1 - y0), y0 - 4, y1);
             pts.push([x0 + i * stepX, y]);
           }
@@ -1852,7 +1879,7 @@
         /* =================== INIT =================== */
         fit();
         setDistance(30);
-        setBrightness(80);
+        setBrightness(100);
         setInterference(0);
         setSensitivity(50);
         updateActionButton();
