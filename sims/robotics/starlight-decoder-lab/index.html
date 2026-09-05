@@ -1543,20 +1543,23 @@
           ctx.fillText("DECODER CONSOLE", consoleX, consoleY + cHalfH + 18);
         }
 
-        // Chibi astronaut mascot — front-facing, matching the LOF reference art (white suit,
-        // red wrist/waist/ankle bands, black gloves & boots, dark starry visor, LOF chest badge).
+        // Kid-proportioned astronaut mascot — a big head, a short pudgy torso, and
+        // stubby limbs, matching the LOF reference art (white suit, red wrist/waist/
+        // ankle bands, black gloves & boots, dark starry visor, LOF chest badge).
         // Both arms hang naturally at the sides; the wand rotates inside the right glove (a
         // wrist flourish) so it can still swish/point without the arm itself having to move.
         // Returns the right-hand glove position so the caller can anchor the wand there.
         function drawAstronaut(bodyCenterX, bodyCenterY) {
           const au = Math.min(CW, CH) * 0.0095;
-          const armLen = 10 * au;
-          const torsoW = 16 * au,
-            torsoH = 18 * au;
+          // Kid proportions: a big head, a short pudgy torso, and stubby limbs
+          // — not a scaled-down adult.
+          const armLen = 8 * au;
+          const torsoW = 15 * au,
+            torsoH = 13 * au;
           // Negative inset so the shoulder sits just outside the torso's edge —
           // otherwise the torso (drawn afterward, in front) paints over the arm.
           const shoulderInsetX = -1 * au,
-            shoulderInsetY = 2.6 * au;
+            shoulderInsetY = 2 * au;
 
           const torsoTop = bodyCenterY - torsoH / 2,
             torsoBottom = bodyCenterY + torsoH / 2;
@@ -1575,12 +1578,12 @@
             blackEdge = "#8b93b8",
             red = "#dc2626";
 
-          // ---- legs & boots ----
-          const legW = 5.5 * au,
+          // ---- legs & boots — short and stubby, with chunky kid-sized boots ----
+          const legW = 6.5 * au,
             legGap = 2 * au,
-            legH = 12 * au,
-            bootW = 8 * au,
-            bootH = 5 * au;
+            legH = 7 * au,
+            bootW = 9.5 * au,
+            bootH = 5.5 * au;
           const hipY = torsoBottom - au;
           const legBottomY = hipY + legH;
           [bodyCenterX - legGap / 2 - legW / 2, bodyCenterX + legGap / 2 + legW / 2].forEach((lx) => {
@@ -1615,40 +1618,40 @@
             ctx.stroke();
           });
 
-          // ---- torso ----
+          // ---- torso — short and rounded, almost egg-shaped, like a kid's puffy suit ----
           ctx.fillStyle = "#eef2fa";
           ctx.strokeStyle = edge;
           ctx.lineWidth = 1.6;
-          rr(ctx, bodyCenterX - torsoW / 2, torsoTop, torsoW, torsoH, torsoW * 0.3);
+          rr(ctx, bodyCenterX - torsoW / 2, torsoTop, torsoW, torsoH, torsoW * 0.42);
           ctx.fill();
           ctx.stroke();
 
           // waist band
           ctx.fillStyle = red;
-          rr(ctx, bodyCenterX - torsoW / 2 - 0.4 * au, torsoBottom - 2.8 * au, torsoW + 0.8 * au, 2.8 * au, 1.6 * au);
+          rr(ctx, bodyCenterX - torsoW / 2 - 0.4 * au, torsoBottom - 2.6 * au, torsoW + 0.8 * au, 2.6 * au, 1.4 * au);
           ctx.fill();
 
           // LOF chest badge
-          const badgeW = 6.4 * au,
-            badgeH = 4.6 * au;
+          const badgeW = 5.6 * au,
+            badgeH = 4 * au;
           const badgeX = bodyCenterX - badgeW / 2,
-            badgeY = torsoTop + torsoH * 0.3;
+            badgeY = torsoTop + torsoH * 0.28;
           ctx.fillStyle = "#ffffff";
           ctx.strokeStyle = "#8891a8";
           ctx.lineWidth = 1;
-          rr(ctx, badgeX, badgeY, badgeW, badgeH, au);
+          rr(ctx, badgeX, badgeY, badgeW, badgeH, 0.8 * au);
           ctx.fill();
           ctx.stroke();
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.font = `800 ${Math.max(6, Math.round(4 * au))}px 'Orbitron', sans-serif`;
-          const badgeMidY = badgeY + badgeH / 2 + 0.4 * au;
+          ctx.font = `800 ${Math.max(6, Math.round(3.5 * au))}px 'Orbitron', sans-serif`;
+          const badgeMidY = badgeY + badgeH / 2 + 0.35 * au;
           ctx.fillStyle = "#2563eb";
-          ctx.fillText("L", bodyCenterX - 2 * au, badgeMidY);
+          ctx.fillText("L", bodyCenterX - 1.7 * au, badgeMidY);
           ctx.fillStyle = "#ef4444";
           ctx.fillText("O", bodyCenterX, badgeMidY);
           ctx.fillStyle = "#2563eb";
-          ctx.fillText("F", bodyCenterX + 2 * au, badgeMidY);
+          ctx.fillText("F", bodyCenterX + 1.7 * au, badgeMidY);
           ctx.textBaseline = "alphabetic";
 
           // ---- both arms hang naturally at the sides — drawn after the torso
@@ -1669,19 +1672,20 @@
             ctx.stroke();
             ctx.fillStyle = red;
             ctx.beginPath();
-            ctx.arc(lerp(sx, hx, 0.82), lerp(sy, hy, 0.82), 1.6 * au, 0, TAU);
+            ctx.arc(lerp(sx, hx, 0.8), lerp(sy, hy, 0.8), 1.8 * au, 0, TAU);
             ctx.fill();
+            // a chubby, rounded kid's mitt rather than a small fist
             ctx.fillStyle = black;
             ctx.strokeStyle = blackEdge;
             ctx.lineWidth = 1.2;
             ctx.beginPath();
-            ctx.arc(hx, hy, 3 * au, 0, TAU);
+            ctx.arc(hx, hy, 3.6 * au, 0, TAU);
             ctx.fill();
             ctx.stroke();
           });
 
-          // ---- helmet ----
-          const helmetR = 10.5 * au;
+          // ---- helmet — big, like a kid's oversized bubble helmet ----
+          const helmetR = 12.5 * au;
           const helmetCenterX = bodyCenterX,
             helmetCenterY = torsoTop - helmetR * 0.55;
           ctx.fillStyle = "#f3f5fa";
