@@ -1295,6 +1295,12 @@
         /* =================== CANVAS SCENE =================== */
         const cv = $("core"),
           ctx = cv.getContext("2d");
+
+        const ASTRO_AR = 1175 / 1338; // reference art's own width/height ratio
+        const astronautImg = new Image();
+        let astronautLoaded = false;
+        astronautImg.onload = () => (astronautLoaded = true);
+        astronautImg.src = "assets/astronaut.png";
         let CW = 900,
           CH = 440,
           DPR = Math.max(1, window.devicePixelRatio || 1);
@@ -1543,198 +1549,22 @@
           ctx.fillText("DECODER CONSOLE", consoleX, consoleY + cHalfH + 18);
         }
 
-        // Chibi astronaut mascot — front-facing, matching the LOF reference art (white suit,
-        // red wrist/waist/ankle bands, black gloves & boots, dark starry visor, LOF chest badge).
-        // Both arms hang naturally at the sides; the wand rotates inside the right glove (a
-        // wrist flourish) so it can still swish/point without the arm itself having to move.
-        // Returns the right-hand glove position so the caller can anchor the wand there.
+        // Astronaut mascot — the real LOF reference artwork, drawn as an image.
+        // The wand grip is anchored at a fixed fraction of the artwork's own
+        // bounding box (its right glove), so it tracks the image at any scale.
+        const ASTRO_HAND_FX = 0.76,
+          ASTRO_HAND_FY = 0.71;
         function drawAstronaut(bodyCenterX, bodyCenterY) {
-          const au = Math.min(CW, CH) * 0.0095;
-          const armLen = 10 * au;
-          const torsoW = 16 * au,
-            torsoH = 18 * au;
-          // Negative inset so the shoulder sits just outside the torso's edge —
-          // otherwise the torso (drawn afterward, in front) paints over the arm.
-          const shoulderInsetX = -1 * au,
-            shoulderInsetY = 2.6 * au;
+          const displayH = clamp(CH * 0.62, 180, 340);
+          const displayW = displayH * ASTRO_AR;
+          const imgX = bodyCenterX - displayW / 2,
+            imgY = bodyCenterY - displayH * 0.5;
+          const gripX = imgX + displayW * ASTRO_HAND_FX,
+            gripY = imgY + displayH * ASTRO_HAND_FY;
 
-          const torsoTop = bodyCenterY - torsoH / 2,
-            torsoBottom = bodyCenterY + torsoH / 2;
-          const rShoulderX = bodyCenterX + torsoW / 2 - shoulderInsetX,
-            rShoulderY = torsoTop + shoulderInsetY;
-          const lShoulderX = bodyCenterX - torsoW / 2 + shoulderInsetX,
-            lShoulderY = torsoTop + shoulderInsetY;
-          const rAngle = 1.48; // just off straight-down, so the hand clears the hip
-          const lAngle = Math.PI - rAngle; // mirrored to the other side
-          const gripX = rShoulderX + Math.cos(rAngle) * armLen,
-            gripY = rShoulderY + Math.sin(rAngle) * armLen;
-
-          const white = "#e9edf6",
-            edge = "#aab3cc",
-            black = "#30354a", // lighter than pure black so it still reads against the dark space backdrop
-            blackEdge = "#8b93b8",
-            red = "#dc2626";
-
-          // ---- legs & boots ----
-          const legW = 5.5 * au,
-            legGap = 2 * au,
-            legH = 12 * au,
-            bootW = 8 * au,
-            bootH = 5 * au;
-          const hipY = torsoBottom - au;
-          const legBottomY = hipY + legH;
-          [bodyCenterX - legGap / 2 - legW / 2, bodyCenterX + legGap / 2 + legW / 2].forEach((lx) => {
-            ctx.fillStyle = white;
-            ctx.strokeStyle = edge;
-            ctx.lineWidth = 1.4;
-            rr(ctx, lx - legW / 2, hipY, legW, legH, legW * 0.35);
-            ctx.fill();
-            ctx.stroke();
-            ctx.fillStyle = red;
-            rr(ctx, lx - legW / 2 - 0.4 * au, legBottomY - 2.6 * au, legW + 0.8 * au, 2.6 * au, 1.4 * au);
-            ctx.fill();
-            // boot: ankle cuff + a separate, wider sole so it reads as a boot
-            // shape rather than a plain rounded box
-            ctx.fillStyle = black;
-            ctx.strokeStyle = blackEdge;
-            ctx.lineWidth = 1.2;
-            rr(ctx, lx - bootW / 2, legBottomY, bootW, bootH * 0.62, bootH * 0.28);
-            ctx.fill();
-            ctx.stroke();
-            const soleW = bootW + 2.6 * au,
-              soleY = legBottomY + bootH * 0.5,
-              soleH = bootH * 0.6;
-            rr(ctx, lx - soleW / 2, soleY, soleW, soleH, soleH * 0.5);
-            ctx.fill();
-            ctx.stroke();
-            ctx.strokeStyle = "rgba(255,255,255,0.18)";
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(lx - bootW / 2 + 1, legBottomY + bootH * 0.28);
-            ctx.lineTo(lx + bootW / 2 - 1, legBottomY + bootH * 0.28);
-            ctx.stroke();
-          });
-
-          // ---- torso ----
-          ctx.fillStyle = "#eef2fa";
-          ctx.strokeStyle = edge;
-          ctx.lineWidth = 1.6;
-          rr(ctx, bodyCenterX - torsoW / 2, torsoTop, torsoW, torsoH, torsoW * 0.3);
-          ctx.fill();
-          ctx.stroke();
-
-          // waist band
-          ctx.fillStyle = red;
-          rr(ctx, bodyCenterX - torsoW / 2 - 0.4 * au, torsoBottom - 2.8 * au, torsoW + 0.8 * au, 2.8 * au, 1.6 * au);
-          ctx.fill();
-
-          // LOF chest badge
-          const badgeW = 6.4 * au,
-            badgeH = 4.6 * au;
-          const badgeX = bodyCenterX - badgeW / 2,
-            badgeY = torsoTop + torsoH * 0.3;
-          ctx.fillStyle = "#ffffff";
-          ctx.strokeStyle = "#8891a8";
-          ctx.lineWidth = 1;
-          rr(ctx, badgeX, badgeY, badgeW, badgeH, au);
-          ctx.fill();
-          ctx.stroke();
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.font = `800 ${Math.max(6, Math.round(4 * au))}px 'Orbitron', sans-serif`;
-          const badgeMidY = badgeY + badgeH / 2 + 0.4 * au;
-          ctx.fillStyle = "#2563eb";
-          ctx.fillText("L", bodyCenterX - 2 * au, badgeMidY);
-          ctx.fillStyle = "#ef4444";
-          ctx.fillText("O", bodyCenterX, badgeMidY);
-          ctx.fillStyle = "#2563eb";
-          ctx.fillText("F", bodyCenterX + 2 * au, badgeMidY);
-          ctx.textBaseline = "alphabetic";
-
-          // ---- both arms hang naturally at the sides — drawn after the torso
-          // so they sit in front of it instead of being painted over ----
-          const sway = Math.sin(performance.now() / 900) * 0.04;
-          const lHandX = lShoulderX + Math.cos(lAngle + sway) * armLen,
-            lHandY = lShoulderY + Math.sin(lAngle + sway) * armLen;
-          [
-            [lShoulderX, lShoulderY, lHandX, lHandY],
-            [rShoulderX, rShoulderY, gripX, gripY],
-          ].forEach(([sx, sy, hx, hy]) => {
-            ctx.strokeStyle = white;
-            ctx.lineWidth = 3.6 * au;
-            ctx.lineCap = "round";
-            ctx.beginPath();
-            ctx.moveTo(sx, sy);
-            ctx.lineTo(hx, hy);
-            ctx.stroke();
-            ctx.fillStyle = red;
-            ctx.beginPath();
-            ctx.arc(lerp(sx, hx, 0.82), lerp(sy, hy, 0.82), 1.6 * au, 0, TAU);
-            ctx.fill();
-            ctx.fillStyle = black;
-            ctx.strokeStyle = blackEdge;
-            ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.arc(hx, hy, 3 * au, 0, TAU);
-            ctx.fill();
-            ctx.stroke();
-          });
-
-          // ---- helmet ----
-          const helmetR = 10.5 * au;
-          const helmetCenterX = bodyCenterX,
-            helmetCenterY = torsoTop - helmetR * 0.55;
-          ctx.fillStyle = "#f3f5fa";
-          ctx.strokeStyle = edge;
-          ctx.lineWidth = 1.8;
-          ctx.beginPath();
-          ctx.arc(helmetCenterX, helmetCenterY, helmetR, 0, TAU);
-          ctx.fill();
-          ctx.stroke();
-
-          // visor — dark, starry, with a small pale "moon"
-          const visorR = helmetR * 0.72;
-          const visorCX = helmetCenterX,
-            visorCY = helmetCenterY + helmetR * 0.06;
-          const vg = ctx.createRadialGradient(visorCX - visorR * 0.3, visorCY - visorR * 0.3, visorR * 0.1, visorCX, visorCY, visorR);
-          vg.addColorStop(0, "#161d38");
-          vg.addColorStop(1, "#05060f");
-          ctx.fillStyle = vg;
-          ctx.beginPath();
-          ctx.arc(visorCX, visorCY, visorR, 0, TAU);
-          ctx.fill();
-          ctx.strokeStyle = "#9aa5c4";
-          ctx.lineWidth = 1.4;
-          ctx.stroke();
-
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(visorCX, visorCY, visorR, 0, TAU);
-          ctx.clip();
-          ctx.fillStyle = "#fbbf24";
-          ctx.beginPath();
-          ctx.arc(visorCX + visorR * 0.35, visorCY - visorR * 0.4, visorR * 0.26, 0, TAU);
-          ctx.fill();
-          ctx.fillStyle = "rgba(255,255,255,0.9)";
-          [
-            [-0.4, -0.1, 0.055],
-            [0.1, 0.35, 0.04],
-            [-0.15, 0.5, 0.055],
-            [0.35, 0.15, 0.04],
-            [-0.5, 0.3, 0.045],
-          ].forEach(([dx, dy, r]) => {
-            ctx.beginPath();
-            ctx.arc(visorCX + dx * visorR, visorCY + dy * visorR, r * visorR, 0, TAU);
-            ctx.fill();
-          });
-          ctx.restore();
-
-          ctx.strokeStyle = "rgba(255,255,255,0.35)";
-          ctx.lineWidth = visorR * 0.14;
-          ctx.lineCap = "round";
-          ctx.beginPath();
-          ctx.arc(visorCX, visorCY, visorR * 0.78, Math.PI * 1.1, Math.PI * 1.35);
-          ctx.stroke();
+          if (astronautLoaded) {
+            ctx.drawImage(astronautImg, imgX, imgY, displayW, displayH);
+          }
 
           return { handX: gripX, handY: gripY };
         }
