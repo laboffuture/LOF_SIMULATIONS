@@ -663,18 +663,19 @@
               the sensor only sees light once you start the scan.
             </li>
             <li>
-              Set <b>distance</b>, <b>brightness</b>, and <b>interference</b> however
-              you like, then press <b>Start</b>. The wand swishes through the air on its
-              own and points itself at the decoder's sensor lens.
+              Set <b>LED Intensity</b> and <b>interference</b> however you like, then
+              press <b>Start</b>. The wand swishes through the air on its own and
+              points itself at the decoder's sensor lens.
             </li>
             <li>
               Watch the decoder console's <b>AS7341 channel graph</b> plot F1-F8 once a
               star is identified — the tallest points are what the controller compares
-              against its colour map.
+              against its colour map. 80% intensity is the ideal for every colour;
+              dim it below that and the whole graph shrinks down with it.
             </li>
             <li>
-              Move the wand <b>far away</b> or dim it right down and scan again — the
-              reading comes back too weak to classify.
+              Dim the LED <b>Intensity</b> right down and scan again — the reading
+              comes back too weak to classify.
             </li>
             <li>
               Turn <b>interference</b> up and scan a colour you already know — watch a
@@ -692,8 +693,7 @@
             <li>How a spectral colour sensor reads incoming light</li>
             <li>How AS7341 readings can be shown as a spectral line graph</li>
             <li>How colour intensity affects detection</li>
-            <li>Why wand distance changes sensor accuracy</li>
-            <li>Why brightness affects graph strength</li>
+            <li>Why 80% LED intensity is the ideal reading for every colour, and why dimming it shrinks the whole graph</li>
             <li>How background light can interfere with colour detection</li>
             <li>How colour mapping converts sensor readings into star identities</li>
             <li>How OLED display can show both text and graph output</li>
@@ -723,28 +723,16 @@
         </div>
 
         <div class="cmdgroup">
-          <h4>Wand Distance</h4>
-          <div class="steprow">
-            <button class="stepbtn" id="btnCloser">◀ Move Closer</button>
-            <button class="stepbtn" id="btnFarther">Move Farther ▶</button>
-          </div>
-          <div class="ctrl">
-            <div class="row"><label>Distance</label><span class="val" id="v_dist">30%</span></div>
-            <input type="range" id="r_dist" min="0" max="100" step="1" value="30" />
-          </div>
-          <div class="hint">Close boosts the signal (and risks saturating it); far weakens it.</div>
-        </div>
-
-        <div class="cmdgroup">
-          <h4>LED Brightness</h4>
+          <h4>LED Intensity</h4>
           <div class="steprow">
             <button class="stepbtn" id="btnDimmer">−10%</button>
             <button class="stepbtn" id="btnBrighter">+10%</button>
           </div>
           <div class="ctrl">
-            <div class="row"><label>Brightness</label><span class="val" id="v_bright">70%</span></div>
-            <input type="range" id="r_bright" min="0" max="100" step="1" value="70" />
+            <div class="row"><label>Intensity</label><span class="val" id="v_bright">80%</span></div>
+            <input type="range" id="r_bright" min="0" max="100" step="1" value="80" />
           </div>
+          <div class="hint">80% is the ideal intensity for every colour. Below that, the signal — and the decoded graph — shrink with it.</div>
         </div>
 
         <div class="cmdgroup">
@@ -1004,14 +992,12 @@
           selectColor(b.dataset.color);
         });
 
+        // Wand Distance is no longer a control — the wand is always treated as
+        // being held at a fixed, reliable distance — but S.distance stays here
+        // since computeReading() still reads it.
         function setDistance(v) {
           S.distance = clamp(v, 0, 100);
-          $("r_dist").value = S.distance;
-          $("v_dist").textContent = Math.round(S.distance) + "%";
         }
-        $("r_dist").addEventListener("input", (e) => setDistance(+e.target.value));
-        $("btnCloser").addEventListener("click", () => setDistance(S.distance - 15));
-        $("btnFarther").addEventListener("click", () => setDistance(S.distance + 15));
 
         function setBrightness(v) {
           S.brightness = clamp(v, 0, 100);
@@ -1067,7 +1053,7 @@
         function resetSystem() {
           S.color = null;
           S.distance = 30;
-          S.brightness = 70;
+          S.brightness = 80;
           S.interference = 0;
           S.sensitivity = 50;
           S.phase = "idle";
@@ -1078,7 +1064,7 @@
           S.resultCandidates = null;
           setSegOn($("colorPick"), "color", null);
           setDistance(30);
-          setBrightness(70);
+          setBrightness(80);
           setInterference(0);
           setSensitivity(50);
           updateActionButton();
@@ -1093,8 +1079,8 @@
         const MISSION = COLOR_ORDER.map((key) => ({
           label: "Scanning " + STARS[key].name + "…",
           action: () => {
-            setDistance(28);
-            setBrightness(78);
+            setDistance(30);
+            setBrightness(80);
             setInterference(0);
             selectColor(key);
           },
@@ -1757,12 +1743,15 @@
         }
 
         // AS7341 channel readings (F1-F8), drawn straight onto the decoder console OLED.
-        // Uses the confirmed star's pure reference profile (from the real sensor PDF), not the
-        // live noisy scan reading, so the same star always redraws the exact same graph.
+        // Uses the confirmed star's pure reference profile (from the real sensor PDF) — the
+        // shape is always the same for a given star, but its height scales with LED
+        // Intensity: 80% is the ideal for every colour (full-height, matching the reference
+        // exactly); below that the whole graph shrinks down with it.
         function drawSpectralGraph(gx, gy, gw, gh) {
           const st = STARS[S.resultKey];
           const profile = st.profile;
           const n = profile.length;
+          const intensityFactor = clamp(S.brightness / 80, 0, 1);
           const padL = 24,
             padR = 4,
             padT = 4,
@@ -1798,7 +1787,7 @@
           let domI = 0;
           for (let i = 0; i < n; i++) {
             if (profile[i] > profile[domI]) domI = i;
-            const raw = profile[i] * 30000;
+            const raw = profile[i] * 30000 * intensityFactor;
             const y = clamp(y1 - (raw / 30000) * (y1 - y0), y0 - 4, y1);
             pts.push([x0 + i * stepX, y]);
           }
@@ -1860,7 +1849,7 @@
         /* =================== INIT =================== */
         fit();
         setDistance(30);
-        setBrightness(70);
+        setBrightness(80);
         setInterference(0);
         setSensitivity(50);
         updateActionButton();
