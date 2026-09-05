@@ -1314,12 +1314,12 @@
           }
           ctx.globalAlpha = 1;
 
-          // Background Interference: stray light visibly washes the whole backdrop
-          // out — fully dark space when off, bright and washed-out (stars barely
-          // visible) when on, scaling with the interference level in between.
+          // Background Interference: visibly darkens the whole backdrop toward black
+          // as it rises — kept dark (not white) so every label/status text drawn in
+          // light colours everywhere else in the scene stays readable either way.
           const interfWash = clamp((S.interference / 100) * 1.4, 0, 0.92);
           if (interfWash > 0) {
-            ctx.fillStyle = `rgba(255,255,255,${interfWash})`;
+            ctx.fillStyle = `rgba(0,0,0,${interfWash})`;
             ctx.fillRect(0, 0, CW, CH);
           }
 
