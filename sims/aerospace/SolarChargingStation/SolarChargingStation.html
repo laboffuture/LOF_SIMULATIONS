@@ -547,15 +547,16 @@
               aim it by hand.
             </li>
             <li>
-              <b>Outdoor:</b> press <b>Move Sun</b> to step the sun across the
-              sky. Watch the rover swing around to keep facing it — for a
-              moment right after it moves, the rover is still turning and
-              generation dips.
+              <b>Outdoor:</b> press <b>Move Sun</b> to step it across the sky
+              from sunrise to sunset. Watch the rover swing around to keep
+              facing it — for a moment right after it moves, the rover is
+              still turning and generation dips.
             </li>
             <li>
-              <b>Indoor:</b> drag the rover around the room. Near the window
-              it catches daylight leaking in; turn on the <b>Lamp</b> and the
-              rover will turn toward that instead if it's the stronger source.
+              <b>Indoor:</b> a classroom scene appears with the rover sitting
+              on a desk. Drag the <b>torch</b> anywhere in the room — the
+              rover turns to face it, and it generates more the closer the
+              torch gets.
             </li>
             <li>Choose the <b>Device Load</b> the station is powering.</li>
             <li>Press <b>Start</b>. Nothing else to set — the battery charges
@@ -565,9 +566,9 @@
             <li>Watch the readings and energy flow.</li>
             <li>
               Try this: charge outdoors at Noon until the battery is full,
-              then switch to Indoor with the lamp off and the rover away from
-              the window — the device keeps running on what you stored, with
-              zero light anywhere nearby, until the battery runs out.
+              then switch to Indoor and drag the torch far from the rover —
+              the device keeps running on what you stored, with almost no
+              light reaching it, until the battery runs out.
             </li>
             <li>Press <b>Reset</b> to clear the battery and start over.</li>
           </ol>
@@ -577,7 +578,7 @@
             <li>Solar power is only generated when a light source is actually available</li>
             <li>A rover with a light sensor can automatically turn to track the strongest light</li>
             <li>While it's still turning toward a new light direction, less power is captured</li>
-            <li>Indoors, natural light comes through windows and falls off with distance</li>
+            <li>Indoors, a light source close by gives much more usable light than one far away</li>
             <li>A device can keep running on stored battery energy even with no light nearby</li>
             <li>A heavier device load drains a battery faster</li>
             <li>Charging and using power can happen at the same time — the battery is just the balance of the two</li>
@@ -628,13 +629,10 @@
         </div>
 
         <div class="ctrl" id="indoorCtrl" style="display: none">
-          <div class="row">
-            <label>Lamp</label><span class="val" id="lampVal">Off</span>
-          </div>
-          <button type="button" class="btn wide" id="lampBtn">💡 Toggle Lamp</button>
+          <div class="row"><label>Classroom</label></div>
           <p class="hint">
-            Drag the rover in the stage — near the window, or near the lit
-            lamp, it turns to face whichever is stronger.
+            Drag the torch anywhere in the classroom — the rover on the desk
+            turns to keep facing it, brighter the closer it gets.
           </p>
         </div>
 
@@ -775,10 +773,8 @@
           { label: "Afternoon", u: 0.72, strength: 58 },
           { label: "Sunset", u: 0.95, strength: 22 },
         ];
-        const WINDOW_MAX = 55, // strongest light the window gives right next to it
-          WINDOW_FALLOFF = 0.38, // per design-unit of distance
-          LAMP_MAX = 62,
-          LAMP_FALLOFF = 0.42;
+        const TORCH_MAX = 70, // strongest light the torch gives right up against the rover
+          TORCH_FALLOFF = 0.32; // per design-unit of distance
 
         const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
         const lerp = (a, b, t) => a + (b - a) * t;
@@ -805,9 +801,8 @@
         const S = {
           scene: "outdoor",
           sunIdx: 2,
-          lampOn: false,
-          roverX: 0,
-          roverY: 0, // set once layout() knows the room size
+          torchX: 0,
+          torchY: 0, // set once layout() knows the room size
           roverAngle: -Math.PI / 2,
           dragging: false,
           device: "led",
@@ -853,10 +848,6 @@
           S.sunIdx = (S.sunIdx + 1) % SUN_POSITIONS.length;
           $("sunPosVal").textContent = SUN_POSITIONS[S.sunIdx].label;
         });
-        $("lampBtn").addEventListener("click", () => {
-          S.lampOn = !S.lampOn;
-          $("lampVal").textContent = S.lampOn ? "On" : "Off";
-        });
 
         const startBtn = $("startBtn");
         startBtn.addEventListener("click", () => {
@@ -874,8 +865,8 @@
           S.deviceOn = false;
           S.chargingStatus = "Not Charging";
           S.particles = [];
-          S.roverX = ROOM_ROVER_HOME_X;
-          S.roverY = ROOM_ROVER_HOME_Y;
+          S.torchX = ROOM_TORCH_HOME_X;
+          S.torchY = ROOM_TORCH_HOME_Y;
           startBtn.classList.remove("on");
           startBtn.textContent = "▶ Start";
           $("statusHint").textContent = "Set the scene, then press Start.";
@@ -887,9 +878,10 @@
         const DESIGN_W = 640,
           DESIGN_H = 520;
         let W, H, GROUND;
-        let OUT_ROVER_X, OUT_ROVER_Y, SUN_ARC_Y, SUN_ARC_LEFT, SUN_ARC_RIGHT, SUN_ARC_HEIGHT;
-        let WINDOW_X, WINDOW_Y, LAMP_X, LAMP_Y, ROOM_FLOOR_TOP, ROOM_FLOOR_BOTTOM, ROOM_FLOOR_LEFT, ROOM_FLOOR_RIGHT;
-        let ROOM_ROVER_HOME_X, ROOM_ROVER_HOME_Y;
+        let OUT_ROVER_X, OUT_ROVER_Y, SUN_Y, SUN_ARC_LEFT, SUN_ARC_RIGHT;
+        let ROOM_FLOOR_TOP, ROOM_FLOOR_BOTTOM, ROOM_FLOOR_LEFT, ROOM_FLOOR_RIGHT;
+        let DESK_X, DESK_Y, IN_ROVER_X, IN_ROVER_Y, CHALKBOARD_X, CHALKBOARD_Y, CHALKBOARD_W, CHALKBOARD_H;
+        let ROOM_TORCH_HOME_X, ROOM_TORCH_HOME_Y;
         let BATT_X, BATT_Y, DEV_X, DEV_Y;
 
         function layout() {
@@ -909,33 +901,36 @@
           DEV_X = W * 0.94;
           DEV_Y = GROUND - 78;
 
-          // outdoor
+          // outdoor — the sun only ever travels left to right, high in the sky
           OUT_ROVER_X = W * 0.32;
           OUT_ROVER_Y = GROUND;
           SUN_ARC_LEFT = W * 0.06;
           SUN_ARC_RIGHT = W * 0.62;
-          SUN_ARC_Y = GROUND;
-          SUN_ARC_HEIGHT = H * 0.55;
+          SUN_Y = H * 0.16;
 
-          // indoor room
+          // indoor classroom
           ROOM_FLOOR_LEFT = W * 0.06;
           ROOM_FLOOR_RIGHT = W * 0.68;
           ROOM_FLOOR_TOP = H * 0.18;
           ROOM_FLOOR_BOTTOM = GROUND;
-          WINDOW_X = ROOM_FLOOR_LEFT + 6;
-          WINDOW_Y = H * 0.42;
-          LAMP_X = ROOM_FLOOR_RIGHT - 30;
-          LAMP_Y = H * 0.28;
-          ROOM_ROVER_HOME_X = (ROOM_FLOOR_LEFT + ROOM_FLOOR_RIGHT) / 2;
-          ROOM_ROVER_HOME_Y = ROOM_FLOOR_BOTTOM - 10;
+          CHALKBOARD_W = (ROOM_FLOOR_RIGHT - ROOM_FLOOR_LEFT) * 0.5;
+          CHALKBOARD_H = H * 0.14;
+          CHALKBOARD_X = ROOM_FLOOR_LEFT + (ROOM_FLOOR_RIGHT - ROOM_FLOOR_LEFT - CHALKBOARD_W) / 2;
+          CHALKBOARD_Y = ROOM_FLOOR_TOP + 6;
+          DESK_X = (ROOM_FLOOR_LEFT + ROOM_FLOOR_RIGHT) / 2;
+          DESK_Y = ROOM_FLOOR_BOTTOM - 44;
+          IN_ROVER_X = DESK_X;
+          IN_ROVER_Y = DESK_Y - 6;
+          ROOM_TORCH_HOME_X = ROOM_FLOOR_LEFT + 40;
+          ROOM_TORCH_HOME_Y = ROOM_FLOOR_BOTTOM - 20;
 
-          if (!S.roverX) {
-            S.roverX = ROOM_ROVER_HOME_X;
-            S.roverY = ROOM_ROVER_HOME_Y;
+          if (!S.torchX) {
+            S.torchX = ROOM_TORCH_HOME_X;
+            S.torchY = ROOM_TORCH_HOME_Y;
           }
         }
 
-        /* ---------- drag handling (indoor rover) ---------- */
+        /* ---------- drag handling (indoor torch) ---------- */
         function toDesign(evt) {
           const rect = canvas.getBoundingClientRect();
           const cx = evt.clientX - rect.left,
@@ -945,7 +940,7 @@
         canvas.addEventListener("pointerdown", (e) => {
           if (S.scene !== "indoor") return;
           const p = toDesign(e);
-          const d = Math.hypot(p.x - S.roverX, p.y - S.roverY);
+          const d = Math.hypot(p.x - S.torchX, p.y - S.torchY);
           if (d < 34) {
             S.dragging = true;
             canvas.setPointerCapture(e.pointerId);
@@ -954,8 +949,8 @@
         canvas.addEventListener("pointermove", (e) => {
           if (!S.dragging) return;
           const p = toDesign(e);
-          S.roverX = clamp(p.x, ROOM_FLOOR_LEFT + 16, ROOM_FLOOR_RIGHT - 16);
-          S.roverY = clamp(p.y, ROOM_FLOOR_TOP + 16, ROOM_FLOOR_BOTTOM - 4);
+          S.torchX = clamp(p.x, ROOM_FLOOR_LEFT + 12, ROOM_FLOOR_RIGHT - 12);
+          S.torchY = clamp(p.y, ROOM_FLOOR_TOP + 12, ROOM_FLOOR_BOTTOM - 4);
         });
         function endDrag() {
           S.dragging = false;
@@ -964,29 +959,25 @@
         canvas.addEventListener("pointercancel", endDrag);
 
         /* ---------- simulation logic ---------- */
+        // The sun only ever travels left to right at a fixed height near the
+        // top of the sky — it never dips down to the ground.
+        function getSunPos() {
+          const preset = SUN_POSITIONS[S.sunIdx];
+          return { x: lerp(SUN_ARC_LEFT, SUN_ARC_RIGHT, preset.u), y: SUN_Y, strength: preset.strength };
+        }
         function computeTarget() {
           if (S.scene === "outdoor") {
-            const preset = SUN_POSITIONS[S.sunIdx];
-            const sunX = lerp(SUN_ARC_LEFT, SUN_ARC_RIGHT, preset.u);
-            const sunY = SUN_ARC_Y - Math.sin(preset.u * Math.PI) * SUN_ARC_HEIGHT;
+            const sun = getSunPos();
             return {
-              angle: Math.atan2(sunY - OUT_ROVER_Y, sunX - OUT_ROVER_X),
-              strength: preset.strength,
-              sourceX: sunX,
-              sourceY: sunY,
+              angle: Math.atan2(sun.y - OUT_ROVER_Y, sun.x - OUT_ROVER_X),
+              strength: sun.strength,
+              sourceX: sun.x,
+              sourceY: sun.y,
             };
           }
-          const dWin = Math.hypot(WINDOW_X - S.roverX, WINDOW_Y - S.roverY);
-          const winStrength = clamp(WINDOW_MAX - dWin * WINDOW_FALLOFF, 0, WINDOW_MAX);
-          let lampStrength = 0;
-          if (S.lampOn) {
-            const dLamp = Math.hypot(LAMP_X - S.roverX, LAMP_Y - S.roverY);
-            lampStrength = clamp(LAMP_MAX - dLamp * LAMP_FALLOFF, 0, LAMP_MAX);
-          }
-          if (lampStrength > winStrength) {
-            return { angle: Math.atan2(LAMP_Y - S.roverY, LAMP_X - S.roverX), strength: lampStrength, sourceX: LAMP_X, sourceY: LAMP_Y };
-          }
-          return { angle: Math.atan2(WINDOW_Y - S.roverY, WINDOW_X - S.roverX), strength: winStrength, sourceX: WINDOW_X, sourceY: WINDOW_Y };
+          const d = Math.hypot(S.torchX - IN_ROVER_X, S.torchY - IN_ROVER_Y);
+          const strength = clamp(TORCH_MAX - d * TORCH_FALLOFF, 0, TORCH_MAX);
+          return { angle: Math.atan2(S.torchY - IN_ROVER_Y, S.torchX - IN_ROVER_X), strength, sourceX: S.torchX, sourceY: S.torchY };
         }
 
         function solarLabel(raw) {
@@ -1283,25 +1274,22 @@
           ctx.fillStyle = "#bcd98a";
           ctx.fillRect(0, GROUND, W, H - GROUND);
 
-          const preset = SUN_POSITIONS[S.sunIdx];
-          const sunX = lerp(SUN_ARC_LEFT, SUN_ARC_RIGHT, preset.u);
-          const sunY = SUN_ARC_Y - Math.sin(preset.u * Math.PI) * SUN_ARC_HEIGHT;
-
+          const sun = getSunPos();
           const r = 24 + Math.sin(t * 1.5) * 1.5;
-          const rayLen = lerp(6, 20, preset.strength / 100);
+          const rayLen = lerp(6, 20, sun.strength / 100);
           ctx.strokeStyle = "#f6b93b";
           ctx.lineWidth = 3;
           ctx.lineCap = "round";
           for (let i = 0; i < 8; i++) {
             const a = (i / 8) * TAU + t * 0.3;
             ctx.beginPath();
-            ctx.moveTo(sunX + Math.cos(a) * (r + 4), sunY + Math.sin(a) * (r + 4));
-            ctx.lineTo(sunX + Math.cos(a) * (r + 4 + rayLen), sunY + Math.sin(a) * (r + 4 + rayLen));
+            ctx.moveTo(sun.x + Math.cos(a) * (r + 4), sun.y + Math.sin(a) * (r + 4));
+            ctx.lineTo(sun.x + Math.cos(a) * (r + 4 + rayLen), sun.y + Math.sin(a) * (r + 4 + rayLen));
             ctx.stroke();
           }
           ctx.fillStyle = "#fbc531";
           ctx.beginPath();
-          ctx.arc(sunX, sunY, r, 0, TAU);
+          ctx.arc(sun.x, sun.y, r, 0, TAU);
           ctx.fill();
 
           drawWire(OUT_ROVER_X, OUT_ROVER_Y - 26, BATT_X, BATT_Y - 30, S.chargeActive);
@@ -1321,62 +1309,70 @@
           ctx.lineWidth = 2;
           ctx.strokeRect(ROOM_FLOOR_LEFT - 4, ROOM_FLOOR_TOP - 4, ROOM_FLOOR_RIGHT - ROOM_FLOOR_LEFT + 8, GROUND - ROOM_FLOOR_TOP + 4);
 
-          // window — brighter near it, simulating daylight coming through
-          const winGlow = ctx.createRadialGradient(WINDOW_X, WINDOW_Y, 4, WINDOW_X, WINDOW_Y, 90);
-          winGlow.addColorStop(0, "rgba(191,224,247,0.85)");
-          winGlow.addColorStop(1, "rgba(191,224,247,0)");
-          ctx.fillStyle = winGlow;
-          ctx.fillRect(WINDOW_X - 90, WINDOW_Y - 90, 180, 180);
-          ctx.fillStyle = "#bfe0f7";
-          rr(ctx, WINDOW_X - 8, WINDOW_Y - 34, 16, 68, 2);
+          // chalkboard, to make the room read as a classroom
+          ctx.fillStyle = "#2f5d4f";
+          rr(ctx, CHALKBOARD_X, CHALKBOARD_Y, CHALKBOARD_W, CHALKBOARD_H, 4);
           ctx.fill();
-          ctx.strokeStyle = "#8a949d";
-          ctx.lineWidth = 2;
-          ctx.strokeRect(WINDOW_X - 8, WINDOW_Y - 34, 16, 68);
+          ctx.strokeStyle = "#8a6a45";
+          ctx.lineWidth = 5;
+          ctx.strokeRect(CHALKBOARD_X, CHALKBOARD_Y, CHALKBOARD_W, CHALKBOARD_H);
+          ctx.strokeStyle = "rgba(255,255,255,0.55)";
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.moveTo(WINDOW_X - 8, WINDOW_Y);
-          ctx.lineTo(WINDOW_X + 8, WINDOW_Y);
+          ctx.moveTo(CHALKBOARD_X + 10, CHALKBOARD_Y + CHALKBOARD_H * 0.4);
+          ctx.lineTo(CHALKBOARD_X + CHALKBOARD_W * 0.55, CHALKBOARD_Y + CHALKBOARD_H * 0.4);
+          ctx.moveTo(CHALKBOARD_X + 10, CHALKBOARD_Y + CHALKBOARD_H * 0.65);
+          ctx.lineTo(CHALKBOARD_X + CHALKBOARD_W * 0.4, CHALKBOARD_Y + CHALKBOARD_H * 0.65);
           ctx.stroke();
 
-          // lamp
-          if (S.lampOn) {
-            const lampGlow = ctx.createRadialGradient(LAMP_X, LAMP_Y, 2, LAMP_X, LAMP_Y, 80);
-            lampGlow.addColorStop(0, "rgba(255,224,130,0.75)");
-            lampGlow.addColorStop(1, "rgba(255,224,130,0)");
-            ctx.fillStyle = lampGlow;
-            ctx.fillRect(LAMP_X - 80, LAMP_Y - 80, 160, 160);
-          }
-          ctx.strokeStyle = "#8a949d";
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.moveTo(LAMP_X, LAMP_Y + 14);
-          ctx.lineTo(LAMP_X, ROOM_FLOOR_TOP - 4);
-          ctx.stroke();
-          ctx.fillStyle = S.lampOn ? "#ffdd66" : "#c7cdd6";
-          ctx.beginPath();
-          ctx.moveTo(LAMP_X - 12, LAMP_Y + 14);
-          ctx.lineTo(LAMP_X + 12, LAMP_Y + 14);
-          ctx.lineTo(LAMP_X + 6, LAMP_Y - 6);
-          ctx.lineTo(LAMP_X - 6, LAMP_Y - 6);
-          ctx.closePath();
+          // desk — the rover's fixed home spot
+          ctx.fillStyle = "#a9784f";
+          rr(ctx, DESK_X - 46, DESK_Y, 92, 10, 2);
           ctx.fill();
+          ctx.fillStyle = "#8a5f3d";
+          [DESK_X - 38, DESK_X + 30].forEach((lx) => {
+            ctx.fillRect(lx, DESK_Y + 10, 8, ROOM_FLOOR_BOTTOM - (DESK_Y + 10));
+          });
 
-          drawWire(S.roverX, S.roverY - 26, BATT_X, BATT_Y - 30, S.chargeActive);
+          drawWire(IN_ROVER_X, IN_ROVER_Y - 26, BATT_X, BATT_Y - 30, S.chargeActive);
           drawWire(BATT_X, BATT_Y - 30, DEV_X, DEV_Y, S.deviceOn);
           drawBattery();
           drawDevice(t);
-          drawParticles(S.roverX, S.roverY - 26);
-          drawRover(S.roverX, S.roverY, S.roverAngle);
+          drawParticles(IN_ROVER_X, IN_ROVER_Y - 26);
+          drawRover(IN_ROVER_X, IN_ROVER_Y, S.roverAngle);
+          drawTorch(t);
+        }
 
-          if (!S.dragging) {
-            ctx.strokeStyle = "rgba(42,120,214,0.45)";
-            ctx.setLineDash([3, 4]);
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.arc(S.roverX, S.roverY, 30, 0, TAU);
-            ctx.stroke();
-            ctx.setLineDash([]);
-          }
+        // A handheld torch the student drags anywhere in the room — always
+        // shining, so how much of its light the rover actually catches is
+        // purely about distance and which way the rover is currently facing.
+        function drawTorch(t) {
+          const glow = ctx.createRadialGradient(S.torchX, S.torchY, 2, S.torchX, S.torchY, 70);
+          glow.addColorStop(0, "rgba(255,224,130,0.8)");
+          glow.addColorStop(1, "rgba(255,224,130,0)");
+          ctx.fillStyle = glow;
+          ctx.fillRect(S.torchX - 70, S.torchY - 70, 140, 140);
+
+          ctx.save();
+          ctx.translate(S.torchX, S.torchY);
+          const bob = S.dragging ? 0 : Math.sin(t * 1.6) * 1.5;
+          ctx.translate(0, bob);
+          ctx.rotate(Math.PI / 5);
+          ctx.fillStyle = "#4c5c6b";
+          rr(ctx, -8, -6, 16, 26, 3);
+          ctx.fill();
+          ctx.fillStyle = "#ffdd66";
+          ctx.beginPath();
+          ctx.moveTo(-9, -6);
+          ctx.lineTo(9, -6);
+          ctx.lineTo(6, -16);
+          ctx.lineTo(-6, -16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "#8a949d";
+          ctx.lineWidth = 1.4;
+          ctx.stroke();
+          ctx.restore();
         }
 
         function draw(t) {
