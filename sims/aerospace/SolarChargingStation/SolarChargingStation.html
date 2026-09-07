@@ -626,10 +626,10 @@
 
         <div class="ctrl">
           <div class="row">
-            <label>Panel Angle</label><span class="val" id="angleVal">45°</span>
+            <label>Panel Angle</label><span class="val" id="angleVal">90°</span>
           </div>
-          <input type="range" id="angleSlider" min="0" max="90" value="45" step="1" />
-          <div class="anglemarks"><span>0°</span><span>★ 45° optimal</span><span>90°</span></div>
+          <input type="range" id="angleSlider" min="0" max="180" value="90" step="1" />
+          <div class="anglemarks"><span>0°</span><span>★ 90° optimal</span><span>180°</span></div>
           <p class="hint">
             Closer to the marked sweet spot faces the panel more directly at
             the sun, so more sunlight is captured.
@@ -766,7 +766,7 @@
           medium: { label: "Medium", power: 65 },
           high: { label: "High", power: 100 },
         };
-        const OPTIMAL_ANGLE = 45;
+        const OPTIMAL_ANGLE = 90; // dead center of the 0-180 range = panel lying flat/horizontal
         const LOADS = {
           led: { label: "LED", drain: 0.6, chargingLabel: false, note: "A small LED barely drains the battery." },
           fan: { label: "Fan", drain: 1.6, chargingLabel: false, note: "A motorized fan pulls noticeably more current." },
@@ -794,7 +794,7 @@
         const S = {
           timeMode: "day",
           sunlight: "medium",
-          panelAngle: 45,
+          panelAngle: 90,
           device: "led",
           batteryMode: "charge",
           running: false,
@@ -810,7 +810,7 @@
           if (S.timeMode !== "day") return 0;
           const base = SUN[S.sunlight].power;
           const angleDiff = Math.abs(S.panelAngle - OPTIMAL_ANGLE);
-          const eff = clamp(1 - angleDiff / 90, 0.15, 1);
+          const eff = clamp(1 - angleDiff / (OPTIMAL_ANGLE * 2), 0.15, 1);
           return base * eff;
         }
         function solarLabel(raw) {
