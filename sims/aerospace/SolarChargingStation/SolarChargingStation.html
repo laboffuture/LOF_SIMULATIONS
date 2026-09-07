@@ -1047,8 +1047,10 @@
 
         function drawPanel() {
           const angleRad = (S.panelAngle * Math.PI) / 180;
-          const panelLen = H * 0.2;
-          const panelThick = panelLen * 0.5;
+          // Fixed pixel size (the chassis below is drawn at a fixed size too) so the
+          // panel stays scaled to fit the little bot instead of towering over it.
+          const panelLen = 62;
+          const panelThick = 28;
 
           // sweet-spot guide arc
           ctx.strokeStyle = "rgba(42,120,214,0.35)";
@@ -1126,7 +1128,7 @@
 
         function batteryWireStart() {
           const angleRad = (S.panelAngle * Math.PI) / 180;
-          const panelLen = H * 0.3;
+          const panelLen = 62; // must match drawPanel()'s fixed panel length
           const a = -Math.PI / 2 - angleRad;
           return { x: PANEL_PX + Math.cos(a) * panelLen * 0.15, y: PANEL_PY + Math.sin(a) * panelLen * 0.15 };
         }
