@@ -1048,108 +1048,10 @@
           }
         }
 
-        function drawPanel() {
-          // Fixed pixel size (the chassis below is drawn at a fixed size too) so the
-          // panel stays scaled to fit the little bot instead of towering over it.
-          const panelLen = 44;
-          const panelThick = 20;
-          const angleRad = (S.panelAngle * Math.PI) / 180;
-
-          // sweet-spot guide arc — marks the optimal angle's position
-          ctx.strokeStyle = "rgba(42,120,214,0.35)";
-          ctx.setLineDash([3, 4]);
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.arc(PANEL_PX, PANEL_PY, panelLen + 14, -Math.PI / 2 - (OPTIMAL_ANGLE * Math.PI) / 180 - 0.05, -Math.PI / 2 - (OPTIMAL_ANGLE * Math.PI) / 180 + 0.05);
-          ctx.stroke();
-          ctx.setLineDash([]);
-
-          ctx.save();
-          ctx.translate(PANEL_PX, PANEL_PY);
-
-          // wheeled bot chassis carries the panel — stays put on the ground, fixed
-          // at the base's center; only the panel above it turns as the angle changes
-          ctx.fillStyle = "rgba(23,41,59,0.14)";
-          ctx.beginPath();
-          ctx.ellipse(0, 4, 24, 7, 0, 0, TAU);
-          ctx.fill();
-          ctx.fillStyle = "#3a4657";
-          rr(ctx, -20, -10, 40, 16, 5);
-          ctx.fill();
-          ctx.fillStyle = "#22314a";
-          [-14, 14].forEach((wx) => {
-            ctx.beginPath();
-            ctx.arc(wx, 6, 6, 0, TAU);
-            ctx.fill();
-          });
-
-          // ctx.rotate operates on the coordinate system (not a direction vector),
-          // so 0 here means the panel's own "outward" axis stays pointing straight
-          // up; increasing the angle swings it toward horizontal-left, never down.
-          ctx.rotate(-angleRad);
-          const onSun = S.timeMode === "day" && S.solarRaw > 0;
-
-          // a short mast lifts the panel clear of the chassis — fixed at the
-          // center, only the panel's angle above it changes
-          const baseGap = 22;
-          ctx.strokeStyle = "#8a949d";
-          ctx.lineWidth = 4;
-          ctx.lineCap = "round";
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.lineTo(0, -baseGap);
-          ctx.stroke();
-
-          // A real folding panel: two hinged solar-cell segments in white frames,
-          // not one plain slab.
-          const hingeGap = 3;
-          const segH = (panelLen - hingeGap) / 2;
-          for (let seg = 0; seg < 2; seg++) {
-            const segTop = -panelLen - baseGap + seg * (segH + hingeGap);
-
-            ctx.fillStyle = "#eef1f4";
-            rr(ctx, -panelThick / 2 - 2, segTop - 2, panelThick + 4, segH + 4, 3);
-            ctx.fill();
-
-            ctx.fillStyle = onSun ? "#2455a4" : "#3a4f6b";
-            rr(ctx, -panelThick / 2, segTop, panelThick, segH, 2);
-            ctx.fill();
-
-            // photovoltaic cell grid — 2 columns x 3 rows per segment
-            ctx.strokeStyle = "rgba(255,255,255,0.4)";
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(0, segTop);
-            ctx.lineTo(0, segTop + segH);
-            for (let i = 1; i < 3; i++) {
-              const y = segTop + (segH / 3) * i;
-              ctx.moveTo(-panelThick / 2, y);
-              ctx.lineTo(panelThick / 2, y);
-            }
-            ctx.stroke();
-
-            if (onSun) {
-              ctx.fillStyle = "rgba(255, 220, 130, 0.35)";
-              rr(ctx, -panelThick / 2, segTop, panelThick, segH, 2);
-              ctx.fill();
-            }
-          }
-
-          // hinge joining the two segments
-          ctx.fillStyle = "#c7cdd6";
-          rr(ctx, -panelThick / 2 - 2, -panelLen / 2 - baseGap - hingeGap / 2 - 1, panelThick + 4, hingeGap + 2, 1.5);
-          ctx.fill();
-
-          ctx.restore();
-        }
-
         function batteryWireStart() {
-          const angleRad = (S.panelAngle * Math.PI) / 180;
-          const panelLen = 44; // must match drawPanel()'s fixed panel length
-          const baseGap = 22; // must match drawPanel()'s fixed mast gap
-          const a = -Math.PI / 2 - angleRad;
-          const d = baseGap + 8; // just past the mast, onto the panel's near edge
-          return { x: PANEL_PX + Math.cos(a) * d, y: PANEL_PY + Math.sin(a) * d };
+          // The panel + bot chassis graphic has been removed from the scene;
+          // the charging wire now simply starts from that fixed spot on the ground.
+          return { x: PANEL_PX, y: PANEL_PY - 10 };
         }
 
         function drawWire(x1, y1, x2, y2, active) {
@@ -1290,7 +1192,6 @@
         function draw(t) {
           drawSky();
           drawSunOrMoon(t);
-          drawPanel();
           const c0 = batteryWireStart();
           drawWire(c0.x, c0.y, BATT_X, BATT_Y - 40, S.batteryMode === "charge" && S.solarRaw > 0);
           drawWire(BATT_X, BATT_Y - 40, DEV_X, DEV_Y, S.batteryMode === "use" && S.deviceOn);
