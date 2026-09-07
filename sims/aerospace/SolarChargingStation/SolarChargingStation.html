@@ -626,9 +626,9 @@
 
         <div class="ctrl">
           <div class="row">
-            <label>Panel Angle</label><span class="val" id="angleVal">30°</span>
+            <label>Panel Angle</label><span class="val" id="angleVal">45°</span>
           </div>
-          <input type="range" id="angleSlider" min="0" max="90" value="30" step="1" />
+          <input type="range" id="angleSlider" min="0" max="90" value="45" step="1" />
           <div class="anglemarks"><span>0°</span><span>★ 45° optimal</span><span>90°</span></div>
           <p class="hint">
             Closer to the marked sweet spot faces the panel more directly at
@@ -794,7 +794,7 @@
         const S = {
           timeMode: "day",
           sunlight: "medium",
-          panelAngle: 30,
+          panelAngle: 45,
           device: "led",
           batteryMode: "charge",
           running: false,
@@ -871,6 +871,9 @@
           S.deviceOn = false;
           S.chargingStatus = "Not Charging";
           S.particles = [];
+          S.panelAngle = OPTIMAL_ANGLE;
+          $("angleSlider").value = OPTIMAL_ANGLE;
+          $("angleVal").textContent = OPTIMAL_ANGLE + "°";
           startBtn.classList.remove("on");
           startBtn.textContent = "▶ Start";
           $("statusHint").textContent = "Set the conditions, then press Start.";
@@ -1045,40 +1048,39 @@
           }
         }
 
-        // The panel rests lying flat/horizontal at the optimal angle and rocks up
-        // and down by a small amount either side of that, rather than swinging
-        // through a full 90 deg arc: 0-90 still maps onto that tilt (so the
-        // optimal-angle physics and slider are unchanged), just compressed into a
-        // +/-30 deg rock around horizontal, centered on the optimal angle.
-        const PANEL_TILT_MAX = 30;
-        function panelVisualAngle() {
-          const tiltDeg = ((S.panelAngle - OPTIMAL_ANGLE) * PANEL_TILT_MAX) / (OPTIMAL_ANGLE || 1);
-          // +90deg base so the panel's own "outward" axis rests pointing horizontally
-          // (to the right) instead of straight up.
-          return Math.PI / 2 + (tiltDeg * Math.PI) / 180;
+        // The panel never tilts up into vertical — it always lies flat/horizontal,
+        // and instead slides left/center/right along a boom above the chassis: 0
+        // is fully left, 45 (optimal) is centered, 90 is fully right. The 0-90
+        // slider range and the underlying efficiency physics are unchanged, only
+        // how the angle is shown has changed.
+        const PANEL_SHIFT_MAX = 26;
+        const PANEL_MAST_H = 16;
+        function panelShiftX() {
+          return ((S.panelAngle - OPTIMAL_ANGLE) * PANEL_SHIFT_MAX) / (OPTIMAL_ANGLE || 1);
         }
 
         function drawPanel() {
           // Fixed pixel size (the chassis below is drawn at a fixed size too) so the
           // panel stays scaled to fit the little bot instead of towering over it.
-          const panelLen = 44;
-          const panelThick = 20;
+          const panelWidth = 44;
+          const panelHeight = 20;
+          const shiftX = panelShiftX();
 
-          // sweet-spot guide arc — marks dead-center/horizontal, which is now where
-          // the optimal angle sits.
+          // sweet-spot guide tick — marks dead-center, which is now where the
+          // optimal angle sits.
           ctx.strokeStyle = "rgba(42,120,214,0.35)";
           ctx.setLineDash([3, 4]);
           ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.arc(PANEL_PX, PANEL_PY, panelLen + 14, -0.05, 0.05);
+          ctx.moveTo(PANEL_PX, PANEL_PY - PANEL_MAST_H - 8);
+          ctx.lineTo(PANEL_PX, PANEL_PY - PANEL_MAST_H + 8);
           ctx.stroke();
           ctx.setLineDash([]);
 
           ctx.save();
           ctx.translate(PANEL_PX, PANEL_PY);
 
-          // wheeled bot chassis carries the panel — stays put on the ground; only
-          // the mast + panel above it turn with the angle slider.
+          // wheeled bot chassis carries the panel — stays put on the ground
           ctx.fillStyle = "rgba(23,41,59,0.14)";
           ctx.beginPath();
           ctx.ellipse(0, 4, 24, 7, 0, 0, TAU);
@@ -1093,68 +1095,70 @@
             ctx.fill();
           });
 
-          ctx.rotate(panelVisualAngle());
           const onSun = S.timeMode === "day" && S.solarRaw > 0;
 
-          // a short mast lifts the panel clear of the chassis instead of it
-          // overlapping the bot's body
-          const baseGap = 22;
+          // fixed vertical mast, plus a boom that slides the panel left/center/right
           ctx.strokeStyle = "#8a949d";
           ctx.lineWidth = 4;
           ctx.lineCap = "round";
           ctx.beginPath();
           ctx.moveTo(0, 0);
-          ctx.lineTo(0, -baseGap);
+          ctx.lineTo(0, -PANEL_MAST_H);
+          ctx.stroke();
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(0, -PANEL_MAST_H);
+          ctx.lineTo(shiftX, -PANEL_MAST_H);
           ctx.stroke();
 
-          // A real folding panel: two hinged solar-cell segments in white frames,
-          // not one plain slab.
+          // A real folding panel: two hinged solar-cell segments side by side in
+          // white frames, always drawn flat — never one plain slab, never tilted.
           const hingeGap = 3;
-          const segH = (panelLen - hingeGap) / 2;
+          const segW = (panelWidth - hingeGap) / 2;
+          const panelBottom = -PANEL_MAST_H;
+          const panelTop = panelBottom - panelHeight;
           for (let seg = 0; seg < 2; seg++) {
-            const segTop = -panelLen - baseGap + seg * (segH + hingeGap);
+            const segLeft = shiftX - panelWidth / 2 + seg * (segW + hingeGap);
 
             ctx.fillStyle = "#eef1f4";
-            rr(ctx, -panelThick / 2 - 2, segTop - 2, panelThick + 4, segH + 4, 3);
+            rr(ctx, segLeft - 2, panelTop - 2, segW + 4, panelHeight + 4, 3);
             ctx.fill();
 
             ctx.fillStyle = onSun ? "#2455a4" : "#3a4f6b";
-            rr(ctx, -panelThick / 2, segTop, panelThick, segH, 2);
+            rr(ctx, segLeft, panelTop, segW, panelHeight, 2);
             ctx.fill();
 
-            // photovoltaic cell grid — 2 columns x 3 rows per segment
+            // photovoltaic cell grid — 3 columns x 2 rows per segment
             ctx.strokeStyle = "rgba(255,255,255,0.4)";
             ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(0, segTop);
-            ctx.lineTo(0, segTop + segH);
+            ctx.moveTo(segLeft, panelTop + panelHeight / 2);
+            ctx.lineTo(segLeft + segW, panelTop + panelHeight / 2);
             for (let i = 1; i < 3; i++) {
-              const y = segTop + (segH / 3) * i;
-              ctx.moveTo(-panelThick / 2, y);
-              ctx.lineTo(panelThick / 2, y);
+              const x = segLeft + (segW / 3) * i;
+              ctx.moveTo(x, panelTop);
+              ctx.lineTo(x, panelTop + panelHeight);
             }
             ctx.stroke();
 
             if (onSun) {
               ctx.fillStyle = "rgba(255, 220, 130, 0.35)";
-              rr(ctx, -panelThick / 2, segTop, panelThick, segH, 2);
+              rr(ctx, segLeft, panelTop, segW, panelHeight, 2);
               ctx.fill();
             }
           }
 
           // hinge joining the two segments
           ctx.fillStyle = "#c7cdd6";
-          rr(ctx, -panelThick / 2 - 2, -panelLen / 2 - baseGap - hingeGap / 2 - 1, panelThick + 4, hingeGap + 2, 1.5);
+          rr(ctx, shiftX - hingeGap / 2 - 1, panelTop - 2, hingeGap + 2, panelHeight + 4, 1.5);
           ctx.fill();
 
           ctx.restore();
         }
 
         function batteryWireStart() {
-          const baseGap = 22; // must match drawPanel()'s fixed mast gap
-          const a = panelVisualAngle();
-          const d = baseGap + 8; // just past the mast, onto the panel's near edge
-          return { x: PANEL_PX + Math.cos(a) * d, y: PANEL_PY + Math.sin(a) * d };
+          const shiftX = panelShiftX();
+          return { x: PANEL_PX + shiftX, y: PANEL_PY - PANEL_MAST_H };
         }
 
         function drawWire(x1, y1, x2, y2, active) {
