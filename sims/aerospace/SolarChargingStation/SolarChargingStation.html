@@ -1068,15 +1068,15 @@
           // the mast + panel above it turn with the angle slider.
           ctx.fillStyle = "rgba(23,41,59,0.14)";
           ctx.beginPath();
-          ctx.ellipse(0, 4, 24, 7, 0, 0, TAU);
+          ctx.ellipse(0, 6, 34, 10, 0, 0, TAU);
           ctx.fill();
           ctx.fillStyle = "#3a4657";
-          rr(ctx, -20, -10, 40, 16, 5);
+          rr(ctx, -28, -13, 56, 22, 6);
           ctx.fill();
           ctx.fillStyle = "#22314a";
-          [-14, 14].forEach((wx) => {
+          [-20, 20].forEach((wx) => {
             ctx.beginPath();
-            ctx.arc(wx, 6, 6, 0, TAU);
+            ctx.arc(wx, 8, 8, 0, TAU);
             ctx.fill();
           });
 
