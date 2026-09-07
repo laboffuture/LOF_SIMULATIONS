@@ -1072,14 +1072,14 @@
           ctx.beginPath();
           ctx.ellipse(PANEL_PX, PANEL_PY + BASE_H / 2 + 3, BASE_W / 2 + 4, 6, 0, 0, TAU);
           ctx.fill();
-          ctx.fillStyle = "#eef1f4";
+          ctx.fillStyle = "#1c3f72";
           rr(ctx, PANEL_PX - BASE_W / 2, PANEL_PY - BASE_H / 2, BASE_W, BASE_H, 3);
           ctx.fill();
-          ctx.strokeStyle = "#c7cdd6";
+          ctx.strokeStyle = "#0f2547";
           ctx.lineWidth = 1;
           rr(ctx, PANEL_PX - BASE_W / 2, PANEL_PY - BASE_H / 2, BASE_W, BASE_H, 3);
           ctx.stroke();
-          ctx.fillStyle = "#c7cdd6";
+          ctx.fillStyle = "#c23b3b";
           [
             [-BASE_W / 2 + 5, -BASE_H / 2 + 3],
             [BASE_W / 2 - 5, -BASE_H / 2 + 3],
@@ -1092,10 +1092,10 @@
           });
 
           // vertical post — fixed, connects the foot plate to the pivot
-          ctx.fillStyle = "#f4f6f8";
+          ctx.fillStyle = "#1c3f72";
           rr(ctx, PANEL_PX - POST_W / 2, pivotY, POST_W, PANEL_PY - BASE_H / 2 - pivotY, 2);
           ctx.fill();
-          ctx.strokeStyle = "#d5dbe1";
+          ctx.strokeStyle = "#0f2547";
           ctx.lineWidth = 1;
           rr(ctx, PANEL_PX - POST_W / 2, pivotY, POST_W, PANEL_PY - BASE_H / 2 - pivotY, 2);
           ctx.stroke();
@@ -1109,7 +1109,7 @@
           const onSun = S.timeMode === "day" && S.solarRaw > 0;
 
           // mount bracket, centered on the pivot — rotates with the panel
-          ctx.fillStyle = "#c7cdd6";
+          ctx.fillStyle = "#c23b3b";
           rr(ctx, -PANEL_THICK / 2 - 3, -6, PANEL_THICK + 6, 12, 3);
           ctx.fill();
 
@@ -1120,7 +1120,7 @@
             const top = Math.min(near, far);
             const h = Math.abs(far - near);
 
-            ctx.fillStyle = "#eef1f4";
+            ctx.fillStyle = "#c23b3b";
             rr(ctx, -PANEL_THICK / 2 - 2, top - 2, PANEL_THICK + 4, h + 4, 3);
             ctx.fill();
 
@@ -1149,7 +1149,7 @@
           });
 
           // hinge strip joining the two halves, right at the pivot
-          ctx.fillStyle = "#c7cdd6";
+          ctx.fillStyle = "#c23b3b";
           rr(ctx, -PANEL_THICK / 2 - 2, -HINGE_GAP / 2 - 1, PANEL_THICK + 4, HINGE_GAP + 2, 1.5);
           ctx.fill();
 
