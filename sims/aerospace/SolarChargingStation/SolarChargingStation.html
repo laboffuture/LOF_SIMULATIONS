@@ -1097,19 +1097,23 @@
 
           const onSun = S.timeMode === "day" && S.solarRaw > 0;
 
-          // fixed vertical mast, plus a boom that slides the panel left/center/right
+          // a rail mounted on the chassis, with the mast's own slider block riding
+          // along it — so the panel always sits visibly attached to the base,
+          // wherever it currently is, instead of floating off the end of a boom.
+          ctx.fillStyle = "#22314a";
+          rr(ctx, -(PANEL_SHIFT_MAX + 8), -4, (PANEL_SHIFT_MAX + 8) * 2, 6, 3);
+          ctx.fill();
+
           ctx.strokeStyle = "#8a949d";
           ctx.lineWidth = 4;
           ctx.lineCap = "round";
           ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.lineTo(0, -PANEL_MAST_H);
-          ctx.stroke();
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.moveTo(0, -PANEL_MAST_H);
+          ctx.moveTo(shiftX, 0);
           ctx.lineTo(shiftX, -PANEL_MAST_H);
           ctx.stroke();
+          ctx.fillStyle = "#3a4657";
+          rr(ctx, shiftX - 6, -6, 12, 8, 2);
+          ctx.fill();
 
           // A real folding panel: two hinged solar-cell segments side by side in
           // white frames, always drawn flat — never one plain slab, never tilted.
