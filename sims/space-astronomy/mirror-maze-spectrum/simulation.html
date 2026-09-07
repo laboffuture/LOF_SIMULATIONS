@@ -795,7 +795,7 @@
           </div>
           <div id="tray"></div>
           <div class="trayhint">
-            Click any element to place into the <b>Active Slot Target</b> above, or drag and drop onto Slot 1 or Slot 2.
+            Click any element to place into the <b>Active Slot Target</b> above, or drag and drop onto Slot 1 or Slot 2. Pick <b>None</b> to clear a slot completely.
           </div>
         </div>
 
@@ -909,6 +909,7 @@
       ];
 
       const TRAY = {
+        none: { name: "None", ic: "🚫" },
         mirror: { name: "Mirror", ic: "🪞" },
         prism: { name: "Prism", ic: "🔺" },
         grating: { name: "Grating", ic: "☷" },
@@ -2091,7 +2092,9 @@
       }
 
       function placeInSlot(i, type) {
-        S.slots[i] = defaultObj(type);
+        // "None" clears the slot completely instead of placing an object — the
+        // same tap-a-slot-then-tap-a-tile flow used to place or swap any item.
+        S.slots[i] = type === "none" ? null : defaultObj(type);
         if (i === 0 && (type === "mirror" || type === "blocker")) {
           S.autoAim = false;
           $("autoAim").checked = false;
