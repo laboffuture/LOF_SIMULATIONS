@@ -1045,16 +1045,17 @@
           }
         }
 
-        // The panel rocks left/right/center around upright instead of swinging all
-        // the way down to lying flat: 0-90 still maps onto that tilt (so the
+        // The panel rests lying flat/horizontal at the optimal angle and rocks up
+        // and down by a small amount either side of that, rather than swinging
+        // through a full 90 deg arc: 0-90 still maps onto that tilt (so the
         // optimal-angle physics and slider are unchanged), just compressed into a
-        // +/-30 deg rock around vertical, centered on the optimal angle.
+        // +/-30 deg rock around horizontal, centered on the optimal angle.
         const PANEL_TILT_MAX = 30;
         function panelVisualAngle() {
-          // 0 = straight up (drawn along local -Y) at the optimal angle; the panel's
-          // own local axis already points "up" pre-rotation, so 0 here means upright.
           const tiltDeg = ((S.panelAngle - OPTIMAL_ANGLE) * PANEL_TILT_MAX) / (OPTIMAL_ANGLE || 1);
-          return (tiltDeg * Math.PI) / 180;
+          // +90deg base so the panel's own "outward" axis rests pointing horizontally
+          // (to the right) instead of straight up.
+          return Math.PI / 2 + (tiltDeg * Math.PI) / 180;
         }
 
         function drawPanel() {
@@ -1063,13 +1064,13 @@
           const panelLen = 44;
           const panelThick = 20;
 
-          // sweet-spot guide arc — marks dead-center/upright, which is now where the
-          // optimal angle sits.
+          // sweet-spot guide arc — marks dead-center/horizontal, which is now where
+          // the optimal angle sits.
           ctx.strokeStyle = "rgba(42,120,214,0.35)";
           ctx.setLineDash([3, 4]);
           ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.arc(PANEL_PX, PANEL_PY, panelLen + 14, -Math.PI / 2 - 0.05, -Math.PI / 2 + 0.05);
+          ctx.arc(PANEL_PX, PANEL_PY, panelLen + 14, -0.05, 0.05);
           ctx.stroke();
           ctx.setLineDash([]);
 
@@ -1097,7 +1098,7 @@
 
           // a short mast lifts the panel clear of the chassis instead of it
           // overlapping the bot's body
-          const baseGap = 18;
+          const baseGap = 22;
           ctx.strokeStyle = "#8a949d";
           ctx.lineWidth = 4;
           ctx.lineCap = "round";
@@ -1150,7 +1151,7 @@
         }
 
         function batteryWireStart() {
-          const baseGap = 18; // must match drawPanel()'s fixed mast gap
+          const baseGap = 22; // must match drawPanel()'s fixed mast gap
           const a = panelVisualAngle();
           const d = baseGap + 8; // just past the mast, onto the panel's near edge
           return { x: PANEL_PX + Math.cos(a) * d, y: PANEL_PY + Math.sin(a) * d };
