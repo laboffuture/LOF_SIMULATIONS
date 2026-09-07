@@ -1079,7 +1079,7 @@
           ctx.lineWidth = 1;
           rr(ctx, PANEL_PX - BASE_W / 2, PANEL_PY - BASE_H / 2, BASE_W, BASE_H, 3);
           ctx.stroke();
-          ctx.fillStyle = "#c23b3b";
+          ctx.fillStyle = "#0f2547";
           [
             [-BASE_W / 2 + 5, -BASE_H / 2 + 3],
             [BASE_W / 2 - 5, -BASE_H / 2 + 3],
@@ -1109,7 +1109,7 @@
           const onSun = S.timeMode === "day" && S.solarRaw > 0;
 
           // mount bracket, centered on the pivot — rotates with the panel
-          ctx.fillStyle = "#c23b3b";
+          ctx.fillStyle = "#c7cdd6";
           rr(ctx, -PANEL_THICK / 2 - 3, -6, PANEL_THICK + 6, 12, 3);
           ctx.fill();
 
@@ -1120,11 +1120,11 @@
             const top = Math.min(near, far);
             const h = Math.abs(far - near);
 
-            ctx.fillStyle = "#c23b3b";
+            ctx.fillStyle = "#eef1f4";
             rr(ctx, -PANEL_THICK / 2 - 2, top - 2, PANEL_THICK + 4, h + 4, 3);
             ctx.fill();
 
-            ctx.fillStyle = "#1c3f72"; // dark blue photovoltaic cells, always — matches the photo
+            ctx.fillStyle = onSun ? "#2455a4" : "#3a4f6b";
             rr(ctx, -PANEL_THICK / 2, top, PANEL_THICK, h, 2);
             ctx.fill();
 
@@ -1149,7 +1149,7 @@
           });
 
           // hinge strip joining the two halves, right at the pivot
-          ctx.fillStyle = "#c23b3b";
+          ctx.fillStyle = "#c7cdd6";
           rr(ctx, -PANEL_THICK / 2 - 2, -HINGE_GAP / 2 - 1, PANEL_THICK + 4, HINGE_GAP + 2, 1.5);
           ctx.fill();
 
