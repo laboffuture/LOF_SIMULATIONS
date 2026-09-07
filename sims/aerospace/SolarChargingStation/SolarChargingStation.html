@@ -1083,7 +1083,10 @@
             ctx.fill();
           });
 
-          ctx.rotate(-Math.PI / 2 - angleRad);
+          // ctx.rotate operates on the coordinate system (not a direction vector),
+          // so 0 here means the panel's own "outward" axis stays pointing straight
+          // up; increasing the angle swings it toward horizontal-left, never down.
+          ctx.rotate(-angleRad);
           const onSun = S.timeMode === "day" && S.solarRaw > 0;
 
           // a short mast lifts the panel clear of the chassis — fixed at the
