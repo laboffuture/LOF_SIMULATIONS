@@ -791,10 +791,6 @@
             <div class="v n" id="s_color">None</div>
           </div>
           <div class="stat">
-            <div class="k">Distance</div>
-            <div class="v c" id="s_dist">Close</div>
-          </div>
-          <div class="stat">
             <div class="k">Brightness</div>
             <div class="v c" id="s_bright">70%</div>
           </div>
@@ -1240,8 +1236,6 @@
         function updateDashboard() {
           $("s_color").textContent = S.color ? STARS[S.color].name.replace(" Star", "") : "None";
 
-          $("s_dist").textContent = S.distance < 30 ? "Close" : S.distance < 65 ? "Medium" : "Far";
-          $("s_dist").className = "v " + (S.distance > 80 ? "d" : "c");
           $("s_bright").textContent = Math.round(S.brightness) + "%";
           $("s_bright").className = "v " + (S.brightness < 25 ? "d" : "c");
           $("s_interf").textContent = S.interference < 5 ? "Clean" : S.interference < 45 ? "Mild" : "High";
