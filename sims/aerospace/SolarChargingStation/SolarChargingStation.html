@@ -1058,8 +1058,8 @@
         function drawPanel() {
           // Fixed pixel size (the chassis below is drawn at a fixed size too) so the
           // panel stays scaled to fit the little bot instead of towering over it.
-          const panelLen = 62;
-          const panelThick = 28;
+          const panelLen = 44;
+          const panelThick = 20;
 
           // sweet-spot guide arc — marks dead-center/upright, which is now where the
           // optimal angle sits.
@@ -1137,7 +1137,7 @@
         }
 
         function batteryWireStart() {
-          const panelLen = 62; // must match drawPanel()'s fixed panel length
+          const panelLen = 44; // must match drawPanel()'s fixed panel length
           const a = panelVisualAngle();
           return { x: PANEL_PX + Math.cos(a) * panelLen * 0.15, y: PANEL_PY + Math.sin(a) * panelLen * 0.15 };
         }
