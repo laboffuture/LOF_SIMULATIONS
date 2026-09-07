@@ -1048,10 +1048,140 @@
           }
         }
 
+        // Pedestal dimensions, shared between drawPanel() and batteryWireStart()
+        // so the wire always meets the panel exactly where it's drawn.
+        const POST_H = 34,
+          BASE_W = 46,
+          BASE_H = 10,
+          POST_W = 12,
+          PANEL_HALFLEN = 26,
+          PANEL_THICK = 22,
+          HINGE_GAP = 3;
+
+        function drawPanel() {
+          // A white pedestal-mounted, two-panel folding solar array (matching the
+          // reference photo): the foot plate + post are fixed on the ground and
+          // never move — only the panel plate above the post pivots as the angle
+          // changes, hinged exactly at the post's top, extending equally to both
+          // sides of the pivot.
+          const angleRad = (S.panelAngle * Math.PI) / 180;
+          const pivotY = PANEL_PY - POST_H;
+
+          // foot plate — fixed, sits on the ground
+          ctx.fillStyle = "rgba(23,41,59,0.14)";
+          ctx.beginPath();
+          ctx.ellipse(PANEL_PX, PANEL_PY + BASE_H / 2 + 3, BASE_W / 2 + 4, 6, 0, 0, TAU);
+          ctx.fill();
+          ctx.fillStyle = "#eef1f4";
+          rr(ctx, PANEL_PX - BASE_W / 2, PANEL_PY - BASE_H / 2, BASE_W, BASE_H, 3);
+          ctx.fill();
+          ctx.strokeStyle = "#c7cdd6";
+          ctx.lineWidth = 1;
+          rr(ctx, PANEL_PX - BASE_W / 2, PANEL_PY - BASE_H / 2, BASE_W, BASE_H, 3);
+          ctx.stroke();
+          ctx.fillStyle = "#c7cdd6";
+          [
+            [-BASE_W / 2 + 5, -BASE_H / 2 + 3],
+            [BASE_W / 2 - 5, -BASE_H / 2 + 3],
+            [-BASE_W / 2 + 5, BASE_H / 2 - 3],
+            [BASE_W / 2 - 5, BASE_H / 2 - 3],
+          ].forEach(([dx, dy]) => {
+            ctx.beginPath();
+            ctx.arc(PANEL_PX + dx, PANEL_PY + dy, 1.3, 0, TAU);
+            ctx.fill();
+          });
+
+          // vertical post — fixed, connects the foot plate to the pivot
+          ctx.fillStyle = "#f4f6f8";
+          rr(ctx, PANEL_PX - POST_W / 2, pivotY, POST_W, PANEL_PY - BASE_H / 2 - pivotY, 2);
+          ctx.fill();
+          ctx.strokeStyle = "#d5dbe1";
+          ctx.lineWidth = 1;
+          rr(ctx, PANEL_PX - POST_W / 2, pivotY, POST_W, PANEL_PY - BASE_H / 2 - pivotY, 2);
+          ctx.stroke();
+
+          ctx.save();
+          ctx.translate(PANEL_PX, pivotY);
+          // ctx.rotate operates on the coordinate system (not a direction vector):
+          // local "up" sweeps from straight up (0°) through horizontal (90°) to
+          // straight down (180°) as the angle increases, exactly matching the slider.
+          ctx.rotate(-angleRad);
+          const onSun = S.timeMode === "day" && S.solarRaw > 0;
+
+          // mount bracket, centered on the pivot — rotates with the panel
+          ctx.fillStyle = "#c7cdd6";
+          rr(ctx, -PANEL_THICK / 2 - 3, -6, PANEL_THICK + 6, 12, 3);
+          ctx.fill();
+
+          // two panel halves, centered on the pivot and sharing a hinge at the middle
+          [-1, 1].forEach((side) => {
+            const near = (side * HINGE_GAP) / 2;
+            const far = side * PANEL_HALFLEN;
+            const top = Math.min(near, far);
+            const h = Math.abs(far - near);
+
+            ctx.fillStyle = "#eef1f4";
+            rr(ctx, -PANEL_THICK / 2 - 2, top - 2, PANEL_THICK + 4, h + 4, 3);
+            ctx.fill();
+
+            ctx.fillStyle = onSun ? "#2455a4" : "#3a4f6b";
+            rr(ctx, -PANEL_THICK / 2, top, PANEL_THICK, h, 2);
+            ctx.fill();
+
+            // photovoltaic cell grid
+            ctx.strokeStyle = "rgba(255,255,255,0.4)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, top);
+            ctx.lineTo(0, top + h);
+            for (let i = 1; i < 3; i++) {
+              const y = top + (h / 3) * i;
+              ctx.moveTo(-PANEL_THICK / 2, y);
+              ctx.lineTo(PANEL_THICK / 2, y);
+            }
+            ctx.stroke();
+
+            if (onSun) {
+              ctx.fillStyle = "rgba(255, 220, 130, 0.35)";
+              rr(ctx, -PANEL_THICK / 2, top, PANEL_THICK, h, 2);
+              ctx.fill();
+            }
+          });
+
+          // hinge strip joining the two halves, right at the pivot
+          ctx.fillStyle = "#c7cdd6";
+          rr(ctx, -PANEL_THICK / 2 - 2, -HINGE_GAP / 2 - 1, PANEL_THICK + 4, HINGE_GAP + 2, 1.5);
+          ctx.fill();
+
+          // exposed red/black wire pair at one panel's outer corner, like the photo
+          const wx = PANEL_THICK / 2 + 1,
+            wy = PANEL_HALFLEN - 4;
+          ctx.strokeStyle = "#c23b3b";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(wx, wy);
+          ctx.lineTo(wx + 6, wy + 5);
+          ctx.stroke();
+          ctx.strokeStyle = "#2b2f36";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(wx, wy + 4);
+          ctx.lineTo(wx + 6, wy + 9);
+          ctx.stroke();
+
+          ctx.restore();
+        }
+
         function batteryWireStart() {
-          // The panel + bot chassis graphic has been removed from the scene;
-          // the charging wire now simply starts from that fixed spot on the ground.
-          return { x: PANEL_PX, y: PANEL_PY - 10 };
+          const angleRad = (S.panelAngle * Math.PI) / 180;
+          const pivotY = PANEL_PY - POST_H;
+          const theta = -angleRad;
+          // matches the exposed wire-pair corner drawn in drawPanel()
+          const lx = PANEL_THICK / 2 + 3,
+            ly = PANEL_HALFLEN;
+          const gx = lx * Math.cos(theta) - ly * Math.sin(theta);
+          const gy = lx * Math.sin(theta) + ly * Math.cos(theta);
+          return { x: PANEL_PX + gx, y: pivotY + gy };
         }
 
         function drawWire(x1, y1, x2, y2, active) {
@@ -1192,6 +1322,7 @@
         function draw(t) {
           drawSky();
           drawSunOrMoon(t);
+          drawPanel();
           const c0 = batteryWireStart();
           drawWire(c0.x, c0.y, BATT_X, BATT_Y - 40, S.batteryMode === "charge" && S.solarRaw > 0);
           drawWire(BATT_X, BATT_Y - 40, DEV_X, DEV_Y, S.batteryMode === "use" && S.deviceOn);
