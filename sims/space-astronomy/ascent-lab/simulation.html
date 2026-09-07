@@ -653,6 +653,24 @@
         background: var(--accent-cyan); color: var(--bg-dark); border: none;
         border-radius: 6px; padding: 10px 20px; cursor: pointer;
       }
+
+      /* ---- RESPONSIVE: stack the stage above the panel on tablet/mobile ---- */
+      @media (max-width: 900px) {
+        html, body {
+          height: auto;
+          overflow: auto;
+        }
+        #app {
+          grid-template-columns: 1fr;
+          height: auto;
+        }
+        #stage {
+          height: clamp(300px, 82vw, 460px);
+        }
+        #panel {
+          overflow-y: visible;
+        }
+      }
     </style>
   </head>
   <body>
