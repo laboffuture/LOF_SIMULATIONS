@@ -1051,8 +1051,10 @@
         // +/-30 deg rock around vertical, centered on the optimal angle.
         const PANEL_TILT_MAX = 30;
         function panelVisualAngle() {
+          // 0 = straight up (drawn along local -Y) at the optimal angle; the panel's
+          // own local axis already points "up" pre-rotation, so 0 here means upright.
           const tiltDeg = ((S.panelAngle - OPTIMAL_ANGLE) * PANEL_TILT_MAX) / (OPTIMAL_ANGLE || 1);
-          return -Math.PI / 2 + (tiltDeg * Math.PI) / 180;
+          return (tiltDeg * Math.PI) / 180;
         }
 
         function drawPanel() {
@@ -1093,12 +1095,23 @@
           ctx.rotate(panelVisualAngle());
           const onSun = S.timeMode === "day" && S.solarRaw > 0;
 
+          // a short mast lifts the panel clear of the chassis instead of it
+          // overlapping the bot's body
+          const baseGap = 18;
+          ctx.strokeStyle = "#8a949d";
+          ctx.lineWidth = 4;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(0, -baseGap);
+          ctx.stroke();
+
           // A real folding panel: two hinged solar-cell segments in white frames,
           // not one plain slab.
           const hingeGap = 3;
           const segH = (panelLen - hingeGap) / 2;
           for (let seg = 0; seg < 2; seg++) {
-            const segTop = -panelLen + seg * (segH + hingeGap);
+            const segTop = -panelLen - baseGap + seg * (segH + hingeGap);
 
             ctx.fillStyle = "#eef1f4";
             rr(ctx, -panelThick / 2 - 2, segTop - 2, panelThick + 4, segH + 4, 3);
@@ -1130,16 +1143,17 @@
 
           // hinge joining the two segments
           ctx.fillStyle = "#c7cdd6";
-          rr(ctx, -panelThick / 2 - 2, -panelLen / 2 - hingeGap / 2 - 1, panelThick + 4, hingeGap + 2, 1.5);
+          rr(ctx, -panelThick / 2 - 2, -panelLen / 2 - baseGap - hingeGap / 2 - 1, panelThick + 4, hingeGap + 2, 1.5);
           ctx.fill();
 
           ctx.restore();
         }
 
         function batteryWireStart() {
-          const panelLen = 44; // must match drawPanel()'s fixed panel length
+          const baseGap = 18; // must match drawPanel()'s fixed mast gap
           const a = panelVisualAngle();
-          return { x: PANEL_PX + Math.cos(a) * panelLen * 0.15, y: PANEL_PY + Math.sin(a) * panelLen * 0.15 };
+          const d = baseGap + 8; // just past the mast, onto the panel's near edge
+          return { x: PANEL_PX + Math.cos(a) * d, y: PANEL_PY + Math.sin(a) * d };
         }
 
         function drawWire(x1, y1, x2, y2, active) {
