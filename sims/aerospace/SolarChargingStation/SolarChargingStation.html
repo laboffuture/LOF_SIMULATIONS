@@ -1045,19 +1045,29 @@
           }
         }
 
+        // The panel rocks left/right/center around upright instead of swinging all
+        // the way down to lying flat: 0-90 still maps onto that tilt (so the
+        // optimal-angle physics and slider are unchanged), just compressed into a
+        // +/-30 deg rock around vertical, centered on the optimal angle.
+        const PANEL_TILT_MAX = 30;
+        function panelVisualAngle() {
+          const tiltDeg = ((S.panelAngle - OPTIMAL_ANGLE) * PANEL_TILT_MAX) / (OPTIMAL_ANGLE || 1);
+          return -Math.PI / 2 + (tiltDeg * Math.PI) / 180;
+        }
+
         function drawPanel() {
-          const angleRad = (S.panelAngle * Math.PI) / 180;
           // Fixed pixel size (the chassis below is drawn at a fixed size too) so the
           // panel stays scaled to fit the little bot instead of towering over it.
           const panelLen = 62;
           const panelThick = 28;
 
-          // sweet-spot guide arc
+          // sweet-spot guide arc — marks dead-center/upright, which is now where the
+          // optimal angle sits.
           ctx.strokeStyle = "rgba(42,120,214,0.35)";
           ctx.setLineDash([3, 4]);
           ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.arc(PANEL_PX, PANEL_PY, panelLen + 14, -Math.PI / 2 - (OPTIMAL_ANGLE * Math.PI) / 180 - 0.05, -Math.PI / 2 - (OPTIMAL_ANGLE * Math.PI) / 180 + 0.05);
+          ctx.arc(PANEL_PX, PANEL_PY, panelLen + 14, -Math.PI / 2 - 0.05, -Math.PI / 2 + 0.05);
           ctx.stroke();
           ctx.setLineDash([]);
 
@@ -1068,19 +1078,19 @@
           // the mast + panel above it turn with the angle slider.
           ctx.fillStyle = "rgba(23,41,59,0.14)";
           ctx.beginPath();
-          ctx.ellipse(0, 6, 34, 10, 0, 0, TAU);
+          ctx.ellipse(0, 4, 24, 7, 0, 0, TAU);
           ctx.fill();
           ctx.fillStyle = "#3a4657";
-          rr(ctx, -28, -13, 56, 22, 6);
+          rr(ctx, -20, -10, 40, 16, 5);
           ctx.fill();
           ctx.fillStyle = "#22314a";
-          [-20, 20].forEach((wx) => {
+          [-14, 14].forEach((wx) => {
             ctx.beginPath();
-            ctx.arc(wx, 8, 8, 0, TAU);
+            ctx.arc(wx, 6, 6, 0, TAU);
             ctx.fill();
           });
 
-          ctx.rotate(-Math.PI / 2 - angleRad);
+          ctx.rotate(panelVisualAngle());
           const onSun = S.timeMode === "day" && S.solarRaw > 0;
 
           // A real folding panel: two hinged solar-cell segments in white frames,
@@ -1127,9 +1137,8 @@
         }
 
         function batteryWireStart() {
-          const angleRad = (S.panelAngle * Math.PI) / 180;
           const panelLen = 62; // must match drawPanel()'s fixed panel length
-          const a = -Math.PI / 2 - angleRad;
+          const a = panelVisualAngle();
           return { x: PANEL_PX + Math.cos(a) * panelLen * 0.15, y: PANEL_PY + Math.sin(a) * panelLen * 0.15 };
         }
 
