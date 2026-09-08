@@ -1,0 +1,1379 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Aero Build — Rocket Design &amp; Flight Physics Lab</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-dark: #070a12;
+        --bg-stage: #090e1c;
+        --panel-bg: #0e1320;
+        --panel-card: rgba(22, 30, 48, 0.85);
+        --border-color: rgba(255, 255, 255, 0.12);
+        --border-highlight: rgba(0, 242, 254, 0.5);
+        --accent-cyan: #00f2fe;
+        --accent-blue: #4facfe;
+        --accent-orange: #ff6b35;
+        --accent-purple: #a855f7;
+        --accent-pink: #ff2a85;
+        --accent-green: #22c55e;
+        --accent-amber: #eab308;
+        --accent-glow: rgba(0, 242, 254, 0.35);
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-muted: #64748b;
+        --mono: "Roboto Mono", ui-monospace, monospace;
+        --sans: "Outfit", system-ui, sans-serif;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        height: 100%;
+        background: var(--bg-dark);
+        color: var(--text-primary);
+        font-family: var(--sans);
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+      #app { display: grid; grid-template-columns: 1fr 400px; height: 100vh; }
+
+      /* ---- STAGE ---- */
+      #stage { position: relative; overflow: hidden; background: var(--bg-stage); }
+      #scene { display: block; width: 100%; height: 100%; touch-action: none; }
+
+      #titlecard {
+        position: absolute; top: 14px; left: 16px; z-index: 3; pointer-events: none;
+        background: rgba(9, 14, 25, 0.88); padding: 8px 14px; border-radius: 8px;
+        border: 1px solid var(--border-color); backdrop-filter: blur(8px);
+      }
+      #titlecard h1 {
+        font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+        background: linear-gradient(90deg, #ff6b35, #00f2fe);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      }
+      #titlecard p { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.05em; margin-top: 3px; color: var(--text-secondary); }
+
+      #viewTabs {
+        position: absolute; top: 14px; right: 16px; z-index: 5; display: flex; gap: 6px;
+        background: rgba(10, 15, 26, 0.88); border: 1px solid var(--border-color); border-radius: 9px; padding: 4px;
+        backdrop-filter: blur(10px);
+      }
+      #viewTabs button {
+        font-family: var(--mono); font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
+        text-transform: uppercase; background: transparent; border: none; color: var(--text-secondary);
+        padding: 7px 14px; border-radius: 6px; cursor: pointer; transition: 0.15s;
+      }
+      #viewTabs button.on { background: var(--accent-cyan); color: #071018; }
+
+      #hud {
+        position: absolute; top: 62px; right: 16px; z-index: 4; display: none; flex-direction: column; gap: 6px;
+        background: rgba(9, 14, 25, 0.88); border: 1px solid var(--border-color); border-radius: 9px;
+        padding: 10px 14px; backdrop-filter: blur(8px); min-width: 168px;
+      }
+      #hud.show { display: flex; }
+      #hud .hr { display: flex; justify-content: space-between; gap: 14px; font-family: var(--mono); font-size: 11px; }
+      #hud .hr dt { color: var(--text-muted); }
+      #hud .hr dd { font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+      #hud .evline { font-family: var(--mono); font-size: 9.5px; color: var(--accent-amber); margin-top: 2px; }
+
+      #launchbar {
+        position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 5;
+        background: rgba(14, 20, 32, 0.94); border: 1.5px solid var(--border-highlight); border-radius: 12px;
+        backdrop-filter: blur(12px); padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7), 0 0 25px var(--accent-glow); flex-wrap: wrap;
+      }
+      #commitBtn {
+        font-family: var(--mono); font-size: 13px; font-weight: 800; letter-spacing: 0.1em; color: #fff;
+        background: linear-gradient(90deg, #ff3b00, #ff8c00); border: none; border-radius: 8px; padding: 12px 22px;
+        cursor: pointer; white-space: nowrap; box-shadow: 0 0 20px rgba(255, 59, 0, 0.5); transition: 0.2s;
+      }
+      #commitBtn:hover { transform: translateY(-2px); box-shadow: 0 0 32px rgba(255, 59, 0, 0.85); }
+      .minibtn {
+        font-family: var(--mono); font-size: 10.5px; font-weight: 700; background: var(--panel-card);
+        border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; padding: 10px 14px;
+        cursor: pointer; transition: 0.15s;
+      }
+      .minibtn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+      .spacer { flex: 1; }
+      #barBadges { display: flex; gap: 8px; flex-wrap: wrap; }
+      .pillbadge {
+        font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.03em; padding: 6px 10px;
+        border-radius: 6px; white-space: nowrap;
+      }
+      .pillbadge.stable { background: rgba(34,197,94,.18); color: var(--accent-green); border: 1px solid var(--accent-green); }
+      .pillbadge.marginal { background: rgba(234,179,8,.18); color: var(--accent-amber); border: 1px solid var(--accent-amber); }
+      .pillbadge.unstable { background: rgba(255,42,133,.18); color: var(--accent-pink); border: 1px solid var(--accent-pink); }
+      .pillbadge.info { background: rgba(0,242,254,.14); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+
+      /* ---- SIDEBAR ---- */
+      #panel { background: var(--panel-bg); border-left: 1px solid var(--border-color); overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+      #panel::-webkit-scrollbar { width: 6px; }
+      #panel::-webkit-scrollbar-track { background: var(--panel-bg); }
+      #panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 3px; }
+      .sec { padding: 15px 18px; border-bottom: 1px solid var(--border-color); position: relative; }
+      .sec-motor { background: linear-gradient(135deg, rgba(255,107,53,.08), rgba(14,19,32,.95)); border-left: 3px solid var(--accent-orange); }
+      .sec-geo { background: linear-gradient(135deg, rgba(168,85,247,.08), rgba(14,19,32,.95)); border-left: 3px solid var(--accent-purple); }
+      .sec-fins { background: linear-gradient(135deg, rgba(0,242,254,.08), rgba(14,19,32,.95)); border-left: 3px solid var(--accent-cyan); }
+      .sec-rec { background: linear-gradient(135deg, rgba(34,197,94,.08), rgba(14,19,32,.95)); border-left: 3px solid var(--accent-green); }
+      .sec-env { background: linear-gradient(135deg, rgba(234,179,8,.08), rgba(14,19,32,.95)); border-left: 3px solid var(--accent-amber); }
+      .sec-stab { background: linear-gradient(135deg, rgba(255,42,133,.08), rgba(14,19,32,.95)); border-left: 3px solid var(--accent-pink); }
+      .sec-out { background: linear-gradient(135deg, rgba(79,172,254,.08), rgba(14,19,32,.95)); border-left: 3px solid var(--accent-blue); }
+
+      .sec-h { font-family: var(--mono); font-size: 10.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+      .whyBtn {
+        font-family: var(--mono); font-size: 9.5px; font-weight: 800; width: 18px; height: 18px; border-radius: 50%;
+        background: rgba(255,255,255,.12); color: var(--text-secondary); border: 1px solid var(--border-color);
+        cursor: pointer; line-height: 1; display: inline-flex; align-items: center; justify-content: center; flex: none;
+      }
+      .whyBtn:hover { background: var(--accent-cyan); color: #071018; border-color: var(--accent-cyan); }
+
+      .ctl { margin-bottom: 13px; }
+      .ctl-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; gap: 8px; }
+      .ctl-name { font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); }
+      .ctl-val { font-family: var(--mono); font-size: 11.5px; font-weight: 700; color: var(--accent-cyan); white-space: nowrap; }
+      input[type="range"] {
+        -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px;
+        background: rgba(255,255,255,.15); cursor: pointer; outline: none;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none; width: 17px; height: 17px; background: var(--accent-cyan); border-radius: 50%;
+        cursor: pointer; border: 2px solid var(--bg-dark); box-shadow: 0 0 10px rgba(0,242,254,.6);
+      }
+      input[type="text"], input[type="number"] {
+        width: 100%; font-family: var(--mono); font-size: 12.5px; font-weight: 700; color: var(--text-primary);
+        background: rgba(0,0,0,.4); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 10px; outline: none;
+      }
+      input[type="text"]:focus, input[type="number"]:focus { border-color: var(--accent-cyan); }
+      input[type="text"].bad { border-color: var(--accent-pink); color: var(--accent-pink); }
+
+      .seg { display: flex; border: 1px solid var(--border-color); border-radius: 6px; background: rgba(0,0,0,.4); overflow: hidden; }
+      .seg button {
+        flex: 1; font-family: var(--mono); font-size: 10.5px; font-weight: 700; background: transparent; border: none;
+        color: var(--text-secondary); padding: 8px 4px; cursor: pointer; transition: .2s;
+      }
+      .seg button.on { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #071018; font-weight: 800; }
+      .noseSeg button.icon { font-size: 15px; padding: 8px 4px 4px; }
+
+      .motorRow { display: flex; gap: 8px; align-items: center; }
+      .motorRow input { flex: 1; }
+      .motorReadout { font-family: var(--mono); font-size: 10px; color: var(--text-secondary); margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+      .motorReadout b { color: var(--text-primary); }
+      .motorReadout .delaytag { cursor: pointer; text-decoration: underline dotted; color: var(--accent-amber); }
+      .motorReadout .bad { color: var(--accent-pink); }
+
+      #finCanvasWrap { background: #040812; border: 1px solid var(--border-color); border-radius: 8px; padding: 6px; margin-top: 8px; }
+      #finCanvas { display: block; width: 100%; height: 84px; }
+
+      #stabGaugeWrap { background: #040812; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; text-align: center; }
+      #stabGauge { display: block; margin: 0 auto; width: 100%; height: 110px; }
+      .stab-verdict { font-family: var(--mono); font-weight: 800; font-size: 13px; margin-top: 4px; }
+      .stab-verdict.stable { color: var(--accent-green); }
+      .stab-verdict.marginal { color: var(--accent-amber); }
+      .stab-verdict.unstable { color: var(--accent-pink); }
+      .stab-sub { font-family: var(--mono); font-size: 9.5px; color: var(--text-muted); margin-top: 2px; }
+
+      .tog { display: flex; align-items: center; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; padding: 6px 0; cursor: pointer; color: var(--text-secondary); }
+
+      .row { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--mono); font-size: 11px; padding: 5px 0; border-bottom: 1px dotted rgba(255,255,255,.1); }
+      .row dt { color: var(--text-secondary); }
+      .row dd { font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+      .row dd .u { color: var(--text-muted); font-size: 9px; font-weight: 400; margin-left: 1px; }
+      .row.click { cursor: pointer; }
+      .row.click:hover dt { color: var(--accent-cyan); }
+
+      #outcomeBanner {
+        margin-top: 10px; font-family: var(--mono); font-size: 11px; line-height: 1.5; padding: 10px 12px;
+        border-radius: 6px; background: rgba(0,0,0,.4); border: 1px solid var(--border-color); display: none;
+      }
+      #outcomeBanner.show { display: block; }
+      #outcomeBanner.ok { border-left: 4px solid var(--accent-green); }
+      #outcomeBanner.warn { border-left: 4px solid var(--accent-amber); }
+      #outcomeBanner.fail { border-left: 4px solid var(--accent-pink); }
+      #outcomeBanner b { display: block; font-size: 12.5px; margin-bottom: 3px; }
+
+      #miniGraphs { display: none; flex-direction: column; gap: 10px; margin-top: 10px; }
+      #miniGraphs.show { display: flex; }
+      .mgraph { background: #06080e; border: 1px solid var(--border-color); border-radius: 6px; padding: 6px; cursor: pointer; }
+      .mgraph canvas { display: block; width: 100%; height: 64px; }
+      .mgraph .mgcap { font-family: var(--mono); font-size: 8.5px; color: var(--text-muted); margin-top: 3px; }
+
+      .linkbtn {
+        font-family: var(--mono); font-size: 10.5px; font-weight: 700; background: var(--panel-card);
+        border: 1px solid var(--border-color); color: var(--text-primary); padding: 9px 12px; border-radius: 6px;
+        cursor: pointer; width: 100%; transition: .15s;
+      }
+      .linkbtn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+      /* ---- overlays ---- */
+      .scrim { position: fixed; inset: 0; background: rgba(5,7,12,.85); backdrop-filter: blur(10px); z-index: 30; display: none; align-items: center; justify-content: center; padding: 20px; }
+      .scrim.show { display: flex; }
+      .ovl { background: var(--panel-bg); border: 1px solid var(--border-highlight); border-radius: 12px; max-width: 560px; width: 100%; max-height: 86vh; overflow-y: auto; padding: 26px 28px; }
+      .ovl h2 { font-size: 17px; letter-spacing: .05em; text-transform: uppercase; color: var(--accent-cyan); margin-bottom: 4px; }
+      .ovl .sub { font-family: var(--mono); font-size: 11px; color: var(--text-secondary); margin-bottom: 16px; }
+      .ovl p { font-size: 13.5px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 12px; }
+      .ovl ol, .ovl ul { margin: 0 0 16px 20px; }
+      .ovl li { font-size: 13px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 8px; }
+      .ovl .close { margin-top: 4px; font-family: var(--mono); font-size: 11px; font-weight: 700; background: var(--accent-cyan); color: var(--bg-dark); border: none; border-radius: 6px; padding: 10px 20px; cursor: pointer; }
+      .ovl .close.ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-color); margin-left: 8px; }
+
+      #checklist .crow { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--mono); font-size: 12.5px; padding: 9px 0; border-bottom: 1px dotted rgba(255,255,255,.12); }
+      #checklist .crow dt { color: var(--text-secondary); }
+      #checklist .crow dd { font-weight: 800; }
+      #checklist .crow dd.stable { color: var(--accent-green); }
+      #checklist .crow dd.marginal { color: var(--accent-amber); }
+      #checklist .crow dd.unstable { color: var(--accent-pink); }
+      #checklistWarn { margin-top: 10px; font-family: var(--mono); font-size: 11px; color: var(--accent-pink); display: none; }
+      #checklistWarn.show { display: block; }
+
+      @media (max-width: 1000px) {
+        html, body { height: auto; overflow: auto; }
+        #app { grid-template-columns: 1fr; height: auto; }
+        #stage { height: clamp(320px, 90vw, 500px); }
+        #panel { overflow-y: visible; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="stage">
+        <canvas id="scene"></canvas>
+
+        <div id="titlecard">
+          <h1>Aero Build</h1>
+          <p>Design it, then find out if it actually flies</p>
+        </div>
+
+        <div id="viewTabs">
+          <button data-v="design" class="on">Design</button>
+          <button data-v="flight">Flight</button>
+        </div>
+
+        <div id="hud">
+          <div class="hr"><dt>Altitude</dt><dd id="h_alt">0.0 <span style="color:var(--text-muted)">m</span></dd></div>
+          <div class="hr"><dt>Speed</dt><dd id="h_vel">0.0 <span style="color:var(--text-muted)">m/s</span></dd></div>
+          <div class="hr"><dt>Pitch</dt><dd id="h_pitch">0.0°</dd></div>
+          <div class="evline" id="h_event"></div>
+        </div>
+
+        <div id="launchbar">
+          <button id="commitBtn">🚀 Pre-Launch Checklist</button>
+          <button class="minibtn" id="backBtn" style="display:none">← Back to Design</button>
+          <div class="spacer"></div>
+          <div id="barBadges">
+            <span class="pillbadge info" id="barMotor">C6-5</span>
+            <span class="pillbadge stable" id="barMargin">1.2 cal</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel">
+        <!-- MOTOR -->
+        <div class="sec sec-motor">
+          <div class="sec-h">Motor <span style="color:var(--accent-orange)">Thrust &amp; Delay</span> <button class="whyBtn" data-why="motor">?</button></div>
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Motor Designation (Sustainer)</span></div>
+            <div class="motorRow"><input type="text" id="motorInput" value="C6-5" maxlength="10" /></div>
+            <div class="motorReadout" id="motorReadout"></div>
+          </div>
+          <div class="ctl">
+            <label class="tog"><span>Two Stages (add a booster)</span>
+              <input type="checkbox" id="stageTog" style="width:34px;height:18px" />
+            </label>
+          </div>
+          <div class="ctl" id="boosterCtl" style="display:none">
+            <div class="ctl-top"><span class="ctl-name">Motor Designation (Booster)</span></div>
+            <div class="motorRow"><input type="text" id="boosterMotorInput" value="B6-4" maxlength="10" /></div>
+            <div class="motorReadout" id="boosterReadout"></div>
+            <div class="ctl-top" style="margin-top:8px"><span class="ctl-name">Booster Dry Mass</span><span class="ctl-val" id="boosterMassVal">30 g</span></div>
+            <input type="range" id="boosterMass" min="5" max="500" step="1" value="30" />
+            <div class="ctl-top" style="margin-top:8px"><span class="ctl-name">Booster Body Length</span><span class="ctl-val" id="boosterLenVal">150 mm</span></div>
+            <input type="range" id="boosterLen" min="50" max="600" step="5" value="150" />
+          </div>
+        </div>
+
+        <!-- GEOMETRY -->
+        <div class="sec sec-geo">
+          <div class="sec-h">Airframe <span style="color:var(--accent-purple)">Geometry</span></div>
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Nose Shape</span></div>
+            <div class="seg noseSeg" id="noseSeg">
+              <button data-k="conical" class="icon">▲<br />Conical</button>
+              <button data-k="ogive" class="icon on">◗<br />Ogive</button>
+              <button data-k="parabolic" class="icon">◔<br />Parabolic</button>
+            </div>
+          </div>
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Body Diameter</span><span class="ctl-val" id="diamVal">24 mm</span></div>
+            <input type="range" id="diam" min="10" max="150" step="1" value="24" />
+          </div>
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Body Length (Sustainer)</span><span class="ctl-val" id="bodyLenVal">300 mm</span></div>
+            <input type="range" id="bodyLen" min="50" max="1000" step="5" value="300" />
+          </div>
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Dry Mass (Sustainer)</span><span class="ctl-val" id="dryMassVal">50 g</span></div>
+            <input type="range" id="dryMass" min="5" max="2000" step="1" value="50" />
+          </div>
+        </div>
+
+        <!-- FINS -->
+        <div class="sec sec-fins">
+          <div class="sec-h">Fins <span style="color:var(--accent-cyan)">Stabilizers</span> <button class="whyBtn" data-why="fins">?</button></div>
+          <div id="finCanvasWrap"><canvas id="finCanvas"></canvas></div>
+          <div class="ctl" style="margin-top:10px">
+            <div class="ctl-top"><span class="ctl-name">Fin Count</span><span class="ctl-val" id="finNVal">3</span></div>
+            <input type="range" class="finslider" id="finN" min="2" max="5" step="1" value="3" />
+          </div>
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Root Chord</span><span class="ctl-val" id="finCrVal">60 mm</span></div>
+            <input type="range" class="finslider" id="finCr" min="15" max="150" step="1" value="60" />
+          </div>
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Tip Chord</span><span class="ctl-val" id="finCtVal">30 mm</span></div>
+            <input type="range" class="finslider" id="finCt" min="0" max="100" step="1" value="30" />
+          </div>
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Span</span><span class="ctl-val" id="finSpanVal">50 mm</span></div>
+            <input type="range" class="finslider" id="finSpan" min="10" max="150" step="1" value="50" />
+          </div>
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Sweep</span><span class="ctl-val" id="finSweepVal">20 mm</span></div>
+            <input type="range" class="finslider" id="finSweep" min="0" max="150" step="1" value="20" />
+          </div>
+          <p style="font-family:var(--mono);font-size:9.5px;color:var(--text-muted);line-height:1.5">Drag the marker on the rocket in the Design view to set the Center of Gravity.</p>
+        </div>
+
+        <!-- STABILITY -->
+        <div class="sec sec-stab">
+          <div class="sec-h">Stability <span style="color:var(--accent-pink)">Static Margin</span> <button class="whyBtn" data-why="margin">?</button></div>
+          <div id="stabGaugeWrap">
+            <canvas id="stabGauge"></canvas>
+            <div class="stab-verdict" id="stabVerdict">STABLE</div>
+            <div class="stab-sub" id="stabSub">margin 1.20 cal · CP 320mm · CG 260mm</div>
+          </div>
+        </div>
+
+        <!-- RECOVERY -->
+        <div class="sec sec-rec">
+          <div class="sec-h">Recovery <span style="color:var(--accent-green)">Parachute</span></div>
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Deploy Mode</span></div>
+            <div class="seg" id="recSeg">
+              <button data-k="motor" class="on">Motor Delay</button>
+              <button data-k="dual">Dual Deploy</button>
+            </div>
+          </div>
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Ejection Delay</span><span class="ctl-val delaytag" id="delayVal">5 s</span></div>
+            <p style="font-family:var(--mono);font-size:9.5px;color:var(--text-muted)">Set by the motor's designation — tap the value to find out why.</p>
+          </div>
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Recovery Area (Main)</span><span class="ctl-val" id="recAreaVal">900 cm²</span></div>
+            <input type="range" id="recArea" min="100" max="3000" step="25" value="900" />
+          </div>
+          <div class="ctl" id="backupCtl" style="display:none">
+            <div class="ctl-top"><span class="ctl-name">Backup (Main) Deploy Altitude</span><span class="ctl-val" id="backupAltVal">150 m</span></div>
+            <input type="range" id="backupAlt" min="20" max="300" step="5" value="150" />
+          </div>
+        </div>
+
+        <!-- LAUNCH / WIND -->
+        <div class="sec sec-env">
+          <div class="sec-h">Launch <span style="color:var(--accent-amber)">Conditions</span></div>
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Launch Angle (from vertical)</span><span class="ctl-val" id="launchAngleVal">0°</span></div>
+            <input type="range" id="launchAngle" min="0" max="15" step="1" value="0" />
+          </div>
+          <div class="ctl">
+            <div class="ctl-top"><span class="ctl-name">Crosswind Speed</span><span class="ctl-val" id="windVal">0.0 m/s</span></div>
+            <input type="range" id="wind" min="0" max="10" step="0.5" value="0" />
+          </div>
+        </div>
+
+        <!-- OUTPUTS -->
+        <div class="sec sec-out">
+          <div class="sec-h">Flight <span style="color:var(--accent-blue)">Outputs</span></div>
+          <div class="row"><dt>Apogee Altitude</dt><dd id="o_apoAlt">—</dd></div>
+          <div class="row"><dt>Apogee Downrange</dt><dd id="o_apoDown">—</dd></div>
+          <div class="row click" id="o_weatherRow" data-why="weathercock"><dt>Weathercock Angle</dt><dd id="o_weather">—</dd></div>
+          <div class="row"><dt>Landing Downrange</dt><dd id="o_landDown">—</dd></div>
+          <div class="row"><dt>Landing Speed</dt><dd id="o_landSpeed">—</dd></div>
+          <div id="outcomeBanner"></div>
+          <div id="miniGraphs">
+            <div class="mgraph" data-why="weathercock"><canvas id="gVel"></canvas><div class="mgcap">Velocity (cyan) &amp; Acceleration in g (orange) vs time</div></div>
+            <div class="mgraph" data-why="weathercock"><canvas id="gPitch"></canvas><div class="mgcap">Pitch vs time — tap to learn about weathercocking</div></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <button class="linkbtn" id="helpBtn">? Flight Manual &amp; Physics Guide</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRE-LAUNCH CHECKLIST -->
+    <div class="scrim" id="checklistScrim">
+      <div class="ovl" id="checklist">
+        <h2>Pre-Launch Checklist</h2>
+        <div class="sub">Review before you commit</div>
+        <div class="crow"><dt>Static Margin</dt><dd id="c_margin">—</dd></div>
+        <div class="crow"><dt>Total Liftoff Mass</dt><dd id="c_mass">—</dd></div>
+        <div class="crow"><dt>Motor(s)</dt><dd id="c_motors">—</dd></div>
+        <div class="crow"><dt>Moment of Inertia</dt><dd id="c_moi">—</dd></div>
+        <div id="checklistWarn"></div>
+        <div style="margin-top:16px">
+          <button class="close" id="commitLaunch">Commit &amp; Launch</button>
+          <button class="close ghost" id="checklistCancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAP-FOR-WHY POPUP -->
+    <div class="scrim" id="whyScrim">
+      <div class="ovl" id="whyOvl">
+        <h2 id="whyTitle">Why</h2>
+        <div id="whyBody"></div>
+        <button class="close" id="whyClose">Got it</button>
+      </div>
+    </div>
+
+    <!-- MANUAL -->
+    <div class="scrim" id="manualScrim">
+      <div class="ovl">
+        <h2>Aero Build Flight Manual</h2>
+        <div class="sub">Motor-Powered Rocket Design &amp; Stability</div>
+        <p>Everything the simulation needs comes from the design you build and the motor designation you type in — no outside data lookups.</p>
+        <ol>
+          <li><b>Design:</b> Pick a nose shape, size the body, add fins, and drag the CG marker onto the rocket. The stability gauge reacts instantly.</li>
+          <li><b>Static Margin:</b> (CP − CG) / diameter, in body-diameters ("calibers"). 1–2 calibers is the classic stable range; below 1 the rocket can tumble.</li>
+          <li><b>Checklist &amp; Launch:</b> Commit opens a checklist — margin, mass, motor, and moment of inertia — then launches into the Flight view.</li>
+          <li><b>Wind:</b> A stable rocket weathercocks — it pitches into the wind — and still drifts downwind. Watch the pitch graph.</li>
+          <li><b>Recovery:</b> The parachute opens using the motor's real ejection delay (or, in Dual Deploy, a small drogue at apogee and the main chute at a backup altitude). Safe descent is 4.5–6 m/s.</li>
+        </ol>
+        <button class="close" id="manualClose">Start Building</button>
+      </div>
+    </div>
+
+    <script>
+      "use strict";
+      const $ = (id) => document.getElementById(id);
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+      const TAU = Math.PI * 2;
+      const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+
+      /* ============ PHYSICAL CONSTANTS (fixed, documented) ============ */
+      const G = 9.81;                 // m/s^2
+      const RHO = 1.225;               // kg/m^3, sea-level air density, held constant (single-Cd scope)
+      const ISP_ASSUMED = 100;         // s — representative black-powder/composite hobby motor exhaust Isp, used only
+                                        // to turn a motor's total impulse into a propellant-mass estimate (J = Isp*g0*mp)
+      const K_DAMP = 0.5;              // pitch-damping constant — "calibrated once, then fixed" per design brief
+      const CD_REC = 1.5;              // parachute drag coefficient, fixed (flat/round canopy assumption)
+      const DROGUE_AREA_FRAC = 0.15;   // dual-deploy drogue area as a fraction of the main chute area
+      const NOSE_LEN_RATIO = 3;        // nose cone length = 3x body diameter, a fixed proportion (no separate control)
+      const TUMBLE_DEG = 270;          // cumulative pitch swing beyond this = genuine loss of control, not a wobble
+      const ROD_LEN = 1.0;             // m — a real launch rod/rail holds attitude fixed for this first stretch,
+                                        // which is why a crosswind doesn't shove a rocket over before it has speed
+      const MFG_TILT_DEG = 1;          // a small, fixed built-in tilt (thrust misalignment / build imperfection) —
+                                        // every real rocket has one; without it an unstable design sitting at a
+                                        // perfect zero-wind equilibrium would never actually show its instability
+      const SEPARATION_MIN_V = 5;      // m/s — booster burnout speed below this risks an unclean stage separation
+      const DEPLOY_SHOCK_V = 50;       // m/s — deploying the recovery system faster than this risks structural overload
+      const LAND_SAFE_LO = 4.5, LAND_SAFE_HI = 6; // m/s, safe descent band
+
+      /* ============ MOTOR DESIGNATION ============ */
+      // Real NAR/NFPA total-impulse class ranges (N·s), each class doubling the one before.
+      const MOTOR_CLASSES = {};
+      (function buildClasses() {
+        const letters = "ABCDEFGHIJKLMNO";
+        let hi = 2.5;
+        for (let i = 0; i < letters.length; i++) {
+          let lo, thisHi;
+          if (i === 0) { lo = 1.26; thisHi = 2.5; }
+          else { lo = +(hi + 0.01).toFixed(2); thisHi = +(hi * 2).toFixed(2); }
+          MOTOR_CLASSES[letters[i]] = { lo, hi: thisHi, mid: (lo + thisHi) / 2 };
+          hi = thisHi;
+        }
+      })();
+
+      function parseMotor(str) {
+        const s = (str || "").trim().toUpperCase();
+        const m = /^([A-O])\s*([0-9]+(?:\.[0-9]+)?)\s*-\s*([0-9]+|P)$/.exec(s);
+        if (!m) return null;
+        const cls = m[1];
+        const range = MOTOR_CLASSES[cls];
+        if (!range) return null;
+        const favg = parseFloat(m[2]);
+        if (!(favg > 0)) return null;
+        const delay = m[3] === "P" ? null : parseFloat(m[3]);
+        const impulseMid = range.mid;
+        const tBurn = impulseMid / favg;
+        const propMass = impulseMid / (ISP_ASSUMED * G); // kg
+        return { raw: s, cls, favg, delay, impulseMid, tBurn, propMass, range };
+      }
+
+      /* ============ NOSE SHAPES ============ */
+      // CN_alpha for a nose cone is 2 regardless of shape (Barrowman); only its CP location and Cd vary by shape.
+      const NOSE = {
+        conical:   { label: "Conical",   cd: 0.35, xnRatio: 0.666, icon: "▲" },
+        ogive:     { label: "Ogive",     cd: 0.30, xnRatio: 0.466, icon: "◗" },
+        parabolic: { label: "Parabolic", cd: 0.50, xnRatio: 0.500, icon: "◔" },
+      };
+
+      /* ============ STATE ============ */
+      const S = {
+        view: "design",
+        stages: 1,
+        motorStr: "C6-5",
+        boosterMotorStr: "B6-4",
+        boosterMass: 30,   // g
+        boosterLen: 150,   // mm
+        nose: "ogive",
+        diam: 24,          // mm
+        bodyLen: 300,      // mm (sustainer body tube)
+        dryMass: 50,       // g (sustainer)
+        finN: 3, finCr: 60, finCt: 30, finSpan: 50, finSweep: 20, // mm
+        cgX: null,         // mm from nose tip — set to a sane default once geometry is known
+        recoveryMode: "motor",
+        recArea: 900,      // cm^2
+        backupAlt: 150,    // m
+        launchAngleDeg: 0,
+        wind: 0,
+        draggingCG: false,
+        flight: null,
+        history: [],
+      };
+
+      function design() {
+        const noseLen = NOSE_LEN_RATIO * S.diam;
+        const totalLen = noseLen + S.bodyLen;
+        if (S.cgX == null) S.cgX = totalLen * 0.55;
+        S.cgX = clamp(S.cgX, 2, totalLen - 2);
+        return { noseLen, totalLen, diam: S.diam };
+      }
+
+      function computeCP(d) {
+        const Xn = NOSE[S.nose].xnRatio * d.noseLen;
+        const CNn = 2;
+        const Rs = S.diam / 2;
+        const Xb = d.totalLen - S.finCr; // fin root leading edge, fins mounted flush with the tail
+        const Lf = Math.sqrt(S.finSpan ** 2 + (S.finSweep + S.finCt / 2 - S.finCr / 2) ** 2);
+        const Kfb = 1 + Rs / (S.finSpan + Rs);
+        const CNf = S.finN > 0
+          ? (Kfb * 4 * S.finN * (S.finSpan / S.diam) ** 2) / (1 + Math.sqrt(1 + (2 * Lf / (S.finCr + S.finCt)) ** 2))
+          : 0;
+        const XfLocal = S.finN > 0
+          ? (S.finSweep * (S.finCr + 2 * S.finCt)) / (3 * (S.finCr + S.finCt)) +
+            (1 / 6) * ((S.finCr + S.finCt) - (S.finCr * S.finCt) / (S.finCr + S.finCt))
+          : 0;
+        const Xf = Xb + XfLocal;
+        const CNtotal = CNn + CNf;
+        const Xcp = (CNn * Xn + CNf * Xf) / CNtotal;
+        return { Xn, Xf, CNn, CNf, CNtotal, Xcp, Xb };
+      }
+
+      function marginOf(cp, d) { return (cp.Xcp - S.cgX) / S.diam; }
+      function classify(m) { return m < 1 ? "unstable" : m <= 2 ? "marginal" : "stable"; }
+      function classifyLabel(c) { return c === "stable" ? "STABLE" : c === "marginal" ? "MARGINAL" : "UNSTABLE"; }
+
+      function liftoffMassKg(motor, boosterMotor) {
+        let m = S.dryMass / 1000 + (motor ? motor.propMass : 0);
+        if (S.stages === 2) {
+          m += S.boosterMass / 1000 + (boosterMotor ? boosterMotor.propMass : 0);
+        }
+        return m;
+      }
+
+      function momentOfInertia(d, massKg) {
+        const L = d.totalLen / 1000;
+        return (1 / 12) * massKg * L * L;
+      }
+
+      /* ============ WHY POPUPS ============ */
+      const WHY = {
+        margin: {
+          title: "Static Margin & the 1–2 Caliber Rule",
+          body: "<p>Static margin is the distance between the Center of Pressure (where aerodynamic force effectively pushes) and the Center of Gravity (where the rocket balances), measured in body diameters — \"calibers.\"</p><p>When the CP sits <b>behind</b> the CG by 1–2 calibers, any nudge off vertical creates a restoring force that points the rocket back the way it came — <b>stable</b>. Below 1 caliber that restoring effect is weak or reversed, and the rocket can tumble instead of flying straight.</p>",
+        },
+        fins: {
+          title: "Fins Move the Center of Pressure",
+          body: "<p>Bigger fins — more span, more area — carry more of the total aerodynamic force, which pulls the Center of Pressure toward them (aft, toward the tail). A rocket with small fins near the front of the airframe (relatively) has its CP close to the nose; adding fin area drags the CP rearward, increasing the static margin.</p><p>Sweep and taper (tip chord) change exactly where along the fin that force acts, which is why the CP shifts even when the span alone doesn't change.</p>",
+        },
+        weathercock: {
+          title: "Weathercocking",
+          body: "<p>A <b>stable</b> rocket naturally points its nose into the wind it feels as it climbs — the same restoring effect that keeps it flying straight also makes it lean toward the direction the wind is coming from.</p><p>Because the rocket is now thrusting at a small angle instead of straight up, it still ends up drifting <b>downwind</b> by the time it lands — even though the stability that caused the lean is a good thing, not a flaw.</p>",
+        },
+        motor: {
+          title: "Reading a Motor Designation",
+          body: "<p>A model rocket motor code like <b>C6-5</b> packs three facts into one string:</p><ul><li><b>C</b> — the impulse class. Each letter doubles the total impulse range of the one before it (A, B, C, D…).</li><li><b>6</b> — the average thrust in newtons while the motor burns.</li><li><b>5</b> — the ejection delay in seconds after burnout, before the recovery charge fires.</li></ul><p>Burn time isn't printed directly — it falls out of the class's impulse and the thrust: a bigger number after the letter burns the same impulse faster, over a shorter time.</p>",
+        },
+        delay: {
+          title: "Why the Ejection Delay Isn't a Free Choice",
+          body: "<p>The ejection delay is a real timed fuse built into the motor itself — it starts counting the instant the propellant finishes burning, and there's no way to change it without swapping to a different motor.</p><p>Picking a motor is picking a delay: too short and the parachute fires while the rocket is still climbing hard; too long and it free-falls well past apogee before recovery deploys. Matching the delay to the coast time is part of choosing the right motor for a design.</p>",
+        },
+      };
+      function showWhy(key) {
+        const w = WHY[key];
+        if (!w) return;
+        $("whyTitle").textContent = w.title;
+        $("whyBody").innerHTML = w.body;
+        $("whyScrim").classList.add("show");
+      }
+      document.querySelectorAll("[data-why]").forEach((el) => {
+        el.addEventListener("click", () => showWhy(el.dataset.why));
+      });
+      $("whyClose").addEventListener("click", () => $("whyScrim").classList.remove("show"));
+      $("whyScrim").addEventListener("click", (e) => { if (e.target.id === "whyScrim") $("whyScrim").classList.remove("show"); });
+
+      /* ============ CONTROLS WIRING ============ */
+      function bindRange(id, valId, fmt, onSet) {
+        const el = $(id);
+        el.addEventListener("input", () => {
+          const v = parseFloat(el.value);
+          onSet(v);
+          $(valId).textContent = fmt(v);
+          refreshAll();
+        });
+      }
+      bindRange("diam", "diamVal", (v) => v + " mm", (v) => (S.diam = v));
+      bindRange("bodyLen", "bodyLenVal", (v) => v + " mm", (v) => (S.bodyLen = v));
+      bindRange("dryMass", "dryMassVal", (v) => v + " g", (v) => (S.dryMass = v));
+      bindRange("boosterMass", "boosterMassVal", (v) => v + " g", (v) => (S.boosterMass = v));
+      bindRange("boosterLen", "boosterLenVal", (v) => v + " mm", (v) => (S.boosterLen = v));
+      bindRange("finN", "finNVal", (v) => String(v), (v) => (S.finN = v));
+      bindRange("finCr", "finCrVal", (v) => v + " mm", (v) => (S.finCr = v));
+      bindRange("finCt", "finCtVal", (v) => v + " mm", (v) => (S.finCt = v));
+      bindRange("finSpan", "finSpanVal", (v) => v + " mm", (v) => (S.finSpan = v));
+      bindRange("finSweep", "finSweepVal", (v) => v + " mm", (v) => (S.finSweep = v));
+      bindRange("recArea", "recAreaVal", (v) => v + " cm²", (v) => (S.recArea = v));
+      bindRange("backupAlt", "backupAltVal", (v) => v + " m", (v) => (S.backupAlt = v));
+      bindRange("launchAngle", "launchAngleVal", (v) => v + "°", (v) => (S.launchAngleDeg = v));
+      bindRange("wind", "windVal", (v) => v.toFixed(1) + " m/s", (v) => (S.wind = v));
+
+      document.querySelectorAll(".finslider").forEach((el) => {
+        el.addEventListener("pointerup", () => showWhy("fins"));
+      });
+
+      $("noseSeg").querySelectorAll("button").forEach((b) => {
+        b.addEventListener("click", () => {
+          $("noseSeg").querySelectorAll("button").forEach((x) => x.classList.remove("on"));
+          b.classList.add("on");
+          S.nose = b.dataset.k;
+          refreshAll();
+        });
+      });
+      $("recSeg").querySelectorAll("button").forEach((b) => {
+        b.addEventListener("click", () => {
+          $("recSeg").querySelectorAll("button").forEach((x) => x.classList.remove("on"));
+          b.classList.add("on");
+          S.recoveryMode = b.dataset.k;
+          $("backupCtl").style.display = S.recoveryMode === "dual" ? "" : "none";
+        });
+      });
+      $("stageTog").addEventListener("change", (e) => {
+        S.stages = e.target.checked ? 2 : 1;
+        $("boosterCtl").style.display = S.stages === 2 ? "" : "none";
+        refreshAll();
+      });
+
+      let motorParsed = parseMotor(S.motorStr);
+      let boosterParsed = parseMotor(S.boosterMotorStr);
+      function updateMotorReadout(inputEl, readoutEl, parsed, label) {
+        inputEl.classList.toggle("bad", !parsed);
+        if (!parsed) {
+          readoutEl.innerHTML = '<span class="bad">Not a recognized designation — try a letter A–O, a thrust number, a dash, then a delay (or P for plugged), e.g. C6-5.</span>';
+          return;
+        }
+        const delayTxt = parsed.delay == null ? "plugged (no ejection)" : parsed.delay + " s";
+        readoutEl.innerHTML =
+          `Class <b>${parsed.cls}</b> (${parsed.range.lo}–${parsed.range.hi} N·s) · Avg Thrust <b>${parsed.favg} N</b> · Burn <b>${parsed.tBurn.toFixed(2)} s</b> · Delay <span class="delaytag" data-why="delay"><b>${delayTxt}</b></span>`;
+        readoutEl.querySelectorAll("[data-why]").forEach((el) => el.addEventListener("click", () => showWhy(el.dataset.why)));
+      }
+      $("motorInput").addEventListener("input", (e) => {
+        S.motorStr = e.target.value;
+        motorParsed = parseMotor(S.motorStr);
+        updateMotorReadout($("motorInput"), $("motorReadout"), motorParsed, "sustainer");
+        refreshAll();
+      });
+      $("boosterMotorInput").addEventListener("input", (e) => {
+        S.boosterMotorStr = e.target.value;
+        boosterParsed = parseMotor(S.boosterMotorStr);
+        updateMotorReadout($("boosterMotorInput"), $("boosterReadout"), boosterParsed, "booster");
+        refreshAll();
+      });
+      updateMotorReadout($("motorInput"), $("motorReadout"), motorParsed, "sustainer");
+      updateMotorReadout($("boosterMotorInput"), $("boosterReadout"), boosterParsed, "booster");
+
+      /* ============ VIEW TABS ============ */
+      $("viewTabs").querySelectorAll("button").forEach((b) => {
+        b.addEventListener("click", () => {
+          if (b.dataset.v === "flight" && !S.flight) return; // nothing to show yet
+          setView(b.dataset.v);
+        });
+      });
+      function setView(v) {
+        S.view = v;
+        $("viewTabs").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x.dataset.v === v));
+        $("hud").classList.toggle("show", v === "flight");
+        $("backBtn").style.display = v === "flight" ? "" : "none";
+        $("commitBtn").style.display = v === "flight" ? "none" : "";
+      }
+      $("backBtn").addEventListener("click", () => setView("design"));
+
+      /* ============ CHECKLIST / LAUNCH ============ */
+      $("commitBtn").addEventListener("click", openChecklist);
+      $("checklistCancel").addEventListener("click", () => $("checklistScrim").classList.remove("show"));
+      $("checklistScrim").addEventListener("click", (e) => { if (e.target.id === "checklistScrim") $("checklistScrim").classList.remove("show"); });
+
+      function openChecklist() {
+        const d = design();
+        const cp = computeCP(d);
+        const m = marginOf(cp, d);
+        const cls = classify(m);
+        const mass = liftoffMassKg(motorParsed, boosterParsed);
+        const I = momentOfInertia(d, mass);
+        $("c_margin").textContent = m.toFixed(2) + " cal — " + classifyLabel(cls);
+        $("c_margin").className = cls;
+        $("c_mass").textContent = (mass * 1000).toFixed(0) + " g";
+        $("c_motors").textContent = S.stages === 2
+          ? `${S.motorStr.toUpperCase()} (sustainer) + ${S.boosterMotorStr.toUpperCase()} (booster)`
+          : S.motorStr.toUpperCase();
+        $("c_moi").textContent = I.toFixed(5) + " kg·m²";
+        const warnEl = $("checklistWarn");
+        const problems = [];
+        if (!motorParsed) problems.push("Sustainer motor designation isn't valid.");
+        if (S.stages === 2 && !boosterParsed) problems.push("Booster motor designation isn't valid.");
+        if (cls === "unstable") problems.push("Static margin is below 1 caliber — this design is likely to tumble.");
+        warnEl.innerHTML = problems.map((p) => "⚠ " + p).join("<br/>");
+        warnEl.classList.toggle("show", problems.length > 0);
+        $("commitLaunch").disabled = !motorParsed || (S.stages === 2 && !boosterParsed);
+        $("commitLaunch").style.opacity = $("commitLaunch").disabled ? 0.4 : 1;
+        $("checklistScrim").classList.add("show");
+      }
+      $("commitLaunch").addEventListener("click", () => {
+        if (!motorParsed || (S.stages === 2 && !boosterParsed)) return;
+        $("checklistScrim").classList.remove("show");
+        launchFlight();
+      });
+
+      /* ============ HELP MANUAL ============ */
+      $("helpBtn").addEventListener("click", () => $("manualScrim").classList.add("show"));
+      $("manualClose").addEventListener("click", () => $("manualScrim").classList.remove("show"));
+      $("manualScrim").addEventListener("click", (e) => { if (e.target.id === "manualScrim") $("manualScrim").classList.remove("show"); });
+
+      /* ============ FLIGHT SIMULATION (RK4) ============ */
+      function motorState(t, motor, dryKg) {
+        if (!motor) return { thrust: 0, mass: dryKg };
+        if (t < motor.tBurn) {
+          const propRemain = motor.propMass * (1 - t / motor.tBurn);
+          return { thrust: motor.favg, mass: dryKg + propRemain };
+        }
+        return { thrust: 0, mass: dryKg };
+      }
+
+      function launchFlight() {
+        const d = design();
+        const cp = computeCP(d);
+        const margin = marginOf(cp, d);
+        const leverArm = (cp.Xcp - S.cgX) / 1000; // m
+        const diamM = S.diam / 1000;
+        const A = Math.PI * (diamM / 2) ** 2;
+        const L = d.totalLen / 1000;
+        const cd = NOSE[S.nose].cd;
+        const dryKgSustainer = S.dryMass / 1000;
+        const dryKgBooster = S.boosterMass / 1000;
+        const staged = S.stages === 2;
+        const tBurnBooster = staged ? boosterParsed.tBurn : 0;
+        const massAtLiftoff = liftoffMassKg(motorParsed, staged ? boosterParsed : null);
+        const I = momentOfInertia(d, massAtLiftoff);
+        const CNalpha = cp.CNtotal;
+        const windX = S.wind;
+        const launchRad = S.launchAngleDeg * D2R;
+        const recAreaM2 = S.recArea / 10000; // cm^2 -> m^2
+        const drogueAreaM2 = recAreaM2 * DROGUE_AREA_FRAC;
+        const backupAltM = S.backupAlt;
+
+        function stackState(t) {
+          if (!staged) {
+            const ms = motorState(t, motorParsed, dryKgSustainer);
+            return { thrust: ms.thrust, mass: ms.mass, sepEvent: false };
+          }
+          if (t < tBurnBooster) {
+            const bp = boosterParsed.propMass * (1 - t / tBurnBooster);
+            const mass = dryKgSustainer + motorParsed.propMass + dryKgBooster + bp;
+            return { thrust: boosterParsed.favg, mass, sepEvent: false };
+          }
+          const ms = motorState(t - tBurnBooster, motorParsed, dryKgSustainer);
+          return { thrust: ms.thrust, mass: ms.mass, sepEvent: t - tBurnBooster < 1e-9 };
+        }
+
+        let state = { x: 0, y: 0.05, vx: 0, vy: 0, theta: launchRad + MFG_TILT_DEG * D2R, omega: 0 };
+        let t = 0;
+        const dt = 1 / 240;
+        const maxT = 90;
+        const history = { t: [], x: [], y: [], v: [], accG: [], theta: [] };
+        const events = []; // {t, x, y, label}
+        let apogeeT = null, apogeeAlt = 0, apogeeDown = 0;
+        let recoveryPhase = "none"; // none | drogue | main
+        let deployedAtSpeed = null, deployShock = false;
+        let boosterSepSpeed = null, boosterSeparated = !staged;
+        let sustainerBurnout = staged ? tBurnBooster + motorParsed.tBurn : motorParsed.tBurn;
+        let weathercockDeg = 0, weathercockCaptured = false;
+        let tumbled = false;
+        let outcome = null;
+        let landed = false, landSpeed = 0;
+        let lastAccMag = 0;
+        let onRod = true; // held to the launch angle until it clears the rod — see ROD_LEN
+
+        function currentDragArea() {
+          if (recoveryPhase === "main") return { cd: CD_REC, A: recAreaM2 };
+          if (recoveryPhase === "drogue") return { cd: CD_REC, A: drogueAreaM2 };
+          return { cd, A };
+        }
+
+        function deriv(s, tt) {
+          const ss = stackState(tt);
+          const drag = currentDragArea();
+          const vrelx = s.vx - windX, vrely = s.vy;
+          const vrel = Math.hypot(vrelx, vrely);
+          const q = 0.5 * RHO * vrel * vrel;
+          const dragMag = drag.cd * q * drag.A;
+          const dragx = vrel > 1e-6 ? -dragMag * (vrelx / vrel) : 0;
+          const dragy = vrel > 1e-6 ? -dragMag * (vrely / vrel) : 0;
+          const ax = (ss.thrust * Math.sin(s.theta) + dragx) / ss.mass;
+          const ay = (ss.thrust * Math.cos(s.theta) + dragy) / ss.mass - G;
+          let domega = 0, dtheta = s.omega;
+          if (onRod) {
+            dtheta = 0; domega = 0; // rigidly constrained to the launch angle while still on the rod
+          } else if (recoveryPhase === "none") {
+            const thetaWind = Math.atan2(vrelx, Math.max(vrely, 1e-6));
+            const cdamp = K_DAMP * 0.5 * RHO * vrel * A * L * L;
+            const torque = -leverArm * CNalpha * q * A * Math.sin(s.theta - thetaWind) - cdamp * s.omega;
+            domega = torque / I;
+          } else {
+            domega = -3 * s.omega; // recovery system + drag quickly settles attitude once deployed
+          }
+          return { x: s.vx, y: s.vy, vx: ax, vy: ay, theta: dtheta, omega: domega, _ax: ax, _ay: ay };
+        }
+        function addState(a, b, k) {
+          return {
+            x: a.x + b.x * k, y: a.y + b.y * k, vx: a.vx + b.vx * k, vy: a.vy + b.vy * k,
+            theta: a.theta + b.theta * k, omega: a.omega + b.omega * k,
+          };
+        }
+
+        let steps = 0;
+        const maxSteps = Math.ceil(maxT / dt) + 10;
+        while (!landed && steps < maxSteps) {
+          if (onRod && Math.hypot(state.x, state.y) >= ROD_LEN) onRod = false;
+          const ss = stackState(t);
+          if (ss.sepEvent && !boosterSeparated) {
+            boosterSeparated = true;
+            boosterSepSpeed = Math.hypot(state.vx, state.vy);
+            events.push({ t, x: state.x, y: state.y, label: "STAGE SEPARATION" });
+          }
+
+          const k1 = deriv(state, t);
+          const k2 = deriv(addState(state, k1, dt / 2), t + dt / 2);
+          const k3 = deriv(addState(state, k2, dt / 2), t + dt / 2);
+          const k4 = deriv(addState(state, k3, dt), t + dt);
+          const next = {
+            x: state.x + (dt / 6) * (k1.x + 2 * k2.x + 2 * k3.x + k4.x),
+            y: state.y + (dt / 6) * (k1.y + 2 * k2.y + 2 * k3.y + k4.y),
+            vx: state.vx + (dt / 6) * (k1.vx + 2 * k2.vx + 2 * k3.vx + k4.vx),
+            vy: state.vy + (dt / 6) * (k1.vy + 2 * k2.vy + 2 * k3.vy + k4.vy),
+            theta: state.theta + (dt / 6) * (k1.theta + 2 * k2.theta + 2 * k3.theta + k4.theta),
+            omega: state.omega + (dt / 6) * (k1.omega + 2 * k2.omega + 2 * k3.omega + k4.omega),
+          };
+
+          if (state.vy > 0 && next.vy <= 0 && apogeeT === null) {
+            apogeeT = t; apogeeAlt = state.y; apogeeDown = state.x;
+          }
+          if (!weathercockCaptured && t > sustainerBurnout * 0.5 && t < sustainerBurnout + 1.5 && Math.hypot(next.vx - windX, next.vy) > 3) {
+            weathercockDeg = Math.abs(next.theta * R2D);
+            weathercockCaptured = true;
+          }
+          if (Math.abs(next.theta * R2D) > TUMBLE_DEG) tumbled = true;
+
+          // recovery state machine
+          if (recoveryPhase === "none" && t >= sustainerBurnout && motorParsed.delay != null) {
+            const deployT = sustainerBurnout + motorParsed.delay;
+            if (t >= deployT) {
+              recoveryPhase = S.recoveryMode === "dual" ? "drogue" : "main";
+              deployedAtSpeed = Math.abs(next.vy);
+              if (deployedAtSpeed > DEPLOY_SHOCK_V) deployShock = true;
+              events.push({ t, x: next.x, y: next.y, label: recoveryPhase === "drogue" ? "DROGUE DEPLOY" : "MAIN DEPLOY" });
+            }
+          }
+          if (recoveryPhase === "drogue" && next.y <= backupAltM && apogeeT !== null) {
+            recoveryPhase = "main";
+            const spd = Math.abs(next.vy);
+            if (spd > DEPLOY_SHOCK_V) deployShock = true;
+            events.push({ t, x: next.x, y: next.y, label: "MAIN DEPLOY" });
+          }
+
+          state = next; t += dt; steps++;
+          const accMag = Math.hypot(k1._ax, k1._ay + G) ; // approx net accel magnitude incl. gravity removed for "felt" g
+          lastAccMag = Math.hypot(k1._ax, k1._ay);
+          if (steps % 6 === 0) {
+            history.t.push(t); history.x.push(state.x); history.y.push(Math.max(0, state.y));
+            history.v.push(Math.hypot(state.vx, state.vy));
+            history.accG.push(lastAccMag / G);
+            history.theta.push(state.theta * R2D);
+          }
+          if (t > 0.5 && state.y <= 0 && state.vy < 0) { landed = true; landSpeed = Math.abs(state.vy); state.y = 0; }
+        }
+        if (!landed) { landed = true; landSpeed = Math.abs(state.vy); }
+
+        // mission outcome
+        let cause, mode, sev;
+        if (tumbled) {
+          mode = "Unstable Ascent"; sev = "fail";
+          cause = `The rocket tumbled — the static margin (${margin.toFixed(2)} cal) put the Center of Pressure too close to, or ahead of, the Center of Gravity.`;
+        } else if (staged && boosterSepSpeed !== null && boosterSepSpeed < SEPARATION_MIN_V) {
+          mode = "Separation Anomaly"; sev = "fail";
+          cause = `The booster separated at only ${boosterSepSpeed.toFixed(1)} m/s — too slow for a clean stage separation.`;
+        } else if (deployShock) {
+          mode = "Structural Overload"; sev = "fail";
+          cause = `The recovery system deployed at ${deployedAtSpeed ? deployedAtSpeed.toFixed(0) : "?"} m/s — well beyond what the airframe or harness is built to survive.`;
+        } else if (recoveryPhase === "none" || landSpeed > LAND_SAFE_HI) {
+          mode = "Recovery Failure"; sev = "fail";
+          cause = recoveryPhase === "none"
+            ? "The recovery system never deployed — check the motor's ejection delay and recovery mode."
+            : `Landed at ${landSpeed.toFixed(1)} m/s — faster than the ${LAND_SAFE_HI} m/s safe-descent limit.`;
+        } else {
+          mode = "Nominal Recovery"; sev = "ok";
+          cause = landSpeed < LAND_SAFE_LO
+            ? `Landed softly at ${landSpeed.toFixed(1)} m/s — under the ${LAND_SAFE_LO} m/s target band (a slightly bigger chute than needed).`
+            : `Landed at ${landSpeed.toFixed(1)} m/s — inside the ${LAND_SAFE_LO}–${LAND_SAFE_HI} m/s safe-descent band.`;
+        }
+
+        S.flight = {
+          history, events, apogeeAlt, apogeeDown, apogeeT, landSpeed,
+          finalX: state.x, margin, outcome: { mode, cause, sev },
+          weathercockDeg: weathercockCaptured ? weathercockDeg : null,
+          wind: S.wind, maxT: t, cp, d,
+          replayIdx: 0, playing: true, playT: 0,
+        };
+        S.history.push(S.flight);
+        populateOutputs(S.flight);
+        setView("flight");
+      }
+
+      function populateOutputs(f) {
+        $("o_apoAlt").textContent = f.apogeeAlt.toFixed(1) + " m";
+        $("o_apoDown").textContent = f.apogeeDown.toFixed(1) + " m";
+        $("o_weather").textContent = f.weathercockDeg != null ? f.weathercockDeg.toFixed(1) + "°" : (S.wind > 0 ? "—" : "no wind");
+        $("o_landDown").textContent = f.finalX.toFixed(1) + " m";
+        $("o_landSpeed").textContent = f.landSpeed.toFixed(1) + " m/s";
+        const banner = $("outcomeBanner");
+        banner.className = "show " + f.outcome.sev;
+        banner.innerHTML = `<b>${f.outcome.mode}</b>${f.outcome.cause}`;
+        $("miniGraphs").classList.add("show");
+        drawMiniGraphs(f);
+      }
+
+      /* ============ CANVAS: shared setup ============ */
+      const cv = $("scene"), ctx = cv.getContext("2d");
+      let CW = 0, CH = 0;
+      function fitScene() {
+        const dpr = Math.max(1, window.devicePixelRatio || 1);
+        const r = cv.parentElement.getBoundingClientRect();
+        cv.width = Math.max(1, Math.round(r.width * dpr));
+        cv.height = Math.max(1, Math.round(r.height * dpr));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        CW = r.width; CH = r.height;
+      }
+      window.addEventListener("resize", fitScene);
+
+      const finCv = $("finCanvas"), finCtx = finCv.getContext("2d");
+      function fitFin() {
+        const dpr = Math.max(1, window.devicePixelRatio || 1);
+        const r = finCv.getBoundingClientRect();
+        finCv.width = Math.max(1, Math.round(r.width * dpr));
+        finCv.height = Math.max(1, Math.round(r.height * dpr));
+        finCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      const gaugeCv = $("stabGauge"), gaugeCtx = gaugeCv.getContext("2d");
+      function fitGauge() {
+        const dpr = Math.max(1, window.devicePixelRatio || 1);
+        const r = gaugeCv.getBoundingClientRect();
+        gaugeCv.width = Math.max(1, Math.round(r.width * dpr));
+        gaugeCv.height = Math.max(1, Math.round(r.height * dpr));
+        gaugeCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      const velCv = $("gVel"), velCtx = velCv.getContext("2d");
+      const pitchCv = $("gPitch"), pitchCtx = pitchCv.getContext("2d");
+      function fitMini(c) {
+        const dpr = Math.max(1, window.devicePixelRatio || 1);
+        const r = c.getBoundingClientRect();
+        c.width = Math.max(1, Math.round(r.width * dpr));
+        c.height = Math.max(1, Math.round(r.height * dpr));
+        c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function rr(c, x, y, w, h, r) {
+        r = Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2);
+        c.beginPath();
+        c.moveTo(x + r, y);
+        c.arcTo(x + w, y, x + w, y + h, r);
+        c.arcTo(x + w, y + h, x, y + h, r);
+        c.arcTo(x, y + h, x, y, r);
+        c.arcTo(x, y, x + w, y, r);
+        c.closePath();
+      }
+
+      /* ============ DESIGN VIEW: side-view rocket ============ */
+      function drawNoseShape(c, len, diam, shape) {
+        const halfD = diam / 2;
+        c.beginPath();
+        if (shape === "conical") {
+          c.moveTo(0, 0);
+          c.lineTo(len, -halfD);
+          c.lineTo(len, halfD);
+          c.closePath();
+        } else if (shape === "ogive") {
+          c.moveTo(0, 0);
+          c.quadraticCurveTo(len * 0.55, -halfD * 0.35, len, -halfD);
+          c.lineTo(len, halfD);
+          c.quadraticCurveTo(len * 0.55, halfD * 0.35, 0, 0);
+        } else {
+          c.moveTo(0, 0);
+          c.quadraticCurveTo(len * 0.75, -halfD * 0.9, len, -halfD);
+          c.lineTo(len, halfD);
+          c.quadraticCurveTo(len * 0.75, halfD * 0.9, 0, 0);
+        }
+        c.closePath();
+      }
+
+      function drawFinShape(c, rootX, tailX, halfD, cr, ct, span, sweep, flip) {
+        const s = flip ? -1 : 1;
+        c.beginPath();
+        c.moveTo(rootX, s * halfD);
+        c.lineTo(rootX + cr, s * halfD);
+        c.lineTo(rootX + sweep + ct, s * (halfD + span));
+        c.lineTo(rootX + sweep, s * (halfD + span));
+        c.closePath();
+      }
+
+      function drawDesign() {
+        ctx.clearRect(0, 0, CW, CH);
+        const g = ctx.createLinearGradient(0, 0, 0, CH);
+        g.addColorStop(0, "#0a0f1c"); g.addColorStop(1, "#050810");
+        ctx.fillStyle = g; ctx.fillRect(0, 0, CW, CH);
+        ctx.fillStyle = "#040812";
+        ctx.strokeStyle = "rgba(0,242,254,0.05)";
+        for (let x = 0; x < CW; x += 24) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, CH); ctx.stroke(); }
+        for (let y = 0; y < CH; y += 24) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CW, y); ctx.stroke(); }
+
+        const d = design();
+        const cp = computeCP(d);
+        const totalLenPx = Math.min(CW * 0.72, CH * 0.62);
+        const scale = totalLenPx / d.totalLen;
+        const cx = CW * 0.5, cy = CH * 0.52;
+        const originX = cx - (d.totalLen * scale) / 2;
+
+        ctx.save();
+        ctx.translate(originX, cy);
+        ctx.scale(scale, scale);
+
+        // body tube
+        ctx.fillStyle = "#1e2a42";
+        ctx.strokeStyle = "rgba(255,255,255,0.25)";
+        ctx.lineWidth = 1 / scale;
+        rr(ctx, d.noseLen, -S.diam / 2, S.bodyLen, S.diam, S.diam * 0.06);
+        ctx.fill(); ctx.stroke();
+
+        // booster segment (visual only, stacked below if 2 stages)
+        if (S.stages === 2) {
+          ctx.fillStyle = "#141d30";
+          rr(ctx, d.totalLen, -S.diam / 2, S.boosterLen, S.diam, S.diam * 0.06);
+          ctx.fill(); ctx.stroke();
+          ctx.strokeStyle = "rgba(255,107,53,0.7)";
+          ctx.setLineDash([4 / scale, 3 / scale]);
+          ctx.beginPath(); ctx.moveTo(d.totalLen, -S.diam / 2 - 4 / scale); ctx.lineTo(d.totalLen, S.diam / 2 + 4 / scale); ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        // nose
+        ctx.fillStyle = "#d4dae4";
+        drawNoseShape(ctx, d.noseLen, S.diam, S.nose);
+        ctx.fill(); ctx.stroke();
+
+        // fins (on sustainer tail)
+        const finRootX = d.totalLen - S.finCr;
+        ctx.fillStyle = "#00c9d6";
+        [false, true].forEach((flip) => {
+          drawFinShape(ctx, finRootX, d.totalLen, S.diam / 2, S.finCr, S.finCt, S.finSpan, S.finSweep, flip);
+          ctx.fill(); ctx.stroke();
+        });
+
+        // CP marker (computed, not draggable)
+        ctx.strokeStyle = "#ff6b35"; ctx.lineWidth = 2 / scale;
+        ctx.beginPath(); ctx.moveTo(cp.Xcp, -S.diam / 2 - 10 / scale); ctx.lineTo(cp.Xcp, S.diam / 2 + 10 / scale); ctx.stroke();
+        ctx.fillStyle = "#ff6b35"; ctx.font = `${11 / scale}px monospace`; ctx.textAlign = "center";
+        ctx.fillText("CP", cp.Xcp, -S.diam / 2 - 13 / scale);
+
+        // CG marker (draggable)
+        ctx.strokeStyle = "#22c55e"; ctx.lineWidth = 2.5 / scale;
+        ctx.beginPath(); ctx.moveTo(S.cgX, -S.diam / 2 - 10 / scale); ctx.lineTo(S.cgX, S.diam / 2 + 10 / scale); ctx.stroke();
+        ctx.beginPath(); ctx.arc(S.cgX, S.diam / 2 + 14 / scale, 6 / scale, 0, TAU); ctx.fillStyle = "#22c55e"; ctx.fill();
+        ctx.fillStyle = "#22c55e"; ctx.fillText("CG (drag me)", S.cgX, S.diam / 2 + 30 / scale);
+
+        ctx.restore();
+
+        // stash transform info for pointer hit-testing
+        S._designXform = { originX, cy, scale, totalLen: d.totalLen };
+      }
+
+      cv.addEventListener("pointerdown", (e) => {
+        if (S.view !== "design" || !S._designXform) return;
+        const rect = cv.getBoundingClientRect();
+        const px = e.clientX - rect.left;
+        const xf = S._designXform;
+        const localX = (px - xf.originX) / xf.scale;
+        if (localX > -20 && localX < xf.totalLen + 20) {
+          S.draggingCG = true;
+          cv.setPointerCapture(e.pointerId);
+        }
+      });
+      cv.addEventListener("pointermove", (e) => {
+        if (!S.draggingCG || !S._designXform) return;
+        const rect = cv.getBoundingClientRect();
+        const px = e.clientX - rect.left;
+        const xf = S._designXform;
+        const localX = (px - xf.originX) / xf.scale;
+        S.cgX = clamp(localX, 2, xf.totalLen - 2);
+        refreshAll();
+      });
+      function stopDrag() { S.draggingCG = false; }
+      cv.addEventListener("pointerup", stopDrag);
+      cv.addEventListener("pointercancel", stopDrag);
+
+      /* ============ FIN MINI CANVAS ============ */
+      function drawFinCanvas() {
+        const r = finCv.getBoundingClientRect();
+        const w = r.width, h = r.height;
+        finCtx.clearRect(0, 0, w, h);
+        const span = S.finSpan, cr = S.finCr, ct = S.finCt, sweep = S.finSweep;
+        const maxDim = Math.max(cr + sweep + ct, span * 2, 1);
+        const scale = Math.min(w * 0.85, h * 0.8) / maxDim;
+        const cx = w / 2, cy = h / 2;
+        finCtx.save();
+        finCtx.translate(cx, cy);
+        finCtx.strokeStyle = "rgba(255,255,255,.25)"; finCtx.lineWidth = 1;
+        finCtx.beginPath(); finCtx.moveTo(-maxDim * scale * 0.5, 0); finCtx.lineTo(maxDim * scale * 0.5, 0); finCtx.stroke();
+        finCtx.scale(scale, scale);
+        finCtx.translate(-cr / 2, 0);
+        finCtx.fillStyle = "#00c9d6"; finCtx.strokeStyle = "rgba(255,255,255,.5)"; finCtx.lineWidth = 1 / scale;
+        for (let i = 0; i < S.finN; i++) {
+          finCtx.save();
+          finCtx.globalAlpha = i === 0 ? 1 : 0.35;
+          const yoff = (i - (S.finN - 1) / 2) * (span * 0.02);
+          finCtx.beginPath();
+          finCtx.moveTo(0, yoff);
+          finCtx.lineTo(cr, yoff);
+          finCtx.lineTo(sweep + ct, span * 0.9 + yoff);
+          finCtx.lineTo(sweep, span * 0.9 + yoff);
+          finCtx.closePath();
+          finCtx.fill(); finCtx.stroke();
+          finCtx.restore();
+        }
+        finCtx.restore();
+      }
+
+      /* ============ STABILITY GAUGE ============ */
+      function drawGauge(margin, cls) {
+        const r = gaugeCv.getBoundingClientRect();
+        const w = r.width, h = r.height;
+        gaugeCtx.clearRect(0, 0, w, h);
+        const cx = w / 2, cy = h - 10, radius = Math.min(w, h * 1.7) / 2 - 8;
+        const start = Math.PI, end = 0; // semicircle
+        const maxCal = 3;
+        function angFor(v) { return start + (clamp(v, 0, maxCal) / maxCal) * (end - start); }
+        const zones = [
+          { from: 0, to: 1, color: "#ff2a85" },
+          { from: 1, to: 2, color: "#eab308" },
+          { from: 2, to: maxCal, color: "#22c55e" },
+        ];
+        gaugeCtx.lineWidth = 10; gaugeCtx.lineCap = "butt";
+        zones.forEach((z) => {
+          gaugeCtx.beginPath();
+          gaugeCtx.strokeStyle = z.color;
+          gaugeCtx.arc(cx, cy, radius, angFor(z.from), angFor(z.to), false);
+          gaugeCtx.stroke();
+        });
+        // needle
+        const na = angFor(margin);
+        gaugeCtx.strokeStyle = "#f8fafc"; gaugeCtx.lineWidth = 2.5;
+        gaugeCtx.beginPath(); gaugeCtx.moveTo(cx, cy); gaugeCtx.lineTo(cx + Math.cos(na) * (radius - 14), cy + Math.sin(na) * (radius - 14)); gaugeCtx.stroke();
+        gaugeCtx.fillStyle = "#f8fafc"; gaugeCtx.beginPath(); gaugeCtx.arc(cx, cy, 4, 0, TAU); gaugeCtx.fill();
+
+        gaugeCtx.font = "8.5px monospace"; gaugeCtx.fillStyle = "rgba(255,255,255,.55)"; gaugeCtx.textAlign = "center";
+        gaugeCtx.fillText("0", cx - radius - 2, cy + 12);
+        gaugeCtx.fillText("1", cx - radius * 0.5, cy - radius * 0.78);
+        gaugeCtx.fillText("2", cx + radius * 0.5, cy - radius * 0.78);
+        gaugeCtx.fillText("3+", cx + radius + 4, cy + 12);
+      }
+
+      /* ============ MINI OUTPUT GRAPHS ============ */
+      function drawSpark(c, ctx2, series, colors, labelMax) {
+        const r = c.getBoundingClientRect();
+        const w = r.width, h = r.height;
+        ctx2.clearRect(0, 0, w, h);
+        const allVals = series.flat();
+        const maxV = Math.max(1e-6, ...allVals.map(Math.abs));
+        const n = series[0].length;
+        if (n < 2) return;
+        series.forEach((arr, si) => {
+          ctx2.strokeStyle = colors[si]; ctx2.lineWidth = 1.5; ctx2.beginPath();
+          arr.forEach((v, i) => {
+            const x = (i / (n - 1)) * w;
+            const y = h - ((v + maxV) / (2 * maxV)) * h;
+            if (i === 0) ctx2.moveTo(x, y); else ctx2.lineTo(x, y);
+          });
+          ctx2.stroke();
+        });
+        ctx2.strokeStyle = "rgba(255,255,255,.15)"; ctx2.beginPath(); ctx2.moveTo(0, h / 2); ctx2.lineTo(w, h / 2); ctx2.stroke();
+      }
+      function drawMiniGraphs(f) {
+        fitMini(velCv); fitMini(pitchCv);
+        drawSpark(velCv, velCtx, [f.history.v, f.history.accG.map((a) => a * 3)], ["#00f2fe", "#ff6b35"]);
+        drawSpark(pitchCv, pitchCtx, [f.history.theta], ["#a855f7"]);
+      }
+
+      /* ============ FLIGHT VIEW ============ */
+      function drawFlight() {
+        ctx.clearRect(0, 0, CW, CH);
+        const f = S.flight;
+        const g = ctx.createLinearGradient(0, 0, 0, CH);
+        g.addColorStop(0, "#050810"); g.addColorStop(0.6, "#101c33"); g.addColorStop(1, "#1a2338");
+        ctx.fillStyle = g; ctx.fillRect(0, 0, CW, CH);
+        if (!f) return;
+
+        const maxAlt = Math.max(20, f.apogeeAlt * 1.15);
+        const maxRange = Math.max(20, Math.max(...f.history.x.map(Math.abs)) * 1.3, 20);
+        const groundY = CH * 0.88;
+        const padX = CW * 0.5;
+        function AY(alt) { return groundY - (alt / maxAlt) * (groundY - CH * 0.08); }
+        function AX(xm) { return padX + (xm / maxRange) * (CW * 0.42); }
+
+        ctx.fillStyle = "#0c1119"; ctx.fillRect(0, groundY, CW, CH - groundY);
+        ctx.strokeStyle = "rgba(255,255,255,.5)"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(CW, groundY); ctx.stroke();
+
+        // altitude gridlines
+        const step = maxAlt > 400 ? 100 : maxAlt > 150 ? 50 : 20;
+        ctx.font = "9px monospace"; ctx.fillStyle = "rgba(255,255,255,.4)"; ctx.textAlign = "left";
+        for (let a = 0; a <= maxAlt; a += step) {
+          const y = AY(a);
+          ctx.strokeStyle = "rgba(255,255,255,.08)"; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CW, y); ctx.stroke();
+          ctx.fillText(a + "m", 6, y - 3);
+        }
+
+        // pad marker
+        ctx.strokeStyle = "#64748b"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(padX, groundY); ctx.lineTo(padX, groundY - 18); ctx.stroke();
+
+        // trajectory
+        ctx.strokeStyle = "#00f2fe"; ctx.lineWidth = 2.2; ctx.beginPath();
+        f.history.x.forEach((x, i) => {
+          const X = AX(x), Y = AY(f.history.y[i]);
+          if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y);
+        });
+        ctx.stroke();
+
+        // event flags
+        f.events.forEach((ev) => {
+          const X = AX(ev.x), Y = AY(ev.y);
+          ctx.fillStyle = "#eab308";
+          ctx.beginPath(); ctx.arc(X, Y, 3.5, 0, TAU); ctx.fill();
+          ctx.save();
+          ctx.translate(X, Y);
+          ctx.fillStyle = "#eab308"; ctx.font = "700 9px monospace"; ctx.textAlign = "left";
+          ctx.fillText(ev.label, 6, -6);
+          ctx.restore();
+        });
+        // apogee flag
+        if (f.apogeeT != null) {
+          const X = AX(f.apogeeDown), Y = AY(f.apogeeAlt);
+          ctx.fillStyle = "#ff6b35"; ctx.beginPath(); ctx.arc(X, Y, 3.5, 0, TAU); ctx.fill();
+          ctx.fillStyle = "#ff6b35"; ctx.font = "700 9px monospace"; ctx.textAlign = "center";
+          ctx.fillText("APOGEE", X, Y - 8);
+        }
+
+        // rocket icon at current playback position
+        const idx = clamp(Math.floor(f.replayIdx), 0, f.history.x.length - 1);
+        const X = AX(f.history.x[idx]), Y = AY(f.history.y[idx]);
+        const theta = (f.history.theta[idx] || 0) * D2R;
+        ctx.save();
+        ctx.translate(X, Y);
+        ctx.rotate(theta);
+        ctx.fillStyle = "#d4dae4";
+        ctx.beginPath();
+        ctx.moveTo(0, -14); ctx.lineTo(5, -2); ctx.lineTo(5, 10); ctx.lineTo(-5, 10); ctx.lineTo(-5, -2); ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#00c9d6";
+        ctx.beginPath(); ctx.moveTo(-5, 6); ctx.lineTo(-10, 12); ctx.lineTo(-5, 12); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(5, 6); ctx.lineTo(10, 12); ctx.lineTo(5, 12); ctx.closePath(); ctx.fill();
+        ctx.restore();
+
+        // advance playback
+        if (f.playing) {
+          f.replayIdx += 2.2;
+          if (f.replayIdx >= f.history.x.length - 1) { f.replayIdx = f.history.x.length - 1; f.playing = false; }
+          const alt = f.history.y[idx] || 0;
+          const spd = f.history.v[idx] || 0;
+          $("h_alt").textContent = alt.toFixed(1) + " m";
+          $("h_vel").textContent = spd.toFixed(1) + " m/s";
+          $("h_pitch").textContent = ((f.history.theta[idx] || 0)).toFixed(1) + "°";
+          const activeEvent = f.events.find((ev) => Math.abs(ev.t - (f.history.t[idx] || 0)) < 0.05);
+          $("h_event").textContent = activeEvent ? "◆ " + activeEvent.label : "";
+        }
+      }
+
+      /* ============ MAIN LOOP ============ */
+      function refreshAll() {
+        const d = design();
+        const cp = computeCP(d);
+        const m = marginOf(cp, d);
+        const cls = classify(m);
+        $("stabVerdict").textContent = classifyLabel(cls);
+        $("stabVerdict").className = "stab-verdict " + cls;
+        $("stabSub").textContent = `margin ${m.toFixed(2)} cal · CP ${cp.Xcp.toFixed(0)}mm · CG ${S.cgX.toFixed(0)}mm`;
+        $("barMotor").textContent = S.stages === 2 ? S.motorStr.toUpperCase() + " +B" : S.motorStr.toUpperCase();
+        $("barMargin").textContent = m.toFixed(2) + " cal";
+        $("barMargin").className = "pillbadge " + cls;
+        $("delayVal").textContent = motorParsed ? (motorParsed.delay == null ? "plugged" : motorParsed.delay + " s") : "—";
+        drawGauge(m, cls);
+        drawFinCanvas();
+      }
+
+      function loop() {
+        if (S.view === "design") drawDesign();
+        else drawFlight();
+        requestAnimationFrame(loop);
+      }
+
+      function fitAll() {
+        fitScene(); fitFin(); fitGauge();
+        if (S.flight) { fitMini(velCv); fitMini(pitchCv); drawMiniGraphs(S.flight); }
+        refreshAll();
+      }
+      window.addEventListener("resize", fitAll);
+      if (window.ResizeObserver) {
+        let first = true;
+        new ResizeObserver(() => { if (first) { first = false; return; } fitAll(); }).observe(cv.parentElement);
+      }
+
+      fitAll();
+      requestAnimationFrame(loop);
+    </script>
+  </body>
+</html>
