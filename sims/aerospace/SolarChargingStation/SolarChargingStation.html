@@ -1415,23 +1415,21 @@
             rr(ctx, -11, -22, 22, 44, 3);
             ctx.fill();
 
-            // battery-level bars at the top of the screen — shows how much
-            // charge is reaching the phone as filled segments, not a number
-            const segs = 5;
-            const filled = clamp(Math.round((S.battery / 100) * segs), 0, segs);
-            const bw = 2.6,
-              bh = 5,
-              gap = 1.3;
-            const totalW = segs * bw + (segs - 1) * gap;
-            const barsY = -17;
-            ctx.fillStyle = "rgba(0,0,0,0.35)";
-            rr(ctx, -totalW / 2 - 3, barsY - bh - 2, totalW + 6, bh + 4, 2);
+            // a single horizontal battery-level bar across the bottom of the
+            // screen — the whole width of the device, filling left-to-right
+            // with the shared station's charge level, no number
+            const barW = 19,
+              barH = 4.5;
+            const barX = -barW / 2,
+              barY = 22 - barH - 2; // sits right above the screen's bottom edge
+            ctx.fillStyle = "rgba(0,0,0,0.4)";
+            rr(ctx, barX - 1, barY - 1, barW + 2, barH + 2, 2);
             ctx.fill();
-            let bx = -totalW / 2;
-            for (let i = 0; i < segs; i++) {
-              ctx.fillStyle = i < filled ? "#ffffff" : "rgba(255,255,255,0.3)";
-              ctx.fillRect(bx, barsY - bh, bw, bh);
-              bx += bw + gap;
+            const fillW = barW * clamp(S.battery / 100, 0, 1);
+            if (fillW > 0.5) {
+              ctx.fillStyle = "#ffffff";
+              rr(ctx, barX, barY, fillW, barH, 1.5);
+              ctx.fill();
             }
 
             if (on) {
