@@ -644,11 +644,11 @@
 
         <div class="ctrl">
           <div class="row">
-            <label>Panel Angle</label><span class="val" id="angleVal">90°</span>
+            <label>Panel Angle</label><span class="val" id="angleVal">0°</span>
           </div>
           <label class="autotrack"><input type="checkbox" id="autoTrackTog" checked /> Auto-Track Sun</label>
-          <input type="range" id="angleSlider" min="0" max="180" value="90" step="1" />
-          <div class="anglemarks"><span>0° right</span><span id="optimalMark">★ optimal</span><span>180° left</span></div>
+          <input type="range" id="angleSlider" min="-90" max="90" value="0" step="1" />
+          <div class="anglemarks"><span>-90° right</span><span id="optimalMark">★ optimal</span><span>90° left</span></div>
           <p class="hint">
             With Auto-Track on, the panel turns to face the sun by itself.
             Turn it off (or just drag the slider) to angle it yourself and see
@@ -786,7 +786,7 @@
           medium: { label: "Medium", power: 65 },
           high: { label: "High", power: 100 },
         };
-        const RESET_ANGLE = 90; // where the slider returns to on Reset — straight up
+        const RESET_ANGLE = 0; // where the slider returns to on Reset — straight up / flat
         const LOADS = {
           led: { label: "LED", drain: 0.6, chargingLabel: false, note: "A small LED barely drains the battery." },
           pump: { label: "Water Pump", drain: 1.6, chargingLabel: false, note: "The pump needs the battery charged past a minimum level — the water flow gets stronger as the battery fills." },
@@ -814,7 +814,7 @@
         const S = {
           timeMode: "day",
           sunlight: "medium",
-          panelAngle: 90,
+          panelAngle: 0,
           autoTrack: true,
           device: "led",
           running: false,
@@ -829,14 +829,14 @@
         };
 
         // The panel's optimal angle is no longer a fixed number — it shifts
-        // with the sun's position. Angle convention (matches drawPanel()'s
-        // rotation): 0°=facing full right, 90°=facing straight up (flat,
-        // sun overhead), 180°=facing full left. A straightforward, direct
-        // mapping from the sun's left-right sweep: dead center (sun directly
-        // overhead) is 90°, and the panel leans a clean 45° toward whichever
-        // side the sun is currently on at the extremes of its sweep.
+        // with the sun's position. Angle convention: 0°=straight up/flat
+        // (optimal when the sun is dead center), negative=tilted right,
+        // positive=tilted left, ±90° being fully on its side. A
+        // straightforward, direct mapping from the sun's left-right sweep:
+        // dead center (sun overhead) is 0°, and the panel leans a clean 45°
+        // toward whichever side the sun is currently on at the extremes.
         function computeOptimalAngle() {
-          return 135 - 90 * sunFrac;
+          return 45 - 90 * sunFrac;
         }
 
         function computeSolarRaw() {
@@ -1214,7 +1214,7 @@
           // never move — only the panel plate above the post pivots as the angle
           // changes, hinged exactly at the post's top, extending equally to both
           // sides of the pivot.
-          const angleRad = (S.panelAngle * Math.PI) / 180;
+          const angleRad = ((S.panelAngle + 90) * Math.PI) / 180;
           const pivotY = PANEL_PY - POST_H;
 
           // foot plate — fixed, sits on the ground
@@ -1253,8 +1253,9 @@
           ctx.save();
           ctx.translate(PANEL_PX, pivotY);
           // ctx.rotate operates on the coordinate system (not a direction vector).
-          // Convention: 0°=facing full right, 90°=facing straight up, 180°=facing
-          // full left — spanning the sun's whole left-to-right sweep across the sky.
+          // S.panelAngle is -90..90 here (0=straight up/flat, negative=tilts
+          // right, positive=tilts left); angleRad above already added the +90°
+          // offset this rotation needs — spanning the sun's whole sweep across the sky.
           ctx.rotate(Math.PI / 2 - angleRad);
           const onSun = S.timeMode === "day" && S.solarRaw > 0;
 
@@ -1323,7 +1324,7 @@
         }
 
         function batteryWireStart() {
-          const angleRad = (S.panelAngle * Math.PI) / 180;
+          const angleRad = ((S.panelAngle + 90) * Math.PI) / 180;
           const pivotY = PANEL_PY - POST_H;
           const theta = Math.PI / 2 - angleRad; // matches drawPanel()'s ctx.rotate()
           // matches the exposed wire-pair corner drawn in drawPanel()
