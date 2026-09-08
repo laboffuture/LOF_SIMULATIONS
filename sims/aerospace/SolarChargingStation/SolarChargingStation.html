@@ -576,6 +576,7 @@
             <li>Solar power is only generated when sunlight is available</li>
             <li>Stronger sunlight and a correctly angled panel generate more power</li>
             <li>A wrongly angled panel captures far less usable sunlight</li>
+            <li>Because the sun moves across the sky, the correctly angled position keeps changing through the day</li>
             <li>Stored battery energy can be used anytime, including at night</li>
             <li>A heavier device load drains a battery faster</li>
             <li>By day a charging station can charge its battery and power a device at the same time; by night it can only draw from what's stored</li>
@@ -629,10 +630,11 @@
             <label>Panel Angle</label><span class="val" id="angleVal">90°</span>
           </div>
           <input type="range" id="angleSlider" min="0" max="180" value="90" step="1" />
-          <div class="anglemarks"><span>0°</span><span>★ 90° optimal</span><span>180°</span></div>
+          <div class="anglemarks"><span>0° right</span><span id="optimalMark">★ optimal</span><span>180° left</span></div>
           <p class="hint">
-            Closer to the marked sweet spot faces the panel more directly at
-            the sun, so more sunlight is captured.
+            The sun moves across the sky, so the optimal angle keeps changing
+            too — closer to it faces the panel more directly at the sun, so
+            more sunlight is captured.
           </p>
         </div>
 
@@ -764,7 +766,7 @@
           medium: { label: "Medium", power: 65 },
           high: { label: "High", power: 100 },
         };
-        const OPTIMAL_ANGLE = 90; // dead center of the 0-180 range = panel lying flat/horizontal
+        const RESET_ANGLE = 90; // where the slider returns to on Reset — straight up
         const LOADS = {
           led: { label: "LED", drain: 0.6, chargingLabel: false, note: "A small LED barely drains the battery." },
           pump: { label: "Water Pump", drain: 1.6, chargingLabel: false, note: "The pump needs the battery charged past a minimum level — the water flow gets stronger as the battery fills." },
@@ -805,11 +807,24 @@
           particles: [],
         };
 
+        // The panel's optimal angle is no longer a fixed number — it's
+        // whatever angle would point the panel straight at the sun's current
+        // position, so it shifts continuously as the sun moves across the sky.
+        // Angle convention (matches drawPanel()'s rotation): 0°=facing full
+        // right, 90°=facing straight up, 180°=facing full left.
+        function computeOptimalAngle() {
+          const pivotY = PANEL_PY - POST_H;
+          const dx = SUN_X - PANEL_PX;
+          const dy = SUN_Y - pivotY; // negative: the sun sits above the pivot
+          const deg = (Math.atan2(-dy, dx) * 180) / Math.PI;
+          return clamp(deg, 0, 180);
+        }
+
         function computeSolarRaw() {
           if (S.timeMode !== "day") return 0;
           const base = SUN[S.sunlight].power;
-          const angleDiff = Math.abs(S.panelAngle - OPTIMAL_ANGLE);
-          const eff = clamp(1 - angleDiff / (OPTIMAL_ANGLE * 2), 0.15, 1);
+          const angleDiff = Math.abs(S.panelAngle - computeOptimalAngle());
+          const eff = clamp(1 - angleDiff / 180, 0.15, 1);
           return base * eff;
         }
         function solarLabel(raw) {
@@ -876,9 +891,9 @@
           S.deviceOn = false;
           S.chargingStatus = "Not Charging";
           S.particles = [];
-          S.panelAngle = OPTIMAL_ANGLE;
-          $("angleSlider").value = OPTIMAL_ANGLE;
-          $("angleVal").textContent = OPTIMAL_ANGLE + "°";
+          S.panelAngle = RESET_ANGLE;
+          $("angleSlider").value = RESET_ANGLE;
+          $("angleVal").textContent = RESET_ANGLE + "°";
           startBtn.classList.remove("on");
           startBtn.textContent = "▶ Start";
           $("statusHint").textContent = "Set the conditions, then press Start.";
@@ -930,6 +945,7 @@
         }
 
         function updateUI() {
+          $("optimalMark").textContent = S.timeMode === "day" ? "★ " + Math.round(computeOptimalAngle()) + "° optimal now" : "★ no sun at night";
           $("solarVal").textContent = solarLabel(S.solarRaw);
           $("battVal").textContent = Math.round(S.battery) + "%";
           const bf = $("battFill");
@@ -976,7 +992,7 @@
         const ctx = canvas.getContext("2d");
         const DESIGN_W = 640,
           DESIGN_H = 520;
-        let W, H, GROUND, PANEL_PX, PANEL_PY, BATT_X, BATT_Y, DEV_X, DEV_Y, SUN_BASE_X, SUN_BASE_Y, SUN_X, SUN_Y;
+        let W, H, GROUND, PANEL_PX, PANEL_PY, BATT_X, BATT_Y, DEV_X, DEV_Y, SUN_BASE_Y, SUN_X, SUN_Y;
 
         function layout() {
           const cw = Math.max(360, Math.round(canvas.clientWidth || DESIGN_W));
@@ -996,8 +1012,18 @@
           BATT_Y = GROUND - 74;
           DEV_X = W * 0.78;
           DEV_Y = GROUND - 90;
-          SUN_BASE_X = W * 0.16;
           SUN_BASE_Y = H * 0.16;
+        }
+
+        // Sweeps the sun (and moon) smoothly from the left edge of the canvas
+        // to the right edge and back — a full left-right-left cycle takes
+        // SUN_CYCLE seconds. Runs before update()/draw() each frame so the
+        // panel's optimal-angle tracking always uses the current position.
+        const SUN_CYCLE = 50;
+        function updateSunPosition(t) {
+          const frac = (1 - Math.cos((t / SUN_CYCLE) * TAU)) / 2; // smooth 0 -> 1 -> 0
+          SUN_X = W * (0.06 + frac * 0.88);
+          SUN_Y = SUN_BASE_Y + Math.sin(t * 0.05) * (H * 0.02);
         }
 
         function drawSky() {
@@ -1079,10 +1105,9 @@
         }
 
         function drawSunOrMoon(t) {
-          // the sun drifts slowly back and forth across the sky instead of sitting
-          // at a fixed point — a full drift cycle takes a couple of minutes
-          SUN_X = SUN_BASE_X + Math.sin(t * 0.04) * (W * 0.14);
-          SUN_Y = SUN_BASE_Y + Math.sin(t * 0.025) * (H * 0.03);
+          // SUN_X/SUN_Y are kept current by updateSunPosition(), called once
+          // per frame before update()/draw() so the panel's sun-tracking math
+          // and this drawing always agree on where the sun currently is
           if (S.timeMode === "day") {
             const r = 26 + Math.sin(t * 1.5) * 1.5;
             const rayLen = { low: 8, medium: 14, high: 22 }[S.sunlight];
@@ -1166,10 +1191,10 @@
 
           ctx.save();
           ctx.translate(PANEL_PX, pivotY);
-          // ctx.rotate operates on the coordinate system (not a direction vector):
-          // local "up" sweeps from straight up (0°) through horizontal (90°) to
-          // straight down (180°) as the angle increases, exactly matching the slider.
-          ctx.rotate(-angleRad);
+          // ctx.rotate operates on the coordinate system (not a direction vector).
+          // Convention: 0°=facing full right, 90°=facing straight up, 180°=facing
+          // full left — spanning the sun's whole left-to-right sweep across the sky.
+          ctx.rotate(Math.PI / 2 - angleRad);
           const onSun = S.timeMode === "day" && S.solarRaw > 0;
 
           // mount bracket, centered on the pivot — rotates with the panel
@@ -1239,7 +1264,7 @@
         function batteryWireStart() {
           const angleRad = (S.panelAngle * Math.PI) / 180;
           const pivotY = PANEL_PY - POST_H;
-          const theta = -angleRad;
+          const theta = Math.PI / 2 - angleRad; // matches drawPanel()'s ctx.rotate()
           // matches the exposed wire-pair corner drawn in drawPanel()
           const lx = PANEL_THICK / 2 + 3,
             ly = PANEL_HALFLEN;
@@ -1490,12 +1515,14 @@
           if (lastT == null) lastT = t;
           const dt = Math.min(0.05, (t - lastT) / 1000);
           lastT = t;
+          updateSunPosition(t / 1000);
           update(dt);
           updateUI();
           draw(t / 1000);
           requestAnimationFrame(loop);
         }
         layout();
+        updateSunPosition(0);
         updateUI();
         draw(0);
         requestAnimationFrame(loop);
