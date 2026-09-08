@@ -626,9 +626,9 @@
 
         <div class="ctrl">
           <div class="row">
-            <label>Panel Angle</label><span class="val" id="angleVal">0°</span>
+            <label>Panel Angle</label><span class="val" id="angleVal">90°</span>
           </div>
-          <input type="range" id="angleSlider" min="-90" max="90" value="0" step="1" />
+          <input type="range" id="angleSlider" min="-90" max="90" value="90" step="1" />
           <div class="anglemarks"><span>-90° right</span><span>★ 0° optimal</span><span>90° left</span></div>
           <p class="hint">
             Closer to the marked sweet spot faces the panel more directly at
@@ -764,13 +764,14 @@
           medium: { label: "Medium", power: 65 },
           high: { label: "High", power: 100 },
         };
-        const RESET_ANGLE = 0; // where the slider returns to on Reset — straight up / flat
+        const RESET_ANGLE = 90; // where the slider returns to on Reset — flat/horizontal
         const LOADS = {
           led: { label: "LED", drain: 0.6, chargingLabel: false, note: "A small LED barely drains the battery." },
           pump: { label: "Water Pump", drain: 1.6, chargingLabel: false, note: "The pump needs the battery charged past a minimum level — the water flow gets stronger as the battery fills." },
           phone: { label: "Phone", drain: 1.0, chargingLabel: true, note: "The phone itself shows as Charging while it draws power." },
         };
         const PUMP_MIN_BATTERY = 15; // % — below this the pump has no water pressure at all
+        const BLOOM_RAMP_TIME = 3; // seconds for the flowers to fully bloom (or wilt back down)
         const CHARGE_RATE = 5.5; // %/sec at 100% solar power
         const LOW_BATTERY_CUTOFF = 1; // % — below this, the device can't be powered
 
@@ -792,7 +793,7 @@
         const S = {
           timeMode: "day",
           sunlight: "medium",
-          panelAngle: 0,
+          panelAngle: 90,
           device: "led",
           running: false,
           battery: 0,
@@ -803,6 +804,7 @@
           chargingStatus: "Not Charging",
           pumpPhase: 0,
           pumpWatering: false,
+          bloomLevel: 0,
           particles: [],
         };
 
@@ -885,6 +887,8 @@
           S.deviceOn = false;
           S.chargingStatus = "Not Charging";
           S.particles = [];
+          S.pumpWatering = false;
+          S.bloomLevel = 0;
           S.panelAngle = RESET_ANGLE;
           $("angleSlider").value = RESET_ANGLE;
           $("angleVal").textContent = RESET_ANGLE + "°";
@@ -929,6 +933,10 @@
           const pumpIntensity = S.device === "pump" && S.deviceOn ? clamp((S.battery - PUMP_MIN_BATTERY) / (100 - PUMP_MIN_BATTERY), 0, 1) : 0;
           S.pumpWatering = pumpIntensity > 0.02;
           if (S.pumpWatering) S.pumpPhase += dt * 3.2;
+          // flowers ease into (and out of) bloom over BLOOM_RAMP_TIME seconds,
+          // instead of snapping the instant the water starts
+          const bloomTarget = S.pumpWatering ? 1 : 0;
+          S.bloomLevel = clamp(S.bloomLevel + Math.sign(bloomTarget - S.bloomLevel) * (dt / BLOOM_RAMP_TIME), 0, 1);
 
           // wire particles — panel->battery while charging, battery->device while powering
           if (Math.random() < (S.chargeActive ? 0.35 : 0)) {
@@ -1111,15 +1119,15 @@
             ctx.stroke();
           }
 
-          const bloom = S.pumpWatering; // flowers bloom bigger and brighter while the pump is actually watering them
+          const bloom = S.bloomLevel; // 0..1 — eases up as the pump waters them, and back down when it stops
           const petalColors = ["#ff6fa5", "#ffd166", "#ffffff", "#b185db", "#ff9770"];
           for (let i = 0; i < 26; i++) {
             const fx = (i * 71.9 + 15) % W;
             const fy = GROUND + (bandH * 0.2) + ((i * 37.1) % (bandH * 0.7));
-            const size = (2.4 + (i % 3)) * (bloom ? 1.7 : 1);
-            ctx.globalAlpha = bloom ? 1 : S.timeMode === "day" ? 1 : 0.55;
-            if (bloom) {
-              ctx.fillStyle = "rgba(255, 240, 190, 0.5)";
+            const size = (2.4 + (i % 3)) * (1 + bloom * 0.7);
+            ctx.globalAlpha = lerp(S.timeMode === "day" ? 1 : 0.55, 1, bloom);
+            if (bloom > 0.02) {
+              ctx.fillStyle = `rgba(255, 240, 190, ${(0.5 * bloom).toFixed(2)})`;
               ctx.beginPath();
               ctx.arc(fx, fy, size * 1.6, 0, TAU);
               ctx.fill();
