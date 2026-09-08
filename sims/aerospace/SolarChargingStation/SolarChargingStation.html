@@ -1392,9 +1392,7 @@
             // water pressure builds up with the battery level: nothing below
             // PUMP_MIN_BATTERY, a full strong stream as it approaches 100%
             const intensity = on ? clamp((S.battery - PUMP_MIN_BATTERY) / (100 - PUMP_MIN_BATTERY), 0, 1) : 0;
-            // a warm rust color reads clearly against the green field, day or
-            // night, unlike the dark green tried earlier which camouflaged
-            const bodyColor = on ? "#c96a2e" : "#8a949d";
+            const bodyColor = on ? "#c23b3b" : "#8a949d";
             const spoutColor = on ? "#c9973b" : "#9aa0a8";
 
             // footing, flush with the ground
