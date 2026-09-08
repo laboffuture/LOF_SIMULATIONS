@@ -655,7 +655,7 @@
       }
 
       /* ---- RESPONSIVE: stack the stage above the panel on tablet/mobile ---- */
-      @media (max-width: 900px) {
+      @media (max-width: 1080px) {
         html, body {
           height: auto;
           overflow: auto;
@@ -669,6 +669,13 @@
         }
         #panel {
           overflow-y: visible;
+        }
+        #titlecard {
+          /* the scenario challenge cards below #scenContainer can wrap onto
+             an extra line at this width, pushing right up against the fixed
+             112px offset below — give it more clearance so it doesn't look
+             stuck to the bottom of the challenge selector */
+          top: 130px;
         }
       }
     </style>
