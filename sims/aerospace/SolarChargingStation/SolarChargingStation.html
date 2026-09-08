@@ -836,7 +836,7 @@
         // dead center (sun overhead) is 0°, and the panel leans a clean 45°
         // toward whichever side the sun is currently on at the extremes.
         function computeOptimalAngle() {
-          return 45 - 90 * sunFrac;
+          return 90 * sunFrac - 45; // flipped: tilts to the opposite side from before
         }
 
         function computeSolarRaw() {
