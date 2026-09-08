@@ -913,6 +913,7 @@
         });
         $("resetBtn").addEventListener("click", () => {
           S.running = false;
+          simTime = 0;
           S.battery = 0;
           S.solarRaw = 0;
           S.deviceOn = false;
@@ -1582,15 +1583,20 @@
 
         /* ---------- loop ---------- */
         let lastT = null;
+        // simTime only advances while running, so the sun, clouds, panel
+        // tracking, and every other animated flourish stay frozen until
+        // Start is pressed, instead of drifting on their own beforehand.
+        let simTime = 0;
         function loop(t) {
           if (lastT == null) lastT = t;
           const dt = Math.min(0.05, (t - lastT) / 1000);
           lastT = t;
-          updateSunPosition(t / 1000);
+          if (S.running) simTime += dt;
+          updateSunPosition(simTime);
           applyAutoTrack();
           update(dt);
           updateUI();
-          draw(t / 1000);
+          draw(simTime);
           requestAnimationFrame(loop);
         }
         layout();
