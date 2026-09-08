@@ -642,7 +642,6 @@
             <button data-v="led">LED</button>
             <button data-v="pump">Pump</button>
             <button data-v="phone">Phone</button>
-            <button data-v="gadget">Gadget</button>
           </div>
           <p class="hint" id="loadNote">A small LED barely drains the battery.</p>
         </div>
@@ -770,7 +769,6 @@
           led: { label: "LED", drain: 0.6, chargingLabel: false, note: "A small LED barely drains the battery." },
           pump: { label: "Water Pump", drain: 1.6, chargingLabel: false, note: "The pump needs the battery charged past a minimum level — the water flow gets stronger as the battery fills." },
           phone: { label: "Phone", drain: 1.0, chargingLabel: true, note: "The phone itself shows as Charging while it draws power." },
-          gadget: { label: "Small Gadget", drain: 2.3, chargingLabel: false, note: "The heaviest load here — it drains the battery fastest." },
         };
         const PUMP_MIN_BATTERY = 15; // % — below this the pump has no water pressure at all
         const CHARGE_RATE = 5.5; // %/sec at 100% solar power
@@ -1250,6 +1248,15 @@
           return { x: PANEL_PX + gx, y: pivotY + gy };
         }
 
+        function deviceWireEnd() {
+          // where the battery-to-device wire should actually touch each
+          // device's drawn body — they don't all sit at the same anchor point
+          // (the pump stands on the ground, the others float at device height)
+          if (S.device === "pump") return { x: DEV_X, y: GROUND - 4 };
+          if (S.device === "phone") return { x: DEV_X, y: DEV_Y + 24 };
+          return { x: DEV_X, y: DEV_Y + 19 }; // led
+        }
+
         function drawWire(x1, y1, x2, y2, active) {
           ctx.strokeStyle = active ? "#e8590c" : "#aab3c2";
           ctx.lineWidth = 3;
@@ -1317,6 +1324,9 @@
             ctx.beginPath();
             ctx.arc(0, 0, 16, 0, TAU);
             ctx.fill();
+            ctx.strokeStyle = "#8a949d";
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
             if (on) {
               ctx.strokeStyle = "rgba(250, 204, 21, 0.6)";
               ctx.lineWidth = 2;
@@ -1332,7 +1342,9 @@
             // water pressure builds up with the battery level: nothing below
             // PUMP_MIN_BATTERY, a full strong stream as it approaches 100%
             const intensity = on ? clamp((S.battery - PUMP_MIN_BATTERY) / (100 - PUMP_MIN_BATTERY), 0, 1) : 0;
-            const bodyColor = on ? "#2f6d4a" : "#8a949d";
+            // a warm rust color reads clearly against the green field, day or
+            // night, unlike the dark green tried earlier which camouflaged
+            const bodyColor = on ? "#c96a2e" : "#8a949d";
             const spoutColor = on ? "#c9973b" : "#9aa0a8";
 
             // footing, flush with the ground
@@ -1344,6 +1356,10 @@
             ctx.fillStyle = bodyColor;
             rr(ctx, -10, -48, 20, 45, 5);
             ctx.fill();
+            ctx.strokeStyle = "#aab3c2";
+            ctx.lineWidth = 1.2;
+            rr(ctx, -10, -48, 20, 45, 5);
+            ctx.stroke();
             ctx.fillStyle = "rgba(255,255,255,0.22)";
             rr(ctx, -10, -48, 20, 12, 4);
             ctx.fill();
@@ -1386,10 +1402,16 @@
               ctx.fill();
             }
           } else if (S.device === "phone") {
-            ctx.fillStyle = "#1c2733";
+            // a medium-slate case (not the old near-black one) with a light
+            // outline, so it reads clearly against the dark night sky too
+            ctx.fillStyle = "#5b6b7d";
             rr(ctx, -14, -26, 28, 52, 6);
             ctx.fill();
-            ctx.fillStyle = on ? "#7fd858" : "#3a4657";
+            ctx.strokeStyle = "#aab3c2";
+            ctx.lineWidth = 1.2;
+            rr(ctx, -14, -26, 28, 52, 6);
+            ctx.stroke();
+            ctx.fillStyle = on ? "#7fd858" : "#232b36";
             rr(ctx, -11, -22, 22, 44, 3);
             ctx.fill();
             if (on) {
@@ -1404,22 +1426,6 @@
               ctx.closePath();
               ctx.fill();
             }
-          } else {
-            ctx.fillStyle = "#3a4657";
-            rr(ctx, -20, -16, 40, 32, 5);
-            ctx.fill();
-            ctx.fillStyle = on ? "#7fd858" : "#8a949d";
-            ctx.globalAlpha = on ? 0.5 + 0.5 * Math.abs(Math.sin(t * 5)) : 1;
-            ctx.beginPath();
-            ctx.arc(10, -4, 4, 0, TAU);
-            ctx.fill();
-            ctx.globalAlpha = 1;
-            ctx.strokeStyle = "#8a949d";
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(-12, 6);
-            ctx.lineTo(6, 6);
-            ctx.stroke();
           }
           ctx.restore();
         }
@@ -1433,8 +1439,9 @@
               y = lerp(c0.y, BATT_Y - 40, p.u);
               color = "#f6b93b";
             } else {
-              x = lerp(BATT_X, DEV_X, p.u);
-              y = lerp(BATT_Y - 40, DEV_Y, p.u);
+              const d1 = deviceWireEnd();
+              x = lerp(BATT_X, d1.x, p.u);
+              y = lerp(BATT_Y - 40, d1.y, p.u);
               color = "#2a78d6";
             }
             ctx.fillStyle = color;
@@ -1452,7 +1459,8 @@
           drawPanel();
           const c0 = batteryWireStart();
           drawWire(c0.x, c0.y, BATT_X, BATT_Y - 40, S.chargeActive);
-          drawWire(BATT_X, BATT_Y - 40, DEV_X, DEV_Y, S.useActive);
+          const d0 = deviceWireEnd();
+          drawWire(BATT_X, BATT_Y - 40, d0.x, d0.y, S.useActive);
           drawBattery();
           drawDevice(t);
           drawParticles();
