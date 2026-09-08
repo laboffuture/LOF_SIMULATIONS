@@ -828,17 +828,15 @@
           particles: [],
         };
 
-        // The panel's optimal angle is no longer a fixed number — it's
-        // whatever angle would point the panel straight at the sun's current
-        // position, so it shifts continuously as the sun moves across the sky.
-        // Angle convention (matches drawPanel()'s rotation): 0°=facing full
-        // right, 90°=facing straight up, 180°=facing full left.
+        // The panel's optimal angle is no longer a fixed number — it shifts
+        // with the sun's position. Angle convention (matches drawPanel()'s
+        // rotation): 0°=facing full right, 90°=facing straight up (flat,
+        // sun overhead), 180°=facing full left. A straightforward, direct
+        // mapping from the sun's left-right sweep: dead center (sun directly
+        // overhead) is 90°, and the panel leans a clean 45° toward whichever
+        // side the sun is currently on at the extremes of its sweep.
         function computeOptimalAngle() {
-          const pivotY = PANEL_PY - POST_H;
-          const dx = SUN_X - PANEL_PX;
-          const dy = SUN_Y - pivotY; // negative: the sun sits above the pivot
-          const deg = (Math.atan2(-dy, dx) * 180) / Math.PI;
-          return clamp(deg, 0, 180);
+          return 135 - 90 * sunFrac;
         }
 
         function computeSolarRaw() {
@@ -1050,9 +1048,10 @@
         // SUN_CYCLE seconds. Runs before update()/draw() each frame so the
         // panel's optimal-angle tracking always uses the current position.
         const SUN_CYCLE = 50;
+        let sunFrac = 0; // 0 = sun at the far left, 1 = sun at the far right
         function updateSunPosition(t) {
-          const frac = (1 - Math.cos((t / SUN_CYCLE) * TAU)) / 2; // smooth 0 -> 1 -> 0
-          SUN_X = W * (0.06 + frac * 0.88);
+          sunFrac = (1 - Math.cos((t / SUN_CYCLE) * TAU)) / 2; // smooth 0 -> 1 -> 0
+          SUN_X = W * (0.06 + sunFrac * 0.88);
           SUN_Y = SUN_BASE_Y + Math.sin(t * 0.05) * (H * 0.02);
         }
 
@@ -1558,27 +1557,9 @@
           });
         }
 
-        function drawSunAimLine() {
-          // a faint dashed line from the panel's pivot straight to the sun —
-          // when the panel is correctly aimed, its tilt lines up with this
-          if (S.timeMode !== "day") return;
-          const pivotY = PANEL_PY - POST_H;
-          ctx.save();
-          ctx.strokeStyle = "rgba(250, 204, 21, 0.6)";
-          ctx.lineWidth = 1.5;
-          ctx.setLineDash([4, 4]);
-          ctx.beginPath();
-          ctx.moveTo(PANEL_PX, pivotY);
-          ctx.lineTo(SUN_X, SUN_Y);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.restore();
-        }
-
         function draw(t) {
           drawSky(t);
           drawSunOrMoon(t);
-          drawSunAimLine();
           drawPanel();
           const c0 = batteryWireStart();
           drawWire(c0.x, c0.y, BATT_X, BATT_Y - 40, S.chargeActive);
