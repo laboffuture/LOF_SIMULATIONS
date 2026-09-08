@@ -212,22 +212,6 @@
         height: 26px;
         cursor: pointer;
       }
-      .autotrack {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        margin-bottom: 8px;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--txt);
-        cursor: pointer;
-      }
-      .autotrack input[type="checkbox"] {
-        width: 16px;
-        height: 16px;
-        accent-color: var(--sky);
-        cursor: pointer;
-      }
       .anglemarks {
         display: flex;
         justify-content: space-between;
@@ -568,10 +552,9 @@
           <ol>
             <li>Pick <b>Day</b> or <b>Night</b> — solar power only exists by day.</li>
             <li>
-              By day, set the <b>Sunlight Intensity</b>. <b>Auto-Track Sun</b>
-              keeps the panel aimed at the sun by itself — turn it off if you'd
-              rather angle the <b>Panel Angle</b> slider yourself and try to
-              match the moving sweet spot.
+              By day, set the <b>Sunlight Intensity</b> and drag the
+              <b>Panel Angle</b> slider — try to land near the marked sweet
+              spot.
             </li>
             <li>Choose the <b>Device Load</b> the station is powering.</li>
             <li>
@@ -593,7 +576,6 @@
             <li>Solar power is only generated when sunlight is available</li>
             <li>Stronger sunlight and a correctly angled panel generate more power</li>
             <li>A wrongly angled panel captures far less usable sunlight</li>
-            <li>Because the sun moves across the sky, the correctly angled position keeps changing through the day</li>
             <li>Stored battery energy can be used anytime, including at night</li>
             <li>A heavier device load drains a battery faster</li>
             <li>By day a charging station can charge its battery and power a device at the same time; by night it can only draw from what's stored</li>
@@ -646,15 +628,11 @@
           <div class="row">
             <label>Panel Angle</label><span class="val" id="angleVal">0°</span>
           </div>
-          <label class="autotrack"><input type="checkbox" id="autoTrackTog" checked /> Auto-Track Sun</label>
           <input type="range" id="angleSlider" min="-90" max="90" value="0" step="1" />
-          <div class="anglemarks"><span>-90° right</span><span id="optimalMark">★ optimal</span><span>90° left</span></div>
+          <div class="anglemarks"><span>-90° right</span><span>★ 0° optimal</span><span>90° left</span></div>
           <p class="hint">
-            With Auto-Track on, the panel turns to face the sun by itself.
-            Turn it off (or just drag the slider) to angle it yourself and see
-            how far off you can get — closer to the optimal faces the panel
-            more directly at the sun, so
-            more sunlight is captured.
+            Closer to the marked sweet spot faces the panel more directly at
+            the sun, so more sunlight is captured.
           </p>
         </div>
 
@@ -815,7 +793,6 @@
           timeMode: "day",
           sunlight: "medium",
           panelAngle: 0,
-          autoTrack: true,
           device: "led",
           running: false,
           battery: 0,
@@ -828,21 +805,17 @@
           particles: [],
         };
 
-        // The panel's optimal angle is no longer a fixed number — it shifts
-        // with the sun's position. Angle convention: 0°=straight up/flat
-        // (optimal when the sun is dead center), negative=tilted right,
-        // positive=tilted left, ±90° being fully on its side. A
-        // straightforward, direct mapping from the sun's left-right sweep:
-        // dead center (sun overhead) is 0°, and the panel leans a clean 45°
-        // toward whichever side the sun is currently on at the extremes.
-        function computeOptimalAngle() {
-          return 45 - 90 * sunFrac; // sweeps clockwise as the sun moves left to right
-        }
+        // The sun moves on its own (left to right across the sky), but the
+        // panel is angled manually by the student — the optimal stays fixed
+        // at dead center. Angle convention: 0°=upright/straight up,
+        // negative=tilted right, positive=tilted left, ±90°=lying flat on
+        // its side.
+        const OPTIMAL_ANGLE = 0;
 
         function computeSolarRaw() {
           if (S.timeMode !== "day") return 0;
           const base = SUN[S.sunlight].power;
-          const angleDiff = Math.abs(S.panelAngle - computeOptimalAngle());
+          const angleDiff = Math.abs(S.panelAngle - OPTIMAL_ANGLE);
           const eff = clamp(1 - angleDiff / 180, 0.15, 1);
           return base * eff;
         }
@@ -887,14 +860,8 @@
           $("loadNote").textContent = LOADS[v].note;
         });
         $("angleSlider").addEventListener("input", (e) => {
-          // dragging the slider by hand takes over from auto-tracking
-          S.autoTrack = false;
-          $("autoTrackTog").checked = false;
           S.panelAngle = Number(e.target.value);
           $("angleVal").textContent = S.panelAngle + "°";
-        });
-        $("autoTrackTog").addEventListener("change", (e) => {
-          S.autoTrack = e.target.checked;
         });
         document.querySelector('#timeToggle button[data-v="day"]').classList.add("on");
         document.querySelector('#sunToggle button[data-v="medium"]').classList.add("on");
@@ -918,8 +885,6 @@
           S.chargingStatus = "Not Charging";
           S.particles = [];
           S.panelAngle = RESET_ANGLE;
-          S.autoTrack = true;
-          $("autoTrackTog").checked = true;
           $("angleSlider").value = RESET_ANGLE;
           $("angleVal").textContent = RESET_ANGLE + "°";
           startBtn.classList.remove("on");
@@ -973,7 +938,6 @@
         }
 
         function updateUI() {
-          $("optimalMark").textContent = S.timeMode === "day" ? "★ " + Math.round(computeOptimalAngle()) + "° optimal now" : "★ no sun at night";
           $("solarVal").textContent = solarLabel(S.solarRaw);
           $("battVal").textContent = Math.round(S.battery) + "%";
           const bf = $("battFill");
@@ -1045,13 +1009,12 @@
 
         // Sweeps the sun (and moon) smoothly from the left edge of the canvas
         // to the right edge and back — a full left-right-left cycle takes
-        // SUN_CYCLE seconds. Runs before update()/draw() each frame so the
-        // panel's optimal-angle tracking always uses the current position.
+        // SUN_CYCLE seconds. Runs before update()/draw() each frame. The
+        // panel angle is manual — this only moves the sun, not the panel.
         const SUN_CYCLE = 50;
-        let sunFrac = 0; // 0 = sun at the far left, 1 = sun at the far right
         function updateSunPosition(t) {
-          sunFrac = (1 - Math.cos((t / SUN_CYCLE) * TAU)) / 2; // smooth 0 -> 1 -> 0
-          SUN_X = W * (0.06 + sunFrac * 0.88);
+          const frac = (1 - Math.cos((t / SUN_CYCLE) * TAU)) / 2; // smooth 0 -> 1 -> 0
+          SUN_X = W * (0.06 + frac * 0.88);
           SUN_Y = SUN_BASE_Y + Math.sin(t * 0.05) * (H * 0.02);
         }
 
@@ -1253,9 +1216,9 @@
           ctx.save();
           ctx.translate(PANEL_PX, pivotY);
           // ctx.rotate operates on the coordinate system (not a direction vector).
-          // S.panelAngle is -90..90 here (0=straight up/flat, negative=tilts
-          // right, positive=tilts left); angleRad above already added the +90°
-          // offset this rotation needs — spanning the sun's whole sweep across the sky.
+          // S.panelAngle is -90..90 here (0=upright/straight up, negative=tilts
+          // right, positive=tilts left, ±90°=flat on its side); angleRad above
+          // already added the +90° offset this rotation needs.
           ctx.rotate(Math.PI / 2 - angleRad);
           const onSun = S.timeMode === "day" && S.solarRaw > 0;
 
@@ -1571,21 +1534,12 @@
           drawParticles();
         }
 
-        // While Auto-Track is on, the panel's angle continuously follows the
-        // sun by itself (day only — there's no sun to aim at, at night), and
-        // the slider/readout stay in sync so they never show a stale value.
-        function applyAutoTrack() {
-          if (!S.autoTrack || S.timeMode !== "day") return;
-          S.panelAngle = Math.round(computeOptimalAngle());
-          $("angleSlider").value = S.panelAngle;
-          $("angleVal").textContent = S.panelAngle + "°";
-        }
-
         /* ---------- loop ---------- */
         let lastT = null;
-        // simTime only advances while running, so the sun, clouds, panel
-        // tracking, and every other animated flourish stay frozen until
-        // Start is pressed, instead of drifting on their own beforehand.
+        // simTime only advances while running, so the sun, clouds, and every
+        // other animated flourish stay frozen until Start is pressed, instead
+        // of drifting on their own beforehand. The panel itself is manual —
+        // it only changes when the student drags the slider.
         let simTime = 0;
         function loop(t) {
           if (lastT == null) lastT = t;
@@ -1593,7 +1547,6 @@
           lastT = t;
           if (S.running) simTime += dt;
           updateSunPosition(simTime);
-          applyAutoTrack();
           update(dt);
           updateUI();
           draw(simTime);
@@ -1601,7 +1554,6 @@
         }
         layout();
         updateSunPosition(0);
-        applyAutoTrack();
         updateUI();
         draw(0);
         requestAnimationFrame(loop);
