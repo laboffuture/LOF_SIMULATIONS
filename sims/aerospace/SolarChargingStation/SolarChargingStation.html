@@ -802,6 +802,7 @@
           useActive: false,
           chargingStatus: "Not Charging",
           pumpPhase: 0,
+          pumpWatering: false,
           particles: [],
         };
 
@@ -901,6 +902,7 @@
             $("modeChip").classList.remove("run");
             S.chargeActive = false;
             S.useActive = false;
+            S.pumpWatering = false;
             return;
           }
           $("modeChip").textContent = S.timeMode === "day" ? "Running — Daytime" : "Running — Nighttime";
@@ -924,7 +926,9 @@
             S.chargingStatus = S.battery >= 100 ? "Fully Charged" : "Not Charging";
           }
 
-          if (S.device === "pump" && S.deviceOn) S.pumpPhase += dt * 3.2;
+          const pumpIntensity = S.device === "pump" && S.deviceOn ? clamp((S.battery - PUMP_MIN_BATTERY) / (100 - PUMP_MIN_BATTERY), 0, 1) : 0;
+          S.pumpWatering = pumpIntensity > 0.02;
+          if (S.pumpWatering) S.pumpPhase += dt * 3.2;
 
           // wire particles — panel->battery while charging, battery->device while powering
           if (Math.random() < (S.chargeActive ? 0.35 : 0)) {
@@ -1107,12 +1111,19 @@
             ctx.stroke();
           }
 
+          const bloom = S.pumpWatering; // flowers bloom bigger and brighter while the pump is actually watering them
           const petalColors = ["#ff6fa5", "#ffd166", "#ffffff", "#b185db", "#ff9770"];
           for (let i = 0; i < 26; i++) {
             const fx = (i * 71.9 + 15) % W;
             const fy = GROUND + (bandH * 0.2) + ((i * 37.1) % (bandH * 0.7));
-            const size = 2.4 + (i % 3);
-            ctx.globalAlpha = S.timeMode === "day" ? 1 : 0.55;
+            const size = (2.4 + (i % 3)) * (bloom ? 1.7 : 1);
+            ctx.globalAlpha = bloom ? 1 : S.timeMode === "day" ? 1 : 0.55;
+            if (bloom) {
+              ctx.fillStyle = "rgba(255, 240, 190, 0.5)";
+              ctx.beginPath();
+              ctx.arc(fx, fy, size * 1.6, 0, TAU);
+              ctx.fill();
+            }
             ctx.fillStyle = petalColors[i % petalColors.length];
             for (let p = 0; p < 5; p++) {
               const a = (p / 5) * TAU;
@@ -1392,8 +1403,10 @@
             // water pressure builds up with the battery level: nothing below
             // PUMP_MIN_BATTERY, a full strong stream as it approaches 100%
             const intensity = on ? clamp((S.battery - PUMP_MIN_BATTERY) / (100 - PUMP_MIN_BATTERY), 0, 1) : 0;
-            const bodyColor = on ? "#e8590c" : "#8a949d"; // a bright, vivid rust-orange, unmistakable against the field
-            const spoutColor = on ? "#c9973b" : "#9aa0a8";
+            // painted parts stay their own color whether running or not — only
+            // the water tells you it's actually pumping
+            const bodyColor = "#e8590c";
+            const spoutColor = "#c9973b";
 
             // footing, flush with the ground
             ctx.fillStyle = "#4c5c6b";
