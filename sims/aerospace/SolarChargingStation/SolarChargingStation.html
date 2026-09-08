@@ -558,15 +558,15 @@
             </li>
             <li>Choose the <b>Device Load</b> the station is powering.</li>
             <li>
-              Set <b>Battery Mode</b> to <b>Charge</b> to fill the battery from
-              the panel, or <b>Use Stored Power</b> to run the device off the
-              battery.
+              By <b>Day</b>, the battery charges from the panel and powers the
+              device at the same time. By <b>Night</b> there's no sunlight, so
+              only the device draws from what's stored.
             </li>
             <li>Press <b>Start</b> and watch the readings and energy flow.</li>
             <li>
-              Try this: charge the battery during the <b>Day</b>, then switch to
-              <b>Night</b> and <b>Use Stored Power</b> — the device keeps running
-              on what you stored.
+              Try this: let the battery build up during the <b>Day</b>, then
+              switch to <b>Night</b> — the device keeps running on what you
+              stored, with no panel left to top it back up.
             </li>
             <li>Press <b>Reset</b> to clear the battery and start over.</li>
           </ol>
@@ -578,7 +578,7 @@
             <li>A wrongly angled panel captures far less usable sunlight</li>
             <li>Stored battery energy can be used anytime, including at night</li>
             <li>A heavier device load drains a battery faster</li>
-            <li>A charging station must choose to charge or to use power — not both at once</li>
+            <li>By day a charging station can charge its battery and power a device at the same time; by night it can only draw from what's stored</li>
             <li>How energy changes form: sunlight → electrical energy → stored energy → device power</li>
           </ul>
         </div>
@@ -640,7 +640,7 @@
           <div class="row"><label>Device Load</label></div>
           <div class="toggle" id="loadToggle">
             <button data-v="led">LED</button>
-            <button data-v="fan">Fan</button>
+            <button data-v="pump">Pump</button>
             <button data-v="phone">Phone</button>
             <button data-v="gadget">Gadget</button>
           </div>
@@ -648,14 +648,13 @@
         </div>
 
         <div class="ctrl">
-          <div class="row"><label>Battery Mode</label></div>
-          <div class="toggle" id="modeToggle">
-            <button data-v="charge">⚡ Charge</button>
-            <button data-v="use">🔌 Use Stored Power</button>
+          <div class="row">
+            <label>Battery Behavior</label><span class="val" id="battModeVal">Charging + Powering Device</span>
           </div>
-          <p class="hint">
-            Charge fills the battery from the panel. Use Stored Power runs the
-            device from the battery — day or night.
+          <p class="hint" id="battModeHint">
+            By day the panel charges the battery while the device runs from it
+            at the same time. By night there's no sunlight, so only the device
+            draws from the battery.
           </p>
         </div>
 
@@ -769,10 +768,11 @@
         const OPTIMAL_ANGLE = 90; // dead center of the 0-180 range = panel lying flat/horizontal
         const LOADS = {
           led: { label: "LED", drain: 0.6, chargingLabel: false, note: "A small LED barely drains the battery." },
-          fan: { label: "Fan", drain: 1.6, chargingLabel: false, note: "A motorized fan pulls noticeably more current." },
+          pump: { label: "Water Pump", drain: 1.6, chargingLabel: false, note: "The pump needs the battery charged past a minimum level — the water flow gets stronger as the battery fills." },
           phone: { label: "Phone", drain: 1.0, chargingLabel: true, note: "The phone itself shows as Charging while it draws power." },
           gadget: { label: "Small Gadget", drain: 2.3, chargingLabel: false, note: "The heaviest load here — it drains the battery fastest." },
         };
+        const PUMP_MIN_BATTERY = 15; // % — below this the pump has no water pressure at all
         const CHARGE_RATE = 5.5; // %/sec at 100% solar power
         const LOW_BATTERY_CUTOFF = 1; // % — below this, the device can't be powered
 
@@ -796,13 +796,14 @@
           sunlight: "medium",
           panelAngle: 90,
           device: "led",
-          batteryMode: "charge",
           running: false,
           battery: 0,
           solarRaw: 0,
           deviceOn: false,
+          chargeActive: false,
+          useActive: false,
           chargingStatus: "Not Charging",
-          fanAngle: 0,
+          pumpPhase: 0,
           particles: [],
         };
 
@@ -835,10 +836,15 @@
           day: "Sunlight is available. The solar panel can generate power and charge the battery.",
           night: "No solar power is generated at night. The device can run only if enough battery is stored.",
         };
+        const BATT_MODE_LABEL = {
+          day: "Charging + Powering Device",
+          night: "Powering Device Only",
+        };
         wireToggle("timeToggle", (v) => {
           S.timeMode = v;
           $("timeVal").textContent = v === "day" ? "Day" : "Night";
           $("timeHint").textContent = TIME_HINT[v];
+          $("battModeVal").textContent = BATT_MODE_LABEL[v];
         });
         wireToggle("sunToggle", (v) => {
           S.sunlight = v;
@@ -848,9 +854,6 @@
           S.device = v;
           $("loadNote").textContent = LOADS[v].note;
         });
-        wireToggle("modeToggle", (v) => {
-          S.batteryMode = v;
-        });
         $("angleSlider").addEventListener("input", (e) => {
           S.panelAngle = Number(e.target.value);
           $("angleVal").textContent = S.panelAngle + "°";
@@ -858,7 +861,6 @@
         document.querySelector('#timeToggle button[data-v="day"]').classList.add("on");
         document.querySelector('#sunToggle button[data-v="medium"]').classList.add("on");
         document.querySelector('#loadToggle button[data-v="led"]').classList.add("on");
-        document.querySelector('#modeToggle button[data-v="charge"]').classList.add("on");
 
         const startBtn = $("startBtn");
         startBtn.addEventListener("click", () => {
@@ -891,39 +893,38 @@
           if (!S.running) {
             $("modeChip").textContent = "Idle — press Start";
             $("modeChip").classList.remove("run");
+            S.chargeActive = false;
+            S.useActive = false;
             return;
           }
           $("modeChip").textContent = S.timeMode === "day" ? "Running — Daytime" : "Running — Nighttime";
           $("modeChip").classList.add("run");
 
-          if (S.batteryMode === "charge") {
-            S.deviceOn = false;
-            if (S.solarRaw > 0 && S.battery < 100) {
-              S.battery = clamp(S.battery + CHARGE_RATE * (S.solarRaw / 100) * dt, 0, 100);
-              S.chargingStatus = S.battery >= 100 ? "Fully Charged" : "Charging";
-            } else if (S.battery >= 100) {
-              S.chargingStatus = "Fully Charged";
-            } else {
-              S.chargingStatus = "Not Charging";
-            }
+          // By day, charging and powering the device happen at the same time.
+          // By night there's no sunlight, so only the device draws from the battery.
+          S.chargeActive = S.timeMode === "day" && S.solarRaw > 0;
+          const canRun = S.battery > LOW_BATTERY_CUTOFF;
+          S.deviceOn = canRun;
+          S.useActive = S.deviceOn;
+
+          let delta = 0;
+          if (S.chargeActive) delta += CHARGE_RATE * (S.solarRaw / 100) * dt;
+          if (canRun) delta -= LOADS[S.device].drain * dt;
+          S.battery = clamp(S.battery + delta, 0, 100);
+
+          if (S.chargeActive) {
+            S.chargingStatus = S.battery >= 100 ? "Fully Charged" : "Charging";
           } else {
-            S.chargingStatus = "Not Charging";
-            if (S.battery > LOW_BATTERY_CUTOFF) {
-              S.deviceOn = true;
-              S.battery = clamp(S.battery - LOADS[S.device].drain * dt, 0, 100);
-              if (S.battery <= LOW_BATTERY_CUTOFF) S.deviceOn = false;
-            } else {
-              S.deviceOn = false;
-            }
+            S.chargingStatus = S.battery >= 100 ? "Fully Charged" : "Not Charging";
           }
 
-          if (S.device === "fan" && S.deviceOn) S.fanAngle += dt * 260;
+          if (S.device === "pump" && S.deviceOn) S.pumpPhase += dt * 3.2;
 
           // wire particles — panel->battery while charging, battery->device while powering
-          if (Math.random() < (S.batteryMode === "charge" && S.solarRaw > 0 ? 0.35 : 0)) {
+          if (Math.random() < (S.chargeActive ? 0.35 : 0)) {
             S.particles.push({ seg: "charge", u: 0 });
           }
-          if (Math.random() < (S.batteryMode === "use" && S.deviceOn ? 0.35 : 0)) {
+          if (Math.random() < (S.useActive ? 0.35 : 0)) {
             S.particles.push({ seg: "use", u: 0 });
           }
           S.particles.forEach((p) => (p.u += dt * 0.9));
@@ -948,14 +949,21 @@
 
           let note;
           if (!S.running) note = "Press Start to begin.";
-          else if (S.batteryMode === "charge") note = S.solarRaw > 0 ? "Battery is charging from the panel. The device stays off in Charge mode." : "No sunlight right now, so nothing is charging.";
-          else if (S.deviceOn) note = "Running the " + LOADS[S.device].label + " from stored battery power.";
-          else note = "Battery is too low to power the device. Switch to Charge mode.";
+          else if (S.timeMode === "day") {
+            if (S.solarRaw > 0 && S.deviceOn) note = "Charging from the panel and running the " + LOADS[S.device].label + " at the same time.";
+            else if (S.solarRaw > 0) note = "Battery is charging from the panel — too low right now to power the device too.";
+            else if (S.deviceOn) note = "No sunlight at this angle — running the " + LOADS[S.device].label + " from stored battery power.";
+            else note = "No sunlight reaching the panel, and the battery is too low to power the device.";
+          } else {
+            note = S.deviceOn
+              ? "Running the " + LOADS[S.device].label + " from stored battery power."
+              : "Battery is too low to power the device — charge it during the day first.";
+          }
           $("devNote").textContent = note;
 
           const sunHot = S.timeMode === "day" && S.solarRaw > 0;
-          const chargeHot = S.batteryMode === "charge" && S.solarRaw > 0;
-          const useHot = S.batteryMode === "use" && S.deviceOn;
+          const chargeHot = S.chargeActive;
+          const useHot = S.useActive;
           document.querySelector('.node[data-n="sun"]').classList.toggle("hot", sunHot);
           document.querySelector('.node[data-n="panel"]').classList.toggle("hot", sunHot);
           document.querySelector('.arrow[data-a="1"]').classList.toggle("hot", sunHot);
@@ -1251,22 +1259,45 @@
             ctx.fillStyle = "#8a949d";
             rr(ctx, -6, 14, 12, 10, 2);
             ctx.fill();
-          } else if (S.device === "fan") {
+          } else if (S.device === "pump") {
+            // water pressure builds up with the battery level — nothing below
+            // PUMP_MIN_BATTERY, a full strong stream as it approaches 100%
+            const intensity = on ? clamp((S.battery - PUMP_MIN_BATTERY) / (100 - PUMP_MIN_BATTERY), 0, 1) : 0;
+
             ctx.fillStyle = "#4c5c6b";
-            ctx.beginPath();
-            ctx.arc(0, 0, 6, 0, TAU);
+            rr(ctx, -10, 12, 20, 5, 2);
             ctx.fill();
-            ctx.save();
-            ctx.rotate(S.fanAngle);
-            ctx.fillStyle = on ? "#2a78d6" : "#aab3c2";
-            for (let i = 0; i < 3; i++) {
-              ctx.save();
-              ctx.rotate((i / 3) * TAU);
-              rr(ctx, -5, -30, 10, 28, 5);
+
+            ctx.fillStyle = on ? "#2a78d6" : "#8a949d";
+            rr(ctx, -13, -14, 26, 22, 5);
+            ctx.fill();
+            ctx.fillStyle = "rgba(255,255,255,0.25)";
+            rr(ctx, -13, -14, 26, 8, 4);
+            ctx.fill();
+
+            ctx.fillStyle = on ? "#2a78d6" : "#8a949d";
+            rr(ctx, 9, -3, 8, 7, 2);
+            ctx.fill();
+
+            if (on && intensity > 0.02) {
+              const dropCount = Math.max(1, Math.round(intensity * 5));
+              for (let i = 0; i < dropCount; i++) {
+                const phase = (S.pumpPhase + i * 0.32) % 1;
+                const dx = 13 + Math.sin(phase * 5 + i) * 1.3;
+                const dy = 6 + phase * (16 + intensity * 14);
+                ctx.globalAlpha = clamp(1 - phase * 0.7, 0, 1);
+                ctx.fillStyle = "#4fb0e6";
+                ctx.beginPath();
+                ctx.ellipse(dx, dy, 1.5, 2.5, 0, 0, TAU);
+                ctx.fill();
+              }
+              ctx.globalAlpha = 1;
+
+              ctx.fillStyle = "rgba(79, 176, 230, 0.45)";
+              ctx.beginPath();
+              ctx.ellipse(13, 26, 4 + intensity * 8, 2 + intensity * 2, 0, 0, TAU);
               ctx.fill();
-              ctx.restore();
             }
-            ctx.restore();
           } else if (S.device === "phone") {
             ctx.fillStyle = "#1c2733";
             rr(ctx, -14, -26, 28, 52, 6);
@@ -1333,8 +1364,8 @@
           drawSunOrMoon(t);
           drawPanel();
           const c0 = batteryWireStart();
-          drawWire(c0.x, c0.y, BATT_X, BATT_Y - 40, S.batteryMode === "charge" && S.solarRaw > 0);
-          drawWire(BATT_X, BATT_Y - 40, DEV_X, DEV_Y, S.batteryMode === "use" && S.deviceOn);
+          drawWire(c0.x, c0.y, BATT_X, BATT_Y - 40, S.chargeActive);
+          drawWire(BATT_X, BATT_Y - 40, DEV_X, DEV_Y, S.useActive);
           drawBattery();
           drawDevice(t);
           drawParticles();
