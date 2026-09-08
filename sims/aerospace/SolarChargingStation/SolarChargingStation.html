@@ -1029,6 +1029,55 @@
 
           ctx.fillStyle = S.timeMode === "day" ? "#bcd98a" : "#141f38";
           ctx.fillRect(0, GROUND, W, H - GROUND);
+
+          if (S.device === "pump") drawFlowerField();
+        }
+
+        function drawFlowerField() {
+          // a richer field of grass and flowers, shown while the Water Pump is
+          // selected, replacing the plain ground fill
+          const bandH = H - GROUND;
+          const g2 = ctx.createLinearGradient(0, GROUND, 0, H);
+          if (S.timeMode === "day") {
+            g2.addColorStop(0, "#a8d47a");
+            g2.addColorStop(1, "#8fc766");
+          } else {
+            g2.addColorStop(0, "#182a1c");
+            g2.addColorStop(1, "#0f1c13");
+          }
+          ctx.fillStyle = g2;
+          ctx.fillRect(0, GROUND, W, bandH);
+
+          ctx.strokeStyle = S.timeMode === "day" ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.07)";
+          ctx.lineWidth = 1;
+          for (let i = 0; i < 60; i++) {
+            const gx = (i * 53.7) % W;
+            const gy = GROUND + (bandH * 0.15) + ((i * 31.3) % (bandH * 0.8));
+            ctx.beginPath();
+            ctx.moveTo(gx, gy);
+            ctx.lineTo(gx + 2, gy - 6);
+            ctx.stroke();
+          }
+
+          const petalColors = ["#ff6fa5", "#ffd166", "#ffffff", "#b185db", "#ff9770"];
+          for (let i = 0; i < 26; i++) {
+            const fx = (i * 71.9 + 15) % W;
+            const fy = GROUND + (bandH * 0.2) + ((i * 37.1) % (bandH * 0.7));
+            const size = 2.4 + (i % 3);
+            ctx.globalAlpha = S.timeMode === "day" ? 1 : 0.55;
+            ctx.fillStyle = petalColors[i % petalColors.length];
+            for (let p = 0; p < 5; p++) {
+              const a = (p / 5) * TAU;
+              ctx.beginPath();
+              ctx.arc(fx + Math.cos(a) * size, fy + Math.sin(a) * size, size * 0.75, 0, TAU);
+              ctx.fill();
+            }
+            ctx.fillStyle = "#ffd166";
+            ctx.beginPath();
+            ctx.arc(fx, fy, size * 0.55, 0, TAU);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
         }
 
         function drawSunOrMoon(t) {
@@ -1089,14 +1138,14 @@
           ctx.beginPath();
           ctx.ellipse(PANEL_PX, PANEL_PY + BASE_H / 2 + 3, BASE_W / 2 + 4, 6, 0, 0, TAU);
           ctx.fill();
-          ctx.fillStyle = "#1c3f72";
+          ctx.fillStyle = "#c23b3b";
           rr(ctx, PANEL_PX - BASE_W / 2, PANEL_PY - BASE_H / 2, BASE_W, BASE_H, 3);
           ctx.fill();
-          ctx.strokeStyle = "#0f2547";
+          ctx.strokeStyle = "#7a2323";
           ctx.lineWidth = 1;
           rr(ctx, PANEL_PX - BASE_W / 2, PANEL_PY - BASE_H / 2, BASE_W, BASE_H, 3);
           ctx.stroke();
-          ctx.fillStyle = "#0f2547";
+          ctx.fillStyle = "#2b2f36";
           [
             [-BASE_W / 2 + 5, -BASE_H / 2 + 3],
             [BASE_W / 2 - 5, -BASE_H / 2 + 3],
@@ -1109,10 +1158,10 @@
           });
 
           // vertical post — fixed, connects the foot plate to the pivot
-          ctx.fillStyle = "#1c3f72";
+          ctx.fillStyle = "#c23b3b";
           rr(ctx, PANEL_PX - POST_W / 2, pivotY, POST_W, PANEL_PY - BASE_H / 2 - pivotY, 2);
           ctx.fill();
-          ctx.strokeStyle = "#0f2547";
+          ctx.strokeStyle = "#7a2323";
           ctx.lineWidth = 1;
           rr(ctx, PANEL_PX - POST_W / 2, pivotY, POST_W, PANEL_PY - BASE_H / 2 - pivotY, 2);
           ctx.stroke();
@@ -1217,12 +1266,21 @@
             h = 78;
           const x = BATT_X - w / 2,
             y = BATT_Y - h;
-          ctx.fillStyle = "#22314a";
+          // a light, high-contrast casing so the battery reads clearly against
+          // both the bright day sky and the dark navy night sky
+          ctx.fillStyle = "#eef1f4";
           rr(ctx, x, y, w, h, 6);
           ctx.fill();
-          ctx.fillStyle = "#22314a";
+          ctx.strokeStyle = "#aab3c2";
+          ctx.lineWidth = 1.5;
+          rr(ctx, x, y, w, h, 6);
+          ctx.stroke();
+          ctx.fillStyle = "#eef1f4";
           rr(ctx, BATT_X - 10, y - 8, 20, 8, 2);
           ctx.fill();
+          ctx.strokeStyle = "#aab3c2";
+          rr(ctx, BATT_X - 10, y - 8, 20, 8, 2);
+          ctx.stroke();
 
           const pad = 5;
           const innerH = h - pad * 2;
@@ -1231,15 +1289,25 @@
           rr(ctx, x + pad, y + pad + (innerH - fillH), w - pad * 2, fillH, 3);
           ctx.fill();
 
+          // percentage sits on its own dark chip so it never camouflages
+          // against whatever sky color is currently behind it
+          const label = Math.round(S.battery) + "%";
+          ctx.font = "700 12px 'IBM Plex Mono', monospace";
+          const chipW = ctx.measureText(label).width + 16,
+            chipH = 18;
+          ctx.fillStyle = "#17293b";
+          rr(ctx, BATT_X - chipW / 2, y + h + 6, chipW, chipH, 4);
+          ctx.fill();
           ctx.fillStyle = "#fff";
-          ctx.font = "700 11px 'IBM Plex Mono', monospace";
           ctx.textAlign = "center";
-          ctx.fillText(Math.round(S.battery) + "%", BATT_X, y + h + 16);
+          ctx.textBaseline = "middle";
+          ctx.fillText(label, BATT_X, y + h + 6 + chipH / 2 + 1);
+          ctx.textBaseline = "alphabetic";
         }
 
         function drawDevice(t) {
           const x = DEV_X,
-            y = DEV_Y;
+            y = S.device === "pump" ? GROUND : DEV_Y; // the pump stands on the ground, not floating
           const on = S.deviceOn;
           ctx.save();
           ctx.translate(x, y);
@@ -1260,42 +1328,61 @@
             rr(ctx, -6, 14, 12, 10, 2);
             ctx.fill();
           } else if (S.device === "pump") {
-            // water pressure builds up with the battery level — nothing below
+            // a big, ground-mounted hand pump standing in the flower field —
+            // water pressure builds up with the battery level: nothing below
             // PUMP_MIN_BATTERY, a full strong stream as it approaches 100%
             const intensity = on ? clamp((S.battery - PUMP_MIN_BATTERY) / (100 - PUMP_MIN_BATTERY), 0, 1) : 0;
+            const bodyColor = on ? "#2f6d4a" : "#8a949d";
+            const spoutColor = on ? "#c9973b" : "#9aa0a8";
 
+            // footing, flush with the ground
             ctx.fillStyle = "#4c5c6b";
-            rr(ctx, -10, 12, 20, 5, 2);
+            rr(ctx, -16, -4, 32, 7, 2);
             ctx.fill();
 
-            ctx.fillStyle = on ? "#2a78d6" : "#8a949d";
-            rr(ctx, -13, -14, 26, 22, 5);
+            // tall main column
+            ctx.fillStyle = bodyColor;
+            rr(ctx, -10, -48, 20, 45, 5);
             ctx.fill();
-            ctx.fillStyle = "rgba(255,255,255,0.25)";
-            rr(ctx, -13, -14, 26, 8, 4);
+            ctx.fillStyle = "rgba(255,255,255,0.22)";
+            rr(ctx, -10, -48, 20, 12, 4);
             ctx.fill();
 
-            ctx.fillStyle = on ? "#2a78d6" : "#8a949d";
-            rr(ctx, 9, -3, 8, 7, 2);
+            // pump handle
+            ctx.strokeStyle = "#4c5c6b";
+            ctx.lineWidth = 4;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(6, -44);
+            ctx.lineTo(20, -50);
+            ctx.stroke();
+            ctx.fillStyle = "#4c5c6b";
+            ctx.beginPath();
+            ctx.arc(6, -44, 3, 0, TAU);
+            ctx.fill();
+
+            // spout
+            ctx.fillStyle = spoutColor;
+            rr(ctx, 8, -18, 13, 9, 2);
             ctx.fill();
 
             if (on && intensity > 0.02) {
-              const dropCount = Math.max(1, Math.round(intensity * 5));
+              const dropCount = Math.max(1, Math.round(intensity * 6));
               for (let i = 0; i < dropCount; i++) {
-                const phase = (S.pumpPhase + i * 0.32) % 1;
-                const dx = 13 + Math.sin(phase * 5 + i) * 1.3;
-                const dy = 6 + phase * (16 + intensity * 14);
+                const phase = (S.pumpPhase + i * 0.3) % 1;
+                const dx = 20 + Math.sin(phase * 5 + i) * 1.6;
+                const dy = -10 + phase * (14 + intensity * 16);
                 ctx.globalAlpha = clamp(1 - phase * 0.7, 0, 1);
                 ctx.fillStyle = "#4fb0e6";
                 ctx.beginPath();
-                ctx.ellipse(dx, dy, 1.5, 2.5, 0, 0, TAU);
+                ctx.ellipse(dx, dy, 2, 3.2, 0, 0, TAU);
                 ctx.fill();
               }
               ctx.globalAlpha = 1;
 
-              ctx.fillStyle = "rgba(79, 176, 230, 0.45)";
+              ctx.fillStyle = "rgba(79, 176, 230, 0.5)";
               ctx.beginPath();
-              ctx.ellipse(13, 26, 4 + intensity * 8, 2 + intensity * 2, 0, 0, TAU);
+              ctx.ellipse(20, 4, 6 + intensity * 10, 3 + intensity * 2.5, 0, 0, TAU);
               ctx.fill();
             }
           } else if (S.device === "phone") {
