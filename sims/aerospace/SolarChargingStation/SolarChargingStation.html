@@ -1558,9 +1558,27 @@
           });
         }
 
+        function drawSunAimLine() {
+          // a faint dashed line from the panel's pivot straight to the sun —
+          // when the panel is correctly aimed, its tilt lines up with this
+          if (S.timeMode !== "day") return;
+          const pivotY = PANEL_PY - POST_H;
+          ctx.save();
+          ctx.strokeStyle = "rgba(250, 204, 21, 0.6)";
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(PANEL_PX, pivotY);
+          ctx.lineTo(SUN_X, SUN_Y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+        }
+
         function draw(t) {
           drawSky(t);
           drawSunOrMoon(t);
+          drawSunAimLine();
           drawPanel();
           const c0 = batteryWireStart();
           drawWire(c0.x, c0.y, BATT_X, BATT_Y - 40, S.chargeActive);
