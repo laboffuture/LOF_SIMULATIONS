@@ -212,6 +212,22 @@
         height: 26px;
         cursor: pointer;
       }
+      .autotrack {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--txt);
+        cursor: pointer;
+      }
+      .autotrack input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--sky);
+        cursor: pointer;
+      }
       .anglemarks {
         display: flex;
         justify-content: space-between;
@@ -552,9 +568,10 @@
           <ol>
             <li>Pick <b>Day</b> or <b>Night</b> — solar power only exists by day.</li>
             <li>
-              By day, set the <b>Sunlight Intensity</b> and drag the
-              <b>Panel Angle</b> slider — try to land near the sweet spot marked
-              on the dial.
+              By day, set the <b>Sunlight Intensity</b>. <b>Auto-Track Sun</b>
+              keeps the panel aimed at the sun by itself — turn it off if you'd
+              rather angle the <b>Panel Angle</b> slider yourself and try to
+              match the moving sweet spot.
             </li>
             <li>Choose the <b>Device Load</b> the station is powering.</li>
             <li>
@@ -629,11 +646,14 @@
           <div class="row">
             <label>Panel Angle</label><span class="val" id="angleVal">90°</span>
           </div>
+          <label class="autotrack"><input type="checkbox" id="autoTrackTog" checked /> Auto-Track Sun</label>
           <input type="range" id="angleSlider" min="0" max="180" value="90" step="1" />
           <div class="anglemarks"><span>0° right</span><span id="optimalMark">★ optimal</span><span>180° left</span></div>
           <p class="hint">
-            The sun moves across the sky, so the optimal angle keeps changing
-            too — closer to it faces the panel more directly at the sun, so
+            With Auto-Track on, the panel turns to face the sun by itself.
+            Turn it off (or just drag the slider) to angle it yourself and see
+            how far off you can get — closer to the optimal faces the panel
+            more directly at the sun, so
             more sunlight is captured.
           </p>
         </div>
@@ -795,6 +815,7 @@
           timeMode: "day",
           sunlight: "medium",
           panelAngle: 90,
+          autoTrack: true,
           device: "led",
           running: false,
           battery: 0,
@@ -868,8 +889,14 @@
           $("loadNote").textContent = LOADS[v].note;
         });
         $("angleSlider").addEventListener("input", (e) => {
+          // dragging the slider by hand takes over from auto-tracking
+          S.autoTrack = false;
+          $("autoTrackTog").checked = false;
           S.panelAngle = Number(e.target.value);
           $("angleVal").textContent = S.panelAngle + "°";
+        });
+        $("autoTrackTog").addEventListener("change", (e) => {
+          S.autoTrack = e.target.checked;
         });
         document.querySelector('#timeToggle button[data-v="day"]').classList.add("on");
         document.querySelector('#sunToggle button[data-v="medium"]').classList.add("on");
@@ -892,6 +919,8 @@
           S.chargingStatus = "Not Charging";
           S.particles = [];
           S.panelAngle = RESET_ANGLE;
+          S.autoTrack = true;
+          $("autoTrackTog").checked = true;
           $("angleSlider").value = RESET_ANGLE;
           $("angleVal").textContent = RESET_ANGLE + "°";
           startBtn.classList.remove("on");
@@ -1026,7 +1055,7 @@
           SUN_Y = SUN_BASE_Y + Math.sin(t * 0.05) * (H * 0.02);
         }
 
-        function drawSky() {
+        function drawSky(t) {
           const g = ctx.createLinearGradient(0, 0, 0, H);
           if (S.timeMode === "day") {
             g.addColorStop(0, "#bfe0f7");
@@ -1037,6 +1066,8 @@
           }
           ctx.fillStyle = g;
           ctx.fillRect(0, 0, W, H);
+
+          drawClouds(t);
 
           if (S.timeMode === "night") {
             ctx.fillStyle = "rgba(255,255,255,0.85)";
@@ -1055,6 +1086,36 @@
           ctx.fillRect(0, GROUND, W, H - GROUND);
 
           if (S.device === "pump") drawFlowerField();
+        }
+
+        function drawClouds(t) {
+          // a few soft, slowly-drifting cloud puffs — dim silhouettes at night
+          const puffs = [
+            { x: 0.1, y: 0.11, scale: 1.0, speed: 3.2 },
+            { x: 0.4, y: 0.2, scale: 0.72, speed: 4.6 },
+            { x: 0.66, y: 0.08, scale: 1.2, speed: 2.6 },
+            { x: 0.87, y: 0.23, scale: 0.85, speed: 3.9 },
+          ];
+          const bumps = [
+            [-18, 4, 16, 11],
+            [-8, -6, 15, 11],
+            [6, -7, 16, 12],
+            [18, 3, 14, 10],
+            [0, 6, 20, 10],
+          ];
+          ctx.fillStyle = S.timeMode === "day" ? "#ffffff" : "#22345a";
+          ctx.globalAlpha = S.timeMode === "day" ? 0.88 : 0.3;
+          puffs.forEach((p) => {
+            const cx = ((p.x * W + t * p.speed) % (W + 160)) - 80;
+            const cy = p.y * H;
+            const s = p.scale;
+            bumps.forEach(([dx, dy, rw, rh]) => {
+              ctx.beginPath();
+              ctx.ellipse(cx + dx * s, cy + dy * s, rw * s, rh * s, 0, 0, TAU);
+              ctx.fill();
+            });
+          });
+          ctx.globalAlpha = 1;
         }
 
         function drawFlowerField() {
@@ -1497,7 +1558,7 @@
         }
 
         function draw(t) {
-          drawSky();
+          drawSky(t);
           drawSunOrMoon(t);
           drawPanel();
           const c0 = batteryWireStart();
@@ -1509,6 +1570,16 @@
           drawParticles();
         }
 
+        // While Auto-Track is on, the panel's angle continuously follows the
+        // sun by itself (day only — there's no sun to aim at, at night), and
+        // the slider/readout stay in sync so they never show a stale value.
+        function applyAutoTrack() {
+          if (!S.autoTrack || S.timeMode !== "day") return;
+          S.panelAngle = Math.round(computeOptimalAngle());
+          $("angleSlider").value = S.panelAngle;
+          $("angleVal").textContent = S.panelAngle + "°";
+        }
+
         /* ---------- loop ---------- */
         let lastT = null;
         function loop(t) {
@@ -1516,6 +1587,7 @@
           const dt = Math.min(0.05, (t - lastT) / 1000);
           lastT = t;
           updateSunPosition(t / 1000);
+          applyAutoTrack();
           update(dt);
           updateUI();
           draw(t / 1000);
@@ -1523,6 +1595,7 @@
         }
         layout();
         updateSunPosition(0);
+        applyAutoTrack();
         updateUI();
         draw(0);
         requestAnimationFrame(loop);
