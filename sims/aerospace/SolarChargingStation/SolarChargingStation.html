@@ -608,7 +608,7 @@
             <button data-v="day">☀️ Day</button>
             <button data-v="night">🌙 Night</button>
           </div>
-          <p class="hint">At night the panel receives no sunlight at all.</p>
+          <p class="hint" id="timeHint">Sunlight is available. The solar panel can generate power and charge the battery.</p>
         </div>
 
         <div class="ctrl">
@@ -831,9 +831,14 @@
             });
           });
         }
+        const TIME_HINT = {
+          day: "Sunlight is available. The solar panel can generate power and charge the battery.",
+          night: "No solar power is generated at night. The device can run only if enough battery is stored.",
+        };
         wireToggle("timeToggle", (v) => {
           S.timeMode = v;
           $("timeVal").textContent = v === "day" ? "Day" : "Night";
+          $("timeHint").textContent = TIME_HINT[v];
         });
         wireToggle("sunToggle", (v) => {
           S.sunlight = v;
@@ -965,7 +970,7 @@
         const ctx = canvas.getContext("2d");
         const DESIGN_W = 640,
           DESIGN_H = 520;
-        let W, H, GROUND, PANEL_PX, PANEL_PY, BATT_X, BATT_Y, DEV_X, DEV_Y, SUN_X, SUN_Y;
+        let W, H, GROUND, PANEL_PX, PANEL_PY, BATT_X, BATT_Y, DEV_X, DEV_Y, SUN_BASE_X, SUN_BASE_Y, SUN_X, SUN_Y;
 
         function layout() {
           const cw = Math.max(360, Math.round(canvas.clientWidth || DESIGN_W));
@@ -985,8 +990,8 @@
           BATT_Y = GROUND - 74;
           DEV_X = W * 0.78;
           DEV_Y = GROUND - 90;
-          SUN_X = W * 0.16;
-          SUN_Y = H * 0.16;
+          SUN_BASE_X = W * 0.16;
+          SUN_BASE_Y = H * 0.16;
         }
 
         function drawSky() {
@@ -1019,6 +1024,10 @@
         }
 
         function drawSunOrMoon(t) {
+          // the sun drifts slowly back and forth across the sky instead of sitting
+          // at a fixed point — a full drift cycle takes a couple of minutes
+          SUN_X = SUN_BASE_X + Math.sin(t * 0.04) * (W * 0.14);
+          SUN_Y = SUN_BASE_Y + Math.sin(t * 0.025) * (H * 0.03);
           if (S.timeMode === "day") {
             const r = 26 + Math.sin(t * 1.5) * 1.5;
             const rayLen = { low: 8, medium: 14, high: 22 }[S.sunlight];
