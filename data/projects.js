@@ -45,9 +45,10 @@ const PROJECTS = [
   { id: "aerovoyage", title: "AeroVoyage — Rotor Lift Lab", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/aerovoyage/simulation.html", description: "Fly one rotor drone across Earth, Mars, Titan, and the Moon to see why the same design behaves differently on each world." },
   { id: "ascent-lab", title: "Ascent Lab", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/ascent-lab/simulation.html", description: "Build a pressure rocket — nose, body, fins, and launch pressure — then launch it and read altitude, drag, and stability from the flight." },
   { id: "aero-build", title: "Aero Build — Rocket Design & Flight Physics", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/aero-build/simulation.html", description: "Design a motor-powered rocket from a real motor designation, check its stability, then launch it into wind, staging, and recovery." },
-  ...Array.from({ length: 23 }, (_, i) => ({
-    id: `space-astronomy-coming-soon-${i + 6}`,
-    title: `Space & Astronomy Project ${String(i + 5).padStart(2, "0")}`,
+  { id: "astro-build", title: "Astro Build — Assemble the ISS", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/astro-build/simulation.html", description: "Catch falling ISS modules and dock them by shape alone — no labels — then keep the crew alive through emergencies that never name the module you need." },
+  ...Array.from({ length: 22 }, (_, i) => ({
+    id: `space-astronomy-coming-soon-${i + 7}`,
+    title: `Space & Astronomy Project ${String(i + 6).padStart(2, "0")}`,
     category: "space-astronomy",
     status: "coming-soon",
     description: "Coming soon.",
