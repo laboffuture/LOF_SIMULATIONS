@@ -134,32 +134,84 @@
       }
       .whyBtn:hover { background: var(--accent-cyan); color: #071018; border-color: var(--accent-cyan); }
 
-      .ctl { margin-bottom: 13px; }
-      .ctl-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; gap: 8px; }
+      .ctl { margin-bottom: 15px; }
+      .ctl-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 7px; gap: 8px; }
       .ctl-name { font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); }
-      .ctl-val { font-family: var(--mono); font-size: 11.5px; font-weight: 700; color: var(--accent-cyan); white-space: nowrap; }
-      input[type="range"] {
-        -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px;
-        background: rgba(255,255,255,.15); cursor: pointer; outline: none;
+      .ctl-val {
+        font-family: var(--mono); font-size: 11.5px; font-weight: 700; color: var(--accent-cyan);
+        white-space: nowrap; background: rgba(0,242,254,.1); border: 1px solid rgba(0,242,254,.25);
+        border-radius: 5px; padding: 2px 7px; font-variant-numeric: tabular-nums;
       }
+      /* the filled portion of every slider tracks its value via --p, set in JS */
+      input[type="range"] {
+        -webkit-appearance: none; appearance: none; width: 100%; height: 7px; border-radius: 4px;
+        background:
+          linear-gradient(90deg, var(--accent-blue) 0%, var(--accent-cyan) var(--p, 50%), rgba(255,255,255,.13) var(--p, 50%));
+        cursor: pointer; outline: none; transition: box-shadow .15s;
+      }
+      input[type="range"]:hover { box-shadow: 0 0 0 4px rgba(0,242,254,.07); }
       input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none; width: 17px; height: 17px; background: var(--accent-cyan); border-radius: 50%;
-        cursor: pointer; border: 2px solid var(--bg-dark); box-shadow: 0 0 10px rgba(0,242,254,.6);
+        -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+        background: radial-gradient(circle at 35% 30%, #ffffff, var(--accent-cyan) 65%);
+        cursor: pointer; border: 2px solid #071018; box-shadow: 0 0 10px rgba(0,242,254,.7), 0 2px 5px rgba(0,0,0,.6);
+        transition: transform .12s;
+      }
+      input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.15); }
+      input[type="range"]::-moz-range-thumb {
+        width: 16px; height: 16px; border-radius: 50%; background: var(--accent-cyan);
+        border: 2px solid #071018; cursor: pointer;
       }
       input[type="text"], input[type="number"] {
         width: 100%; font-family: var(--mono); font-size: 12.5px; font-weight: 700; color: var(--text-primary);
-        background: rgba(0,0,0,.4); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 10px; outline: none;
+        background: rgba(0,0,0,.45); border: 1px solid var(--border-color); border-radius: 7px;
+        padding: 9px 11px; outline: none; letter-spacing: .06em; transition: .15s;
       }
-      input[type="text"]:focus, input[type="number"]:focus { border-color: var(--accent-cyan); }
+      input[type="text"]:focus, input[type="number"]:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(0,242,254,.12); }
       input[type="text"].bad { border-color: var(--accent-pink); color: var(--accent-pink); }
 
-      .seg { display: flex; border: 1px solid var(--border-color); border-radius: 6px; background: rgba(0,0,0,.4); overflow: hidden; }
+      .seg { display: flex; gap: 4px; border: 1px solid var(--border-color); border-radius: 8px; background: rgba(0,0,0,.4); padding: 4px; }
       .seg button {
-        flex: 1; font-family: var(--mono); font-size: 10.5px; font-weight: 700; background: transparent; border: none;
-        color: var(--text-secondary); padding: 8px 4px; cursor: pointer; transition: .2s;
+        flex: 1; font-family: var(--mono); font-size: 10.5px; font-weight: 700; background: transparent;
+        border: none; border-radius: 5px; color: var(--text-secondary); padding: 8px 4px; cursor: pointer; transition: .18s;
       }
-      .seg button.on { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #071018; font-weight: 800; }
-      .noseSeg button.icon { font-size: 15px; padding: 8px 4px 4px; }
+      .seg button:hover { background: rgba(255,255,255,.06); color: var(--text-primary); }
+      .seg button.on {
+        background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); color: #071018;
+        font-weight: 800; box-shadow: 0 2px 10px rgba(0,242,254,.3);
+      }
+      .noseSeg { flex-wrap: wrap; }
+      /* four across wherever there is room; falls back to 2x2 on genuinely narrow screens */
+      .noseSeg button { flex: 1 1 74px; }
+      .noseSeg button.icon { font-size: 16px; line-height: 1.15; padding: 7px 4px 5px; }
+      .noseSeg button .nlab { display: block; font-size: 9.5px; letter-spacing: .04em; margin-top: 2px; }
+
+      /* real toggle switch rather than a raw checkbox */
+      .switch { position: relative; width: 40px; height: 22px; flex: none; }
+      .switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; z-index: 2; }
+      .switch .track {
+        position: absolute; inset: 0; border-radius: 11px; background: rgba(255,255,255,.16);
+        border: 1px solid var(--border-color); transition: .2s;
+      }
+      .switch .track::after {
+        content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+        background: #cbd5e1; transition: .2s;
+      }
+      .switch input:checked + .track { background: linear-gradient(90deg, var(--accent-orange), #ffa06b); border-color: var(--accent-orange); }
+      .switch input:checked + .track::after { left: 20px; background: #fff; }
+
+      /* inline explanation strip that changes with the control you touch */
+      .hint {
+        font-family: var(--mono); font-size: 9.5px; line-height: 1.55; color: var(--text-muted);
+        background: rgba(0,0,0,.3); border-left: 2px solid rgba(255,255,255,.16);
+        border-radius: 0 5px 5px 0; padding: 7px 9px; margin-top: 8px;
+      }
+      .hint b { color: var(--text-secondary); font-weight: 700; }
+      .hint .up { color: var(--accent-green); }
+      .hint .dn { color: var(--accent-pink); }
+      .subnote { font-family: var(--mono); font-size: 9.5px; color: var(--text-muted); line-height: 1.5; margin-top: 5px; }
+      .liveval { font-family: var(--mono); font-size: 10.5px; font-weight: 700; color: var(--accent-green); }
+      .liveval.warn { color: var(--accent-amber); }
+      .liveval.bad { color: var(--accent-pink); }
 
       .motorRow { display: flex; gap: 8px; align-items: center; }
       .motorRow input { flex: 1; }
@@ -169,17 +221,35 @@
       .motorReadout .bad { color: var(--accent-pink); }
 
       #finCanvasWrap { background: #040812; border: 1px solid var(--border-color); border-radius: 8px; padding: 6px; margin-top: 8px; }
-      #finCanvas { display: block; width: 100%; height: 84px; }
+      #finCanvas { display: block; width: 100%; height: 108px; }
 
       #stabGaugeWrap { background: #040812; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; text-align: center; }
-      #stabGauge { display: block; margin: 0 auto; width: 100%; height: 110px; }
-      .stab-verdict { font-family: var(--mono); font-weight: 800; font-size: 13px; margin-top: 4px; }
+      #stabGauge { display: block; margin: 0 auto; width: 100%; height: 128px; }
+      .stab-verdict { font-family: var(--mono); font-weight: 800; font-size: 13px; margin-top: 4px; letter-spacing: .06em; }
       .stab-verdict.stable { color: var(--accent-green); }
-      .stab-verdict.marginal { color: var(--accent-amber); }
+      .stab-verdict.overstable { color: var(--accent-amber); }
       .stab-verdict.unstable { color: var(--accent-pink); }
       .stab-sub { font-family: var(--mono); font-size: 9.5px; color: var(--text-muted); margin-top: 2px; }
+      .pillbadge.overstable { background: rgba(234,179,8,.18); color: var(--accent-amber); border: 1px solid var(--accent-amber); }
 
-      .tog { display: flex; align-items: center; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; padding: 6px 0; cursor: pointer; color: var(--text-secondary); }
+      .tog {
+        display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        font-family: var(--mono); font-size: 10.5px; padding: 4px 0; cursor: pointer; color: var(--text-secondary);
+      }
+      /* staging is opt-in, so it gets its own framed card explaining what it does */
+      .stagecard { background: rgba(0,0,0,.28); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 11px; }
+      .stagecard.on { border-color: rgba(255,107,53,.55); background: rgba(255,107,53,.07); }
+      .stageflow { display: flex; align-items: stretch; gap: 5px; margin-top: 9px; }
+      .stageflow .sgbox {
+        flex: 1; text-align: center; font-family: var(--mono); font-size: 8.5px; line-height: 1.35;
+        border-radius: 6px; padding: 6px 3px; border: 1px solid var(--border-color); color: var(--text-muted);
+      }
+      .stageflow .sgbox b { display: block; font-size: 9.5px; color: var(--text-secondary); }
+      .stageflow .sgbox.a { border-color: rgba(255,107,53,.5); background: rgba(255,107,53,.1); }
+      .stageflow .sgbox.a b { color: var(--accent-orange); }
+      .stageflow .sgbox.b { border-color: rgba(0,242,254,.4); background: rgba(0,242,254,.08); }
+      .stageflow .sgbox.b b { color: var(--accent-cyan); }
+      .stageflow .arrow { display: flex; align-items: center; color: var(--text-muted); font-size: 12px; }
 
       .row { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--mono); font-size: 11px; padding: 5px 0; border-bottom: 1px dotted rgba(255,255,255,.1); }
       .row dt { color: var(--text-secondary); }
@@ -227,7 +297,7 @@
       #checklist .crow dt { color: var(--text-secondary); }
       #checklist .crow dd { font-weight: 800; }
       #checklist .crow dd.stable { color: var(--accent-green); }
-      #checklist .crow dd.marginal { color: var(--accent-amber); }
+      #checklist .crow dd.overstable { color: var(--accent-amber); }
       #checklist .crow dd.unstable { color: var(--accent-pink); }
       #checklistWarn { margin-top: 10px; font-family: var(--mono); font-size: 11px; color: var(--accent-pink); display: none; }
       #checklistWarn.show { display: block; }
@@ -283,31 +353,51 @@
             <div class="motorReadout" id="motorReadout"></div>
           </div>
           <div class="ctl">
-            <label class="tog"><span>Two Stages (add a booster)</span>
-              <input type="checkbox" id="stageTog" style="width:34px;height:18px" />
-            </label>
+            <div class="stagecard" id="stageCard">
+              <label class="tog" style="font-size:11px;color:var(--text-primary);font-weight:700">
+                <span>Two-Stage Rocket</span>
+                <span class="switch"><input type="checkbox" id="stageTog" /><span class="track"></span></span>
+              </label>
+              <div class="subnote" id="stageBlurb">
+                A booster is a second motor stacked <b>below</b> the rocket. It fires first, is dropped when it
+                burns out, and the rocket's own motor lights immediately after — so the rocket carries less
+                dead weight for the rest of the climb.
+              </div>
+              <div class="stageflow" id="stageFlow" style="display:none">
+                <div class="sgbox a"><b>1 · BOOSTER</b>fires off the pad, then drops away</div>
+                <div class="arrow">→</div>
+                <div class="sgbox b"><b>2 · SUSTAINER</b>lights at separation, carries the chute</div>
+              </div>
+            </div>
           </div>
           <div class="ctl" id="boosterCtl" style="display:none">
-            <div class="ctl-top"><span class="ctl-name">Motor Designation (Booster)</span></div>
-            <div class="motorRow"><input type="text" id="boosterMotorInput" value="B6-4" maxlength="10" /></div>
+            <div class="ctl-top"><span class="ctl-name">Booster Motor (fires first)</span></div>
+            <div class="motorRow"><input type="text" id="boosterMotorInput" value="C6-0" maxlength="10" /></div>
             <div class="motorReadout" id="boosterReadout"></div>
-            <div class="ctl-top" style="margin-top:8px"><span class="ctl-name">Booster Dry Mass</span><span class="ctl-val" id="boosterMassVal">30 g</span></div>
+            <div class="subnote">
+              Booster motors end in <b>-0</b>: no delay, no ejection charge — they light the stage above
+              the instant they burn out. A delay here would coast before staging.
+            </div>
+            <div class="ctl-top" style="margin-top:10px"><span class="ctl-name">Booster Dry Mass</span><span class="ctl-val" id="boosterMassVal">30 g</span></div>
             <input type="range" id="boosterMass" min="5" max="500" step="1" value="30" />
-            <div class="ctl-top" style="margin-top:8px"><span class="ctl-name">Booster Body Length</span><span class="ctl-val" id="boosterLenVal">150 mm</span></div>
+            <div class="ctl-top" style="margin-top:10px"><span class="ctl-name">Booster Body Length</span><span class="ctl-val" id="boosterLenVal">150 mm</span></div>
             <input type="range" id="boosterLen" min="50" max="600" step="5" value="150" />
+            <div class="hint" id="stageHint"></div>
           </div>
         </div>
 
         <!-- GEOMETRY -->
         <div class="sec sec-geo">
-          <div class="sec-h">Airframe <span style="color:var(--accent-purple)">Geometry</span></div>
+          <div class="sec-h">Airframe <span style="color:var(--accent-purple)">Geometry</span> <button class="whyBtn" data-why="nose">?</button></div>
           <div class="ctl">
             <div class="ctl-top"><span class="ctl-name">Nose Shape</span></div>
             <div class="seg noseSeg" id="noseSeg">
-              <button data-k="conical" class="icon">▲<br />Conical</button>
-              <button data-k="ogive" class="icon on">◗<br />Ogive</button>
-              <button data-k="parabolic" class="icon">◔<br />Parabolic</button>
+              <button data-k="conical" class="icon">▲<span class="nlab">Conical</span></button>
+              <button data-k="ogive" class="icon on">◗<span class="nlab">Ogive</span></button>
+              <button data-k="parabolic" class="icon">◗<span class="nlab">Parabolic</span></button>
+              <button data-k="rounded" class="icon">⬤<span class="nlab">Rounded</span></button>
             </div>
+            <div class="hint" id="noseHint"></div>
           </div>
           <div class="ctl">
             <div class="ctl-top"><span class="ctl-name">Body Diameter</span><span class="ctl-val" id="diamVal">24 mm</span></div>
@@ -329,25 +419,26 @@
           <div id="finCanvasWrap"><canvas id="finCanvas"></canvas></div>
           <div class="ctl" style="margin-top:10px">
             <div class="ctl-top"><span class="ctl-name">Fin Count</span><span class="ctl-val" id="finNVal">3</span></div>
-            <input type="range" class="finslider" id="finN" min="2" max="5" step="1" value="3" />
+            <input type="range" class="finslider" id="finN" data-why="finCount" min="2" max="5" step="1" value="3" />
           </div>
           <div class="ctl">
             <div class="ctl-top"><span class="ctl-name">Root Chord</span><span class="ctl-val" id="finCrVal">60 mm</span></div>
-            <input type="range" class="finslider" id="finCr" min="15" max="150" step="1" value="60" />
+            <input type="range" class="finslider" id="finCr" data-why="finRoot" min="15" max="150" step="1" value="60" />
           </div>
           <div class="ctl">
             <div class="ctl-top"><span class="ctl-name">Tip Chord</span><span class="ctl-val" id="finCtVal">30 mm</span></div>
-            <input type="range" class="finslider" id="finCt" min="0" max="100" step="1" value="30" />
+            <input type="range" class="finslider" id="finCt" data-why="finTip" min="0" max="100" step="1" value="30" />
           </div>
           <div class="ctl">
             <div class="ctl-top"><span class="ctl-name">Span</span><span class="ctl-val" id="finSpanVal">50 mm</span></div>
-            <input type="range" class="finslider" id="finSpan" min="10" max="150" step="1" value="50" />
+            <input type="range" class="finslider" id="finSpan" data-why="finSpan" min="10" max="150" step="1" value="50" />
           </div>
           <div class="ctl">
             <div class="ctl-top"><span class="ctl-name">Sweep</span><span class="ctl-val" id="finSweepVal">20 mm</span></div>
-            <input type="range" class="finslider" id="finSweep" min="0" max="150" step="1" value="20" />
+            <input type="range" class="finslider" id="finSweep" data-why="finSweep" min="0" max="150" step="1" value="20" />
           </div>
-          <p style="font-family:var(--mono);font-size:9.5px;color:var(--text-muted);line-height:1.5">Drag the marker on the rocket in the Design view to set the Center of Gravity.</p>
+          <div class="hint" id="finHint"></div>
+          <p class="subnote">Drag the green marker on the rocket in the Design view to set the Center of Gravity.</p>
         </div>
 
         <!-- STABILITY -->
@@ -362,25 +453,49 @@
 
         <!-- RECOVERY -->
         <div class="sec sec-rec">
-          <div class="sec-h">Recovery <span style="color:var(--accent-green)">Parachute</span></div>
+          <div class="sec-h">Recovery <span style="color:var(--accent-green)">Parachute</span> <button class="whyBtn" data-why="recovery">?</button></div>
+          <p class="subnote" style="margin:-4px 0 10px">
+            Getting the rocket back undamaged. The chute must open near the top of the flight — and be
+            big enough to slow the landing, but not so big it drifts away.
+          </p>
+
           <div class="ctl">
-            <div class="ctl-top"><span class="ctl-name">Deploy Mode</span></div>
+            <div class="ctl-top"><span class="ctl-name">Deploy Mode</span> <button class="whyBtn" data-why="deployMode">?</button></div>
             <div class="seg" id="recSeg">
               <button data-k="motor" class="on">Motor Delay</button>
               <button data-k="dual">Dual Deploy</button>
             </div>
+            <div class="hint" id="recModeHint"></div>
           </div>
+
           <div class="ctl">
             <div class="ctl-top"><span class="ctl-name">Ejection Delay</span><span class="ctl-val delaytag" id="delayVal">5 s</span></div>
-            <p style="font-family:var(--mono);font-size:9.5px;color:var(--text-muted)">Set by the motor's designation — tap the value to find out why.</p>
+            <p class="subnote">
+              Not yours to choose — it is the number after the dash in the motor code, a fuse built into the
+              motor. Change the motor to change it. <span class="delaytag" data-why="delay"
+              style="cursor:pointer;text-decoration:underline dotted;color:var(--accent-amber)">Why does this matter?</span>
+            </p>
+            <div class="subnote" id="delayMatch"></div>
           </div>
+
           <div class="ctl">
-            <div class="ctl-top"><span class="ctl-name">Recovery Area (Main)</span><span class="ctl-val" id="recAreaVal">900 cm²</span></div>
-            <input type="range" id="recArea" min="100" max="3000" step="25" value="900" />
+            <div class="ctl-top"><span class="ctl-name">Parachute Area (Main)</span><span class="ctl-val" id="recAreaVal">225 cm²</span></div>
+            <input type="range" id="recArea" min="50" max="3000" step="25" value="225" />
+            <div class="subnote">
+              How much canopy the rocket hangs under. Bigger canopy → slower, safer landing, but more
+              wind drift. Predicted touchdown for this design:
+              <span class="liveval" id="descentRate">—</span>
+              <span id="descentBand" style="color:var(--text-muted)"></span>
+            </div>
           </div>
+
           <div class="ctl" id="backupCtl" style="display:none">
-            <div class="ctl-top"><span class="ctl-name">Backup (Main) Deploy Altitude</span><span class="ctl-val" id="backupAltVal">150 m</span></div>
+            <div class="ctl-top"><span class="ctl-name">Main Deploy Altitude</span><span class="ctl-val" id="backupAltVal">150 m</span></div>
             <input type="range" id="backupAlt" min="20" max="300" step="5" value="150" />
+            <div class="subnote">
+              In Dual Deploy the small drogue comes out at apogee and the big main chute waits until the
+              rocket has fallen to this height — less time in the wind, so it lands closer to the pad.
+            </div>
           </div>
         </div>
 
@@ -405,6 +520,8 @@
           <div class="row click" id="o_weatherRow" data-why="weathercock"><dt>Weathercock Angle</dt><dd id="o_weather">—</dd></div>
           <div class="row"><dt>Landing Downrange</dt><dd id="o_landDown">—</dd></div>
           <div class="row"><dt>Landing Speed</dt><dd id="o_landSpeed">—</dd></div>
+          <div class="row"><dt>Total Flight Time</dt><dd id="o_flightTime">—</dd></div>
+          <div class="row"><dt>Drag Coefficient</dt><dd id="o_cd">—</dd></div>
           <div id="outcomeBanner"></div>
           <div id="miniGraphs">
             <div class="mgraph" data-why="weathercock"><canvas id="gVel"></canvas><div class="mgcap">Velocity (cyan) &amp; Acceleration in g (orange) vs time</div></div>
@@ -424,8 +541,10 @@
         <h2>Pre-Launch Checklist</h2>
         <div class="sub">Review before you commit</div>
         <div class="crow"><dt>Static Margin</dt><dd id="c_margin">—</dd></div>
+        <div class="crow"><dt>Thrust-to-Weight</dt><dd id="c_twr">—</dd></div>
         <div class="crow"><dt>Total Liftoff Mass</dt><dd id="c_mass">—</dd></div>
         <div class="crow"><dt>Motor(s)</dt><dd id="c_motors">—</dd></div>
+        <div class="crow"><dt>Drag Coefficient</dt><dd id="c_cd">—</dd></div>
         <div class="crow"><dt>Moment of Inertia</dt><dd id="c_moi">—</dd></div>
         <div id="checklistWarn"></div>
         <div style="margin-top:16px">
@@ -451,11 +570,12 @@
         <div class="sub">Motor-Powered Rocket Design &amp; Stability</div>
         <p>Everything the simulation needs comes from the design you build and the motor designation you type in — no outside data lookups.</p>
         <ol>
-          <li><b>Design:</b> Pick a nose shape, size the body, add fins, and drag the CG marker onto the rocket. The stability gauge reacts instantly.</li>
-          <li><b>Static Margin:</b> (CP − CG) / diameter, in body-diameters ("calibers"). 1–2 calibers is the classic stable range; below 1 the rocket can tumble.</li>
-          <li><b>Checklist &amp; Launch:</b> Commit opens a checklist — margin, mass, motor, and moment of inertia — then launches into the Flight view.</li>
-          <li><b>Wind:</b> A stable rocket weathercocks — it pitches into the wind — and still drifts downwind. Watch the pitch graph.</li>
-          <li><b>Recovery:</b> The parachute opens using the motor's real ejection delay (or, in Dual Deploy, a small drogue at apogee and the main chute at a backup altitude). Safe descent is 4.5–6 m/s.</li>
+          <li><b>Design:</b> Pick a nose shape, size the body, add fins, and drag the green CG marker along the rocket. The stability gauge reacts instantly.</li>
+          <li><b>Static Margin:</b> (CP − CG) / diameter, in body-diameters ("calibers"). Below <b>1</b> the rocket tumbles. <b>1–2</b> is the band you want. Above <b>2</b> it is over-stable — it snaps into any crosswind and weathercocks badly, so it flies a long way downwind instead of up.</li>
+          <li><b>Fins:</b> Span is by far the strongest control — the fin's effect goes as span squared. Sweep buys margin almost free. Fin count is shown honestly in the rear view, and every fin you add is also drag.</li>
+          <li><b>Drag:</b> The C<sub>d</sub> shown in the outputs is built up from the nose shape, skin friction along the body, the fins, and base drag — so a longer body or bigger fins really do cost you altitude.</li>
+          <li><b>Staging:</b> A booster fires first and is dropped at burnout, so the rest of the climb carries less mass. It only pays if the booster burns hard while attached — watch the dashed orange trace showing where the spent booster falls.</li>
+          <li><b>Recovery:</b> The parachute opens on the motor's real ejection delay (or, in Dual Deploy, a drogue at apogee and the main chute lower down). Safe descent is 4.5–6 m/s — the panel predicts it before you fly.</li>
         </ol>
         <button class="close" id="manualClose">Start Building</button>
       </div>
@@ -476,8 +596,14 @@
       const K_DAMP = 0.5;              // pitch-damping constant — "calibrated once, then fixed" per design brief
       const CD_REC = 1.5;              // parachute drag coefficient, fixed (flat/round canopy assumption)
       const DROGUE_AREA_FRAC = 0.15;   // dual-deploy drogue area as a fraction of the main chute area
-      const NOSE_LEN_RATIO = 3;        // nose cone length = 3x body diameter, a fixed proportion (no separate control)
       const TUMBLE_DEG = 270;          // cumulative pitch swing beyond this = genuine loss of control, not a wobble
+      /* --- drag build-up, all referred to body frontal area (the standard convention) --- */
+      const CF_SKIN = 0.004;           // turbulent skin-friction coefficient on wetted area, typical for model-rocket Re
+      const CD_BASE_COAST = 0.12;      // base (tail suction) drag when the motor is not firing
+      const CD_BASE_THRUST = 0.03;     // exhaust fills the base while thrusting, so base drag nearly vanishes
+      const CD_FIN_PRESSURE = 0.002;   // fin leading/trailing-edge pressure drag, per unit fin-to-body area ratio.
+                                        // Calibrated so a conventional 24 mm airframe lands near Cd 0.6, which is
+                                        // where real well-finished model rockets measure (published range 0.45–0.75).
       const ROD_LEN = 1.0;             // m — a real launch rod/rail holds attitude fixed for this first stretch,
                                         // which is why a crosswind doesn't shove a rocket over before it has speed
       const MFG_TILT_DEG = 1;          // a small, fixed built-in tilt (thrust misalignment / build imperfection) —
@@ -519,11 +645,19 @@
       }
 
       /* ============ NOSE SHAPES ============ */
-      // CN_alpha for a nose cone is 2 regardless of shape (Barrowman); only its CP location and Cd vary by shape.
+      // CN_alpha for a nose cone is 2 whatever the profile (Barrowman); the profile sets where that force
+      // acts (xnRatio, as a fraction of nose length) and how much pressure drag the shape makes (cdPressure).
+      // lenRatio is the nose's own fineness — length as a multiple of body diameter — which is what actually
+      // makes the four options look and behave differently instead of being three near-identical points.
       const NOSE = {
-        conical:   { label: "Conical",   cd: 0.35, xnRatio: 0.666, icon: "▲" },
-        ogive:     { label: "Ogive",     cd: 0.30, xnRatio: 0.466, icon: "◗" },
-        parabolic: { label: "Parabolic", cd: 0.50, xnRatio: 0.500, icon: "◔" },
+        conical:   { label: "Conical",   lenRatio: 3.0, xnRatio: 0.667, cdPressure: 0.15, icon: "▲",
+                     note: "Straight-sided and easy to build. The flat sides make a little more pressure drag than a curve, and its CP sits furthest back of the four." },
+        ogive:     { label: "Ogive",     lenRatio: 3.5, xnRatio: 0.466, cdPressure: 0.08, icon: "◗",
+                     note: "The classic tangent-ogive: a long circular-arc curve. Lowest drag of the four and the shape most real rockets use." },
+        parabolic: { label: "Parabolic", lenRatio: 3.0, xnRatio: 0.500, cdPressure: 0.10, icon: "◗",
+                     note: "A fuller curve than the ogive — slightly blunter shoulders, slightly more drag, CP a touch further aft." },
+        rounded:   { label: "Rounded",   lenRatio: 1.2, xnRatio: 0.333, cdPressure: 0.28, icon: "⬤",
+                     note: "Short and blunt, like a hemisphere. Much more pressure drag, so it flies noticeably lower — but its CP is the furthest forward, which costs stability too." },
       };
 
       /* ============ STATE ============ */
@@ -531,7 +665,7 @@
         view: "design",
         stages: 1,
         motorStr: "C6-5",
-        boosterMotorStr: "B6-4",
+        boosterMotorStr: "C6-0",
         boosterMass: 30,   // g
         boosterLen: 150,   // mm
         nose: "ogive",
@@ -541,7 +675,7 @@
         finN: 3, finCr: 60, finCt: 30, finSpan: 50, finSweep: 20, // mm
         cgX: null,         // mm from nose tip — set to a sane default once geometry is known
         recoveryMode: "motor",
-        recArea: 900,      // cm^2
+        recArea: 225,      // cm^2 — sized so the stock design lands inside the safe band
         backupAlt: 150,    // m
         launchAngleDeg: 0,
         wind: 0,
@@ -551,11 +685,28 @@
       };
 
       function design() {
-        const noseLen = NOSE_LEN_RATIO * S.diam;
+        const noseLen = NOSE[S.nose].lenRatio * S.diam;
         const totalLen = noseLen + S.bodyLen;
-        if (S.cgX == null) S.cgX = totalLen * 0.55;
-        S.cgX = clamp(S.cgX, 2, totalLen - 2);
+        S.cgX = clamp(S.cgX == null ? totalLen * 0.55 : S.cgX, 2, totalLen - 2);
         return { noseLen, totalLen, diam: S.diam };
+      }
+
+      /* Drag build-up, all coefficients referred to the body's frontal area.
+         The old model used the nose coefficient alone, which ignored the two biggest real
+         contributors on a model rocket — skin friction down a long body tube, and the fins. */
+      function dragBuildup(d, thrusting) {
+        const dm = S.diam / 1000, Lb = S.bodyLen / 1000, Ln = d.noseLen / 1000;
+        const frontal = Math.PI * (dm / 2) ** 2;
+        // skin friction over the wetted body + nose surface
+        const wetted = Math.PI * dm * (Lb + Ln * 0.9);
+        const cdSkin = (CF_SKIN * wetted) / frontal;
+        // fins: both faces wetted, plus edge pressure drag
+        const finArea = (((S.finCr + S.finCt) / 2) * S.finSpan) / 1e6; // m^2, one fin
+        const finRatio = (S.finN * finArea) / frontal;
+        const cdFins = CF_SKIN * 2 * finRatio + CD_FIN_PRESSURE * finRatio;
+        const cdBase = thrusting ? CD_BASE_THRUST : CD_BASE_COAST;
+        const cdNose = NOSE[S.nose].cdPressure;
+        return { cdNose, cdSkin, cdFins, cdBase, total: cdNose + cdSkin + cdFins + cdBase, frontal };
       }
 
       function computeCP(d) {
@@ -579,8 +730,10 @@
       }
 
       function marginOf(cp, d) { return (cp.Xcp - S.cgX) / S.diam; }
-      function classify(m) { return m < 1 ? "unstable" : m <= 2 ? "marginal" : "stable"; }
-      function classifyLabel(c) { return c === "stable" ? "STABLE" : c === "marginal" ? "MARGINAL" : "UNSTABLE"; }
+      // 1–2 calibers is the classic good band. Below 1 the rocket can tumble; above 2 it is
+      // over-stable — the restoring moment is so strong it weathercocks hard into any crosswind.
+      function classify(m) { return m < 1 ? "unstable" : m <= 2 ? "stable" : "overstable"; }
+      function classifyLabel(c) { return c === "stable" ? "STABLE" : c === "overstable" ? "OVER-STABLE" : "UNSTABLE"; }
 
       function liftoffMassKg(motor, boosterMotor) {
         let m = S.dryMass / 1000 + (motor ? motor.propMass : 0);
@@ -599,11 +752,51 @@
       const WHY = {
         margin: {
           title: "Static Margin & the 1–2 Caliber Rule",
-          body: "<p>Static margin is the distance between the Center of Pressure (where aerodynamic force effectively pushes) and the Center of Gravity (where the rocket balances), measured in body diameters — \"calibers.\"</p><p>When the CP sits <b>behind</b> the CG by 1–2 calibers, any nudge off vertical creates a restoring force that points the rocket back the way it came — <b>stable</b>. Below 1 caliber that restoring effect is weak or reversed, and the rocket can tumble instead of flying straight.</p>",
+          body: "<p>Static margin is the distance between the Center of Pressure (where aerodynamic force effectively pushes) and the Center of Gravity (where the rocket balances), measured in body diameters — \"calibers.\"</p><p>When the CP sits <b>behind</b> the CG by 1–2 calibers, any nudge off vertical creates a restoring force that points the rocket back the way it came — <b>stable</b>.</p><p>Below 1 caliber that restoring effect is weak or reversed, and the rocket can tumble. Above 2 calibers it becomes <b>over-stable</b>: the restoring moment is so strong that the rocket snaps into any crosswind and weathercocks hard, flying a long way downwind instead of up.</p>",
         },
         fins: {
           title: "Fins Move the Center of Pressure",
-          body: "<p>Bigger fins — more span, more area — carry more of the total aerodynamic force, which pulls the Center of Pressure toward them (aft, toward the tail). A rocket with small fins near the front of the airframe (relatively) has its CP close to the nose; adding fin area drags the CP rearward, increasing the static margin.</p><p>Sweep and taper (tip chord) change exactly where along the fin that force acts, which is why the CP shifts even when the span alone doesn't change.</p>",
+          body: "<p>Fins are the only large aerodynamic surface near the <b>tail</b>. Whatever share of the total aerodynamic force they carry pulls the Center of Pressure toward them, and the CP is a force-weighted average between the nose and the fins.</p><p>That is the whole job: fins do not make the rocket stable by pushing it straight, they make it stable by moving the CP behind the CG. Each fin control changes that share in a different way — tap any individual slider to see how.</p><p>Fins are not free, though. Every square centimetre of fin is also wetted surface making drag, so oversized fins buy stability at the cost of altitude.</p>",
+        },
+        finCount: {
+          title: "Fin Count — How Many Blades",
+          body: "<p>More fins means more total fin area, so the CP moves further aft and the rocket gets more stable — but the gain is not proportional. Fins partly shield each other, and the interference term in the Barrowman method means the fourth and fifth fins add less than the third did.</p><p><b>Three</b> is the classic choice: enough area to be solidly stable, the least drag for that stability, and it cannot rock on the pad. <b>Four</b> is easier to align by eye and slightly more stable. <b>Two</b> only stabilises in one plane and is genuinely marginal.</p><p>Watch the rear-view diagram above: that is the count you are actually setting, seen looking up the tail.</p>",
+        },
+        finRoot: {
+          title: "Root Chord — The Edge Glued to the Body",
+          body: "<p>Root chord is how long the fin is where it meets the body tube. Because the fins are mounted flush with the tail, a <b>longer</b> root chord pushes the fin's leading edge further <b>forward</b> — so the fin's own centre of lift moves forward too, and the CP creeps <i>toward the nose</i>, slightly reducing the margin.</p><p>It also adds area, which pulls the other way. Root chord is the one fin control where those two effects fight, so the CP moves relatively little while the drag keeps climbing.</p>",
+        },
+        finTip: {
+          title: "Tip Chord — Taper",
+          body: "<p>Tip chord sets how much the fin narrows toward its outer edge. A tip chord equal to the root gives a rectangular fin; a tip chord of zero gives a triangle.</p><p>Taper moves the fin's area — and therefore its share of the lift — inboard and forward, so cutting the tip chord shifts the CP slightly forward while shedding drag. Tapered fins are also stiffer for their weight and less likely to flutter at speed.</p>",
+        },
+        finSpan: {
+          title: "Span — How Far the Fins Stick Out",
+          body: "<p>Span is the single most powerful stability control you have. In the Barrowman equations the fin's normal-force contribution scales with <b>span squared</b> over body diameter — so doubling the span roughly quadruples the fin's pull on the CP.</p><p>Air far out from the body is also undisturbed by the body itself, so it is doing more work per unit area than fin area close in. This is why a small increase in span moves the margin so much more than the same increase in chord.</p><p>The cost is drag and fragility: long fins are the first thing to snap on landing.</p>",
+        },
+        finSweep: {
+          title: "Sweep — Raking the Fin Backwards",
+          body: "<p>Sweep slides the fin's tip rearward without changing its area. Because the fin's centre of lift sits between root and tip, sweeping the tip back drags that point <b>aft</b> — so the CP moves back and the static margin goes <b>up</b>, for free, with no extra area and almost no extra drag.</p><p>That is why swept fins are so common. The practical limit is the tip overhanging the tail, where it is exposed on landing and adds nothing.</p>",
+        },
+        nose: {
+          title: "Nose Shape — Drag vs Stability",
+          body: "<p>The nose cone always contributes the same normal force (Barrowman gives every nose CN<sub>α</sub> = 2). What changes with the profile is <b>where</b> that force acts and <b>how much drag</b> the shape makes punching through the air.</p><ul><li><b>Ogive</b> — the long circular-arc curve. Lowest drag, and the CP furthest forward of the slender shapes.</li><li><b>Parabolic</b> — a slightly fuller curve, a little more drag.</li><li><b>Conical</b> — straight sides, easiest to build, a bit more pressure drag, CP furthest aft.</li><li><b>Rounded</b> — short and blunt. Far more pressure drag, so it flies noticeably lower, and its CP is furthest forward, which costs stability as well.</li></ul><p>The four shapes also have different <b>lengths</b> here, because fineness is part of what makes a nose shape what it is — a blunt nose that was three diameters long would just be a parabola.</p>",
+        },
+        recovery: {
+          title: "Recovery — Getting It Back in One Piece",
+          body: "<p>A rocket that reaches a beautiful apogee and then augers into the ground is a failed flight. Recovery is the half of the design that decides whether you fly the same airframe again.</p><p>Three things have to line up:</p><ul><li><b>Timing</b> — the chute must open near apogee, when the rocket is moving slowly. Open it at speed and the shock tears the airframe apart.</li><li><b>Size</b> — enough canopy to land under about 6 m/s. Too little and it breaks on impact; too much and it floats away downwind.</li><li><b>Mode</b> — one chute all the way down, or a small drogue first and the main chute low down.</li></ul>",
+        },
+        deployMode: {
+          title: "Motor Delay vs Dual Deploy",
+          body: "<p><b>Motor Delay</b> is the simple way, and how nearly every small rocket flies. When the propellant is spent, a slow-burning delay grain keeps smoking for a fixed number of seconds, then fires an ejection charge that pushes the parachute out. One chute, out near apogee, all the way to the ground.</p><p>Its weakness is drift: the rocket hangs under a full canopy for the entire descent, so a breeze carries it a long way.</p><p><b>Dual Deploy</b> splits recovery in two. A small <i>drogue</i> comes out at apogee — just enough to stop the rocket tumbling and bring it down fast and nearly straight. The big <i>main</i> chute is held back until the rocket has fallen to a set altitude, so it only spends the last few hundred metres drifting.</p><p>That is how any serious high-altitude rocket lands anywhere near the pad — at the cost of needing an altimeter and a second charge.</p>",
+        },
+        recArea: {
+          title: "Parachute Area — the Landing Speed Dial",
+          body: "<p>A parachute falls at the speed where its drag exactly balances the rocket's weight. Set them equal and solve:</p><p style=\"font-family:var(--mono);text-align:center;color:var(--accent-cyan)\">v = √( 2mg / ρ · C<sub>d</sub> · A )</p><p>Because the area is under a square root, the canopy has to get <b>four times</b> bigger to land <b>half</b> as fast. That is why chasing a very soft landing costs so much canopy — and so much drift.</p><p>Aim for <b>4.5–6 m/s</b>. Below that band you are carrying more nylon than you need; above it, the landing starts breaking fins.</p>",
+        },
+        staging: {
+          title: "Why Add a Booster Stage",
+          body: "<p>A single motor has to lift its own dead weight — casing, propellant, everything — for the whole burn. Staging attacks that directly: the booster does its work low down and is then <b>thrown away</b>, so the rocket that keeps climbing is lighter than the one that left the pad.</p><p>The sequence here is the real one. The booster fires off the pad. When its propellant runs out it has no delay and no ejection charge (that is what the <b>-0</b> in a booster motor code means) — the hot gases pass straight up and light the sustainer motor, and the empty booster falls away.</p><p>Staging only pays if the booster is actually burning hard while it is attached. A booster that is heavy relative to its thrust can leave you <i>lower</i> than a single stage, because you carried its mass through the part of the flight where it cost the most.</p>",
         },
         weathercock: {
           title: "Weathercocking",
@@ -632,12 +825,21 @@
       $("whyScrim").addEventListener("click", (e) => { if (e.target.id === "whyScrim") $("whyScrim").classList.remove("show"); });
 
       /* ============ CONTROLS WIRING ============ */
+      // paints the filled part of a slider track up to its current value
+      function paintRange(el) {
+        const min = parseFloat(el.min), max = parseFloat(el.max);
+        const pct = ((parseFloat(el.value) - min) / (max - min)) * 100;
+        el.style.setProperty("--p", pct.toFixed(1) + "%");
+      }
+      const RANGES = [];
       function bindRange(id, valId, fmt, onSet) {
         const el = $(id);
+        RANGES.push(el);
         el.addEventListener("input", () => {
           const v = parseFloat(el.value);
           onSet(v);
           $(valId).textContent = fmt(v);
+          paintRange(el);
           refreshAll();
         });
       }
@@ -656,15 +858,37 @@
       bindRange("launchAngle", "launchAngleVal", (v) => v + "°", (v) => (S.launchAngleDeg = v));
       bindRange("wind", "windVal", (v) => v.toFixed(1) + " m/s", (v) => (S.wind = v));
 
+      /* Each fin control teaches its own lesson. The popup fires once per control so it
+         explains without nagging; the inline hint below the sliders updates every time. */
+      const FIN_HINTS = {
+        finCount: "<b>Fin count</b> — more blades, more total fin area, so the CP moves aft. The gain shrinks with each fin added: going 3→4 helps far less than 2→3.",
+        finRoot: "<b>Root chord</b> — the edge glued to the body. Lengthening it pushes the fin forward as well as adding area, so the two effects fight and the CP barely moves while drag climbs.",
+        finTip: "<b>Tip chord</b> — taper. Trimming the tip moves area inboard and forward, easing the CP slightly forward but shedding drag and stiffening the fin.",
+        finSpan: "<b>Span</b> — the strongest control you have. The fin's contribution goes as span <i>squared</i> over diameter, so a small change here swings the margin hard.",
+        finSweep: "<b>Sweep</b> — rakes the tip backwards without adding area. Drags the fin's centre of lift aft, so the margin rises almost for free.",
+      };
+      const whyShown = new Set();
       document.querySelectorAll(".finslider").forEach((el) => {
-        el.addEventListener("pointerup", () => showWhy("fins"));
+        const key = el.dataset.why;
+        el.addEventListener("input", () => { $("finHint").innerHTML = FIN_HINTS[key] || ""; });
+        el.addEventListener("pointerup", () => {
+          if (whyShown.has(key)) return;
+          whyShown.add(key);
+          showWhy(key);
+        });
       });
 
       $("noseSeg").querySelectorAll("button").forEach((b) => {
         b.addEventListener("click", () => {
           $("noseSeg").querySelectorAll("button").forEach((x) => x.classList.remove("on"));
           b.classList.add("on");
+          // The shapes have different lengths, and cgX is measured from the nose tip. Slide the CG by
+          // the change so it stays at the same station on the body tube — swapping a nose should not
+          // teleport the balance point down the airframe and fake an instant stability change.
+          const before = NOSE[S.nose].lenRatio * S.diam;
           S.nose = b.dataset.k;
+          const after = NOSE[S.nose].lenRatio * S.diam;
+          if (S.cgX != null) S.cgX += after - before;
           refreshAll();
         });
       });
@@ -674,11 +898,15 @@
           b.classList.add("on");
           S.recoveryMode = b.dataset.k;
           $("backupCtl").style.display = S.recoveryMode === "dual" ? "" : "none";
+          refreshAll();
         });
       });
       $("stageTog").addEventListener("change", (e) => {
         S.stages = e.target.checked ? 2 : 1;
         $("boosterCtl").style.display = S.stages === 2 ? "" : "none";
+        $("stageFlow").style.display = S.stages === 2 ? "" : "none";
+        $("stageCard").classList.toggle("on", S.stages === 2);
+        if (S.stages === 2 && !whyShown.has("staging")) { whyShown.add("staging"); showWhy("staging"); }
         refreshAll();
       });
 
@@ -750,6 +978,19 @@
         if (!motorParsed) problems.push("Sustainer motor designation isn't valid.");
         if (S.stages === 2 && !boosterParsed) problems.push("Booster motor designation isn't valid.");
         if (cls === "unstable") problems.push("Static margin is below 1 caliber — this design is likely to tumble.");
+        if (cls === "overstable") problems.push(`Static margin is ${m.toFixed(1)} calibers — over-stable. It will fly straight, but it weathercocks hard and will drift a long way in any wind.`);
+        const liftThrust = S.stages === 2 ? (boosterParsed && boosterParsed.favg) : (motorParsed && motorParsed.favg);
+        if (liftThrust) {
+          const twr = liftThrust / (mass * G);
+          $("c_twr").textContent = twr.toFixed(1) + ":1";
+          $("c_twr").className = twr < 1 ? "unstable" : twr < 5 ? "overstable" : "stable";
+          if (twr < 1) problems.push(`Thrust-to-weight is ${twr.toFixed(2)} — the motor cannot lift this rocket off the pad at all.`);
+          else if (twr < 5) problems.push(`Thrust-to-weight is only ${twr.toFixed(1)} — it will leave the rod slowly and be pushed around by any breeze. Aim for 5 or better.`);
+        } else {
+          $("c_twr").textContent = "—";
+        }
+        const dragNow = dragBuildup(d, false);
+        $("c_cd").textContent = dragNow.total.toFixed(2);
         warnEl.innerHTML = problems.map((p) => "⚠ " + p).join("<br/>");
         warnEl.classList.toggle("show", problems.length > 0);
         $("commitLaunch").disabled = !motorParsed || (S.stages === 2 && !boosterParsed);
@@ -785,7 +1026,8 @@
         const diamM = S.diam / 1000;
         const A = Math.PI * (diamM / 2) ** 2;
         const L = d.totalLen / 1000;
-        const cd = NOSE[S.nose].cd;
+        const cdCoast = dragBuildup(d, false).total;
+        const cdThrust = dragBuildup(d, true).total;
         const dryKgSustainer = S.dryMass / 1000;
         const dryKgBooster = S.boosterMass / 1000;
         const staged = S.stages === 2;
@@ -810,19 +1052,25 @@
             return { thrust: boosterParsed.favg, mass, sepEvent: false };
           }
           const ms = motorState(t - tBurnBooster, motorParsed, dryKgSustainer);
-          return { thrust: ms.thrust, mass: ms.mass, sepEvent: t - tBurnBooster < 1e-9 };
+          return { thrust: ms.thrust, mass: ms.mass };
         }
 
         let state = { x: 0, y: 0.05, vx: 0, vy: 0, theta: launchRad + MFG_TILT_DEG * D2R, omega: 0 };
         let t = 0;
-        const dt = 1 / 240;
-        const maxT = 90;
+        // Fine steps while the dynamics are fast (thrust, high-speed coast); once the parachute is
+        // out the motion is slow and smooth, so a coarser step covers the long descent cheaply.
+        // The old fixed 1/240 s step with a 90 s ceiling ran out of budget in mid-air, which is why
+        // flights used to stop halfway down and report a landing that never happened.
+        const DT_FAST = 1 / 240, DT_CHUTE = 1 / 40;
+        const maxT = 600;
         const history = { t: [], x: [], y: [], v: [], accG: [], theta: [] };
+        const boosterTrack = { x: [], y: [] }; // spent booster's own fall, drawn separately
         const events = []; // {t, x, y, label}
         let apogeeT = null, apogeeAlt = 0, apogeeDown = 0;
         let recoveryPhase = "none"; // none | drogue | main
         let deployedAtSpeed = null, deployShock = false;
         let boosterSepSpeed = null, boosterSeparated = !staged;
+        let boosterFall = null; // the discarded booster, propagated separately so staging is visible
         let sustainerBurnout = staged ? tBurnBooster + motorParsed.tBurn : motorParsed.tBurn;
         let weathercockDeg = 0, weathercockCaptured = false;
         let tumbled = false;
@@ -831,15 +1079,16 @@
         let lastAccMag = 0;
         let onRod = true; // held to the launch angle until it clears the rod — see ROD_LEN
 
-        function currentDragArea() {
+        function currentDragArea(thrusting) {
+          // Under a canopy the chute completely dominates; the airframe's own drag is negligible beside it.
           if (recoveryPhase === "main") return { cd: CD_REC, A: recAreaM2 };
           if (recoveryPhase === "drogue") return { cd: CD_REC, A: drogueAreaM2 };
-          return { cd, A };
+          return { cd: thrusting ? cdThrust : cdCoast, A };
         }
 
         function deriv(s, tt) {
           const ss = stackState(tt);
-          const drag = currentDragArea();
+          const drag = currentDragArea(ss.thrust > 0);
           const vrelx = s.vx - windX, vrely = s.vy;
           const vrel = Math.hypot(vrelx, vrely);
           const q = 0.5 * RHO * vrel * vrel;
@@ -869,14 +1118,21 @@
         }
 
         let steps = 0;
-        const maxSteps = Math.ceil(maxT / dt) + 10;
-        while (!landed && steps < maxSteps) {
+        let nextSampleT = 0;
+        let timedOut = false;
+        const SAMPLE_EVERY = 0.05; // s between history samples, so the trace stays smooth at any duration
+        while (!landed) {
+          const dt = recoveryPhase === "none" ? DT_FAST : DT_CHUTE;
+          if (t > maxT) { timedOut = true; break; }
           if (onRod && Math.hypot(state.x, state.y) >= ROD_LEN) onRod = false;
-          const ss = stackState(t);
-          if (ss.sepEvent && !boosterSeparated) {
+          // The booster is spent the moment its propellant runs out; detect the crossing rather than
+          // testing for an exact hit on the boundary, which a fixed step almost never lands on.
+          if (staged && !boosterSeparated && t >= tBurnBooster) {
             boosterSeparated = true;
             boosterSepSpeed = Math.hypot(state.vx, state.vy);
             events.push({ t, x: state.x, y: state.y, label: "STAGE SEPARATION" });
+            // from here the empty booster is its own falling object — a tumbling brick, high drag, no lift
+            boosterFall = { x: state.x, y: state.y, vx: state.vx, vy: state.vy, live: true };
           }
 
           const k1 = deriv(state, t);
@@ -918,22 +1174,54 @@
             events.push({ t, x: next.x, y: next.y, label: "MAIN DEPLOY" });
           }
 
-          state = next; t += dt; steps++;
-          const accMag = Math.hypot(k1._ax, k1._ay + G) ; // approx net accel magnitude incl. gravity removed for "felt" g
+          // ground contact: interpolate the crossing so the touchdown speed is the real one
+          if (t > 0.5 && next.y <= 0 && next.vy < 0) {
+            const frac = state.y / (state.y - next.y || 1);
+            landSpeed = Math.abs(state.vy + (next.vy - state.vy) * frac);
+            state = { ...next, y: 0, x: state.x + (next.x - state.x) * frac };
+            t += dt * frac;
+            landed = true;
+          } else {
+            state = next; t += dt;
+          }
+          steps++;
           lastAccMag = Math.hypot(k1._ax, k1._ay);
-          if (steps % 6 === 0) {
+
+          // spent booster falls ballistically on its own — high drag, no stabilising fins of its own
+          if (boosterFall && boosterFall.live) {
+            const bf = boosterFall;
+            const bMass = Math.max(0.005, dryKgBooster);
+            const bA = A, bCd = 0.9; // tumbling empty tube
+            const bv = Math.hypot(bf.vx - windX, bf.vy);
+            const bq = 0.5 * RHO * bv * bv * bCd * bA;
+            bf.vx += ((bv > 1e-6 ? -bq * ((bf.vx - windX) / bv) : 0) / bMass) * dt;
+            bf.vy += ((bv > 1e-6 ? -bq * (bf.vy / bv) : 0) / bMass - G) * dt;
+            bf.x += bf.vx * dt; bf.y += bf.vy * dt;
+            if (bf.y <= 0) { bf.y = 0; bf.live = false; }
+          }
+
+          if (t >= nextSampleT) {
+            nextSampleT = t + SAMPLE_EVERY;
             history.t.push(t); history.x.push(state.x); history.y.push(Math.max(0, state.y));
             history.v.push(Math.hypot(state.vx, state.vy));
             history.accG.push(lastAccMag / G);
             history.theta.push(state.theta * R2D);
+            boosterTrack.x.push(boosterFall ? boosterFall.x : null);
+            boosterTrack.y.push(boosterFall ? Math.max(0, boosterFall.y) : null);
           }
-          if (t > 0.5 && state.y <= 0 && state.vy < 0) { landed = true; landSpeed = Math.abs(state.vy); state.y = 0; }
         }
         if (!landed) { landed = true; landSpeed = Math.abs(state.vy); }
 
         // mission outcome
+        const liftoffThrust = staged ? boosterParsed.favg : motorParsed.favg;
+        const twr = liftoffThrust / (massAtLiftoff * G);
         let cause, mode, sev;
-        if (tumbled) {
+        if (apogeeAlt < 2 || twr < 1) {
+          mode = "Never Left the Pad"; sev = "fail";
+          cause = `Thrust-to-weight is only ${twr.toFixed(2)}. The motor pushes with ${liftoffThrust.toFixed(1)} N ` +
+            `but the rocket weighs ${(massAtLiftoff * G).toFixed(1)} N — you need at least 1.0 to leave the ground, ` +
+            `and about 5 to leave it safely. Use a bigger motor or take mass out.`;
+        } else if (tumbled) {
           mode = "Unstable Ascent"; sev = "fail";
           cause = `The rocket tumbled — the static margin (${margin.toFixed(2)} cal) put the Center of Pressure too close to, or ahead of, the Center of Gravity.`;
         } else if (staged && boosterSepSpeed !== null && boosterSepSpeed < SEPARATION_MIN_V) {
@@ -947,16 +1235,23 @@
           cause = recoveryPhase === "none"
             ? "The recovery system never deployed — check the motor's ejection delay and recovery mode."
             : `Landed at ${landSpeed.toFixed(1)} m/s — faster than the ${LAND_SAFE_HI} m/s safe-descent limit.`;
+        } else if (timedOut) {
+          mode = "Flight Not Resolved"; sev = "warn";
+          cause = `The rocket was still airborne after ${maxT} s of simulated flight — usually a very large chute on a very light airframe.`;
         } else {
           mode = "Nominal Recovery"; sev = "ok";
           cause = landSpeed < LAND_SAFE_LO
             ? `Landed softly at ${landSpeed.toFixed(1)} m/s — under the ${LAND_SAFE_LO} m/s target band (a slightly bigger chute than needed).`
             : `Landed at ${landSpeed.toFixed(1)} m/s — inside the ${LAND_SAFE_LO}–${LAND_SAFE_HI} m/s safe-descent band.`;
+          if (margin > 2 && S.wind > 0) {
+            cause += ` Note the ${margin.toFixed(1)} cal margin: over-stable rockets weathercock hard, which is why it drifted ${Math.abs(state.x).toFixed(0)} m downrange.`;
+          }
         }
 
         S.flight = {
-          history, events, apogeeAlt, apogeeDown, apogeeT, landSpeed,
-          finalX: state.x, margin, outcome: { mode, cause, sev },
+          history, events, apogeeAlt, apogeeDown, apogeeT, landSpeed, sustainerBurnout,
+          finalX: state.x, margin, outcome: { mode, cause, sev }, boosterTrack, staged,
+          flightTime: t, cdCoast,
           weathercockDeg: weathercockCaptured ? weathercockDeg : null,
           wind: S.wind, maxT: t, cp, d,
           replayIdx: 0, playing: true, playT: 0,
@@ -972,6 +1267,8 @@
         $("o_weather").textContent = f.weathercockDeg != null ? f.weathercockDeg.toFixed(1) + "°" : (S.wind > 0 ? "—" : "no wind");
         $("o_landDown").textContent = f.finalX.toFixed(1) + " m";
         $("o_landSpeed").textContent = f.landSpeed.toFixed(1) + " m/s";
+        $("o_flightTime").textContent = f.flightTime.toFixed(1) + " s";
+        $("o_cd").textContent = f.cdCoast.toFixed(2);
         const banner = $("outcomeBanner");
         banner.className = "show " + f.outcome.sev;
         banner.innerHTML = `<b>${f.outcome.mode}</b>${f.outcome.cause}`;
@@ -1030,6 +1327,21 @@
       }
 
       /* ============ DESIGN VIEW: side-view rocket ============ */
+      // The real profile equations, so the four shapes are actually the shapes they are named after
+      // rather than three near-identical quadratic guesses.
+      function noseRadiusAt(u, halfD, len, shape) {
+        // u is 0 at the tip, 1 at the base; returns the local radius there
+        if (shape === "conical") return halfD * u;
+        if (shape === "ogive") {
+          // tangent ogive of radius rho
+          const rho = (halfD * halfD + len * len) / (2 * halfD);
+          const x = u * len;
+          return Math.sqrt(Math.max(0, rho * rho - (len - x) ** 2)) - (rho - halfD);
+        }
+        if (shape === "rounded") return halfD * Math.sqrt(Math.max(0, 1 - (1 - u) ** 2)); // quarter ellipse
+        return halfD * (2 * u - u * u); // parabolic (K = 1)
+      }
+
       function drawNoseShape(c, len, diam, shape) {
         const halfD = diam / 2;
         c.beginPath();
@@ -1038,17 +1350,13 @@
           c.lineTo(len, -halfD);
           c.lineTo(len, halfD);
           c.closePath();
-        } else if (shape === "ogive") {
-          c.moveTo(0, 0);
-          c.quadraticCurveTo(len * 0.55, -halfD * 0.35, len, -halfD);
-          c.lineTo(len, halfD);
-          c.quadraticCurveTo(len * 0.55, halfD * 0.35, 0, 0);
-        } else {
-          c.moveTo(0, 0);
-          c.quadraticCurveTo(len * 0.75, -halfD * 0.9, len, -halfD);
-          c.lineTo(len, halfD);
-          c.quadraticCurveTo(len * 0.75, halfD * 0.9, 0, 0);
+          return;
         }
+        const N = 28;
+        c.moveTo(0, 0);
+        for (let i = 1; i <= N; i++) c.lineTo((i / N) * len, -noseRadiusAt(i / N, halfD, len, shape));
+        c.lineTo(len, halfD);
+        for (let i = N - 1; i >= 1; i--) c.lineTo((i / N) * len, noseRadiusAt(i / N, halfD, len, shape));
         c.closePath();
       }
 
@@ -1083,35 +1391,132 @@
         ctx.translate(originX, cy);
         ctx.scale(scale, scale);
 
-        // body tube
-        ctx.fillStyle = "#1e2a42";
-        ctx.strokeStyle = "rgba(255,255,255,0.25)";
+        const halfD = S.diam / 2;
+        const rTail = S.stages === 2 ? d.totalLen + S.boosterLen : d.totalLen;
+        const seam = S.diam * 0.06;
         ctx.lineWidth = 1 / scale;
-        rr(ctx, d.noseLen, -S.diam / 2, S.bodyLen, S.diam, S.diam * 0.06);
-        ctx.fill(); ctx.stroke();
 
-        // booster segment (visual only, stacked below if 2 stages)
+        // soft shadow under the airframe, so it reads as a solid object on the grid
+        ctx.save();
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
+        ctx.beginPath();
+        ctx.ellipse((d.noseLen + rTail) / 2, halfD + 46 / scale, (rTail - d.noseLen) / 1.9, 6 / scale, 0, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+
+        // booster segment (visual only, stacked below if 2 stages) — drawn first, behind the sustainer
         if (S.stages === 2) {
-          ctx.fillStyle = "#141d30";
-          rr(ctx, d.totalLen, -S.diam / 2, S.boosterLen, S.diam, S.diam * 0.06);
+          const boostGrad = ctx.createLinearGradient(0, -halfD, 0, halfD);
+          boostGrad.addColorStop(0, "#241d2b");
+          boostGrad.addColorStop(0.24, "#61506b");
+          boostGrad.addColorStop(0.44, "#d6c3dd");
+          boostGrad.addColorStop(0.62, "#7b6784");
+          boostGrad.addColorStop(1, "#1d1824");
+          ctx.fillStyle = boostGrad;
+          ctx.strokeStyle = "rgba(255,255,255,0.22)";
+          rr(ctx, d.totalLen, -halfD, S.boosterLen, S.diam, seam);
           ctx.fill(); ctx.stroke();
-          ctx.strokeStyle = "rgba(255,107,53,0.7)";
+          // interstage coupler ring
+          ctx.fillStyle = "rgba(255,107,53,0.85)";
+          ctx.fillRect(d.totalLen - 2 / scale, -halfD, 5 / scale, S.diam);
+          // separation plane
+          ctx.strokeStyle = "rgba(255,107,53,0.8)";
           ctx.setLineDash([4 / scale, 3 / scale]);
-          ctx.beginPath(); ctx.moveTo(d.totalLen, -S.diam / 2 - 4 / scale); ctx.lineTo(d.totalLen, S.diam / 2 + 4 / scale); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(d.totalLen, -halfD - 5 / scale); ctx.lineTo(d.totalLen, halfD + 5 / scale); ctx.stroke();
           ctx.setLineDash([]);
         }
 
-        // nose
-        ctx.fillStyle = "#d4dae4";
-        drawNoseShape(ctx, d.noseLen, S.diam, S.nose);
+        // motor nozzle at the very tail
+        const nozLen = Math.min(halfD * 1.1, 22);
+        const nozGrad = ctx.createLinearGradient(rTail, 0, rTail + nozLen, 0);
+        nozGrad.addColorStop(0, "#3b4253");
+        nozGrad.addColorStop(1, "#12151d");
+        ctx.fillStyle = nozGrad;
+        ctx.strokeStyle = "rgba(255,255,255,0.18)";
+        ctx.beginPath();
+        ctx.moveTo(rTail, -halfD * 0.5);
+        ctx.lineTo(rTail + nozLen, -halfD * 0.92);
+        ctx.lineTo(rTail + nozLen, halfD * 0.92);
+        ctx.lineTo(rTail, halfD * 0.5);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "rgba(255,120,40,0.28)";
+        ctx.beginPath(); ctx.ellipse(rTail + nozLen, 0, 2.5 / scale, halfD * 0.9, 0, 0, TAU); ctx.fill();
+
+        // body tube — vertical gradient reads as a lit cylinder rather than a flat bar
+        const bodyGrad = ctx.createLinearGradient(0, -halfD, 0, halfD);
+        bodyGrad.addColorStop(0, "#2b3549");
+        bodyGrad.addColorStop(0.22, "#5f6f8c");
+        bodyGrad.addColorStop(0.42, "#eef2f8");
+        bodyGrad.addColorStop(0.6, "#9aa8c1");
+        bodyGrad.addColorStop(1, "#222a3b");
+        ctx.fillStyle = bodyGrad;
+        ctx.strokeStyle = "rgba(255,255,255,0.28)";
+        rr(ctx, d.noseLen, -halfD, S.bodyLen, S.diam, seam);
         ctx.fill(); ctx.stroke();
 
-        // fins (on sustainer tail)
+        // panel seams
+        ctx.strokeStyle = "rgba(0,0,0,0.18)";
+        for (let sx = d.noseLen + S.bodyLen * 0.25; sx < d.totalLen - 1; sx += S.bodyLen * 0.25) {
+          ctx.beginPath(); ctx.moveTo(sx, -halfD); ctx.lineTo(sx, halfD); ctx.stroke();
+        }
+        // specular highlight running the length of the stack
+        ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        ctx.beginPath(); ctx.moveTo(d.noseLen, -halfD * 0.55); ctx.lineTo(rTail, -halfD * 0.55); ctx.stroke();
+        // shoulder where the nose meets the tube
+        ctx.strokeStyle = "rgba(0,0,0,0.3)"; ctx.lineWidth = 1.5 / scale;
+        ctx.beginPath(); ctx.moveTo(d.noseLen, -halfD); ctx.lineTo(d.noseLen, halfD); ctx.stroke();
+        ctx.lineWidth = 1 / scale;
+        // launch lug
+        ctx.fillStyle = "#2b3346";
+        ctx.fillRect(d.noseLen + S.bodyLen * 0.5, halfD, Math.min(S.bodyLen * 0.16, 40), 3.5 / scale);
+
+        // nose
+        const noseGrad = ctx.createLinearGradient(0, -halfD, d.noseLen, halfD);
+        noseGrad.addColorStop(0, "#ffffff");
+        noseGrad.addColorStop(0.5, "#dbe2ee");
+        noseGrad.addColorStop(1, "#aeb9cd");
+        ctx.fillStyle = noseGrad;
+        ctx.strokeStyle = "rgba(255,255,255,0.3)";
+        drawNoseShape(ctx, d.noseLen, S.diam, S.nose);
+        ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = "rgba(255,255,255,0.65)"; ctx.lineWidth = 1.4 / scale;
+        ctx.beginPath(); ctx.moveTo(d.noseLen * 0.12, -halfD * 0.18); ctx.lineTo(d.noseLen * 0.92, -halfD * 0.6); ctx.stroke();
+        ctx.lineWidth = 1 / scale;
+
+        // Fins, on the sustainer tail. Every fin is drawn, foreshortened by its roll angle the way a
+        // real side view works: a fin edge-on to the viewer projects to almost nothing, one pointing
+        // straight up or down shows its full span. That is what makes the fin-count slider visible here.
         const finRootX = d.totalLen - S.finCr;
-        ctx.fillStyle = "#00c9d6";
-        [false, true].forEach((flip) => {
-          drawFinShape(ctx, finRootX, d.totalLen, S.diam / 2, S.finCr, S.finCt, S.finSpan, S.finSweep, flip);
-          ctx.fill(); ctx.stroke();
+        const fins = [];
+        for (let i = 0; i < S.finN; i++) {
+          // roll 0 = fin pointing straight up, matching the rear-view diagram in the Fins panel
+          const roll = (i * TAU) / S.finN;
+          fins.push({ proj: Math.cos(roll), depth: Math.sin(roll) });
+        }
+        // draw the ones pointing away from the viewer first so nearer fins overlap them correctly
+        fins.sort((a, b) => a.depth - b.depth);
+        fins.forEach((f) => {
+          const projSpan = S.finSpan * Math.abs(f.proj);
+          const flip = f.proj > 0; // positive roll component points up, and up is -y on a canvas
+          const s = flip ? -1 : 1;
+          const edgeOn = Math.abs(f.proj) < 0.06;
+          const finGrad = ctx.createLinearGradient(0, s * halfD, 0, s * (halfD + Math.max(projSpan, 1)));
+          finGrad.addColorStop(0, "#2ae7f5");
+          finGrad.addColorStop(1, "#0079b8");
+          ctx.globalAlpha = edgeOn ? 0.55 : 0.55 + 0.45 * Math.abs(f.proj);
+          if (edgeOn) {
+            // seen along its own plane: just the thin edge against the tube
+            ctx.strokeStyle = "#1aa8c8"; ctx.lineWidth = 2 / scale;
+            ctx.beginPath(); ctx.moveTo(finRootX, 0); ctx.lineTo(d.totalLen, 0); ctx.stroke();
+            ctx.lineWidth = 1 / scale;
+          } else {
+            drawFinShape(ctx, finRootX, d.totalLen, halfD, S.finCr, S.finCt, projSpan, S.finSweep, flip);
+            ctx.fillStyle = finGrad;
+            ctx.strokeStyle = "rgba(255,255,255,0.45)";
+            ctx.fill(); ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
         });
 
         // CP marker (computed, not draggable)
@@ -1157,69 +1562,145 @@
       cv.addEventListener("pointercancel", stopDrag);
 
       /* ============ FIN MINI CANVAS ============ */
+      /* Two panels: the fin's true planform on the left (what the chord/span/sweep sliders shape),
+         and a rear view up the tail on the right — which is the only place fin COUNT is legible.
+         The old version stacked N identical outlines a couple of pixels apart, so changing the
+         count looked like nothing happened while the CP moved. */
       function drawFinCanvas() {
         const r = finCv.getBoundingClientRect();
         const w = r.width, h = r.height;
         finCtx.clearRect(0, 0, w, h);
         const span = S.finSpan, cr = S.finCr, ct = S.finCt, sweep = S.finSweep;
-        const maxDim = Math.max(cr + sweep + ct, span * 2, 1);
-        const scale = Math.min(w * 0.85, h * 0.8) / maxDim;
-        const cx = w / 2, cy = h / 2;
+        const splitX = w * 0.58;
+
+        finCtx.strokeStyle = "rgba(255,255,255,.1)"; finCtx.lineWidth = 1;
+        finCtx.beginPath(); finCtx.moveTo(splitX, 6); finCtx.lineTo(splitX, h - 6); finCtx.stroke();
+        finCtx.font = "7.5px monospace"; finCtx.fillStyle = "rgba(255,255,255,.4)";
+        finCtx.textAlign = "left"; finCtx.fillText("FIN PLANFORM", 5, 11);
+        finCtx.textAlign = "center"; finCtx.fillText("REAR VIEW · ×" + S.finN, splitX + (w - splitX) / 2, 11);
+
+        /* ---- left: one fin, true shape, with the body tube edge it is glued to ---- */
+        const maxW = Math.max(cr, sweep + ct, 1), maxH = Math.max(span, 1);
+        const ps = Math.min((splitX - 24) / maxW, (h - 34) / maxH);
+        const px = 12, py = h - 14;
         finCtx.save();
-        finCtx.translate(cx, cy);
-        finCtx.strokeStyle = "rgba(255,255,255,.25)"; finCtx.lineWidth = 1;
-        finCtx.beginPath(); finCtx.moveTo(-maxDim * scale * 0.5, 0); finCtx.lineTo(maxDim * scale * 0.5, 0); finCtx.stroke();
-        finCtx.scale(scale, scale);
-        finCtx.translate(-cr / 2, 0);
-        finCtx.fillStyle = "#00c9d6"; finCtx.strokeStyle = "rgba(255,255,255,.5)"; finCtx.lineWidth = 1 / scale;
+        finCtx.translate(px, py);
+        finCtx.strokeStyle = "rgba(255,255,255,.28)"; finCtx.lineWidth = 1.5;
+        finCtx.beginPath(); finCtx.moveTo(-4, 0); finCtx.lineTo(maxW * ps + 4, 0); finCtx.stroke();
+        const pg = finCtx.createLinearGradient(0, 0, 0, -span * ps);
+        pg.addColorStop(0, "#2ae7f5"); pg.addColorStop(1, "#0079b8");
+        finCtx.fillStyle = pg; finCtx.strokeStyle = "rgba(255,255,255,.5)"; finCtx.lineWidth = 1;
+        finCtx.beginPath();
+        finCtx.moveTo(0, 0);
+        finCtx.lineTo(cr * ps, 0);
+        finCtx.lineTo((sweep + ct) * ps, -span * ps);
+        finCtx.lineTo(sweep * ps, -span * ps);
+        finCtx.closePath();
+        finCtx.fill(); finCtx.stroke();
+        finCtx.restore();
+
+        /* ---- right: looking up the tail, N fins evenly spaced around the tube ---- */
+        const rcx = splitX + (w - splitX) / 2, rcy = h / 2 + 5;
+        const bodyR = Math.min((w - splitX) * 0.17, 13);
+        const finLen = Math.min((w - splitX) / 2 - bodyR - 8, (h / 2) - 14);
+        const spanScale = clamp(span / Math.max(S.diam, 1), 0.4, 3) / 3; // relative, so it reads proportionally
+        const drawLen = Math.max(6, finLen * clamp(spanScale * 1.6, 0.3, 1));
+        finCtx.save();
+        finCtx.translate(rcx, rcy);
         for (let i = 0; i < S.finN; i++) {
+          // fin 0 straight up, same convention the side view uses, so the two diagrams agree
           finCtx.save();
-          finCtx.globalAlpha = i === 0 ? 1 : 0.35;
-          const yoff = (i - (S.finN - 1) / 2) * (span * 0.02);
+          finCtx.rotate((i * TAU) / S.finN);
+          const fg = finCtx.createLinearGradient(0, -bodyR, 0, -bodyR - drawLen);
+          fg.addColorStop(0, "#2ae7f5"); fg.addColorStop(1, "#0079b8");
+          finCtx.fillStyle = fg;
+          finCtx.strokeStyle = "rgba(255,255,255,.55)"; finCtx.lineWidth = 1;
+          const halfT = 2.4;
           finCtx.beginPath();
-          finCtx.moveTo(0, yoff);
-          finCtx.lineTo(cr, yoff);
-          finCtx.lineTo(sweep + ct, span * 0.9 + yoff);
-          finCtx.lineTo(sweep, span * 0.9 + yoff);
+          finCtx.moveTo(-halfT, -bodyR + 1);
+          finCtx.lineTo(halfT, -bodyR + 1);
+          finCtx.lineTo(halfT * 0.55, -bodyR - drawLen);
+          finCtx.lineTo(-halfT * 0.55, -bodyR - drawLen);
           finCtx.closePath();
           finCtx.fill(); finCtx.stroke();
           finCtx.restore();
         }
+        // the body tube seen end-on
+        const bg = finCtx.createRadialGradient(-bodyR * 0.35, -bodyR * 0.35, 1, 0, 0, bodyR);
+        bg.addColorStop(0, "#8794ad"); bg.addColorStop(1, "#232b3c");
+        finCtx.fillStyle = bg; finCtx.strokeStyle = "rgba(255,255,255,.4)"; finCtx.lineWidth = 1;
+        finCtx.beginPath(); finCtx.arc(0, 0, bodyR, 0, TAU); finCtx.fill(); finCtx.stroke();
+        finCtx.fillStyle = "#12151d";
+        finCtx.beginPath(); finCtx.arc(0, 0, bodyR * 0.45, 0, TAU); finCtx.fill();
         finCtx.restore();
       }
 
       /* ============ STABILITY GAUGE ============ */
+      // Canvas angles run clockwise from +x with y pointing down, so the UPPER semicircle is the
+      // sweep from PI to 2PI. The old version mapped values onto PI→0, which is the lower half —
+      // below the pivot and off the canvas — so the dial drew nothing and the needle ran backwards.
+      const GAUGE_MAX_CAL = 4;
+      function gaugeAngle(v) { return Math.PI + (clamp(v, 0, GAUGE_MAX_CAL) / GAUGE_MAX_CAL) * Math.PI; }
+
       function drawGauge(margin, cls) {
         const r = gaugeCv.getBoundingClientRect();
         const w = r.width, h = r.height;
         gaugeCtx.clearRect(0, 0, w, h);
-        const cx = w / 2, cy = h - 10, radius = Math.min(w, h * 1.7) / 2 - 8;
-        const start = Math.PI, end = 0; // semicircle
-        const maxCal = 3;
-        function angFor(v) { return start + (clamp(v, 0, maxCal) / maxCal) * (end - start); }
+        const cx = w / 2, cy = h - 22, radius = Math.min(w / 2, h - 34) - 6;
+        if (radius <= 0) return;
+
         const zones = [
-          { from: 0, to: 1, color: "#ff2a85" },
-          { from: 1, to: 2, color: "#eab308" },
-          { from: 2, to: maxCal, color: "#22c55e" },
+          { from: 0, to: 1, color: "#ff2a85", label: "UNSTABLE" },
+          { from: 1, to: 2, color: "#22c55e", label: "STABLE" },
+          { from: 2, to: GAUGE_MAX_CAL, color: "#eab308", label: "OVER" },
         ];
-        gaugeCtx.lineWidth = 10; gaugeCtx.lineCap = "butt";
+        gaugeCtx.lineWidth = 11; gaugeCtx.lineCap = "butt";
         zones.forEach((z) => {
           gaugeCtx.beginPath();
           gaugeCtx.strokeStyle = z.color;
-          gaugeCtx.arc(cx, cy, radius, angFor(z.from), angFor(z.to), false);
+          gaugeCtx.globalAlpha = cls === "unstable" && z.from === 0 ? 1
+            : cls === "stable" && z.from === 1 ? 1
+            : cls === "overstable" && z.from === 2 ? 1 : 0.4;
+          gaugeCtx.arc(cx, cy, radius, gaugeAngle(z.from), gaugeAngle(z.to), false);
           gaugeCtx.stroke();
         });
+        gaugeCtx.globalAlpha = 1;
+
+        // tick marks at each caliber
+        gaugeCtx.strokeStyle = "rgba(255,255,255,.35)"; gaugeCtx.lineWidth = 1.5;
+        for (let v = 0; v <= GAUGE_MAX_CAL; v++) {
+          const a = gaugeAngle(v);
+          gaugeCtx.beginPath();
+          gaugeCtx.moveTo(cx + Math.cos(a) * (radius - 7), cy + Math.sin(a) * (radius - 7));
+          gaugeCtx.lineTo(cx + Math.cos(a) * (radius + 7), cy + Math.sin(a) * (radius + 7));
+          gaugeCtx.stroke();
+        }
+
         // needle
-        const na = angFor(margin);
-        gaugeCtx.strokeStyle = "#f8fafc"; gaugeCtx.lineWidth = 2.5;
-        gaugeCtx.beginPath(); gaugeCtx.moveTo(cx, cy); gaugeCtx.lineTo(cx + Math.cos(na) * (radius - 14), cy + Math.sin(na) * (radius - 14)); gaugeCtx.stroke();
-        gaugeCtx.fillStyle = "#f8fafc"; gaugeCtx.beginPath(); gaugeCtx.arc(cx, cy, 4, 0, TAU); gaugeCtx.fill();
+        const na = gaugeAngle(margin);
+        const nx = cx + Math.cos(na) * (radius - 6), ny = cy + Math.sin(na) * (radius - 6);
+        gaugeCtx.strokeStyle = "#f8fafc"; gaugeCtx.lineWidth = 3; gaugeCtx.lineCap = "round";
+        gaugeCtx.beginPath(); gaugeCtx.moveTo(cx, cy); gaugeCtx.lineTo(nx, ny); gaugeCtx.stroke();
+        gaugeCtx.fillStyle = "#f8fafc"; gaugeCtx.beginPath(); gaugeCtx.arc(cx, cy, 5, 0, TAU); gaugeCtx.fill();
+        gaugeCtx.fillStyle = "#0e1320"; gaugeCtx.beginPath(); gaugeCtx.arc(cx, cy, 2, 0, TAU); gaugeCtx.fill();
+        // an off-scale margin should still read as off-scale, not silently pin
+        if (margin > GAUGE_MAX_CAL) {
+          gaugeCtx.fillStyle = "#eab308"; gaugeCtx.font = "700 9px monospace"; gaugeCtx.textAlign = "right";
+          gaugeCtx.fillText("▸ off scale", w - 4, 12);
+        }
 
         gaugeCtx.font = "8.5px monospace"; gaugeCtx.fillStyle = "rgba(255,255,255,.55)"; gaugeCtx.textAlign = "center";
-        gaugeCtx.fillText("0", cx - radius - 2, cy + 12);
-        gaugeCtx.fillText("1", cx - radius * 0.5, cy - radius * 0.78);
-        gaugeCtx.fillText("2", cx + radius * 0.5, cy - radius * 0.78);
-        gaugeCtx.fillText("3+", cx + radius + 4, cy + 12);
+        for (let v = 0; v <= GAUGE_MAX_CAL; v++) {
+          const a = gaugeAngle(v);
+          gaugeCtx.fillText(v === GAUGE_MAX_CAL ? v + "+" : String(v),
+            cx + Math.cos(a) * (radius + 16), cy + Math.sin(a) * (radius + 16) + 3);
+        }
+        // zone captions under the arc ends
+        gaugeCtx.font = "700 7.5px monospace";
+        gaugeCtx.fillStyle = "rgba(255,42,133,.85)"; gaugeCtx.textAlign = "left";
+        gaugeCtx.fillText("TUMBLES", 2, cy + 16);
+        gaugeCtx.fillStyle = "rgba(234,179,8,.85)"; gaugeCtx.textAlign = "right";
+        gaugeCtx.fillText("WEATHERCOCKS", w - 2, cy + 16);
       }
 
       /* ============ MINI OUTPUT GRAPHS ============ */
@@ -1258,7 +1739,11 @@
         if (!f) return;
 
         const maxAlt = Math.max(20, f.apogeeAlt * 1.15);
-        const maxRange = Math.max(20, Math.max(...f.history.x.map(Math.abs)) * 1.3, 20);
+        const boosterXs = f.boosterTrack ? f.boosterTrack.x.filter((v) => v != null).map(Math.abs) : [];
+        // Floor the horizontal scale against the altitude scale. Without it, a still-air flight that
+        // drifts 10 m gets zoomed until it looks like it flew off at an angle — the axes have to stay
+        // roughly comparable for "it went straight up" to actually read as straight up.
+        const maxRange = Math.max(maxAlt * 0.3, 20, Math.max(...f.history.x.map(Math.abs), ...boosterXs) * 1.3);
         const groundY = CH * 0.88;
         const padX = CW * 0.5;
         function AY(alt) { return groundY - (alt / maxAlt) * (groundY - CH * 0.08); }
@@ -1281,6 +1766,33 @@
         ctx.strokeStyle = "#64748b"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(padX, groundY); ctx.lineTo(padX, groundY - 18); ctx.stroke();
 
+        // the spent booster's own fall, so a two-stage flight visibly differs from a single stage
+        if (f.staged && f.boosterTrack) {
+          ctx.strokeStyle = "rgba(255,107,53,.75)"; ctx.lineWidth = 1.6;
+          ctx.setLineDash([5, 4]);
+          ctx.beginPath();
+          let started = false;
+          for (let i = 0; i < f.boosterTrack.x.length; i++) {
+            const bx = f.boosterTrack.x[i];
+            if (bx == null) { started = false; continue; }
+            const X = AX(bx), Y = AY(f.boosterTrack.y[i]);
+            if (!started) { ctx.moveTo(X, Y); started = true; } else ctx.lineTo(X, Y);
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
+          // label the discarded booster where it comes to rest
+          for (let i = f.boosterTrack.x.length - 1; i >= 0; i--) {
+            if (f.boosterTrack.x[i] != null) {
+              const X = AX(f.boosterTrack.x[i]), Y = AY(f.boosterTrack.y[i]);
+              ctx.fillStyle = "#ff6b35";
+              ctx.beginPath(); ctx.arc(X, Y, 3, 0, TAU); ctx.fill();
+              ctx.font = "700 8.5px monospace"; ctx.textAlign = "center";
+              ctx.fillText("SPENT BOOSTER", X, Y - 7);
+              break;
+            }
+          }
+        }
+
         // trajectory
         ctx.strokeStyle = "#00f2fe"; ctx.lineWidth = 2.2; ctx.beginPath();
         f.history.x.forEach((x, i) => {
@@ -1289,53 +1801,202 @@
         });
         ctx.stroke();
 
-        // event flags
-        f.events.forEach((ev) => {
-          const X = AX(ev.x), Y = AY(ev.y);
-          ctx.fillStyle = "#eab308";
-          ctx.beginPath(); ctx.arc(X, Y, 3.5, 0, TAU); ctx.fill();
-          ctx.save();
-          ctx.translate(X, Y);
-          ctx.fillStyle = "#eab308"; ctx.font = "700 9px monospace"; ctx.textAlign = "left";
-          ctx.fillText(ev.label, 6, -6);
-          ctx.restore();
-        });
-        // apogee flag
+        // Event + apogee flags. Deployment usually happens within a second of apogee, so their
+        // markers land on top of each other — collect the labels and stack any that overlap.
+        const flags = f.events.map((ev) => ({ X: AX(ev.x), Y: AY(ev.y), text: ev.label, color: "#eab308" }));
         if (f.apogeeT != null) {
-          const X = AX(f.apogeeDown), Y = AY(f.apogeeAlt);
-          ctx.fillStyle = "#ff6b35"; ctx.beginPath(); ctx.arc(X, Y, 3.5, 0, TAU); ctx.fill();
-          ctx.fillStyle = "#ff6b35"; ctx.font = "700 9px monospace"; ctx.textAlign = "center";
-          ctx.fillText("APOGEE", X, Y - 8);
+          flags.push({ X: AX(f.apogeeDown), Y: AY(f.apogeeAlt), text: "APOGEE", color: "#ff6b35" });
         }
+        flags.sort((a, b) => a.Y - b.Y);
+        const placed = [];
+        ctx.font = "700 9px monospace"; ctx.textAlign = "left";
+        flags.forEach((fl) => {
+          ctx.fillStyle = fl.color;
+          ctx.beginPath(); ctx.arc(fl.X, fl.Y, 3.5, 0, TAU); ctx.fill();
+          let ly = fl.Y - 6;
+          while (placed.some((p) => Math.abs(p.y - ly) < 11 && Math.abs(p.x - fl.X) < 96)) ly -= 11;
+          placed.push({ x: fl.X, y: ly });
+          ctx.beginPath();
+          ctx.strokeStyle = fl.color; ctx.lineWidth = 1; ctx.globalAlpha = 0.5;
+          ctx.moveTo(fl.X, fl.Y); ctx.lineTo(fl.X + 5, ly + 3); ctx.stroke();
+          ctx.globalAlpha = 1;
+          ctx.fillText(fl.text, fl.X + 7, ly + 3);
+        });
 
         // rocket icon at current playback position
         const idx = clamp(Math.floor(f.replayIdx), 0, f.history.x.length - 1);
         const X = AX(f.history.x[idx]), Y = AY(f.history.y[idx]);
         const theta = (f.history.theta[idx] || 0) * D2R;
+        const curT = f.history.t[idx] || 0;
+        const alt = f.history.y[idx] || 0;
+        const burning = curT < (f.sustainerBurnout || 0) && alt > 0.3;
+        const chuteOut = alt > 1 && f.events.some((ev) => /DEPLOY/.test(ev.label) && ev.t <= curT);
+
+        // parachute — drawn unrotated so the canopy always sits world-up above the rocket
+        if (chuteOut) {
+          ctx.save();
+          ctx.translate(X, Y);
+          const cw = 30;
+          const canopy = ctx.createLinearGradient(0, -46, 0, -14);
+          canopy.addColorStop(0, "#ff9d4d");
+          canopy.addColorStop(1, "#ef5a24");
+          ctx.fillStyle = canopy;
+          ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(-cw / 2, -16);
+          ctx.quadraticCurveTo(0, -48, cw / 2, -16);
+          ctx.quadraticCurveTo(0, -26, -cw / 2, -16);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          ctx.strokeStyle = "rgba(255,255,255,0.4)";
+          ctx.beginPath();
+          ctx.moveTo(-cw / 2, -16); ctx.lineTo(-2.5, -1);
+          ctx.moveTo(cw / 2, -16); ctx.lineTo(2.5, -1);
+          ctx.moveTo(0, -22); ctx.lineTo(0, -1);
+          ctx.stroke();
+          ctx.restore();
+        }
+
         ctx.save();
         ctx.translate(X, Y);
         ctx.rotate(theta);
-        ctx.fillStyle = "#d4dae4";
+
+        // exhaust plume while the motor is still burning
+        if (burning) {
+          const fl = 15 + Math.random() * 9;
+          // soft glow so the plume reads as light, not just a shape
+          const glow = ctx.createRadialGradient(0, 12, 0, 0, 12, fl * 1.1);
+          glow.addColorStop(0, "rgba(255,170,70,0.5)");
+          glow.addColorStop(1, "rgba(255,110,0,0)");
+          ctx.fillStyle = glow;
+          ctx.beginPath(); ctx.arc(0, 12, fl * 1.1, 0, TAU); ctx.fill();
+
+          const plume = ctx.createLinearGradient(0, 8, 0, 8 + fl);
+          plume.addColorStop(0, "rgba(255,250,225,0.98)");
+          plume.addColorStop(0.28, "rgba(255,200,90,0.92)");
+          plume.addColorStop(0.62, "rgba(255,130,35,0.75)");
+          plume.addColorStop(1, "rgba(255,60,0,0)");
+          ctx.fillStyle = plume;
+          ctx.beginPath();
+          ctx.moveTo(-4.4, 8);
+          ctx.quadraticCurveTo(-2.6, 8 + fl * 0.75, 0, 8 + fl * 1.45);
+          ctx.quadraticCurveTo(2.6, 8 + fl * 0.75, 4.4, 8);
+          ctx.quadraticCurveTo(0, 8 + fl * 0.3, -4.4, 8);
+          ctx.fill();
+        }
+
+        // body
+        const bodyG = ctx.createLinearGradient(-4.6, 0, 4.6, 0);
+        bodyG.addColorStop(0, "#8b97ad");
+        bodyG.addColorStop(0.5, "#f4f7fb");
+        bodyG.addColorStop(1, "#8b97ad");
+        ctx.fillStyle = bodyG;
+        ctx.strokeStyle = "rgba(18,22,32,0.55)"; ctx.lineWidth = 0.8;
         ctx.beginPath();
-        ctx.moveTo(0, -14); ctx.lineTo(5, -2); ctx.lineTo(5, 10); ctx.lineTo(-5, 10); ctx.lineTo(-5, -2); ctx.closePath();
+        ctx.moveTo(0, -16);
+        ctx.quadraticCurveTo(4.6, -9, 4.6, -2);
+        ctx.lineTo(4.6, 8);
+        ctx.lineTo(-4.6, 8);
+        ctx.lineTo(-4.6, -2);
+        ctx.quadraticCurveTo(-4.6, -9, 0, -16);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        // nose cap
+        ctx.fillStyle = "#ff6b35";
+        ctx.beginPath();
+        ctx.moveTo(0, -16);
+        ctx.quadraticCurveTo(2.7, -11, 2.7, -7.5);
+        ctx.lineTo(-2.7, -7.5);
+        ctx.quadraticCurveTo(-2.7, -11, 0, -16);
+        ctx.closePath();
         ctx.fill();
+
+        // fins
         ctx.fillStyle = "#00c9d6";
-        ctx.beginPath(); ctx.moveTo(-5, 6); ctx.lineTo(-10, 12); ctx.lineTo(-5, 12); ctx.closePath(); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(5, 6); ctx.lineTo(10, 12); ctx.lineTo(5, 12); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-4.6, 1.5); ctx.lineTo(-10.5, 10); ctx.lineTo(-4.6, 8.5); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(4.6, 1.5); ctx.lineTo(10.5, 10); ctx.lineTo(4.6, 8.5); ctx.closePath(); ctx.fill();
+
+        // nozzle
+        ctx.fillStyle = "#2a2f3b";
+        ctx.beginPath(); ctx.moveTo(-3, 8); ctx.lineTo(-4.2, 12); ctx.lineTo(4.2, 12); ctx.lineTo(3, 8); ctx.closePath(); ctx.fill();
         ctx.restore();
 
         // advance playback
         if (f.playing) {
           f.replayIdx += 2.2;
           if (f.replayIdx >= f.history.x.length - 1) { f.replayIdx = f.history.x.length - 1; f.playing = false; }
-          const alt = f.history.y[idx] || 0;
           const spd = f.history.v[idx] || 0;
           $("h_alt").textContent = alt.toFixed(1) + " m";
           $("h_vel").textContent = spd.toFixed(1) + " m/s";
           $("h_pitch").textContent = ((f.history.theta[idx] || 0)).toFixed(1) + "°";
-          const activeEvent = f.events.find((ev) => Math.abs(ev.t - (f.history.t[idx] || 0)) < 0.05);
+          const activeEvent = f.events.find((ev) => Math.abs(ev.t - curT) < 0.05);
           $("h_event").textContent = activeEvent ? "◆ " + activeEvent.label : "";
         }
+      }
+
+      /* ============ LIVE READOUTS ============ */
+      // Terminal velocity under a canopy: drag balances weight, so v = sqrt(2mg / rho*Cd*A).
+      // Showing this live is what turns "Parachute Area" from an abstract number into a real choice.
+      function descentSpeedFor(areaCm2, massKg) {
+        const A = areaCm2 / 10000;
+        return Math.sqrt((2 * massKg * G) / (RHO * CD_REC * A));
+      }
+
+      function updateRecoveryReadout() {
+        // By the time the chute is out the propellant is spent and any booster is long gone,
+        // so the descent is flown on the sustainer's dry mass alone.
+        const v = descentSpeedFor(S.recArea, S.dryMass / 1000);
+        const el = $("descentRate"), band = $("descentBand");
+        el.textContent = v.toFixed(1) + " m/s";
+        el.className = "liveval" + (v > LAND_SAFE_HI ? " bad" : v < LAND_SAFE_LO ? " warn" : "");
+        band.textContent = v > LAND_SAFE_HI
+          ? " — too fast, this will break something on impact."
+          : v < LAND_SAFE_LO
+          ? " — gentler than it needs to be; the extra canopy just adds drift."
+          : ` — inside the ${LAND_SAFE_LO}–${LAND_SAFE_HI} m/s safe band.`;
+
+        $("recModeHint").innerHTML = S.recoveryMode === "motor"
+          ? "<b>Motor Delay</b> — one chute, pushed out by the motor's own ejection charge, open the whole way down. Simple and reliable, but it drifts for the entire descent."
+          : "<b>Dual Deploy</b> — a small drogue at apogee to come down fast and straight, then the main chute low down. Far less drift, at the cost of a second charge and an altimeter.";
+
+        // does the motor's built-in delay actually match this design's coast time?
+        const dm = $("delayMatch");
+        if (!motorParsed || motorParsed.delay == null) { dm.textContent = ""; return; }
+        const f = S.flight;
+        if (f && f.apogeeT != null && f.sustainerBurnout != null) {
+          const coast = f.apogeeT - f.sustainerBurnout;
+          const err = motorParsed.delay - coast;
+          dm.innerHTML = Math.abs(err) < 0.7
+            ? `Last flight coasted <b>${coast.toFixed(1)} s</b> to apogee — this delay is well matched.`
+            : err > 0
+            ? `Last flight coasted only <b>${coast.toFixed(1)} s</b> to apogee, so the chute came out <b>${err.toFixed(1)} s late</b>, well into the fall. A shorter delay would suit it.`
+            : `Last flight was still climbing at ejection — the chute opened <b>${(-err).toFixed(1)} s early</b>. A longer delay would suit it.`;
+        } else {
+          dm.innerHTML = "Fly it once and this will tell you whether the delay matches the coast.";
+        }
+      }
+
+      function updateStageHint(massKg) {
+        if (S.stages !== 2 || !boosterParsed || !motorParsed) return;
+        const boosterTotal = S.boosterMass / 1000 + boosterParsed.propMass;
+        const frac = (boosterTotal / massKg) * 100;
+        const twr = (boosterParsed.favg / (massKg * G)).toFixed(1);
+        $("stageHint").innerHTML =
+          `The booster is <b>${(boosterTotal * 1000).toFixed(0)} g</b> — <b>${frac.toFixed(0)}%</b> of everything on the pad — ` +
+          `and lifts the stack at a thrust-to-weight of <b>${twr}</b>. ` +
+          (twr < 5
+            ? "<span class='dn'>That is sluggish: below about 5 the stack barely accelerates and the booster's mass costs you more than its impulse buys.</span>"
+            : "<span class='up'>Healthy — it clears the pad fast, then drops away and stops being dead weight.</span>");
+      }
+
+      function updateNoseHint() {
+        const n = NOSE[S.nose];
+        const d = design();
+        const cd = dragBuildup(d, false);
+        $("noseHint").innerHTML =
+          `<b>${n.label}</b> — ${n.note} Nose length ${d.noseLen.toFixed(0)} mm ` +
+          `(${n.lenRatio}× diameter) · total drag C<sub>d</sub> <b>${cd.total.toFixed(2)}</b>.`;
       }
 
       /* ============ MAIN LOOP ============ */
@@ -1344,6 +2005,7 @@
         const cp = computeCP(d);
         const m = marginOf(cp, d);
         const cls = classify(m);
+        const massKg = liftoffMassKg(motorParsed, S.stages === 2 ? boosterParsed : null);
         $("stabVerdict").textContent = classifyLabel(cls);
         $("stabVerdict").className = "stab-verdict " + cls;
         $("stabSub").textContent = `margin ${m.toFixed(2)} cal · CP ${cp.Xcp.toFixed(0)}mm · CG ${S.cgX.toFixed(0)}mm`;
@@ -1351,6 +2013,9 @@
         $("barMargin").textContent = m.toFixed(2) + " cal";
         $("barMargin").className = "pillbadge " + cls;
         $("delayVal").textContent = motorParsed ? (motorParsed.delay == null ? "plugged" : motorParsed.delay + " s") : "—";
+        updateRecoveryReadout();
+        updateStageHint(massKg);
+        updateNoseHint();
         drawGauge(m, cls);
         drawFinCanvas();
       }
@@ -1371,6 +2036,19 @@
         let first = true;
         new ResizeObserver(() => { if (first) { first = false; return; } fitAll(); }).observe(cv.parentElement);
       }
+
+      /* ============ INIT ============ */
+      // Start the CG where the design is actually flyable — a hair under 1.5 calibers — instead of
+      // an arbitrary 55% of length, which left the default rocket at 4.4 cal and pinned off the dial.
+      (function seedCG() {
+        const d0 = design();
+        const cp0 = computeCP(d0);
+        S.cgX = clamp(cp0.Xcp - 1.5 * S.diam, 2, d0.totalLen - 2);
+      })();
+      RANGES.forEach(paintRange);
+      $("finHint").innerHTML =
+        "Move any fin slider and this line explains what that particular one does. " +
+        "Watch the <b>rear view</b> for count, and the margin badge for the effect on stability.";
 
       fitAll();
       requestAnimationFrame(loop);
