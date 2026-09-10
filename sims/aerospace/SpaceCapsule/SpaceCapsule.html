@@ -1144,14 +1144,6 @@
           ctx.strokeStyle = "rgba(120,140,160,0.6)";
           ctx.lineWidth = 1;
           ctx.stroke();
-          // gore lines
-          ctx.strokeStyle = "rgba(120,140,160,0.4)";
-          [-0.3, 0, 0.3].forEach((f) => {
-            ctx.beginPath();
-            ctx.moveTo(cw * 0.5 * f, cyC + ch2 * 0.25);
-            ctx.lineTo(cw * 0.5 * f * 0.5, cyC - ch2 * 0.7);
-            ctx.stroke();
-          });
         }
 
         // capsule body (gumdrop): wide flat shield at bottom, rounded taper up
