@@ -652,13 +652,13 @@
       // lenRatio is the nose's own fineness — length as a multiple of body diameter — which is what actually
       // makes the four options look and behave differently instead of being three near-identical points.
       const NOSE = {
-        conical:   { label: "Conical",   lenRatio: 3.0, xnRatio: 0.667, cdPressure: 0.15, icon: "▲",
+        conical:   { label: "Conical",   lenRatio: 3.0, xnRatio: 0.667, cdPressure: 0.18, icon: "▲",
                      note: "Straight-sided and easy to build. The flat sides make a little more pressure drag than a curve, and its CP sits furthest back of the four." },
-        ogive:     { label: "Ogive",     lenRatio: 3.5, xnRatio: 0.466, cdPressure: 0.08, icon: "◗",
+        ogive:     { label: "Ogive",     lenRatio: 3.5, xnRatio: 0.466, cdPressure: 0.07, icon: "◗",
                      note: "The classic tangent-ogive: a long circular-arc curve. Lowest drag of the four and the shape most real rockets use." },
-        parabolic: { label: "Parabolic", lenRatio: 3.0, xnRatio: 0.500, cdPressure: 0.10, icon: "◗",
+        parabolic: { label: "Parabolic", lenRatio: 3.0, xnRatio: 0.500, cdPressure: 0.11, icon: "◗",
                      note: "A fuller curve than the ogive — slightly blunter shoulders, slightly more drag, CP a touch further aft." },
-        rounded:   { label: "Rounded",   lenRatio: 1.2, xnRatio: 0.333, cdPressure: 0.28, icon: "⬤",
+        rounded:   { label: "Rounded",   lenRatio: 1.2, xnRatio: 0.333, cdPressure: 0.40, icon: "⬤",
                      note: "Short and blunt, like a hemisphere. Much more pressure drag, so it flies noticeably lower — but its CP is the furthest forward, which costs stability too." },
       };
 
@@ -1752,16 +1752,28 @@
         ctx.fillStyle = g; ctx.fillRect(0, 0, CW, CH);
         if (!f) return;
 
-        const maxAlt = Math.max(20, f.apogeeAlt * 1.15);
-        const boosterXs = f.boosterTrack ? f.boosterTrack.x.filter((v) => v != null).map(Math.abs) : [];
-        // Floor the horizontal scale against the altitude scale. Without it, a still-air flight that
-        // drifts 10 m gets zoomed until it looks like it flew off at an angle — the axes have to stay
-        // roughly comparable for "it went straight up" to actually read as straight up.
-        const maxRange = Math.max(maxAlt * 0.3, 20, Math.max(...f.history.x.map(Math.abs), ...boosterXs) * 1.3);
+        // Hold the altitude scale STEADY across the last several flights instead of re-fitting it to
+        // this one's apogee. Auto-fitting every flight made a 280 m climb and a 360 m climb draw the
+        // same arc — so changing the nose or the fins looked like it did nothing. With a shared scale
+        // a lower flight visibly falls short of the earlier ones.
+        const recent = S.history.slice(-5);
+        const refApogee = Math.max(20, ...recent.map((h) => h.apogeeAlt || 0));
+        const maxAlt = refApogee * 1.12;
+        const rangeOf = (h) => {
+          const bx = h.boosterTrack ? h.boosterTrack.x.filter((v) => v != null).map(Math.abs) : [];
+          return Math.max(0, ...h.history.x.map(Math.abs), ...bx);
+        };
+        const maxRange = Math.max(maxAlt * 0.3, 20, Math.max(...recent.map(rangeOf)) * 1.3);
         const groundY = CH * 0.88;
         const padX = CW * 0.5;
         function AY(alt) { return groundY - (alt / maxAlt) * (groundY - CH * 0.08); }
         function AX(xm) { return padX + (xm / maxRange) * (CW * 0.42); }
+
+        // playback cursor — everything downstream reveals progressively up to this point
+        const nPts = f.history.x.length;
+        const idx = clamp(Math.floor(f.replayIdx), 0, nPts - 1);
+        const curT = f.history.t[idx] || 0;
+        const revealTo = f.playing ? Math.min(idx + 2, nPts) : nPts;
 
         ctx.fillStyle = "#0c1119"; ctx.fillRect(0, groundY, CW, CH - groundY);
         ctx.strokeStyle = "rgba(255,255,255,.5)"; ctx.lineWidth = 2;
@@ -1780,48 +1792,79 @@
         ctx.strokeStyle = "#64748b"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(padX, groundY); ctx.lineTo(padX, groundY - 18); ctx.stroke();
 
-        // the spent booster's own fall, so a two-stage flight visibly differs from a single stage
+        // ghost traces of the previous few flights, on the SAME scale — this is what makes a
+        // nose-shape or fin change read: the new arc sits visibly under (or over) the old ones.
+        const ghosts = S.history.slice(-4, -1);
+        ghosts.forEach((gh, gi) => {
+          const a = 0.18 + gi * 0.11;
+          ctx.strokeStyle = `rgba(0,242,254,${a})`;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          for (let i = 0; i < gh.history.x.length; i++) {
+            const GX = AX(gh.history.x[i]), GY = AY(gh.history.y[i]);
+            if (i === 0) ctx.moveTo(GX, GY); else ctx.lineTo(GX, GY);
+          }
+          ctx.stroke();
+          const gX = AX(gh.apogeeDown || 0), gY = AY(gh.apogeeAlt || 0);
+          ctx.fillStyle = `rgba(0,242,254,${Math.min(1, a + 0.3)})`;
+          ctx.fillRect(gX - 2.5, gY - 1.5, 5, 3);
+          ctx.font = "8px monospace"; ctx.textAlign = "left";
+          ctx.fillText((gh.apogeeAlt || 0).toFixed(0) + " m", gX + 6, gY + 3);
+        });
+        if (ghosts.length) {
+          ctx.font = "9px monospace"; ctx.textAlign = "left"; ctx.fillStyle = "rgba(0,242,254,.6)";
+          ctx.fillText("faded = earlier flights · axis held at 0–" + maxAlt.toFixed(0) + " m", 8, groundY - 8);
+        }
+
+        // the spent booster's own fall — revealed as playback reaches it, so you SEE it come off
         if (f.staged && f.boosterTrack) {
-          ctx.strokeStyle = "rgba(255,107,53,.75)"; ctx.lineWidth = 1.6;
+          ctx.strokeStyle = "rgba(255,107,53,.8)"; ctx.lineWidth = 1.6;
           ctx.setLineDash([5, 4]);
           ctx.beginPath();
-          let started = false;
-          for (let i = 0; i < f.boosterTrack.x.length; i++) {
+          let started = false, lastBi = -1;
+          for (let i = 0; i < f.boosterTrack.x.length && i < revealTo; i++) {
             const bx = f.boosterTrack.x[i];
             if (bx == null) { started = false; continue; }
-            const X = AX(bx), Y = AY(f.boosterTrack.y[i]);
-            if (!started) { ctx.moveTo(X, Y); started = true; } else ctx.lineTo(X, Y);
+            const BX = AX(bx), BY = AY(f.boosterTrack.y[i]);
+            if (!started) { ctx.moveTo(BX, BY); started = true; } else ctx.lineTo(BX, BY);
+            lastBi = i;
           }
           ctx.stroke();
           ctx.setLineDash([]);
-          // label the discarded booster where it comes to rest
-          for (let i = f.boosterTrack.x.length - 1; i >= 0; i--) {
-            if (f.boosterTrack.x[i] != null) {
-              const X = AX(f.boosterTrack.x[i]), Y = AY(f.boosterTrack.y[i]);
-              ctx.fillStyle = "#ff6b35";
-              ctx.beginPath(); ctx.arc(X, Y, 3, 0, TAU); ctx.fill();
-              ctx.font = "700 8.5px monospace"; ctx.textAlign = "center";
-              ctx.fillText("SPENT BOOSTER", X, Y - 7);
-              break;
-            }
+          // the spent booster itself, tumbling, drawn at its live position during playback
+          if (lastBi >= 0) {
+            const BX = AX(f.boosterTrack.x[lastBi]), BY = AY(f.boosterTrack.y[lastBi]);
+            const grounded = f.boosterTrack.y[lastBi] <= 0.3;
+            ctx.save();
+            ctx.translate(BX, BY);
+            if (!grounded) ctx.rotate(curT * 7.0);
+            ctx.fillStyle = "#4a4152";
+            ctx.strokeStyle = "rgba(12,16,24,0.65)"; ctx.lineWidth = 0.8;
+            rr(ctx, -3, -6.5, 6, 13, 1.3); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = "#6b5f78";
+            ctx.beginPath(); ctx.moveTo(-3, 4); ctx.lineTo(-7.5, 8); ctx.lineTo(-3, 7); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(3, 4); ctx.lineTo(7.5, 8); ctx.lineTo(3, 7); ctx.closePath(); ctx.fill();
+            ctx.restore();
+            ctx.fillStyle = "#ff6b35";
+            ctx.font = "700 8.5px monospace"; ctx.textAlign = "center";
+            ctx.fillText(grounded ? "SPENT BOOSTER" : "BOOSTER FALLING", BX, BY - 11);
           }
         }
 
-        // trajectory
+        // trajectory — grows with playback so the climb, apogee and separation happen on screen
         ctx.strokeStyle = "#00f2fe"; ctx.lineWidth = 2.2; ctx.beginPath();
-        f.history.x.forEach((x, i) => {
-          const X = AX(x), Y = AY(f.history.y[i]);
-          if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y);
-        });
+        for (let i = 0; i < revealTo; i++) {
+          const TX = AX(f.history.x[i]), TY = AY(f.history.y[i]);
+          if (i === 0) ctx.moveTo(TX, TY); else ctx.lineTo(TX, TY);
+        }
         ctx.stroke();
 
-        // Event + apogee flags. Deployment usually happens within a second of apogee, so their
-        // markers land on top of each other — collect the labels and stack any that overlap.
-        const flags = f.events.map((ev) => ({
+        // Event + apogee flags — only the ones that have happened by the current playback time.
+        const flags = f.events.filter((ev) => ev.t <= curT + 1e-6).map((ev) => ({
           X: AX(ev.x), Y: AY(ev.y), text: ev.label,
           color: /SEPARAT/.test(ev.label) ? "#ff6b35" : "#eab308",
         }));
-        if (f.apogeeT != null) {
+        if (f.apogeeT != null && f.apogeeT <= curT + 1e-6) {
           flags.push({ X: AX(f.apogeeDown), Y: AY(f.apogeeAlt), text: "APOGEE", color: "#ff6b35" });
         }
         flags.sort((a, b) => a.Y - b.Y);
@@ -1841,10 +1884,8 @@
         });
 
         // rocket icon at current playback position
-        const idx = clamp(Math.floor(f.replayIdx), 0, f.history.x.length - 1);
         const X = AX(f.history.x[idx]), Y = AY(f.history.y[idx]);
         const theta = (f.history.theta[idx] || 0) * D2R;
-        const curT = f.history.t[idx] || 0;
         const alt = f.history.y[idx] || 0;
         const burning = curT < (f.sustainerBurnout || 0) && alt > 0.3;
         const chuteOut = alt > 1 && f.events.some((ev) => /DEPLOY/.test(ev.label) && ev.t <= curT);
@@ -1887,7 +1928,7 @@
 
         // the plume leaves whichever motor is actually lit — the booster's nozzle before
         // separation, the sustainer's after
-        const plumeY = boosterOn ? 12 + bpx : 8;
+        const plumeY = boosterOn ? 8 + bpx + 3 : 8;
 
         // exhaust plume while the motor is still burning
         if (burning) {
@@ -1913,28 +1954,35 @@
           ctx.fill();
         }
 
-        // attached booster stage (before separation) — a wider, darker segment with its own
-        // fins and nozzle, plus an interstage band where it will split
+        // attached booster stage (before separation): a segment flush below the sustainer, with
+        // the interstage band where it will split and its fins at the very bottom of the stack.
+        // The sustainer's own fins/nozzle are suppressed while stacked, so there is exactly one
+        // set of fins and it is at the tail — see the !boosterOn guards further down.
         if (boosterOn) {
+          const bTop = 8, bBot = 8 + bpx;
+          // interstage band, right at the sustainer tail
+          ctx.fillStyle = "#ff6b35";
+          ctx.fillRect(-4.9, bTop - 1, 9.8, 2);
+          // booster body
           ctx.fillStyle = "#4a4152";
           ctx.strokeStyle = "rgba(18,22,32,0.55)"; ctx.lineWidth = 0.8;
-          ctx.beginPath(); rr(ctx, -5.4, 10, 10.8, bpx, 1.6); ctx.fill(); ctx.stroke();
-          // interstage band
-          ctx.fillStyle = "#ff6b35";
-          ctx.fillRect(-5.4, 9, 10.8, 2);
-          // booster fins
+          ctx.beginPath(); rr(ctx, -4.9, bTop, 9.8, bpx, 1.4); ctx.fill(); ctx.stroke();
+          // booster fins — the only fins on the stack, at the very bottom
           ctx.fillStyle = "#6b5f78";
-          ctx.beginPath(); ctx.moveTo(-5.4, 10 + bpx - 5); ctx.lineTo(-12, 10 + bpx + 3); ctx.lineTo(-5.4, 10 + bpx); ctx.closePath(); ctx.fill();
-          ctx.beginPath(); ctx.moveTo(5.4, 10 + bpx - 5); ctx.lineTo(12, 10 + bpx + 3); ctx.lineTo(5.4, 10 + bpx); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(-4.9, bBot - 6); ctx.lineTo(-11.5, bBot + 2); ctx.lineTo(-4.9, bBot); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(4.9, bBot - 6); ctx.lineTo(11.5, bBot + 2); ctx.lineTo(4.9, bBot); ctx.closePath(); ctx.fill();
           // booster nozzle
           ctx.fillStyle = "#2a2f3b";
-          ctx.beginPath(); ctx.moveTo(-3.4, 10 + bpx); ctx.lineTo(-4.8, 12 + bpx); ctx.lineTo(4.8, 12 + bpx); ctx.lineTo(3.4, 10 + bpx); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(-3.2, bBot); ctx.lineTo(-4.6, bBot + 2.4); ctx.lineTo(4.6, bBot + 2.4); ctx.lineTo(3.2, bBot); ctx.closePath(); ctx.fill();
         }
 
-        // separation flash
+        // separation flash + expanding puff
         if (sepFlash) {
-          ctx.fillStyle = "rgba(255,180,90," + (0.6 * (1 - Math.abs(curT - sepEv.t) / 0.35)).toFixed(2) + ")";
-          ctx.beginPath(); ctx.arc(0, 9, 16, 0, TAU); ctx.fill();
+          const k = 1 - Math.abs(curT - sepEv.t) / 0.35;
+          ctx.fillStyle = "rgba(255,190,110," + (0.7 * k).toFixed(2) + ")";
+          ctx.beginPath(); ctx.arc(0, 9, 20, 0, TAU); ctx.fill();
+          ctx.strokeStyle = "rgba(255,150,70," + (0.8 * k).toFixed(2) + ")"; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(0, 9, 10 + (1 - k) * 22, 0, TAU); ctx.stroke();
         }
 
         // body
@@ -1964,14 +2012,18 @@
         ctx.closePath();
         ctx.fill();
 
-        // fins
-        ctx.fillStyle = "#00c9d6";
-        ctx.beginPath(); ctx.moveTo(-4.6, 1.5); ctx.lineTo(-10.5, 10); ctx.lineTo(-4.6, 8.5); ctx.closePath(); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(4.6, 1.5); ctx.lineTo(10.5, 10); ctx.lineTo(4.6, 8.5); ctx.closePath(); ctx.fill();
+        // sustainer fins — hidden while the booster is stacked (its fins carry the tail then)
+        if (!boosterOn) {
+          ctx.fillStyle = "#00c9d6";
+          ctx.beginPath(); ctx.moveTo(-4.6, 1.5); ctx.lineTo(-10.5, 10); ctx.lineTo(-4.6, 8.5); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(4.6, 1.5); ctx.lineTo(10.5, 10); ctx.lineTo(4.6, 8.5); ctx.closePath(); ctx.fill();
+        }
 
-        // nozzle
-        ctx.fillStyle = "#2a2f3b";
-        ctx.beginPath(); ctx.moveTo(-3, 8); ctx.lineTo(-4.2, 12); ctx.lineTo(4.2, 12); ctx.lineTo(3, 8); ctx.closePath(); ctx.fill();
+        // sustainer nozzle — hidden while stacked (the booster's nozzle is the live one)
+        if (!boosterOn) {
+          ctx.fillStyle = "#2a2f3b";
+          ctx.beginPath(); ctx.moveTo(-3, 8); ctx.lineTo(-4.2, 12); ctx.lineTo(4.2, 12); ctx.lineTo(3, 8); ctx.closePath(); ctx.fill();
+        }
         ctx.restore();
 
         // advance playback
