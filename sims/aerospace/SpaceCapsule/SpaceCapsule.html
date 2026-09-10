@@ -582,23 +582,28 @@
             shield bleeds off almost all of that speed.
           </li>
           <li>
-            The parachute opens at your chosen height. Its drag slows the fall to a
-            steady <b>terminal speed</b> that depends on
-            <b>total mass &divide; parachute area</b>.
+            The parachute opens and the capsule settles almost at once to its
+            <b>terminal speed</b>, set by
+            <b>total mass &divide; parachute area</b>:
+            <br />speed = &radic;( 2 &middot; mass &middot; g / (&rho; &middot; area &middot; Cd) )
           </li>
-          <li>Wind pushes the capsule sideways the whole way down &mdash; slow descents drift furthest.</li>
+          <li>
+            Deployment height and wind do <b>not</b> change that speed &mdash; they
+            set the <b>fall time</b> (height &divide; speed) and the
+            <b>drift</b> (wind &times; fall time).
+          </li>
         </ul>
         <h4>Reading the result</h4>
         <ul>
-          <li><b>Safe</b> &le; 10 m/s &nbsp;&middot;&nbsp; <b>Hard</b> 10&ndash;20 m/s &nbsp;&middot;&nbsp; <b>Failed</b> &gt; 20 m/s</li>
+          <li><b>Safe</b> &le; 5 m/s &nbsp;&middot;&nbsp; <b>Hard</b> 5&ndash;10 m/s &nbsp;&middot;&nbsp; <b>Failed</b> &gt; 10 m/s</li>
           <li><b>Mission Success</b> needs a Safe splashdown inside the target zone.</li>
         </ul>
         <h4>Try this</h4>
         <ul>
-          <li>Fly the Heavy capsule on the Small chute, then swap to Large.</li>
-          <li>Add 3 astronauts and watch total mass drive the splashdown speed up.</li>
-          <li>Drop the deploy height to Low with a heavy load &mdash; the chute opens too late.</li>
-          <li>Put the Light capsule on the Large chute in Strong wind and watch it drift off target.</li>
+          <li>Only the <b>Large</b> chute on a <b>Light</b> capsule lands Safe (~4 m/s) &mdash; try every payload.</li>
+          <li>Fly the Heavy capsule on the Small chute (~29 m/s, Failed), then swap to Large (~10 m/s).</li>
+          <li>Change deploy height &mdash; the splashdown speed stays the same, only Fall Time moves.</li>
+          <li>Put the Light + Large combo in Strong wind and watch the long, slow fall drift off target.</li>
         </ul>
       </div>
     </div>
@@ -751,15 +756,18 @@
         strong: { name: "Strong",  v: 5, note: "5 m/s crosswind — strong sideways drift" },
       };
 
-      const G = 9.81;
-      const RHO = 1.225;            // air density near sea level (kg/m^3)
-      const CD_CHUTE = 1.5;         // drag coefficient of an open round canopy
-      const REENTRY_KMS = 7.8;      // headline atmospheric-interface speed
-      const V_AFTER_SHIELD = { light: 150, medium: 210, heavy: 280 }; // m/s at canopy deploy
-      const T_INFL = 1.6;          // canopy inflation time (drag builds up over this)
-      const TARGET_R = 500;         // radius of the safe splashdown zone (m)
-      const SAFE_MAX = 10;          // m/s
-      const HARD_MAX = 20;          // m/s
+      // Splashdown speed = parachute terminal velocity:
+      //   v = sqrt( 2 * TotalMass * g / (rho * ParachuteArea * Cd) )
+      // Cd is calibrated so Light capsule + Small chute = 12.00 m/s, which anchors
+      // the whole outcome table (Heavy + Small ~= 29.4 m/s, Light + Large ~= 4.0 m/s).
+      const G = 9.8;               // m/s^2
+      const RHO = 1.225;           // air density near sea level (kg/m^3)
+      const CD_CHUTE = 1.4147;     // calibrated round-canopy drag coefficient
+      const REENTRY_KMS = 7.8;     // headline atmospheric-interface speed
+      const V_AFTER_SHIELD = { light: 150, medium: 210, heavy: 280 }; // m/s, heat-shield exit (display only)
+      const TARGET_R = 500;        // radius of the safe splashdown zone (m)
+      const SAFE_MAX = 5;          // m/s  — Safe splashdown
+      const HARD_MAX = 10;         // m/s  — Hard splashdown; above this is Failed
 
       const FB = {
         safe:  "The parachute created enough air resistance to slow the capsule.",
@@ -786,7 +794,7 @@
 
       // 0 for a soft touchdown, 1 for a violent one — drives every splashdown visual
       function impactSeverity(v) {
-        return Math.max(0, Math.min(1, (v - 4) / 24));
+        return Math.max(0, Math.min(1, (v - 3) / 22));
       }
 
       /* ---------------- physics ---------------- */
@@ -797,35 +805,17 @@
         const dep = DEPLOY[S.dep], wd = WIND[S.wind];
         const mass = cap.mass + pay.mass;
         const area = chuteArea(ch.dia);
-        const k = (RHO * CD_CHUTE * area) / (2 * mass);   // v' = g - k v^2
-        const vTerm = Math.sqrt(G / k);
         const v0 = V_AFTER_SHIELD[S.cap];
 
-        // integrate the canopy descent from deploy altitude to the water:
-        //   v' = g - k(t) v^2 ,  with drag k ramping in as the canopy inflates
-        const dt = 0.004;
-        let v = v0, h = dep.alt, t = 0, x = 0, guard = 0;
-        const samp = [{ t: 0, h: h, v: v, x: 0 }];
-        while (h > 0 && guard < 300000) {
-          const infl = Math.min(1, t / T_INFL);
-          const kNow = k * infl * infl;   // effective drag area grows with inflation
-          v += (G - kNow * v * v) * dt;
-          if (v < 0) v = 0;
-          h -= v * dt;
-          x += wd.v * dt;                 // capsule tracks the wind under canopy
-          t += dt;
-          guard++;
-          if (guard % 60 === 0) samp.push({ t: t, h: Math.max(h, 0), v: v, x: x });
-        }
-        samp.push({ t: t, h: 0, v: v, x: x });
+        // Parachute terminal velocity. At these masses and canopy areas the capsule
+        // settles to this speed within metres of the canopy opening, so it IS the
+        // splashdown speed — deployment height and wind do not change it.
+        const vSplash = Math.sqrt((2 * mass * G) / (RHO * area * CD_CHUTE));
+        const vTerm = vSplash;
 
-        const vSplash = v;
-        const drift = x;
-        // "opened too late": either it splashed before settling to terminal, or it
-        // deployed so low there was no slowing distance and the landing was rough
-        const lateDeploy =
-          vSplash > vTerm * 1.08 + 1 ||
-          (S.dep === "low" && vSplash > SAFE_MAX);
+        // Deployment height and wind only drive fall time and drift.
+        const fallTime = dep.alt / vSplash;          // height / speed
+        const drift = wd.v * fallTime;               // wind * fall time
         const drifted = drift > TARGET_R;
 
         let impact;
@@ -834,31 +824,26 @@
         else impact = "fail";
 
         const success = impact === "safe" && !drifted;
+        // "opened too late" — advisory only: a Low deployment that still failed had
+        // no altitude left to recover in. It does not change the impact tier.
+        const lateDeploy = S.dep === "low" && impact === "fail";
 
         return {
           mass, area, drag: ch.drag, v0,
-          vTerm, vSplash, fallTime: t, drift,
+          vTerm, vSplash, fallTime, drift,
           impact, success, lateDeploy, drifted,
-          samples: samp, payMass: pay.mass,
+          depAlt: dep.alt, windV: wd.v, payMass: pay.mass,
         };
       }
 
-      function sampleTraj(samp, tt) {
-        if (tt <= 0) return samp[0];
-        const last = samp[samp.length - 1];
-        if (tt >= last.t) return last;
-        let lo = 0, hi = samp.length - 1;
-        while (hi - lo > 1) {
-          const mid = (lo + hi) >> 1;
-          if (samp[mid].t < tt) lo = mid; else hi = mid;
-        }
-        const a = samp[lo], b = samp[hi];
-        const f = (tt - a.t) / Math.max(b.t - a.t, 1e-6);
+      // Descent state at elapsed time tt (seconds) — constant terminal-velocity fall.
+      function trajAt(c, tt) {
+        const t = Math.max(0, Math.min(tt, c.fallTime));
         return {
-          t: tt,
-          h: a.h + (b.h - a.h) * f,
-          v: a.v + (b.v - a.v) * f,
-          x: a.x + (b.x - a.x) * f,
+          t,
+          h: Math.max(0, c.depAlt - c.vSplash * t),
+          v: c.vSplash,
+          x: c.windV * t,
         };
       }
 
@@ -1477,24 +1462,29 @@
         }
 
         if (S.phase === "descent") {
-          const realT = ((S.animT - REENTRY_DUR) / PB) * c.fallTime;
-          const s = sampleTraj(c.samples, realT);
+          const dt2 = S.animT - REENTRY_DUR;
+          const realT = (dt2 / PB) * c.fallTime;
+          const s = trajAt(c, realT);
           capY = yOf(s.h);
           let px = cx + s.x * driftPxPerM;
           S.driftedVisual = px > cx + CW * 0.44;
           capX = Math.max(cx - CW * 0.44, Math.min(cx + CW * 0.44, px));
-          bloom = Math.min(1, (S.animT - REENTRY_DUR) / BLOOM_DUR);
-          plasma = Math.max(0, 0.5 - (S.animT - REENTRY_DUR) / 0.5) * 0.8;
+          bloom = Math.min(1, dt2 / BLOOM_DUR);
+          plasma = Math.max(0, 0.5 - dt2 / 0.5) * 0.8;
           const sway = Math.sin(S.animT * 1.8) * 0.05;
           rot = sway + windTilt;
           S.sinkDir = c.drift > 1 ? 1 : -1;
-          const fast = Math.max(0, Math.min(1, (s.v - 9) / 20));
+          // visual "snap": the canopy grabs and speed drops from heat-shield exit
+          // to terminal over the first moment of the descent
+          const SNAP = 0.8;
+          const shownV = dt2 < SNAP ? c.v0 + (c.vSplash - c.v0) * (dt2 / SNAP) : c.vSplash;
+          const fast = Math.max(0, Math.min(1, (shownV - 9) / 20));
           if (fast > 0.05) drawSpeedStreaks(capX, capY, w, fast, bloom);
-          spd = (s.v / 1000).toFixed(3) + " km/s (" + Math.round(s.v) + " m/s)";
+          spd = (shownV / 1000).toFixed(3) + " km/s (" + Math.round(shownV) + " m/s)";
           ftxt = realT.toFixed(1) + " s";
           drawCapsule(capX, capY, w, rot, plasma, bloom, false);
           if (S.driftedVisual) drawDriftArrow();
-          const st = S.animT - REENTRY_DUR < 1.0
+          const st = dt2 < 1.0
             ? "PARACHUTE DEPLOYED"
             : fast > 0.55 ? "DESCENDING · FAST" : "DESCENDING";
           drawHUD(st, spd, ftxt);
