@@ -688,9 +688,12 @@
 
       function design() {
         const noseLen = NOSE[S.nose].lenRatio * S.diam;
-        const totalLen = noseLen + S.bodyLen;
+        const sustLen = noseLen + S.bodyLen;               // nose + sustainer body tube
+        // With a booster the airframe IS the whole stack — one set of fins, at its tail — so every
+        // downstream calc (CP, moment of inertia, the CG track) works on the full length.
+        const totalLen = sustLen + (S.stages === 2 ? S.boosterLen : 0);
         S.cgX = clamp(S.cgX == null ? totalLen * 0.55 : S.cgX, 2, totalLen - 2);
-        return { noseLen, totalLen, diam: S.diam };
+        return { noseLen, totalLen, sustLen, diam: S.diam };
       }
 
       /* Drag build-up, all coefficients referred to the body's frontal area.
@@ -849,7 +852,20 @@
       bindRange("bodyLen", "bodyLenVal", (v) => v + " mm", (v) => (S.bodyLen = v));
       bindRange("dryMass", "dryMassVal", (v) => v + " g", (v) => (S.dryMass = v));
       bindRange("boosterMass", "boosterMassVal", (v) => v + " g", (v) => (S.boosterMass = v));
-      bindRange("boosterLen", "boosterLenVal", (v) => v + " mm", (v) => (S.boosterLen = v));
+      bindRange("boosterLen", "boosterLenVal", (v) => v + " mm", (v) => {
+        // The fins ride the tail, so lengthening the booster carries them (and the CP) aft. Slide the
+        // CG the same way, so resizing the booster keeps the stability margin you had set rather than
+        // throwing the rocket straight to OVER-STABLE.
+        if (S.stages === 2 && S.cgX != null) {
+          const dOld = design();
+          const marOld = marginOf(computeCP(dOld), dOld);
+          S.boosterLen = v;
+          const dNew = design();
+          S.cgX = clamp(computeCP(dNew).Xcp - marOld * S.diam, 2, dNew.totalLen - 2);
+        } else {
+          S.boosterLen = v;
+        }
+      });
       bindRange("finN", "finNVal", (v) => String(v), (v) => (S.finN = v));
       bindRange("finCr", "finCrVal", (v) => v + " mm", (v) => (S.finCr = v));
       bindRange("finCt", "finCtVal", (v) => v + " mm", (v) => (S.finCt = v));
@@ -909,6 +925,10 @@
         $("stageFlow").style.display = S.stages === 2 ? "" : "none";
         $("stageCard").classList.toggle("on", S.stages === 2);
         if (S.stages === 2 && !whyShown.has("staging")) { whyShown.add("staging"); showWhy("staging"); }
+        // Adding/removing the booster moves the tail (and so the fins and the CP) a long way.
+        // Re-seed the CG to a flyable ~1.5 cal so the toggle doesn't dump you at OVER-STABLE.
+        const d = design();
+        S.cgX = clamp(computeCP(d).Xcp - 1.5 * S.diam, 2, d.totalLen - 2);
         refreshAll();
       });
 
@@ -1395,7 +1415,7 @@
         // scale to the WHOLE drawn stack — nose to nozzle, booster included — so a
         // two-stage rocket doesn't run off the right edge of the canvas
         const nozzleLen = Math.min(S.diam * 1.1, 22);
-        const drawnLen = (S.stages === 2 ? d.totalLen + S.boosterLen : d.totalLen) + nozzleLen + 8;
+        const drawnLen = d.totalLen + nozzleLen + 8;   // d.totalLen already spans the whole stack
         const totalLenPx = Math.min(CW * 0.82, CH * 0.62);
         const scale = totalLenPx / drawnLen;
         const cx = CW * 0.5, cy = CH * 0.52;
@@ -1406,7 +1426,8 @@
         ctx.scale(scale, scale);
 
         const halfD = S.diam / 2;
-        const rTail = S.stages === 2 ? d.totalLen + S.boosterLen : d.totalLen;
+        const rTail = d.totalLen;               // aft end of the stack (nozzle mounts here)
+        const sustEnd = d.sustLen;              // where the sustainer body ends / the booster begins
         const seam = S.diam * 0.06;
         ctx.lineWidth = 1 / scale;
 
@@ -1428,15 +1449,15 @@
           boostGrad.addColorStop(1, "#1d1824");
           ctx.fillStyle = boostGrad;
           ctx.strokeStyle = "rgba(255,255,255,0.22)";
-          rr(ctx, d.totalLen, -halfD, S.boosterLen, S.diam, seam);
+          rr(ctx, sustEnd, -halfD, S.boosterLen, S.diam, seam);
           ctx.fill(); ctx.stroke();
           // interstage coupler ring
           ctx.fillStyle = "rgba(255,107,53,0.85)";
-          ctx.fillRect(d.totalLen - 2 / scale, -halfD, 5 / scale, S.diam);
+          ctx.fillRect(sustEnd - 2 / scale, -halfD, 5 / scale, S.diam);
           // separation plane
           ctx.strokeStyle = "rgba(255,107,53,0.8)";
           ctx.setLineDash([4 / scale, 3 / scale]);
-          ctx.beginPath(); ctx.moveTo(d.totalLen, -halfD - 5 / scale); ctx.lineTo(d.totalLen, halfD + 5 / scale); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(sustEnd, -halfD - 5 / scale); ctx.lineTo(sustEnd, halfD + 5 / scale); ctx.stroke();
           ctx.setLineDash([]);
         }
 
@@ -1469,9 +1490,9 @@
         rr(ctx, d.noseLen, -halfD, S.bodyLen, S.diam, seam);
         ctx.fill(); ctx.stroke();
 
-        // panel seams
+        // panel seams (sustainer body only)
         ctx.strokeStyle = "rgba(0,0,0,0.18)";
-        for (let sx = d.noseLen + S.bodyLen * 0.25; sx < d.totalLen - 1; sx += S.bodyLen * 0.25) {
+        for (let sx = d.noseLen + S.bodyLen * 0.25; sx < sustEnd - 1; sx += S.bodyLen * 0.25) {
           ctx.beginPath(); ctx.moveTo(sx, -halfD); ctx.lineTo(sx, halfD); ctx.stroke();
         }
         // specular highlight running the length of the stack
@@ -1498,45 +1519,11 @@
         ctx.beginPath(); ctx.moveTo(d.noseLen * 0.12, -halfD * 0.18); ctx.lineTo(d.noseLen * 0.92, -halfD * 0.6); ctx.stroke();
         ctx.lineWidth = 1 / scale;
 
-        // Booster fins, at the very tail of the stack — so a two-stage rocket has fins at the back
-        // where you expect them, not just a bare tube behind the sustainer fins. These are visual
-        // (the CP math models the sustainer fins); they mirror the sustainer fin planform, scaled
-        // down a little, and are drawn before the sustainer fins so those overlap cleanly.
-        if (S.stages === 2 && S.finN > 0) {
-          const bfCr = S.finCr * 0.85, bfSpanFull = S.finSpan * 0.8, bfSweep = S.finSweep * 0.85, bfCt = S.finCt * 0.85;
-          const bfRootX = rTail - bfCr;
-          const bfins = [];
-          for (let i = 0; i < S.finN; i++) {
-            const roll = (i * TAU) / S.finN;
-            bfins.push({ proj: Math.cos(roll), depth: Math.sin(roll) });
-          }
-          bfins.sort((a, b) => a.depth - b.depth);
-          bfins.forEach((bf) => {
-            const projSpan = bfSpanFull * Math.abs(bf.proj);
-            const flip = bf.proj > 0, s = flip ? -1 : 1;
-            const edgeOn = Math.abs(bf.proj) < 0.06;
-            ctx.globalAlpha = edgeOn ? 0.5 : 0.5 + 0.4 * Math.abs(bf.proj);
-            if (edgeOn) {
-              ctx.strokeStyle = "#8a5aa8"; ctx.lineWidth = 2 / scale;
-              ctx.beginPath(); ctx.moveTo(bfRootX, 0); ctx.lineTo(rTail, 0); ctx.stroke();
-              ctx.lineWidth = 1 / scale;
-            } else {
-              drawFinShape(ctx, bfRootX, rTail, halfD, bfCr, bfCt, projSpan, bfSweep, flip);
-              const bfGrad = ctx.createLinearGradient(0, s * halfD, 0, s * (halfD + Math.max(projSpan, 1)));
-              bfGrad.addColorStop(0, "#c78ce0");
-              bfGrad.addColorStop(1, "#5b3a78");
-              ctx.fillStyle = bfGrad;
-              ctx.strokeStyle = "rgba(255,255,255,0.35)";
-              ctx.fill(); ctx.stroke();
-            }
-            ctx.globalAlpha = 1;
-          });
-        }
-
-        // Sustainer fins, on the sustainer tail — these are what the CP math models, so the orange
-        // CP marker lands on them. Every fin is drawn, foreshortened by its roll angle the way a
-        // real side view works: a fin edge-on to the viewer projects to almost nothing, one pointing
-        // straight up or down shows its full span. That is what makes the fin-count slider visible.
+        // Fins — one set, always at the very tail of the airframe (which is the booster tail on a
+        // two-stage rocket, since d.totalLen spans the whole stack). Every fin is drawn, foreshortened
+        // by its roll angle the way a real side view works: a fin edge-on to the viewer projects to
+        // almost nothing, one pointing straight up or down shows its full span. That is what makes the
+        // fin-count slider visible here.
         const finRootX = d.totalLen - S.finCr;
         const fins = [];
         for (let i = 0; i < S.finN; i++) {
