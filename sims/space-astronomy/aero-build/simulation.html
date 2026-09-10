@@ -182,7 +182,9 @@
       .noseSeg { flex-wrap: wrap; }
       /* four across wherever there is room; falls back to 2x2 on genuinely narrow screens */
       .noseSeg button { flex: 1 1 74px; }
-      .noseSeg button.icon { font-size: 16px; line-height: 1.15; padding: 7px 4px 5px; }
+      .noseSeg button.icon { line-height: 1.1; padding: 7px 4px 5px; }
+      .noseSeg button svg { display: block; width: 30px; height: 22px; margin: 0 auto 3px; fill: currentColor; opacity: .82; }
+      .noseSeg button.on svg { opacity: 1; }
       .noseSeg button .nlab { display: block; font-size: 9.5px; letter-spacing: .04em; margin-top: 2px; }
 
       /* real toggle switch rather than a raw checkbox */
@@ -346,7 +348,7 @@
       <div id="panel">
         <!-- MOTOR -->
         <div class="sec sec-motor">
-          <div class="sec-h">Motor <span style="color:var(--accent-orange)">Thrust &amp; Delay</span> <button class="whyBtn" data-why="motor">?</button></div>
+          <div class="sec-h">🔥 Motor <span style="color:var(--accent-orange)">Thrust &amp; Delay</span> <button class="whyBtn" data-why="motor">?</button></div>
           <div class="ctl">
             <div class="ctl-top"><span class="ctl-name">Motor Designation (Sustainer)</span></div>
             <div class="motorRow"><input type="text" id="motorInput" value="C6-5" maxlength="10" /></div>
@@ -388,14 +390,14 @@
 
         <!-- GEOMETRY -->
         <div class="sec sec-geo">
-          <div class="sec-h">Airframe <span style="color:var(--accent-purple)">Geometry</span> <button class="whyBtn" data-why="nose">?</button></div>
+          <div class="sec-h">📐 Airframe <span style="color:var(--accent-purple)">Geometry</span> <button class="whyBtn" data-why="nose">?</button></div>
           <div class="ctl">
             <div class="ctl-top"><span class="ctl-name">Nose Shape</span></div>
             <div class="seg noseSeg" id="noseSeg">
-              <button data-k="conical" class="icon">▲<span class="nlab">Conical</span></button>
-              <button data-k="ogive" class="icon on">◗<span class="nlab">Ogive</span></button>
-              <button data-k="parabolic" class="icon">◗<span class="nlab">Parabolic</span></button>
-              <button data-k="rounded" class="icon">⬤<span class="nlab">Rounded</span></button>
+              <button data-k="conical" class="icon"><svg viewBox="0 0 30 24" aria-hidden="true"><path d="M15 2 L27 22 L3 22 Z"/></svg><span class="nlab">Conical</span></button>
+              <button data-k="ogive" class="icon on"><svg viewBox="0 0 30 24" aria-hidden="true"><path d="M15 2 C20 6 27 13 27 22 L3 22 C3 13 10 6 15 2 Z"/></svg><span class="nlab">Ogive</span></button>
+              <button data-k="parabolic" class="icon"><svg viewBox="0 0 30 24" aria-hidden="true"><path d="M15 3 C24 4 27 12 27 22 L3 22 C3 12 6 4 15 3 Z"/></svg><span class="nlab">Parabolic</span></button>
+              <button data-k="rounded" class="icon"><svg viewBox="0 0 30 24" aria-hidden="true"><path d="M3 22 C3 8 27 8 27 22 Z"/></svg><span class="nlab">Rounded</span></button>
             </div>
             <div class="hint" id="noseHint"></div>
           </div>
@@ -415,7 +417,7 @@
 
         <!-- FINS -->
         <div class="sec sec-fins">
-          <div class="sec-h">Fins <span style="color:var(--accent-cyan)">Stabilizers</span> <button class="whyBtn" data-why="fins">?</button></div>
+          <div class="sec-h">🪁 Fins <span style="color:var(--accent-cyan)">Stabilizers</span> <button class="whyBtn" data-why="fins">?</button></div>
           <div id="finCanvasWrap"><canvas id="finCanvas"></canvas></div>
           <div class="ctl" style="margin-top:10px">
             <div class="ctl-top"><span class="ctl-name">Fin Count</span><span class="ctl-val" id="finNVal">3</span></div>
@@ -443,7 +445,7 @@
 
         <!-- STABILITY -->
         <div class="sec sec-stab">
-          <div class="sec-h">Stability <span style="color:var(--accent-pink)">Static Margin</span> <button class="whyBtn" data-why="margin">?</button></div>
+          <div class="sec-h">⚖️ Stability <span style="color:var(--accent-pink)">Static Margin</span> <button class="whyBtn" data-why="margin">?</button></div>
           <div id="stabGaugeWrap">
             <canvas id="stabGauge"></canvas>
             <div class="stab-verdict" id="stabVerdict">STABLE</div>
@@ -453,7 +455,7 @@
 
         <!-- RECOVERY -->
         <div class="sec sec-rec">
-          <div class="sec-h">Recovery <span style="color:var(--accent-green)">Parachute</span> <button class="whyBtn" data-why="recovery">?</button></div>
+          <div class="sec-h">🪂 Recovery <span style="color:var(--accent-green)">Parachute</span> <button class="whyBtn" data-why="recovery">?</button></div>
           <p class="subnote" style="margin:-4px 0 10px">
             Getting the rocket back undamaged. The chute must open near the top of the flight — and be
             big enough to slow the landing, but not so big it drifts away.
@@ -501,7 +503,7 @@
 
         <!-- LAUNCH / WIND -->
         <div class="sec sec-env">
-          <div class="sec-h">Launch <span style="color:var(--accent-amber)">Conditions</span></div>
+          <div class="sec-h">🌬️ Launch <span style="color:var(--accent-amber)">Conditions</span></div>
           <div class="ctl">
             <div class="ctl-top"><span class="ctl-name">Launch Angle (from vertical)</span><span class="ctl-val" id="launchAngleVal">0°</span></div>
             <input type="range" id="launchAngle" min="0" max="15" step="1" value="0" />
@@ -514,7 +516,7 @@
 
         <!-- OUTPUTS -->
         <div class="sec sec-out">
-          <div class="sec-h">Flight <span style="color:var(--accent-blue)">Outputs</span></div>
+          <div class="sec-h">📊 Flight <span style="color:var(--accent-blue)">Outputs</span></div>
           <div class="row"><dt>Apogee Altitude</dt><dd id="o_apoAlt">—</dd></div>
           <div class="row"><dt>Apogee Downrange</dt><dd id="o_apoDown">—</dd></div>
           <div class="row click" id="o_weatherRow" data-why="weathercock"><dt>Weathercock Angle</dt><dd id="o_weather">—</dd></div>
@@ -1251,6 +1253,7 @@
         S.flight = {
           history, events, apogeeAlt, apogeeDown, apogeeT, landSpeed, sustainerBurnout,
           finalX: state.x, margin, outcome: { mode, cause, sev }, boosterTrack, staged,
+          tBurnBooster, boosterLen: S.boosterLen,
           flightTime: t, cdCoast,
           weathercockDeg: weathercockCaptured ? weathercockDeg : null,
           wind: S.wind, maxT: t, cp, d,
@@ -1271,7 +1274,14 @@
         $("o_cd").textContent = f.cdCoast.toFixed(2);
         const banner = $("outcomeBanner");
         banner.className = "show " + f.outcome.sev;
-        banner.innerHTML = `<b>${f.outcome.mode}</b>${f.outcome.cause}`;
+        let body = `<b>${f.outcome.mode}</b>${f.outcome.cause}`;
+        if (f.staged) {
+          const sep = f.events.find((ev) => /SEPARAT/.test(ev.label));
+          body += sep
+            ? ` <span style="color:var(--accent-orange)">Booster dropped at ${sep.y.toFixed(0)} m; its fall is the dashed orange trace.</span>`
+            : ` <span style="color:var(--accent-pink)">The stages never separated cleanly.</span>`;
+        }
+        banner.innerHTML = body;
         $("miniGraphs").classList.add("show");
         drawMiniGraphs(f);
       }
@@ -1382,10 +1392,14 @@
 
         const d = design();
         const cp = computeCP(d);
-        const totalLenPx = Math.min(CW * 0.72, CH * 0.62);
-        const scale = totalLenPx / d.totalLen;
+        // scale to the WHOLE drawn stack — nose to nozzle, booster included — so a
+        // two-stage rocket doesn't run off the right edge of the canvas
+        const nozzleLen = Math.min(S.diam * 1.1, 22);
+        const drawnLen = (S.stages === 2 ? d.totalLen + S.boosterLen : d.totalLen) + nozzleLen + 8;
+        const totalLenPx = Math.min(CW * 0.82, CH * 0.62);
+        const scale = totalLenPx / drawnLen;
         const cx = CW * 0.5, cy = CH * 0.52;
-        const originX = cx - (d.totalLen * scale) / 2;
+        const originX = cx - (drawnLen * scale) / 2;
 
         ctx.save();
         ctx.translate(originX, cy);
@@ -1803,7 +1817,10 @@
 
         // Event + apogee flags. Deployment usually happens within a second of apogee, so their
         // markers land on top of each other — collect the labels and stack any that overlap.
-        const flags = f.events.map((ev) => ({ X: AX(ev.x), Y: AY(ev.y), text: ev.label, color: "#eab308" }));
+        const flags = f.events.map((ev) => ({
+          X: AX(ev.x), Y: AY(ev.y), text: ev.label,
+          color: /SEPARAT/.test(ev.label) ? "#ff6b35" : "#eab308",
+        }));
         if (f.apogeeT != null) {
           flags.push({ X: AX(f.apogeeDown), Y: AY(f.apogeeAlt), text: "APOGEE", color: "#ff6b35" });
         }
@@ -1831,6 +1848,13 @@
         const alt = f.history.y[idx] || 0;
         const burning = curT < (f.sustainerBurnout || 0) && alt > 0.3;
         const chuteOut = alt > 1 && f.events.some((ev) => /DEPLOY/.test(ev.label) && ev.t <= curT);
+        // before separation a two-stage rocket carries its booster, so the icon has to show it —
+        // that is the whole point of "it looks the same with or without a booster"
+        const boosterOn = f.staged && curT < (f.tBurnBooster || 0) && alt >= 0;
+        const bpx = boosterOn ? clamp(6 + (f.boosterLen - 50) / 550 * 14, 6, 20) : 0;
+        // brief flash right at separation
+        const sepEv = f.events.find((ev) => /SEPARAT/.test(ev.label));
+        const sepFlash = sepEv && Math.abs(curT - sepEv.t) < 0.35;
 
         // parachute — drawn unrotated so the canopy always sits world-up above the rocket
         if (chuteOut) {
@@ -1861,28 +1885,56 @@
         ctx.translate(X, Y);
         ctx.rotate(theta);
 
+        // the plume leaves whichever motor is actually lit — the booster's nozzle before
+        // separation, the sustainer's after
+        const plumeY = boosterOn ? 12 + bpx : 8;
+
         // exhaust plume while the motor is still burning
         if (burning) {
           const fl = 15 + Math.random() * 9;
           // soft glow so the plume reads as light, not just a shape
-          const glow = ctx.createRadialGradient(0, 12, 0, 0, 12, fl * 1.1);
+          const glow = ctx.createRadialGradient(0, plumeY + 4, 0, 0, plumeY + 4, fl * 1.1);
           glow.addColorStop(0, "rgba(255,170,70,0.5)");
           glow.addColorStop(1, "rgba(255,110,0,0)");
           ctx.fillStyle = glow;
-          ctx.beginPath(); ctx.arc(0, 12, fl * 1.1, 0, TAU); ctx.fill();
+          ctx.beginPath(); ctx.arc(0, plumeY + 4, fl * 1.1, 0, TAU); ctx.fill();
 
-          const plume = ctx.createLinearGradient(0, 8, 0, 8 + fl);
+          const plume = ctx.createLinearGradient(0, plumeY, 0, plumeY + fl);
           plume.addColorStop(0, "rgba(255,250,225,0.98)");
           plume.addColorStop(0.28, "rgba(255,200,90,0.92)");
           plume.addColorStop(0.62, "rgba(255,130,35,0.75)");
           plume.addColorStop(1, "rgba(255,60,0,0)");
           ctx.fillStyle = plume;
           ctx.beginPath();
-          ctx.moveTo(-4.4, 8);
-          ctx.quadraticCurveTo(-2.6, 8 + fl * 0.75, 0, 8 + fl * 1.45);
-          ctx.quadraticCurveTo(2.6, 8 + fl * 0.75, 4.4, 8);
-          ctx.quadraticCurveTo(0, 8 + fl * 0.3, -4.4, 8);
+          ctx.moveTo(-4.4, plumeY);
+          ctx.quadraticCurveTo(-2.6, plumeY + fl * 0.75, 0, plumeY + fl * 1.45);
+          ctx.quadraticCurveTo(2.6, plumeY + fl * 0.75, 4.4, plumeY);
+          ctx.quadraticCurveTo(0, plumeY + fl * 0.3, -4.4, plumeY);
           ctx.fill();
+        }
+
+        // attached booster stage (before separation) — a wider, darker segment with its own
+        // fins and nozzle, plus an interstage band where it will split
+        if (boosterOn) {
+          ctx.fillStyle = "#4a4152";
+          ctx.strokeStyle = "rgba(18,22,32,0.55)"; ctx.lineWidth = 0.8;
+          ctx.beginPath(); rr(ctx, -5.4, 10, 10.8, bpx, 1.6); ctx.fill(); ctx.stroke();
+          // interstage band
+          ctx.fillStyle = "#ff6b35";
+          ctx.fillRect(-5.4, 9, 10.8, 2);
+          // booster fins
+          ctx.fillStyle = "#6b5f78";
+          ctx.beginPath(); ctx.moveTo(-5.4, 10 + bpx - 5); ctx.lineTo(-12, 10 + bpx + 3); ctx.lineTo(-5.4, 10 + bpx); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(5.4, 10 + bpx - 5); ctx.lineTo(12, 10 + bpx + 3); ctx.lineTo(5.4, 10 + bpx); ctx.closePath(); ctx.fill();
+          // booster nozzle
+          ctx.fillStyle = "#2a2f3b";
+          ctx.beginPath(); ctx.moveTo(-3.4, 10 + bpx); ctx.lineTo(-4.8, 12 + bpx); ctx.lineTo(4.8, 12 + bpx); ctx.lineTo(3.4, 10 + bpx); ctx.closePath(); ctx.fill();
+        }
+
+        // separation flash
+        if (sepFlash) {
+          ctx.fillStyle = "rgba(255,180,90," + (0.6 * (1 - Math.abs(curT - sepEv.t) / 0.35)).toFixed(2) + ")";
+          ctx.beginPath(); ctx.arc(0, 9, 16, 0, TAU); ctx.fill();
         }
 
         // body
