@@ -1,0 +1,1575 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Space Capsule · Re-entry &amp; Splashdown</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #eef1f4;
+        --panel: #fcfdfe;
+        --panel2: #f3f6f8;
+        --line: #dbe2e8;
+        --txt: #17293b;
+        --mut: #4c5c6b;
+        --dim: #8a949d;
+        --accent: #e8590c;
+        --accent-press: #c94a08;
+        --sky: #2a78d6;
+        --sky-soft: #e3eefb;
+        --warn: #fab219;
+        --danger: #d03b3b;
+        --danger-soft: #fbe5e5;
+        --ok: #0ca30c;
+        --ok-ink: #006300;
+        --ok-soft: #e9f7e9;
+        --shadow: 0 1px 2px rgba(23, 41, 59, 0.08);
+        --r: 10px;
+        --head: "Orbitron", sans-serif;
+        --body: "Rajdhani", sans-serif;
+        --mono: "IBM Plex Mono", Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        font-family: var(--body);
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--txt);
+        background: var(--bg);
+        height: 100vh;
+        overflow: hidden;
+        padding: 12px clamp(12px, 2.4vw, 30px);
+        display: flex;
+        flex-direction: column;
+      }
+      h1,
+      h3,
+      .badge {
+        font-family: var(--head);
+      }
+      header.top {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+        flex: 0 0 auto;
+      }
+      .logo {
+        font-size: 26px;
+        line-height: 1;
+      }
+      .title h1 {
+        margin: 0;
+        font-size: 23px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--txt);
+      }
+      .title p {
+        margin: 2px 0 0;
+        font-size: 12.5px;
+        color: var(--mut);
+        letter-spacing: 0.02em;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 288px 1fr 316px;
+        gap: 14px;
+        align-items: stretch;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      @media (max-width: 1180px) {
+        body {
+          overflow: auto;
+          height: auto;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+          flex: 0 0 auto;
+        }
+        .card.controls,
+        .card.readings {
+          width: 100%;
+        }
+        .card.stage {
+          width: 100%;
+          flex: 0 0 auto;
+          height: clamp(380px, 128vw, 640px);
+        }
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        box-shadow: var(--shadow);
+        padding: 16px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
+      }
+      .card.stage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        padding: 14px;
+      }
+      .card.stage canvas {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 8px;
+        background: #0b1020;
+      }
+
+      .card h3 {
+        margin: 0 0 3px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--mut);
+      }
+      .card .sub {
+        font-size: 12.5px;
+        color: var(--mut);
+        margin: 0 0 10px;
+        line-height: 1.45;
+      }
+
+      .ctrl {
+        margin: 13px 0;
+      }
+      .ctrl .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 5px;
+        gap: 8px;
+      }
+      .ctrl label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--txt);
+        letter-spacing: 0.02em;
+      }
+      .ctrl .val {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--accent);
+        font-weight: 600;
+        text-align: right;
+      }
+
+      .seg {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .seg button {
+        flex: 1 1 auto;
+        min-width: 58px;
+        cursor: pointer;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--mut);
+        padding: 7px 6px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        transition: 0.15s;
+        font-family: var(--body);
+      }
+      .seg button:hover {
+        border-color: var(--dim);
+        color: var(--txt);
+      }
+      .seg button.on {
+        color: var(--txt);
+        border-color: var(--sky);
+        background: var(--sky-soft);
+        font-weight: 700;
+      }
+      .seg.wide button {
+        min-width: 44px;
+      }
+      .hint {
+        font-size: 11px;
+        color: var(--dim);
+        margin-top: 6px;
+        line-height: 1.4;
+      }
+
+      .stage-foot {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+        justify-content: center;
+        align-items: center;
+        flex: 0 0 auto;
+      }
+      .btn {
+        cursor: pointer;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--txt);
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-size: 12.5px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        transition: 0.15s;
+        font-family: var(--head);
+      }
+      .btn:hover {
+        border-color: var(--dim);
+      }
+      .btn.start {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .btn.start:hover {
+        background: var(--accent-press);
+        border-color: var(--accent-press);
+      }
+      .btn.start:disabled {
+        background: var(--panel2);
+        border-color: var(--line);
+        color: var(--dim);
+        cursor: default;
+      }
+      .btn.reset {
+        background: var(--panel);
+        border-color: var(--line);
+        color: var(--mut);
+      }
+      .modechip {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        background: var(--panel2);
+        color: var(--mut);
+        border: 1px solid var(--line);
+      }
+      .modechip.run {
+        background: var(--sky-soft);
+        color: var(--sky);
+        border-color: #bcd9f5;
+      }
+      .modechip.safe {
+        background: var(--ok-soft);
+        color: var(--ok-ink);
+        border-color: #bfe3bb;
+      }
+      .modechip.hard {
+        background: #fdf1e3;
+        color: #9a5a06;
+        border-color: #f0d5b0;
+      }
+      .modechip.fail {
+        background: var(--danger-soft);
+        color: #a02525;
+        border-color: #eab6b6;
+      }
+
+      .reading {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--line);
+        gap: 10px;
+      }
+      .reading .k {
+        font-size: 12.5px;
+        color: var(--mut);
+      }
+      .reading .v {
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--txt);
+        text-align: right;
+      }
+      .reading .v small {
+        font-family: var(--body);
+        font-weight: 600;
+        color: var(--mut);
+        font-size: 10.5px;
+        margin-left: 4px;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 9px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        border: 1px solid var(--line);
+        background: var(--panel2);
+        color: var(--mut);
+      }
+      .pill.safe {
+        background: var(--ok-soft);
+        color: var(--ok-ink);
+        border-color: #bfe3bb;
+      }
+      .pill.hard {
+        background: #fdf1e3;
+        color: #9a5a06;
+        border-color: #f0d5b0;
+      }
+      .pill.fail {
+        background: var(--danger-soft);
+        color: #a02525;
+        border-color: #eab6b6;
+      }
+
+      .fbwrap {
+        margin-top: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        min-height: 20px;
+      }
+      .fb {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--txt);
+        background: var(--panel2);
+        border: 1px solid var(--line);
+        border-left: 3px solid var(--dim);
+        border-radius: 7px;
+        padding: 8px 10px;
+      }
+      .fb.ok {
+        border-left-color: var(--ok);
+        background: var(--ok-soft);
+      }
+      .fb.warn {
+        border-left-color: var(--warn);
+        background: #fdf7e8;
+      }
+      .fb.bad {
+        border-left-color: var(--danger);
+        background: var(--danger-soft);
+      }
+      .fb .ic {
+        font-size: 13px;
+        flex: 0 0 auto;
+        line-height: 1.3;
+      }
+
+      .logsect {
+        margin-top: 16px;
+        padding-top: 12px;
+        border-top: 1px solid var(--line);
+      }
+      .logsect .lhead {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .logsect .lhead button {
+        font-family: var(--body);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--mut);
+        background: var(--panel2);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 4px 9px;
+        cursor: pointer;
+      }
+      .logscroll {
+        max-height: 210px;
+        overflow-y: auto;
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+      table.log {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: var(--mono);
+        font-size: 10px;
+      }
+      table.log th,
+      table.log td {
+        padding: 5px 3px;
+        text-align: center;
+        border-bottom: 1px solid var(--line);
+        white-space: nowrap;
+      }
+      table.log th:first-child,
+      table.log td:first-child {
+        padding-left: 6px;
+      }
+      table.log th:last-child,
+      table.log td:last-child {
+        padding-right: 6px;
+      }
+      table.log th {
+        position: sticky;
+        top: 0;
+        background: var(--panel2);
+        color: var(--mut);
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+      table.log tr:last-child td {
+        border-bottom: none;
+      }
+      table.log td.res {
+        font-weight: 700;
+      }
+      table.log td.res.safe {
+        color: var(--ok-ink);
+      }
+      table.log td.res.hard {
+        color: #9a5a06;
+      }
+      table.log td.res.fail {
+        color: #a02525;
+      }
+      .logempty {
+        padding: 14px 10px;
+        text-align: center;
+        color: var(--dim);
+        font-size: 11.5px;
+      }
+
+      /* help panel */
+      .helpwrap {
+        position: fixed;
+        top: 14px;
+        right: clamp(12px, 2.4vw, 30px);
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+      }
+      .helpbtn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head);
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #fff;
+        background: var(--sky);
+        border: 1px solid var(--sky);
+        border-radius: 8px;
+        padding: 8px 14px;
+        box-shadow: 0 6px 14px rgba(42, 120, 214, 0.24);
+        transition: 0.15s ease;
+      }
+      .helpbtn:hover {
+        transform: translateY(-1px);
+      }
+      .helpbtn.on {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+      .helpbar {
+        display: none;
+        margin-top: 8px;
+        width: 360px;
+        max-width: min(360px, 86vw);
+        max-height: 74vh;
+        overflow-y: auto;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        box-shadow: 0 14px 30px rgba(23, 41, 59, 0.16);
+        padding: 14px 16px;
+        font-size: 12.5px;
+        line-height: 1.5;
+        color: var(--txt);
+      }
+      .helpbar.show {
+        display: block;
+      }
+      .helpbar h4 {
+        font-family: var(--head);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin: 0 0 6px;
+        color: var(--accent);
+      }
+      .helpbar h4:not(:first-child) {
+        margin-top: 12px;
+      }
+      .helpbar p {
+        margin: 0 0 8px;
+      }
+      .helpbar ul {
+        margin: 0 0 8px;
+        padding-left: 18px;
+      }
+      .helpbar li {
+        margin-bottom: 4px;
+      }
+      .helpbar b {
+        color: var(--txt);
+      }
+
+      @media (max-width: 1180px) {
+        .helpwrap {
+          position: static;
+          align-items: stretch;
+          margin-bottom: 10px;
+        }
+        .helpbar {
+          width: 100%;
+          max-width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="helpwrap">
+      <button class="helpbtn" id="helpBtn" aria-expanded="false">Guide</button>
+      <div class="helpbar" id="helpBar">
+        <h4>What you are testing</h4>
+        <p>
+          A crew capsule is returning from orbit. You choose its size, how much it
+          carries, its parachute, the height the parachute opens, and the wind.
+          Then you fly the return and see whether it survives the water landing.
+        </p>
+        <h4>How it works</h4>
+        <ul>
+          <li>
+            The capsule hits the air at <b>7.8 km/s</b> heat-shield-down. The heat
+            shield bleeds off almost all of that speed.
+          </li>
+          <li>
+            The parachute opens at your chosen height. Its drag slows the fall to a
+            steady <b>terminal speed</b> that depends on
+            <b>total mass &divide; parachute area</b>.
+          </li>
+          <li>Wind pushes the capsule sideways the whole way down &mdash; slow descents drift furthest.</li>
+        </ul>
+        <h4>Reading the result</h4>
+        <ul>
+          <li><b>Safe</b> &le; 10 m/s &nbsp;&middot;&nbsp; <b>Hard</b> 10&ndash;20 m/s &nbsp;&middot;&nbsp; <b>Failed</b> &gt; 20 m/s</li>
+          <li><b>Mission Success</b> needs a Safe splashdown inside the target zone.</li>
+        </ul>
+        <h4>Try this</h4>
+        <ul>
+          <li>Fly the Heavy capsule on the Small chute, then swap to Large.</li>
+          <li>Add 3 astronauts and watch total mass drive the splashdown speed up.</li>
+          <li>Drop the deploy height to Low with a heavy load &mdash; the chute opens too late.</li>
+          <li>Put the Light capsule on the Large chute in Strong wind and watch it drift off target.</li>
+        </ul>
+      </div>
+    </div>
+
+    <header class="top">
+      <span class="logo">&#128760;</span>
+      <div class="title">
+        <h1>Space Capsule &mdash; Re-entry &amp; Splashdown</h1>
+        <p>Configure the return vehicle, then bring the crew home safely.</p>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- ============ CONTROLS ============ -->
+      <section class="card controls">
+        <h3>Mission Setup</h3>
+        <p class="sub">Set the capsule up, then press Start Mission.</p>
+
+        <div class="ctrl">
+          <div class="row"><label>Capsule Type</label><span class="val" id="vCap">&mdash;</span></div>
+          <div class="seg" id="segCap">
+            <button data-v="light">Light</button>
+            <button data-v="medium">Medium</button>
+            <button data-v="heavy">Heavy</button>
+          </div>
+          <div class="hint" id="hCap"></div>
+        </div>
+
+        <div class="ctrl">
+          <div class="row"><label>Payload</label><span class="val" id="vPay">&mdash;</span></div>
+          <div class="seg wide" id="segPay">
+            <button data-v="empty">Empty</button>
+            <button data-v="equip">Equip</button>
+            <button data-v="a1">1 Astro</button>
+            <button data-v="a2">2 Astro</button>
+            <button data-v="a3">3 Astro</button>
+          </div>
+          <div class="hint" id="hPay"></div>
+        </div>
+
+        <div class="ctrl">
+          <div class="row"><label>Parachute Size</label><span class="val" id="vChute">&mdash;</span></div>
+          <div class="seg" id="segChute">
+            <button data-v="small">Small</button>
+            <button data-v="medium">Medium</button>
+            <button data-v="large">Large</button>
+          </div>
+          <div class="hint" id="hChute"></div>
+        </div>
+
+        <div class="ctrl">
+          <div class="row"><label>Deployment Height</label><span class="val" id="vDep">&mdash;</span></div>
+          <div class="seg" id="segDep">
+            <button data-v="low">Low</button>
+            <button data-v="medium">Med</button>
+            <button data-v="high">High</button>
+          </div>
+          <div class="hint" id="hDep"></div>
+        </div>
+
+        <div class="ctrl">
+          <div class="row"><label>Wind Speed</label><span class="val" id="vWind">&mdash;</span></div>
+          <div class="seg" id="segWind">
+            <button data-v="none">No Wind</button>
+            <button data-v="mild">Mild</button>
+            <button data-v="strong">Strong</button>
+          </div>
+          <div class="hint" id="hWind"></div>
+        </div>
+      </section>
+
+      <!-- ============ STAGE ============ -->
+      <section class="card stage">
+        <canvas id="stage"></canvas>
+        <div class="stage-foot">
+          <button class="btn start" id="btnStart">Start Mission</button>
+          <button class="btn reset" id="btnReset">Reset</button>
+          <span class="modechip" id="chip">READY</span>
+        </div>
+      </section>
+
+      <!-- ============ READINGS ============ -->
+      <section class="card readings">
+        <h3>Simulation Outputs</h3>
+        <p class="sub" id="outNote">Predicted values &mdash; run the mission to confirm.</p>
+
+        <div class="reading"><span class="k">Total Mass</span><span class="v" id="oMass">&mdash;</span></div>
+        <div class="reading"><span class="k">Parachute Area</span><span class="v" id="oArea">&mdash;</span></div>
+        <div class="reading"><span class="k">Air Resistance</span><span class="v" id="oDrag">&mdash;</span></div>
+        <div class="reading"><span class="k">Re-entry Speed</span><span class="v" id="oReentry">&mdash;</span></div>
+        <div class="reading"><span class="k">Splashdown Speed</span><span class="v" id="oSplash">&mdash;</span></div>
+        <div class="reading"><span class="k">Fall Time</span><span class="v" id="oFall">&mdash;</span></div>
+        <div class="reading"><span class="k">Drift Distance</span><span class="v" id="oDrift">&mdash;</span></div>
+        <div class="reading"><span class="k">Landing Impact</span><span class="v" id="oImpact">&mdash;</span></div>
+        <div class="reading"><span class="k">Mission Result</span><span class="v" id="oResult">&mdash;</span></div>
+
+        <div class="fbwrap" id="fbWrap"></div>
+
+        <div class="logsect">
+          <div class="lhead">
+            <h3 style="margin:0">Observation Log</h3>
+            <button id="btnClear">Clear</button>
+          </div>
+          <div class="logscroll">
+            <table class="log">
+              <thead>
+                <tr title="Cap = capsule · Ch = chute · Dep = deploy height · Wnd = wind m/s · m/s = splashdown speed · Drift metres">
+                  <th>#</th><th>Cap</th><th>Ch</th><th>Dep</th><th>Wnd</th>
+                  <th>m/s</th><th>Drift</th><th>Res</th>
+                </tr>
+              </thead>
+              <tbody id="logBody">
+                <tr><td colspan="8" class="logempty">No runs yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      "use strict";
+
+      /* ---------------- configuration data ---------------- */
+      const CAPSULE = {
+        light:  { name: "Light",  dia: 2.5, ht: 2.0, mass: 1000, w: 34, note: "2.5 m dia · 1,000 kg shell" },
+        medium: { name: "Medium", dia: 3.5, ht: 3.0, mass: 3000, w: 46, note: "3.5 m dia · 3,000 kg shell" },
+        heavy:  { name: "Heavy",  dia: 5.0, ht: 4.0, mass: 6000, w: 60, note: "5.0 m dia · 6,000 kg shell" },
+      };
+      const PAYLOAD = {
+        empty: { name: "Empty",        mass: 0,   note: "No payload · 0 kg" },
+        equip: { name: "Equipment",    mass: 150, note: "Cargo &amp; equipment · 150 kg" },
+        a1:    { name: "1 Astronaut",  mass: 80,  note: "One crew member · 80 kg" },
+        a2:    { name: "2 Astronauts", mass: 160, note: "Two crew members · 160 kg" },
+        a3:    { name: "3 Astronauts", mass: 240, note: "Full crew of three · 240 kg" },
+      };
+      const CHUTE = {
+        small:  { name: "Small",  dia: 10, drag: "Low",    note: "10 m canopy · low air resistance" },
+        medium: { name: "Medium", dia: 20, drag: "Medium", note: "20 m canopy · medium air resistance" },
+        large:  { name: "Large",  dia: 30, drag: "High",   note: "30 m canopy · high air resistance" },
+      };
+      const DEPLOY = {
+        low:    { name: "Low",    alt: 1000, note: "Opens at 1,000 m — little time to slow down" },
+        medium: { name: "Medium", alt: 2000, note: "Opens at 2,000 m above the water" },
+        high:   { name: "High",   alt: 3000, note: "Opens at 3,000 m — most time to slow down" },
+      };
+      const WIND = {
+        none:   { name: "No Wind", v: 0, note: "Still air — the capsule lands where it deploys" },
+        mild:   { name: "Mild",    v: 2, note: "2 m/s crosswind — slight sideways drift" },
+        strong: { name: "Strong",  v: 5, note: "5 m/s crosswind — strong sideways drift" },
+      };
+
+      const G = 9.81;
+      const RHO = 1.225;            // air density near sea level (kg/m^3)
+      const CD_CHUTE = 1.5;         // drag coefficient of an open round canopy
+      const REENTRY_KMS = 7.8;      // headline atmospheric-interface speed
+      const V_AFTER_SHIELD = { light: 150, medium: 210, heavy: 280 }; // m/s at canopy deploy
+      const T_INFL = 1.6;          // canopy inflation time (drag builds up over this)
+      const TARGET_R = 500;         // radius of the safe splashdown zone (m)
+      const SAFE_MAX = 10;          // m/s
+      const HARD_MAX = 20;          // m/s
+
+      const FB = {
+        safe:  "The parachute created enough air resistance to slow the capsule.",
+        hard:  "The capsule landed too fast. Try a larger parachute or reduce payload.",
+        fail:  "The parachute was too small for the total capsule mass.",
+        drift: "Wind pushed the capsule away from the target zone.",
+        late:  "The parachute opened too late to slow the capsule properly.",
+        heavy: "More payload increases total mass and needs more slowing support.",
+      };
+
+      /* ---------------- state ---------------- */
+      const S = {
+        cap: "medium", pay: "a2", chute: "medium", dep: "medium", wind: "none",
+        phase: "ready",     // ready | reentry | descent | splash | result
+        running: false,
+        animT: 0, lastTs: 0,
+        traj: null, calc: null, result: null,
+        splashDone: false, tSplash: 0,
+        particles: [], ripples: [],
+        driftedVisual: false,
+        log: [], runN: 0,
+      };
+
+      /* ---------------- physics ---------------- */
+      function chuteArea(dia) { return Math.PI * (dia / 2) * (dia / 2); }
+
+      function computeCalc() {
+        const cap = CAPSULE[S.cap], pay = PAYLOAD[S.pay], ch = CHUTE[S.chute];
+        const dep = DEPLOY[S.dep], wd = WIND[S.wind];
+        const mass = cap.mass + pay.mass;
+        const area = chuteArea(ch.dia);
+        const k = (RHO * CD_CHUTE * area) / (2 * mass);   // v' = g - k v^2
+        const vTerm = Math.sqrt(G / k);
+        const v0 = V_AFTER_SHIELD[S.cap];
+
+        // integrate the canopy descent from deploy altitude to the water:
+        //   v' = g - k(t) v^2 ,  with drag k ramping in as the canopy inflates
+        const dt = 0.004;
+        let v = v0, h = dep.alt, t = 0, x = 0, guard = 0;
+        const samp = [{ t: 0, h: h, v: v, x: 0 }];
+        while (h > 0 && guard < 300000) {
+          const infl = Math.min(1, t / T_INFL);
+          const kNow = k * infl * infl;   // effective drag area grows with inflation
+          v += (G - kNow * v * v) * dt;
+          if (v < 0) v = 0;
+          h -= v * dt;
+          x += wd.v * dt;                 // capsule tracks the wind under canopy
+          t += dt;
+          guard++;
+          if (guard % 60 === 0) samp.push({ t: t, h: Math.max(h, 0), v: v, x: x });
+        }
+        samp.push({ t: t, h: 0, v: v, x: x });
+
+        const vSplash = v;
+        const drift = x;
+        // "opened too late": either it splashed before settling to terminal, or it
+        // deployed so low there was no slowing distance and the landing was rough
+        const lateDeploy =
+          vSplash > vTerm * 1.08 + 1 ||
+          (S.dep === "low" && vSplash > SAFE_MAX);
+        const drifted = drift > TARGET_R;
+
+        let impact;
+        if (vSplash <= SAFE_MAX) impact = "safe";
+        else if (vSplash <= HARD_MAX) impact = "hard";
+        else impact = "fail";
+
+        const success = impact === "safe" && !drifted;
+
+        return {
+          mass, area, drag: ch.drag, v0,
+          vTerm, vSplash, fallTime: t, drift,
+          impact, success, lateDeploy, drifted,
+          samples: samp, payMass: pay.mass,
+        };
+      }
+
+      function sampleTraj(samp, tt) {
+        if (tt <= 0) return samp[0];
+        const last = samp[samp.length - 1];
+        if (tt >= last.t) return last;
+        let lo = 0, hi = samp.length - 1;
+        while (hi - lo > 1) {
+          const mid = (lo + hi) >> 1;
+          if (samp[mid].t < tt) lo = mid; else hi = mid;
+        }
+        const a = samp[lo], b = samp[hi];
+        const f = (tt - a.t) / Math.max(b.t - a.t, 1e-6);
+        return {
+          t: tt,
+          h: a.h + (b.h - a.h) * f,
+          v: a.v + (b.v - a.v) * f,
+          x: a.x + (b.x - a.x) * f,
+        };
+      }
+
+      function buildFeedback(c) {
+        const out = [];
+        if (c.impact === "safe") out.push({ cls: "ok", ic: "✔", t: FB.safe });
+        else if (c.impact === "hard") out.push({ cls: "warn", ic: "⚠", t: FB.hard });
+        else out.push({ cls: "bad", ic: "✖", t: FB.fail });
+        if (c.lateDeploy) out.push({ cls: "warn", ic: "⏱", t: FB.late });
+        if (c.drifted) out.push({ cls: "warn", ic: "→", t: FB.drift });
+        if (c.payMass >= 160 && c.impact !== "safe")
+          out.push({ cls: "warn", ic: "⚖", t: FB.heavy });
+        return out.slice(0, 3);
+      }
+
+      /* ---------------- outputs panel ---------------- */
+      function fmtSplash(v) {
+        return (v / 1000).toFixed(3) + " km/s <small>(" + Math.round(v) + " m/s)</small>";
+      }
+      function pill(txt, cls) { return '<span class="pill ' + cls + '">' + txt + "</span>"; }
+
+      function refreshOutputs() {
+        const c = computeCalc();
+        S.calc = c;
+        const done = S.phase === "result" && S.result;
+        const view = done ? S.result : c;
+
+        document.getElementById("oMass").textContent = view.mass.toLocaleString() + " kg";
+        document.getElementById("oArea").innerHTML =
+          Math.round(view.area) + " m<small>²</small>";
+        document.getElementById("oDrag").textContent = view.drag;
+        document.getElementById("oReentry").innerHTML =
+          REENTRY_KMS.toFixed(1) + " km/s <small>&rarr; " + (view.v0 / 1000).toFixed(2) + " km/s post-shield</small>";
+
+        if (done) {
+          document.getElementById("oSplash").innerHTML = fmtSplash(view.vSplash);
+          document.getElementById("oFall").textContent = view.fallTime.toFixed(1) + " s";
+          document.getElementById("oDrift").innerHTML =
+            Math.round(view.drift) + " m " +
+            (view.drifted ? '<small style="color:var(--danger)">off target</small>'
+                          : '<small style="color:var(--ok-ink)">in zone</small>');
+          document.getElementById("oImpact").innerHTML =
+            pill(view.impact.toUpperCase(), view.impact);
+          document.getElementById("oResult").innerHTML = view.success
+            ? pill("SUCCESS", "safe") : pill("RETRY", "fail");
+          document.getElementById("outNote").textContent =
+            "Actual splashdown result for this configuration.";
+          renderFeedback(buildFeedback(view));
+        } else {
+          document.getElementById("oSplash").innerHTML =
+            '<small style="color:var(--dim)">predicted ' + fmtSplash(c.vSplash) + "</small>";
+          document.getElementById("oFall").innerHTML =
+            '<small style="color:var(--dim)">predicted ' + c.fallTime.toFixed(1) + " s</small>";
+          document.getElementById("oDrift").innerHTML =
+            '<small style="color:var(--dim)">predicted ' + Math.round(c.drift) + " m</small>";
+          document.getElementById("oImpact").innerHTML =
+            '<small style="color:var(--dim)">predicted ' + pill(c.impact.toUpperCase(), c.impact) + "</small>";
+          document.getElementById("oResult").innerHTML =
+            '<small style="color:var(--dim)">' + (c.success ? "predicted success" : "predicted retry") + "</small>";
+          document.getElementById("outNote").textContent =
+            "Predicted values — run the mission to confirm.";
+          renderFeedback([]);
+        }
+      }
+
+      function renderFeedback(list) {
+        const w = document.getElementById("fbWrap");
+        w.innerHTML = "";
+        list.forEach((f) => {
+          const d = document.createElement("div");
+          d.className = "fb " + f.cls;
+          d.innerHTML = '<span class="ic">' + f.ic + '</span><span>' + f.t + "</span>";
+          w.appendChild(d);
+        });
+      }
+
+      /* ---------------- observation log ---------------- */
+      function shortCap(v) { return { light: "L", medium: "M", heavy: "H" }[v]; }
+      function shortChute(v) { return { small: "S", medium: "M", large: "L" }[v]; }
+      function shortDep(v) { return { low: "1k", medium: "2k", high: "3k" }[v]; }
+
+      function addLogRow(c) {
+        S.runN++;
+        S.log.push({
+          n: S.runN,
+          cap: shortCap(S.cap), chute: shortChute(S.chute),
+          dep: shortDep(S.dep), wind: WIND[S.wind].v,
+          splash: Math.round(c.vSplash), drift: Math.round(c.drift),
+          impact: c.impact, success: c.success, drifted: c.drifted,
+        });
+        renderLog();
+      }
+      function renderLog() {
+        const b = document.getElementById("logBody");
+        if (!S.log.length) {
+          b.innerHTML = '<tr><td colspan="8" class="logempty">No runs yet.</td></tr>';
+          return;
+        }
+        b.innerHTML = S.log
+          .map((r) => {
+            let res, cls;
+            if (r.success) { res = "OK"; cls = "safe"; }
+            else if (r.drifted && r.impact === "safe") { res = "DRIFT"; cls = "hard"; }
+            else { res = r.impact.toUpperCase(); cls = r.impact; }
+            return (
+              "<tr><td>" + r.n + "</td><td>" + r.cap + "</td><td>" + r.chute + "</td><td>" +
+              r.dep + "</td><td>" + r.wind + "</td><td>" + r.splash + "</td><td>" + r.drift +
+              '</td><td class="res ' + cls + '">' + res + "</td></tr>"
+            );
+          })
+          .join("");
+        const sc = b.parentElement.parentElement;
+        sc.scrollTop = sc.scrollHeight;
+      }
+
+      /* ---------------- canvas ---------------- */
+      const canvas = document.getElementById("stage");
+      const ctx = canvas.getContext("2d");
+      let CW = 0, CH = 0, DPR = 1;
+
+      function fit() {
+        const r = canvas.getBoundingClientRect();
+        DPR = Math.min(window.devicePixelRatio || 1, 2);
+        CW = Math.max(300, r.width);
+        CH = Math.max(260, r.height);
+        canvas.width = Math.round(CW * DPR);
+        canvas.height = Math.round(CH * DPR);
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      }
+      window.addEventListener("resize", fit);
+
+      const ALT_SPAN = 3600;          // metres shown between waterline and sky top
+      function skyTopY() { return CH * 0.07; }
+      function waterY() { return CH * 0.84; }
+      function yOf(altM) {
+        const wy = waterY(), ty = skyTopY();
+        return wy - (Math.max(0, altM) / ALT_SPAN) * (wy - ty);
+      }
+      let driftPxPerM = 1;
+
+      function drawScene() {
+        const wy = waterY();
+        // sky: space at the top fading into atmosphere
+        const g = ctx.createLinearGradient(0, 0, 0, wy);
+        g.addColorStop(0, "#0b1020");
+        g.addColorStop(0.32, "#182a4d");
+        g.addColorStop(0.62, "#3f6ea5");
+        g.addColorStop(0.86, "#9fc4e4");
+        g.addColorStop(1, "#cfe4f2");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, CW, wy);
+
+        // stars in the upper third
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        for (let i = 0; i < 46; i++) {
+          const sx = (i * 97.13) % CW;
+          const sy = (i * 53.7) % (CH * 0.34);
+          const r = (i % 5 === 0) ? 1.4 : 0.8;
+          ctx.globalAlpha = 0.35 + ((i * 7) % 10) / 16;
+          ctx.fillRect(sx, sy, r, r);
+        }
+        ctx.globalAlpha = 1;
+
+        // water
+        const wg = ctx.createLinearGradient(0, wy, 0, CH);
+        wg.addColorStop(0, "#1f6f8f");
+        wg.addColorStop(1, "#0c3a4e");
+        ctx.fillStyle = wg;
+        ctx.fillRect(0, wy, CW, CH - wy);
+        ctx.strokeStyle = "rgba(255,255,255,0.25)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, wy);
+        ctx.lineTo(CW, wy);
+        ctx.stroke();
+
+        // altitude ticks
+        ctx.font = "10px 'IBM Plex Mono', monospace";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        [0, 1000, 2000, 3000].forEach((a) => {
+          const y = yOf(a);
+          ctx.strokeStyle = "rgba(255,255,255,0.14)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(CW, y);
+          ctx.stroke();
+          ctx.fillStyle = "rgba(255,255,255,0.5)";
+          ctx.fillText(a === 0 ? "water" : (a / 1000) + " km", 6, y - 7);
+        });
+
+        // deploy-height marker
+        const depAlt = DEPLOY[S.dep].alt;
+        const dy = yOf(depAlt);
+        ctx.strokeStyle = "rgba(232,89,12,0.65)";
+        ctx.setLineDash([6, 5]);
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, dy);
+        ctx.lineTo(CW, dy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = "#e8590c";
+        ctx.textAlign = "right";
+        ctx.fillText("deploy " + depAlt + " m", CW - 6, dy - 7);
+
+        // target zone on the water
+        driftPxPerM = (CW * 0.16) / TARGET_R;
+        const cx = CW * 0.5;
+        const half = TARGET_R * driftPxPerM;
+        ctx.strokeStyle = "rgba(255,255,255,0.55)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx - half, wy - 8); ctx.lineTo(cx - half, wy + 8);
+        ctx.moveTo(cx + half, wy - 8); ctx.lineTo(cx + half, wy + 8);
+        ctx.moveTo(cx - half, wy + 6); ctx.lineTo(cx + half, wy + 6);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(255,255,255,0.6)";
+        ctx.textAlign = "center";
+        ctx.fillText("target zone", cx, wy + 20);
+
+        // wind arrows
+        const wv = WIND[S.wind].v;
+        if (wv > 0) {
+          const n = wv >= 5 ? 3 : 2;
+          ctx.strokeStyle = "rgba(255,255,255,0.5)";
+          ctx.fillStyle = "rgba(255,255,255,0.5)";
+          ctx.lineWidth = 2;
+          for (let i = 0; i < n; i++) {
+            const ax = CW * 0.62 + i * 26;
+            const ay = CH * 0.12 + i * 16;
+            ctx.beginPath();
+            ctx.moveTo(ax, ay);
+            ctx.lineTo(ax + 20, ay);
+            ctx.lineTo(ax + 14, ay - 4);
+            ctx.moveTo(ax + 20, ay);
+            ctx.lineTo(ax + 14, ay + 4);
+            ctx.stroke();
+          }
+          ctx.textAlign = "left";
+          ctx.fillText(wv + " m/s wind", CW * 0.62, CH * 0.12 - 12);
+        }
+      }
+
+      function drawCapsule(x, y, w, rot, plasma, bloom, collapsing) {
+        const h = w * 0.82;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rot);
+
+        // plasma / heat-shield fire (below the shield, local +y)
+        if (plasma > 0.01) {
+          const pl = plasma;
+          for (let i = 0; i < 5; i++) {
+            const t = i / 4;
+            const fy = h * 0.4 + t * h * (1.1 + pl * 0.7);
+            const fw = w * (0.52 - t * 0.34) * (0.8 + pl * 0.4);
+            ctx.globalAlpha = (0.85 - t * 0.7) * pl;
+            ctx.fillStyle = i < 2 ? "#fff2c2" : i < 4 ? "#ffb347" : "#ff6b35";
+            ctx.beginPath();
+            ctx.ellipse(0, fy, fw, fw * 1.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          // trailing streaks upward
+          ctx.globalAlpha = 0.5 * pl;
+          ctx.strokeStyle = "#ffce8a";
+          ctx.lineWidth = 1.5;
+          for (let i = -2; i <= 2; i++) {
+            ctx.beginPath();
+            ctx.moveTo(i * w * 0.16, -h * 0.2);
+            ctx.lineTo(i * w * 0.26, -h * 0.9 - pl * 26);
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+        }
+
+        // parachute above (local -y)
+        if (bloom > 0.01) {
+          const b = bloom;
+          const cw = w * 1.75 * b;
+          const cyC = -h * 0.5 - (46 + w * 0.7) * b - (collapsing ? 0 : 0);
+          const ch2 = cw * (collapsing ? 0.22 : 0.62);
+          // shroud lines
+          ctx.strokeStyle = "rgba(240,244,248,0.85)";
+          ctx.lineWidth = 1;
+          const rim = [-cw * 0.5, -cw * 0.22, cw * 0.22, cw * 0.5];
+          rim.forEach((rx) => {
+            ctx.beginPath();
+            ctx.moveTo(rx * 0.9, cyC + ch2 * 0.2);
+            ctx.lineTo(0, -h * 0.42);
+            ctx.stroke();
+          });
+          // canopy
+          ctx.beginPath();
+          ctx.moveTo(-cw * 0.5, cyC + ch2 * 0.25);
+          ctx.quadraticCurveTo(0, cyC - ch2, cw * 0.5, cyC + ch2 * 0.25);
+          ctx.quadraticCurveTo(0, cyC + ch2 * 0.65, -cw * 0.5, cyC + ch2 * 0.25);
+          ctx.closePath();
+          const cg = ctx.createLinearGradient(0, cyC - ch2, 0, cyC + ch2);
+          cg.addColorStop(0, "#ff8f4c");
+          cg.addColorStop(0.5, "#ffd7a0");
+          cg.addColorStop(0.5, "#f4f7fa");
+          cg.addColorStop(1, "#cdd8e2");
+          ctx.fillStyle = cg;
+          ctx.fill();
+          ctx.strokeStyle = "rgba(120,140,160,0.6)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          // gore lines
+          ctx.strokeStyle = "rgba(120,140,160,0.4)";
+          [-0.3, 0, 0.3].forEach((f) => {
+            ctx.beginPath();
+            ctx.moveTo(cw * 0.5 * f, cyC + ch2 * 0.25);
+            ctx.lineTo(cw * 0.5 * f * 0.5, cyC - ch2 * 0.7);
+            ctx.stroke();
+          });
+        }
+
+        // capsule body (gumdrop): wide flat shield at bottom, rounded taper up
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.5, h * 0.4);
+        ctx.lineTo(w * 0.32, h * 0.4);
+        ctx.quadraticCurveTo(w * 0.5, h * 0.4, w * 0.46, h * 0.24);
+        ctx.lineTo(w * 0.2, -h * 0.42);
+        ctx.quadraticCurveTo(w * 0.16, -h * 0.55, 0, -h * 0.55);
+        ctx.quadraticCurveTo(-w * 0.16, -h * 0.55, -w * 0.2, -h * 0.42);
+        ctx.lineTo(-w * 0.46, h * 0.24);
+        ctx.quadraticCurveTo(-w * 0.5, h * 0.4, -w * 0.5, h * 0.4);
+        ctx.closePath();
+        const bg = ctx.createLinearGradient(-w * 0.5, 0, w * 0.5, 0);
+        bg.addColorStop(0, "#c9d2db");
+        bg.addColorStop(0.5, "#eef2f6");
+        bg.addColorStop(1, "#aab4be");
+        ctx.fillStyle = bg;
+        ctx.fill();
+        ctx.strokeStyle = "#6b7580";
+        ctx.lineWidth = 1.4;
+        ctx.stroke();
+
+        // heat shield (dark ablative disc across the bottom)
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.5, h * 0.4);
+        ctx.lineTo(w * 0.32, h * 0.4);
+        ctx.quadraticCurveTo(w * 0.5, h * 0.4, w * 0.46, h * 0.24);
+        ctx.quadraticCurveTo(0, h * 0.58, -w * 0.46, h * 0.24);
+        ctx.quadraticCurveTo(-w * 0.5, h * 0.4, -w * 0.5, h * 0.4);
+        ctx.closePath();
+        ctx.fillStyle = plasma > 0.2 ? "#3a2016" : "#4a3128";
+        ctx.fill();
+        ctx.strokeStyle = "#2b1a12";
+        ctx.stroke();
+
+        // window
+        ctx.beginPath();
+        ctx.ellipse(w * 0.02, -h * 0.16, w * 0.1, w * 0.12, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "#2b4b63";
+        ctx.fill();
+        ctx.strokeStyle = "#6b7580";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      function spawnSplash(x) {
+        const wy = waterY();
+        for (let i = 0; i < 18; i++) {
+          const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.7;
+          const sp = 2 + Math.random() * 4.5;
+          S.particles.push({
+            x: x + (Math.random() - 0.5) * 20, y: wy,
+            vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1,
+            life: 1,
+          });
+        }
+        S.ripples.push({ x: x, r: 6, life: 1 });
+        S.ripples.push({ x: x, r: 2, life: 1.3 });
+      }
+      function updateParticles(dt) {
+        S.particles.forEach((p) => {
+          p.vy += 22 * dt;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= dt * 0.9;
+        });
+        S.particles = S.particles.filter((p) => p.life > 0 && p.y < CH + 20);
+        S.ripples.forEach((r) => { r.r += 46 * dt; r.life -= dt * 0.7; });
+        S.ripples = S.ripples.filter((r) => r.life > 0);
+      }
+      function drawParticles() {
+        const wy = waterY();
+        S.ripples.forEach((r) => {
+          ctx.globalAlpha = Math.max(0, r.life) * 0.5;
+          ctx.strokeStyle = "#dff1f7";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.ellipse(r.x, wy, r.r, r.r * 0.34, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+        S.particles.forEach((p) => {
+          ctx.globalAlpha = Math.max(0, p.life);
+          ctx.fillStyle = "#e8f5fa";
+          ctx.fillRect(p.x, p.y, 2.4, 2.4);
+        });
+        ctx.globalAlpha = 1;
+      }
+
+      /* ---------------- animation timeline ---------------- */
+      const REENTRY_DUR = 4.0;
+      const BLOOM_DUR = 0.55;
+      function playbackDur() {
+        const ft = S.traj ? S.traj.fallTime : 200;
+        return Math.max(6, Math.min(14, ft / 12));
+      }
+
+      function frame(ts) {
+        if (!S.lastTs) S.lastTs = ts;
+        let dt = (ts - S.lastTs) / 1000;
+        S.lastTs = ts;
+        if (dt > 0.05) dt = 0.05;
+
+        if (S.running) S.animT += dt;
+        stepPhase(dt);
+        render();
+        requestAnimationFrame(frame);
+      }
+
+      function stepPhase(dt) {
+        if (!S.running) return;
+        const c = S.traj;
+        const PB = playbackDur();
+
+        if (S.phase === "reentry" && S.animT >= REENTRY_DUR) {
+          S.phase = "descent";
+        }
+        if (S.phase === "descent" && S.animT >= REENTRY_DUR + PB) {
+          S.phase = "splash";
+        }
+        if (S.phase === "splash" && !S.splashDone) {
+          S.splashDone = true;
+          S.tSplash = S.animT;
+          const cx = CW * 0.5;
+          let px = cx + c.drift * driftPxPerM;
+          px = Math.max(cx - CW * 0.44, Math.min(cx + CW * 0.44, px));
+          spawnSplash(px);
+        }
+        if (S.phase === "splash" && S.animT >= S.tSplash + 1.1) {
+          S.phase = "result";
+          S.result = c;
+          addLogRow(c);
+          refreshOutputs();
+          setChip();
+        }
+        updateParticles(dt);
+      }
+
+      function render() {
+        ctx.clearRect(0, 0, CW, CH);
+        drawScene();
+
+        const c = S.calc;
+        const cx = CW * 0.5;
+        const depAlt = DEPLOY[S.dep].alt;
+        const w = CAPSULE[S.cap].w * Math.min(1, CW / 520) * 1.05;
+
+        if (S.phase === "ready") {
+          // parked at the top, heat-shield-down, waiting
+          drawCapsule(cx, skyTopY() + 14, w, 0, 0, 0, false);
+          drawHUD("READY", "—", "—");
+          return;
+        }
+
+        const PB = playbackDur();
+        let capX = cx, capY = 0, rot = 0, plasma = 0, bloom = 0, spd = "", ftxt = "";
+        const windTilt = { none: 0, mild: 0.05, strong: 0.11 }[S.wind];
+
+        if (S.phase === "reentry") {
+          const p = Math.min(1, S.animT / REENTRY_DUR);
+          const e = p * p * (3 - 2 * p);
+          capY = -w * 0.6 + (yOf(depAlt) - (-w * 0.6)) * e;
+          plasma = 0.55 + 0.45 * Math.sin(p * Math.PI * 0.9);
+          const kms = REENTRY_KMS + (c.v0 / 1000 - REENTRY_KMS) * e;
+          spd = kms.toFixed(2) + " km/s";
+          ftxt = "0.0 s";
+          drawCapsule(capX, capY, w, 0, plasma, 0, false);
+          drawHUD("RE-ENTRY", spd, ftxt);
+          return;
+        }
+
+        if (S.phase === "descent") {
+          const realT = ((S.animT - REENTRY_DUR) / PB) * c.fallTime;
+          const s = sampleTraj(c.samples, realT);
+          capY = yOf(s.h);
+          let px = cx + s.x * driftPxPerM;
+          S.driftedVisual = px > cx + CW * 0.44;
+          capX = Math.max(cx - CW * 0.44, Math.min(cx + CW * 0.44, px));
+          bloom = Math.min(1, (S.animT - REENTRY_DUR) / BLOOM_DUR);
+          plasma = Math.max(0, 0.5 - (S.animT - REENTRY_DUR) / 0.5) * 0.8;
+          const sway = Math.sin(S.animT * 1.8) * 0.05;
+          rot = sway + windTilt;
+          spd = (s.v / 1000).toFixed(3) + " km/s (" + Math.round(s.v) + " m/s)";
+          ftxt = realT.toFixed(1) + " s";
+          drawCapsule(capX, capY, w, rot, plasma, bloom, false);
+          if (S.driftedVisual) drawDriftArrow();
+          drawHUD(S.animT - REENTRY_DUR < 1.1 ? "PARACHUTE DEPLOYED" : "DESCENDING", spd, ftxt);
+          return;
+        }
+
+        // splash + result: capsule sitting on the water, canopy collapsing
+        let px = cx + c.drift * driftPxPerM;
+        S.driftedVisual = px > cx + CW * 0.44;
+        capX = Math.max(cx - CW * 0.44, Math.min(cx + CW * 0.44, px));
+        const bob = Math.sin(S.animT * 3) * 2;
+        drawCapsule(capX, waterY() - w * 0.16 + bob, w, windTilt * 0.5, 0, 1, true);
+        drawParticles();
+        if (S.driftedVisual) drawDriftArrow();
+
+        if (S.phase === "result" && S.result) {
+          drawResultCard(S.result);
+          drawHUD(
+            S.result.impact.toUpperCase(),
+            (S.result.vSplash / 1000).toFixed(3) + " km/s (" + Math.round(S.result.vSplash) + " m/s)",
+            S.result.fallTime.toFixed(1) + " s"
+          );
+        } else {
+          drawHUD("SPLASHDOWN", "—", c.fallTime.toFixed(1) + " s");
+        }
+      }
+
+      function drawDriftArrow() {
+        const y = CH * 0.5;
+        ctx.fillStyle = "#ffd27a";
+        ctx.strokeStyle = "#ffd27a";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(CW - 46, y);
+        ctx.lineTo(CW - 18, y);
+        ctx.lineTo(CW - 26, y - 8);
+        ctx.moveTo(CW - 18, y);
+        ctx.lineTo(CW - 26, y + 8);
+        ctx.stroke();
+        ctx.font = "bold 10px 'IBM Plex Mono', monospace";
+        ctx.textAlign = "right";
+        ctx.fillText("DRIFTING OFF", CW - 46, y - 14);
+      }
+
+      function drawHUD(state, speed, time) {
+        ctx.font = "11px 'IBM Plex Mono', monospace";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        const lines = [
+          ["STATE", state],
+          ["SPEED", speed],
+          ["FALL T", time],
+        ];
+        const bw = 186, bh = 14 + lines.length * 15;
+        ctx.fillStyle = "rgba(8,14,28,0.55)";
+        ctx.fillRect(8, 8, bw, bh);
+        ctx.strokeStyle = "rgba(255,255,255,0.18)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(8, 8, bw, bh);
+        lines.forEach((l, i) => {
+          ctx.fillStyle = "rgba(255,255,255,0.55)";
+          ctx.fillText(l[0], 16, 15 + i * 15);
+          ctx.fillStyle = "#fff";
+          ctx.fillText(l[1], 70, 15 + i * 15);
+        });
+      }
+
+      function drawResultCard(r) {
+        const bw = Math.min(300, CW * 0.78), bh = 132;
+        const bx = (CW - bw) / 2, by = CH * 0.3;
+        ctx.fillStyle = "rgba(252,253,254,0.96)";
+        ctx.strokeStyle = "#cdd8e2";
+        ctx.lineWidth = 1.5;
+        roundRect(bx, by, bw, bh, 12);
+        ctx.fill();
+        ctx.stroke();
+
+        const col = r.impact === "safe" ? "#0ca30c" : r.impact === "hard" ? "#c97a20" : "#d03b3b";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = col;
+        ctx.font = "800 26px 'Orbitron', sans-serif";
+        ctx.fillText(
+          r.impact === "safe" ? "SAFE" : r.impact === "hard" ? "HARD" : "FAILED",
+          CW / 2, by + 30
+        );
+        ctx.fillStyle = "#17293b";
+        ctx.font = "700 14px 'Orbitron', sans-serif";
+        ctx.fillText(r.success ? "MISSION SUCCESS" : "MISSION — RETRY", CW / 2, by + 60);
+        ctx.fillStyle = "#4c5c6b";
+        ctx.font = "12px 'IBM Plex Mono', monospace";
+        ctx.fillText("splashdown " + Math.round(r.vSplash) + " m/s", CW / 2, by + 84);
+        ctx.fillText(
+          "drift " + Math.round(r.drift) + " m " + (r.drifted ? "(off target)" : "(in zone)"),
+          CW / 2, by + 104
+        );
+      }
+      function roundRect(x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+      }
+
+      /* ---------------- chip + control wiring ---------------- */
+      function setChip() {
+        const el = document.getElementById("chip");
+        if (S.phase === "result" && S.result) {
+          const r = S.result;
+          el.textContent = (r.success ? "SUCCESS · " : "RETRY · ") + r.impact.toUpperCase();
+          el.className = "modechip " + (r.impact === "safe" ? "safe" : r.impact === "hard" ? "hard" : "fail");
+        } else if (S.running) {
+          el.textContent = "MISSION RUNNING";
+          el.className = "modechip run";
+        } else {
+          el.textContent = "READY";
+          el.className = "modechip";
+        }
+      }
+
+      function wireSeg(id, key, valEl, hintEl, dataMap, labelFn) {
+        const box = document.getElementById(id);
+        box.querySelectorAll("button").forEach((b) => {
+          b.addEventListener("click", () => {
+            if (S.running && S.phase !== "result") return;
+            S[key] = b.dataset.v;
+            if (S.phase === "result") resetScene(false);
+            syncSeg(id, key);
+            const d = dataMap[S[key]];
+            document.getElementById(valEl).innerHTML = labelFn(d);
+            document.getElementById(hintEl).innerHTML = d.note;
+            refreshOutputs();
+          });
+        });
+      }
+      function syncSeg(id, key) {
+        document.getElementById(id).querySelectorAll("button").forEach((b) => {
+          b.classList.toggle("on", b.dataset.v === S[key]);
+        });
+      }
+
+      wireSeg("segCap", "cap", "vCap", "hCap", CAPSULE, (d) => d.mass.toLocaleString() + " kg");
+      wireSeg("segPay", "pay", "vPay", "hPay", PAYLOAD, (d) => "+" + d.mass + " kg");
+      wireSeg("segChute", "chute", "vChute", "hChute", CHUTE, (d) => d.dia + " m · " + d.drag);
+      wireSeg("segDep", "dep", "vDep", "hDep", DEPLOY, (d) => d.alt.toLocaleString() + " m");
+      wireSeg("segWind", "wind", "vWind", "hWind", WIND, (d) => d.v + " m/s");
+
+      function initSegs() {
+        [
+          ["segCap", "cap", "vCap", "hCap", CAPSULE, (d) => d.mass.toLocaleString() + " kg"],
+          ["segPay", "pay", "vPay", "hPay", PAYLOAD, (d) => "+" + d.mass + " kg"],
+          ["segChute", "chute", "vChute", "hChute", CHUTE, (d) => d.dia + " m · " + d.drag],
+          ["segDep", "dep", "vDep", "hDep", DEPLOY, (d) => d.alt.toLocaleString() + " m"],
+          ["segWind", "wind", "vWind", "hWind", WIND, (d) => d.v + " m/s"],
+        ].forEach(([id, key, valEl, hintEl, map, fn]) => {
+          syncSeg(id, key);
+          document.getElementById(valEl).innerHTML = fn(map[S[key]]);
+          document.getElementById(hintEl).innerHTML = map[S[key]].note;
+        });
+      }
+
+      /* ---------------- start / reset ---------------- */
+      function startMission() {
+        if (S.running && S.phase !== "result") return;
+        resetScene(false);
+        S.traj = computeCalc();
+        S.calc = S.traj;
+        S.phase = "reentry";
+        S.running = true;
+        S.animT = 0;
+        S.lastTs = 0;
+        S.splashDone = false;
+        S.particles = [];
+        S.ripples = [];
+        S.result = null;
+        document.getElementById("btnStart").disabled = true;
+        setChip();
+        refreshOutputs();
+      }
+      function resetScene(full) {
+        S.phase = "ready";
+        S.running = false;
+        S.animT = 0;
+        S.result = null;
+        S.splashDone = false;
+        S.particles = [];
+        S.ripples = [];
+        S.driftedVisual = false;
+        document.getElementById("btnStart").disabled = false;
+        if (full) { S.log = []; S.runN = 0; renderLog(); }
+        setChip();
+        refreshOutputs();
+      }
+
+      document.getElementById("btnStart").addEventListener("click", startMission);
+      document.getElementById("btnReset").addEventListener("click", () => resetScene(false));
+      document.getElementById("btnClear").addEventListener("click", () => { S.log = []; S.runN = 0; renderLog(); });
+
+      const hb = document.getElementById("helpBar"), hbtn = document.getElementById("helpBtn");
+      hbtn.addEventListener("click", () => {
+        const open = hb.classList.toggle("show");
+        hbtn.classList.toggle("on", open);
+        hbtn.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+
+      /* ---------------- boot ---------------- */
+      fit();
+      initSegs();
+      refreshOutputs();
+      renderLog();
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>

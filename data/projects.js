@@ -29,9 +29,10 @@ const PROJECTS = [
   { id: "uttm", title: "UTTM — Universal Thrust Testing Machine", category: "aerospace", status: "live", url: "../sims/aerospace/UTTM/UTTM.html", description: "Bench-test motor and propeller combinations to find the best safe thrust setup." },
   { id: "darrieus-turbine", title: "Darrieus Turbine", category: "aerospace", status: "live", url: "../sims/aerospace/DarrieusTurbine/DarrieusTurbine.html", description: "Spin up a helical vertical-axis wind turbine and charge a device with the power it generates." },
   { id: "solar-charging-station", title: "Solar Charging Station", category: "aerospace", status: "live", url: "../sims/aerospace/SolarChargingStation/SolarChargingStation.html", description: "Angle a solar panel into the sun, charge a battery, then switch to stored power and keep a device running after dark." },
-  ...Array.from({ length: 25 }, (_, i) => ({
-    id: `aerospace-coming-soon-${i + 2}`,
-    title: `Aerospace Project ${String(i + 2).padStart(2, "0")}`,
+  { id: "space-capsule", title: "Space Capsule — Re-entry & Splashdown", category: "aerospace", status: "live", url: "../sims/aerospace/SpaceCapsule/SpaceCapsule.html", description: "Configure a returning crew capsule — mass, payload, parachute, deploy height, wind — and fly the re-entry to a safe water splashdown." },
+  ...Array.from({ length: 24 }, (_, i) => ({
+    id: `aerospace-coming-soon-${i + 3}`,
+    title: `Aerospace Project ${String(i + 3).padStart(2, "0")}`,
     category: "aerospace",
     status: "coming-soon",
     description: "Coming soon.",
