@@ -337,6 +337,7 @@
         <div id="launchbar">
           <button id="commitBtn">🚀 Pre-Launch Checklist</button>
           <button class="minibtn" id="backBtn" style="display:none">← Back to Design</button>
+          <button class="minibtn" id="resetBtn" style="display:none">↺ Reset Graph</button>
           <div class="spacer"></div>
           <div id="barBadges">
             <span class="pillbadge info" id="barMotor">C6-5</span>
@@ -652,14 +653,14 @@
       // lenRatio is the nose's own fineness — length as a multiple of body diameter — which is what actually
       // makes the four options look and behave differently instead of being three near-identical points.
       const NOSE = {
-        conical:   { label: "Conical",   lenRatio: 3.0, xnRatio: 0.667, cdPressure: 0.18, icon: "▲",
+        conical:   { label: "Conical",   lenRatio: 3.0, xnRatio: 0.667, cdPressure: 0.24, icon: "▲",
                      note: "Straight-sided and easy to build. The flat sides make a little more pressure drag than a curve, and its CP sits furthest back of the four." },
-        ogive:     { label: "Ogive",     lenRatio: 3.5, xnRatio: 0.466, cdPressure: 0.07, icon: "◗",
+        ogive:     { label: "Ogive",     lenRatio: 3.5, xnRatio: 0.466, cdPressure: 0.05, icon: "◗",
                      note: "The classic tangent-ogive: a long circular-arc curve. Lowest drag of the four and the shape most real rockets use." },
-        parabolic: { label: "Parabolic", lenRatio: 3.0, xnRatio: 0.500, cdPressure: 0.11, icon: "◗",
+        parabolic: { label: "Parabolic", lenRatio: 3.0, xnRatio: 0.500, cdPressure: 0.12, icon: "◗",
                      note: "A fuller curve than the ogive — slightly blunter shoulders, slightly more drag, CP a touch further aft." },
-        rounded:   { label: "Rounded",   lenRatio: 1.2, xnRatio: 0.333, cdPressure: 0.40, icon: "⬤",
-                     note: "Short and blunt, like a hemisphere. Much more pressure drag, so it flies noticeably lower — but its CP is the furthest forward, which costs stability too." },
+        rounded:   { label: "Rounded",   lenRatio: 1.2, xnRatio: 0.333, cdPressure: 0.72, icon: "⬤",
+                     note: "Short and blunt, like a hemisphere. Far more pressure drag, so it flies markedly lower — often 100 m short of an ogive — and its CP is the furthest forward, which costs stability too." },
       };
 
       /* ============ STATE ============ */
@@ -972,9 +973,21 @@
         $("viewTabs").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x.dataset.v === v));
         $("hud").classList.toggle("show", v === "flight");
         $("backBtn").style.display = v === "flight" ? "" : "none";
+        $("resetBtn").style.display = v === "flight" && S.history.length ? "" : "none";
         $("commitBtn").style.display = v === "flight" ? "none" : "";
       }
       $("backBtn").addEventListener("click", () => setView("design"));
+      $("resetBtn").addEventListener("click", () => {
+        // wipe every flight and its comparison ghosts, and go back to a clean design
+        S.history = [];
+        S.flight = null;
+        ["o_apoAlt", "o_apoDown", "o_weather", "o_landDown", "o_landSpeed", "o_flightTime", "o_cd"]
+          .forEach((id) => { const el = $(id); if (el) el.textContent = "—"; });
+        $("outcomeBanner").className = "";
+        $("outcomeBanner").innerHTML = "";
+        $("miniGraphs").classList.remove("show");
+        setView("design");
+      });
 
       /* ============ CHECKLIST / LAUNCH ============ */
       $("commitBtn").addEventListener("click", openChecklist);
@@ -1818,56 +1831,59 @@
         ctx.beginPath(); ctx.moveTo(padX, groundY); ctx.lineTo(padX, groundY - 18); ctx.stroke();
 
         // Flight-to-flight comparison. Two near-vertical climbs are hard to tell apart by their arcs,
-        // so the difference is shown as horizontal apogee lines across the whole graph — a nose or
-        // fin change drops (or lifts) that line by a visible amount on the held scale.
-        const ghosts = S.history.slice(-4, -1);
-        ghosts.forEach((gh, gi) => {
-          const a = 0.22 + gi * 0.14;
-          // faint ascent path
-          ctx.strokeStyle = `rgba(0,242,254,${a * 0.6})`;
-          ctx.setLineDash([2, 3]); ctx.lineWidth = 1.2;
+        // so the difference is drawn as a full-width apogee line per flight. The immediately previous
+        // flight is picked out in amber as an explicit before/after against this one (cyan).
+        const prevFlight = S.history[S.history.length - 2] || null;
+        const olderGhosts = S.history.slice(0, -1).filter((g) => g !== prevFlight).slice(-3);
+
+        // older flights: faint dashed apogee lines only
+        ctx.font = "9px monospace"; ctx.textAlign = "left";
+        olderGhosts.forEach((gh, gi) => {
+          const gY = AY(gh.apogeeAlt || 0);
+          if (Math.abs((gh.apogeeAlt || 0) - f.apogeeAlt) < maxAlt * 0.012) return;
+          const a = 0.16 + gi * 0.06;
+          ctx.strokeStyle = `rgba(150,180,200,${a})`;
+          ctx.setLineDash([5, 5]); ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(46, gY); ctx.lineTo(CW - 8, gY); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = `rgba(170,200,220,${a + 0.3})`;
+          ctx.fillText(`#${gh.flightNo || "?"} ${(gh.noseLabel || "").toUpperCase()} · ${(gh.apogeeAlt || 0).toFixed(0)} m`, 50, gY - 3);
+        });
+
+        // previous flight: solid amber ascent path + apogee line (the "before")
+        if (prevFlight) {
+          ctx.strokeStyle = "rgba(255,176,60,.7)"; ctx.lineWidth = 1.6; ctx.setLineDash([]);
           ctx.beginPath();
-          for (let i = 0; i < gh.history.x.length; i++) {
-            const GX = AX(gh.history.x[i]), GY = AY(gh.history.y[i]);
+          for (let i = 0; i < prevFlight.history.x.length; i++) {
+            const GX = AX(prevFlight.history.x[i]), GY = AY(prevFlight.history.y[i]);
             if (i === 0) ctx.moveTo(GX, GY); else ctx.lineTo(GX, GY);
           }
           ctx.stroke();
-          // apogee reference line + label (left side, clear of the readout box).
-          // Skip it if it would land on top of the current flight's line (a re-flown identical config).
-          const gY = AY(gh.apogeeAlt || 0);
-          if (Math.abs((gh.apogeeAlt || 0) - f.apogeeAlt) < maxAlt * 0.012) return;
-          ctx.strokeStyle = `rgba(0,242,254,${a})`;
-          ctx.setLineDash([6, 4]); ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.moveTo(46, gY); ctx.lineTo(CW - 8, gY); ctx.stroke();
+          const pY = AY(prevFlight.apogeeAlt || 0);
+          ctx.strokeStyle = "rgba(255,176,60,.75)"; ctx.setLineDash([7, 4]); ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.moveTo(46, pY); ctx.lineTo(CW - 8, pY); ctx.stroke();
           ctx.setLineDash([]);
-          ctx.font = "9px monospace"; ctx.textAlign = "left";
-          ctx.fillStyle = `rgba(120,220,255,${Math.min(1, a + 0.35)})`;
-          ctx.fillText(
-            `#${gh.flightNo || "?"} ${(gh.noseLabel || "").toUpperCase()} · ${(gh.apogeeAlt || 0).toFixed(0)} m`,
-            50, gY - 3
-          );
-        });
-        // current flight's apogee line, bright
+          ctx.font = "700 9.5px monospace"; ctx.fillStyle = "#ffb03c";
+          ctx.fillText(`PREV  #${prevFlight.flightNo || "?"} ${(prevFlight.noseLabel || "").toUpperCase()} · ${(prevFlight.apogeeAlt || 0).toFixed(0)} m`, 50, pY - 4);
+        }
+
+        // current flight: bright cyan apogee line (the "after")
         {
           const cY = AY(f.apogeeAlt);
-          ctx.strokeStyle = "rgba(0,242,254,.9)"; ctx.setLineDash([]); ctx.lineWidth = 1.5;
+          ctx.strokeStyle = "rgba(0,242,254,.95)"; ctx.setLineDash([]); ctx.lineWidth = 1.8;
           ctx.beginPath(); ctx.moveTo(46, cY); ctx.lineTo(CW - 8, cY); ctx.stroke();
-          ctx.font = "700 10px monospace"; ctx.textAlign = "left"; ctx.fillStyle = "#7fe8ff";
-          ctx.fillText(
-            `#${f.flightNo || S.history.length} ${(f.noseLabel || "").toUpperCase()} · ${f.apogeeAlt.toFixed(0)} m`,
-            50, cY - 5
-          );
-          const prev = S.history[S.history.length - 2];
-          if (prev) {
-            const dA = f.apogeeAlt - prev.apogeeAlt;
-            ctx.fillStyle = dA >= 0 ? "#4ade80" : "#f97362";
-            ctx.font = "10px monospace";
-            ctx.fillText(`${dA >= 0 ? "+" : ""}${dA.toFixed(0)} m vs #${prev.flightNo || (S.history.length - 1)} (${(prev.noseLabel || "").toUpperCase()})`, 50, cY + 12);
+          ctx.font = "700 10.5px monospace"; ctx.textAlign = "left"; ctx.fillStyle = "#7fe8ff";
+          ctx.fillText(`NOW   #${f.flightNo || S.history.length} ${(f.noseLabel || "").toUpperCase()} · ${f.apogeeAlt.toFixed(0)} m`, 50, cY - 6);
+          if (prevFlight) {
+            const dA = f.apogeeAlt - prevFlight.apogeeAlt;
+            ctx.fillStyle = Math.abs(dA) < 1 ? "#9aa8c1" : dA > 0 ? "#4ade80" : "#f97362";
+            ctx.font = "700 10px monospace";
+            ctx.fillText(`${dA >= 0 ? "+" : ""}${dA.toFixed(0)} m vs previous flight`, 50, cY + 13);
           }
         }
-        if (ghosts.length) {
+        if (prevFlight || olderGhosts.length) {
           ctx.font = "9px monospace"; ctx.textAlign = "left"; ctx.fillStyle = "rgba(0,242,254,.6)";
-          ctx.fillText("dashed lines = earlier flights · axis held at 0–" + maxAlt.toFixed(0) + " m", 8, groundY - 8);
+          ctx.fillText("cyan = this flight · amber = previous · axis held at 0–" + maxAlt.toFixed(0) + " m", 8, groundY - 8);
         }
 
         // the spent booster's own fall — revealed as playback reaches it, so you SEE it come off
