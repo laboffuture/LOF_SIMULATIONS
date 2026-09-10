@@ -1498,9 +1498,45 @@
         ctx.beginPath(); ctx.moveTo(d.noseLen * 0.12, -halfD * 0.18); ctx.lineTo(d.noseLen * 0.92, -halfD * 0.6); ctx.stroke();
         ctx.lineWidth = 1 / scale;
 
-        // Fins, on the sustainer tail. Every fin is drawn, foreshortened by its roll angle the way a
+        // Booster fins, at the very tail of the stack — so a two-stage rocket has fins at the back
+        // where you expect them, not just a bare tube behind the sustainer fins. These are visual
+        // (the CP math models the sustainer fins); they mirror the sustainer fin planform, scaled
+        // down a little, and are drawn before the sustainer fins so those overlap cleanly.
+        if (S.stages === 2 && S.finN > 0) {
+          const bfCr = S.finCr * 0.85, bfSpanFull = S.finSpan * 0.8, bfSweep = S.finSweep * 0.85, bfCt = S.finCt * 0.85;
+          const bfRootX = rTail - bfCr;
+          const bfins = [];
+          for (let i = 0; i < S.finN; i++) {
+            const roll = (i * TAU) / S.finN;
+            bfins.push({ proj: Math.cos(roll), depth: Math.sin(roll) });
+          }
+          bfins.sort((a, b) => a.depth - b.depth);
+          bfins.forEach((bf) => {
+            const projSpan = bfSpanFull * Math.abs(bf.proj);
+            const flip = bf.proj > 0, s = flip ? -1 : 1;
+            const edgeOn = Math.abs(bf.proj) < 0.06;
+            ctx.globalAlpha = edgeOn ? 0.5 : 0.5 + 0.4 * Math.abs(bf.proj);
+            if (edgeOn) {
+              ctx.strokeStyle = "#8a5aa8"; ctx.lineWidth = 2 / scale;
+              ctx.beginPath(); ctx.moveTo(bfRootX, 0); ctx.lineTo(rTail, 0); ctx.stroke();
+              ctx.lineWidth = 1 / scale;
+            } else {
+              drawFinShape(ctx, bfRootX, rTail, halfD, bfCr, bfCt, projSpan, bfSweep, flip);
+              const bfGrad = ctx.createLinearGradient(0, s * halfD, 0, s * (halfD + Math.max(projSpan, 1)));
+              bfGrad.addColorStop(0, "#c78ce0");
+              bfGrad.addColorStop(1, "#5b3a78");
+              ctx.fillStyle = bfGrad;
+              ctx.strokeStyle = "rgba(255,255,255,0.35)";
+              ctx.fill(); ctx.stroke();
+            }
+            ctx.globalAlpha = 1;
+          });
+        }
+
+        // Sustainer fins, on the sustainer tail — these are what the CP math models, so the orange
+        // CP marker lands on them. Every fin is drawn, foreshortened by its roll angle the way a
         // real side view works: a fin edge-on to the viewer projects to almost nothing, one pointing
-        // straight up or down shows its full span. That is what makes the fin-count slider visible here.
+        // straight up or down shows its full span. That is what makes the fin-count slider visible.
         const finRootX = d.totalLen - S.finCr;
         const fins = [];
         for (let i = 0; i < S.finN; i++) {
