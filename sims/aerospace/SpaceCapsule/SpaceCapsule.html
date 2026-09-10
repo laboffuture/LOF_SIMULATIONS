@@ -778,10 +778,16 @@
         animT: 0, lastTs: 0,
         traj: null, calc: null, result: null,
         splashDone: false, tSplash: 0,
-        particles: [], ripples: [],
+        particles: [], ripples: [], bubbles: [],
+        shake: 0, flash: 0, flashCol: "#fff", sinkDir: 1,
         driftedVisual: false,
         log: [], runN: 0,
       };
+
+      // 0 for a soft touchdown, 1 for a violent one — drives every splashdown visual
+      function impactSeverity(v) {
+        return Math.max(0, Math.min(1, (v - 4) / 24));
+      }
 
       /* ---------------- physics ---------------- */
       function chuteArea(dia) { return Math.PI * (dia / 2) * (dia / 2); }
@@ -1098,11 +1104,12 @@
         }
       }
 
-      function drawCapsule(x, y, w, rot, plasma, bloom, collapsing) {
+      function drawCapsule(x, y, w, rot, plasma, bloom, collapsing, alpha) {
         const h = w * 0.82;
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(rot);
+        if (alpha != null && alpha < 1) ctx.globalAlpha = alpha;
 
         // plasma / heat-shield fire (below the shield, local +y)
         if (plasma > 0.01) {
@@ -1218,30 +1225,73 @@
         ctx.restore();
       }
 
-      function spawnSplash(x) {
+      // sev 0..1 scales the whole splash — a gentle plop vs. a violent crater
+      function spawnSplash(x, sev) {
         const wy = waterY();
-        for (let i = 0; i < 18; i++) {
-          const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.7;
-          const sp = 2 + Math.random() * 4.5;
+        const n = Math.round(12 + sev * 48);
+        for (let i = 0; i < n; i++) {
+          const a = -Math.PI / 2 + (Math.random() - 0.5) * (1.3 + sev * 1.1);
+          const sp = (1.8 + Math.random() * 4) * (1 + sev * 2.4);
           S.particles.push({
-            x: x + (Math.random() - 0.5) * 20, y: wy,
-            vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1,
+            x: x + (Math.random() - 0.5) * (16 + sev * 40), y: wy - Math.random() * 4,
+            vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1 - sev * 2,
+            sz: 1.8 + Math.random() * (1.4 + sev * 2.6),
             life: 1,
           });
         }
-        S.ripples.push({ x: x, r: 6, life: 1 });
-        S.ripples.push({ x: x, r: 2, life: 1.3 });
+        // central geyser column for a hard hit
+        if (sev > 0.35) {
+          const gc = Math.round(sev * 22);
+          for (let i = 0; i < gc; i++) {
+            S.particles.push({
+              x: x + (Math.random() - 0.5) * 14, y: wy,
+              vx: (Math.random() - 0.5) * 2.2, vy: -(5 + Math.random() * 7) * (0.6 + sev),
+              sz: 2 + Math.random() * 3.5, life: 1.1,
+            });
+          }
+        }
+        const rc = 1 + Math.round(sev * 3);
+        for (let i = 0; i < rc; i++)
+          S.ripples.push({ x: x, r: 4 + i * 6, life: 1 + i * 0.25, grow: 34 + sev * 60 });
+      }
+      function spawnBubbles(x, y, n) {
+        for (let i = 0; i < n; i++) {
+          S.bubbles.push({
+            x: x + (Math.random() - 0.5) * 34,
+            y: y + (Math.random() - 0.5) * 20,
+            vy: -(12 + Math.random() * 26),
+            r: 1.2 + Math.random() * 3,
+            life: 1,
+          });
+        }
       }
       function updateParticles(dt) {
         S.particles.forEach((p) => {
-          p.vy += 22 * dt;
+          p.vy += 24 * dt;
           p.x += p.vx;
           p.y += p.vy;
-          p.life -= dt * 0.9;
+          p.life -= dt * 0.85;
         });
         S.particles = S.particles.filter((p) => p.life > 0 && p.y < CH + 20);
-        S.ripples.forEach((r) => { r.r += 46 * dt; r.life -= dt * 0.7; });
+        S.ripples.forEach((r) => { r.r += (r.grow || 44) * dt; r.life -= dt * 0.7; });
         S.ripples = S.ripples.filter((r) => r.life > 0);
+        S.bubbles.forEach((b) => {
+          b.y += b.vy * dt;
+          b.vy += 6 * dt;                 // buoyancy eases as it nears the surface
+          b.life -= dt * 0.5;
+        });
+        S.bubbles = S.bubbles.filter((b) => b.life > 0 && b.y > waterY() - 2);
+      }
+      function drawBubbles() {
+        ctx.strokeStyle = "rgba(220,240,248,0.5)";
+        ctx.lineWidth = 1;
+        S.bubbles.forEach((b) => {
+          ctx.globalAlpha = Math.max(0, b.life) * 0.6;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+        ctx.globalAlpha = 1;
       }
       function drawParticles() {
         const wy = waterY();
@@ -1256,9 +1306,52 @@
         S.particles.forEach((p) => {
           ctx.globalAlpha = Math.max(0, p.life);
           ctx.fillStyle = "#e8f5fa";
-          ctx.fillRect(p.x, p.y, 2.4, 2.4);
+          const s = p.sz || 2.4;
+          ctx.fillRect(p.x, p.y, s, s);
         });
         ctx.globalAlpha = 1;
+      }
+
+      // where the capsule sits (or sinks) after it hits the water
+      function capsulePose(tSince, impact, w, windTilt, dir) {
+        if (impact === "safe") {
+          const damp = Math.exp(-tSince * 0.5);
+          return {
+            dy: -w * 0.16 + Math.sin(tSince * 3) * 3 * damp,
+            rot: windTilt * 0.4 + Math.sin(tSince * 2.2) * 0.05 * damp,
+            alpha: 1, under: false,
+          };
+        }
+        if (impact === "hard") {
+          // brief plunge, then a heavy damped bob that settles low in the water
+          let dy;
+          if (tSince < 0.32) dy = (tSince / 0.32) * (w * 0.5);
+          else {
+            const tt = tSince - 0.32;
+            dy = w * 0.5 * Math.cos(tt * 6) * Math.exp(-tt * 1.6) - w * 0.02;
+          }
+          return {
+            dy: dy,
+            rot: windTilt * 0.4 + 0.5 * Math.sin(tSince * 7) * Math.exp(-tSince * 1.1),
+            alpha: 1, under: tSince > 0.05 && tSince < 0.9,
+          };
+        }
+        // failed: the capsule drives under and sinks, tipping as it goes
+        const plunge = tSince < 0.4 ? (tSince / 0.4) * (w * 0.6) : w * 0.6 + (tSince - 0.4) * (w * 1.15);
+        return {
+          dy: plunge,
+          rot: windTilt * 0.4 + Math.min(Math.PI * 0.6, tSince * 1.0) * dir,
+          alpha: Math.max(0.05, 1 - Math.max(0, tSince - 1.4) / 1.6),
+          under: tSince > 0.18,
+        };
+      }
+      function drawWaterTint() {
+        const wy = waterY();
+        const wg = ctx.createLinearGradient(0, wy, 0, CH);
+        wg.addColorStop(0, "rgba(31,111,143,0.78)");
+        wg.addColorStop(1, "rgba(12,58,78,0.92)");
+        ctx.fillStyle = wg;
+        ctx.fillRect(0, wy, CW, CH - wy);
       }
 
       /* ---------------- animation timeline ---------------- */
@@ -1266,7 +1359,11 @@
       const BLOOM_DUR = 0.55;
       function playbackDur() {
         const ft = S.traj ? S.traj.fallTime : 200;
-        return Math.max(6, Math.min(14, ft / 12));
+        const base = Math.max(5.5, Math.min(13, ft / 12));
+        // a hard / failed splashdown should visibly rush in, not drift down gently
+        const vs = S.traj ? S.traj.vSplash : 8;
+        const rush = vs > 20 ? 0.58 : vs > 12 ? 0.78 : 1;
+        return base * rush;
       }
 
       function frame(ts) {
@@ -1298,20 +1395,56 @@
           const cx = CW * 0.5;
           let px = cx + c.drift * driftPxPerM;
           px = Math.max(cx - CW * 0.44, Math.min(cx + CW * 0.44, px));
-          spawnSplash(px);
+          const sev = impactSeverity(c.vSplash);
+          spawnSplash(px, sev);
+          S.shake = 3 + sev * 13;
+          S.flash = c.impact === "safe" ? 0.12 : c.impact === "hard" ? 0.32 : 0.5;
+          S.flashCol = c.impact === "fail" ? "#d03b3b" : c.impact === "hard" ? "#ffd9a8" : "#dff1f7";
         }
-        if (S.phase === "splash" && S.animT >= S.tSplash + 1.1) {
-          S.phase = "result";
-          S.result = c;
-          addLogRow(c);
-          refreshOutputs();
-          setChip();
+        // keep venting bubbles while a failed capsule is going under
+        if (S.splashDone && S.calc.impact === "fail") {
+          const tS = S.animT - S.tSplash;
+          if (tS > 0.15 && tS < 3.4 && Math.random() < 0.6) {
+            const cx = CW * 0.5;
+            let px = Math.max(cx - CW * 0.44, Math.min(cx + CW * 0.44, cx + S.calc.drift * driftPxPerM));
+            spawnBubbles(px, waterY() + 10 + tS * 22, 2);
+          }
         }
+        if (S.phase === "splash") {
+          const delay = c.impact === "fail" ? 1.9 : c.impact === "hard" ? 1.3 : 1.0;
+          if (S.animT >= S.tSplash + delay) {
+            S.phase = "result";
+            S.result = c;
+            addLogRow(c);
+            refreshOutputs();
+            setChip();
+          }
+        }
+        S.shake = Math.max(0, S.shake - dt * (S.shake * 5 + 3));
+        S.flash = Math.max(0, S.flash - dt * 1.6);
         updateParticles(dt);
       }
 
       function render() {
         ctx.clearRect(0, 0, CW, CH);
+        let sx = 0, sy = 0;
+        if (S.shake > 0.3) {
+          sx = (Math.random() - 0.5) * S.shake;
+          sy = (Math.random() - 0.5) * S.shake;
+        }
+        ctx.save();
+        ctx.translate(sx, sy);
+        renderWorld();
+        ctx.restore();
+        if (S.flash > 0.01) {
+          ctx.globalAlpha = Math.min(0.6, S.flash);
+          ctx.fillStyle = S.flashCol;
+          ctx.fillRect(0, 0, CW, CH);
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      function renderWorld() {
         drawScene();
 
         const c = S.calc;
@@ -1354,33 +1487,74 @@
           plasma = Math.max(0, 0.5 - (S.animT - REENTRY_DUR) / 0.5) * 0.8;
           const sway = Math.sin(S.animT * 1.8) * 0.05;
           rot = sway + windTilt;
+          S.sinkDir = c.drift > 1 ? 1 : -1;
+          const fast = Math.max(0, Math.min(1, (s.v - 9) / 20));
+          if (fast > 0.05) drawSpeedStreaks(capX, capY, w, fast, bloom);
           spd = (s.v / 1000).toFixed(3) + " km/s (" + Math.round(s.v) + " m/s)";
           ftxt = realT.toFixed(1) + " s";
           drawCapsule(capX, capY, w, rot, plasma, bloom, false);
           if (S.driftedVisual) drawDriftArrow();
-          drawHUD(S.animT - REENTRY_DUR < 1.1 ? "PARACHUTE DEPLOYED" : "DESCENDING", spd, ftxt);
+          const st = S.animT - REENTRY_DUR < 1.0
+            ? "PARACHUTE DEPLOYED"
+            : fast > 0.55 ? "DESCENDING · FAST" : "DESCENDING";
+          drawHUD(st, spd, ftxt);
           return;
         }
 
-        // splash + result: capsule sitting on the water, canopy collapsing
+        // ---- splashdown & result: the animation matches the verdict ----
+        const tS = S.animT - S.tSplash;
+        const impact = c.impact;
         let px = cx + c.drift * driftPxPerM;
         S.driftedVisual = px > cx + CW * 0.44;
         capX = Math.max(cx - CW * 0.44, Math.min(cx + CW * 0.44, px));
-        const bob = Math.sin(S.animT * 3) * 2;
-        drawCapsule(capX, waterY() - w * 0.16 + bob, w, windTilt * 0.5, 0, 1, true);
-        drawParticles();
+
+        const pose = capsulePose(tS, impact, w, windTilt, S.sinkDir);
+        const chuteOn = impact === "fail" ? (tS < 0.5 ? 1 : 0) : 1;
+
+        drawBubbles();                       // already underwater — behind the surface
+        drawCapsule(capX, waterY() - w * 0.16 + pose.dy, w, pose.rot, 0, chuteOn, true, pose.alpha);
+        drawWaterTint();                     // surface closes over the sinking capsule
+        drawParticles();                     // spray + ripples in front of the water
+
+        if (tS < 0.5) {
+          ctx.globalAlpha = (1 - tS / 0.5) * 0.7;
+          ctx.strokeStyle = "#f2fbff";
+          ctx.lineWidth = 3;
+          const rr = 10 + tS * 130;
+          ctx.beginPath();
+          ctx.ellipse(capX, waterY(), rr, rr * 0.3, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
         if (S.driftedVisual) drawDriftArrow();
 
-        if (S.phase === "result" && S.result) {
-          drawResultCard(S.result);
-          drawHUD(
-            S.result.impact.toUpperCase(),
-            (S.result.vSplash / 1000).toFixed(3) + " km/s (" + Math.round(S.result.vSplash) + " m/s)",
-            S.result.fallTime.toFixed(1) + " s"
-          );
-        } else {
-          drawHUD("SPLASHDOWN", "—", c.fallTime.toFixed(1) + " s");
+        const hudState =
+          S.phase === "result" && S.result
+            ? (S.result.success ? "SUCCESS" : "RETRY")
+            : impact === "fail" ? "SINKING" : impact === "hard" ? "HARD IMPACT" : "SPLASHDOWN";
+        drawHUD(
+          hudState,
+          (c.vSplash / 1000).toFixed(3) + " km/s (" + Math.round(c.vSplash) + " m/s)",
+          c.fallTime.toFixed(1) + " s"
+        );
+        if (S.phase === "result" && S.result) drawResultCard(S.result);
+      }
+
+      function drawSpeedStreaks(x, y, w, k, bloom) {
+        ctx.strokeStyle = "rgba(215,238,248,0.55)";
+        ctx.lineWidth = 1.4;
+        const n = 5 + Math.round(k * 7);
+        for (let i = 0; i < n; i++) {
+          const ox = x + (Math.random() - 0.5) * w * 2.4;
+          const oy = y + (Math.random() - 0.5) * w * 1.4 - w * 0.2;
+          const len = (10 + k * 46) * (0.5 + Math.random() * 0.8);
+          ctx.globalAlpha = 0.25 + Math.random() * 0.4;
+          ctx.beginPath();
+          ctx.moveTo(ox, oy - len);
+          ctx.lineTo(ox, oy);
+          ctx.stroke();
         }
+        ctx.globalAlpha = 1;
       }
 
       function drawDriftArrow() {
@@ -1533,6 +1707,9 @@
         S.splashDone = false;
         S.particles = [];
         S.ripples = [];
+        S.bubbles = [];
+        S.shake = 0;
+        S.flash = 0;
         S.result = null;
         document.getElementById("btnStart").disabled = true;
         setChip();
@@ -1546,6 +1723,9 @@
         S.splashDone = false;
         S.particles = [];
         S.ripples = [];
+        S.bubbles = [];
+        S.shake = 0;
+        S.flash = 0;
         S.driftedVisual = false;
         document.getElementById("btnStart").disabled = false;
         if (full) { S.log = []; S.runN = 0; renderLog(); }
