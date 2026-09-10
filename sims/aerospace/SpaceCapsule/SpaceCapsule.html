@@ -1109,16 +1109,6 @@
             ctx.ellipse(0, fy, fw, fw * 1.5, 0, 0, Math.PI * 2);
             ctx.fill();
           }
-          // trailing streaks upward
-          ctx.globalAlpha = 0.5 * pl;
-          ctx.strokeStyle = "#ffce8a";
-          ctx.lineWidth = 1.5;
-          for (let i = -2; i <= 2; i++) {
-            ctx.beginPath();
-            ctx.moveTo(i * w * 0.16, -h * 0.2);
-            ctx.lineTo(i * w * 0.26, -h * 0.9 - pl * 26);
-            ctx.stroke();
-          }
           ctx.globalAlpha = 1;
         }
 
@@ -1479,7 +1469,6 @@
           const SNAP = 0.8;
           const shownV = dt2 < SNAP ? c.v0 + (c.vSplash - c.v0) * (dt2 / SNAP) : c.vSplash;
           const fast = Math.max(0, Math.min(1, (shownV - 9) / 20));
-          if (fast > 0.05) drawSpeedStreaks(capX, capY, w, fast, bloom);
           spd = (shownV / 1000).toFixed(3) + " km/s (" + Math.round(shownV) + " m/s)";
           ftxt = realT.toFixed(1) + " s";
           drawCapsule(capX, capY, w, rot, plasma, bloom, false);
@@ -1499,11 +1488,13 @@
         capX = Math.max(cx - CW * 0.44, Math.min(cx + CW * 0.44, px));
 
         const pose = capsulePose(tS, impact, w, windTilt, S.sinkDir);
-        const chuteOn = impact === "fail" ? (tS < 0.5 ? 1 : 0) : 1;
+        // the attached canopy lets go within a moment of splashdown
+        const chuteOn = tS < 0.25 ? 1 - tS / 0.25 : 0;
 
         drawBubbles();                       // already underwater — behind the surface
         drawCapsule(capX, waterY() - w * 0.16 + pose.dy, w, pose.rot, 0, chuteOn, true, pose.alpha);
         drawWaterTint();                     // surface closes over the sinking capsule
+        drawDitchedChute(capX, waterY(), w, tS, S.sinkDir, impact); // fabric floating on top
         drawParticles();                     // spray + ripples in front of the water
 
         if (tS < 0.5) {
@@ -1530,21 +1521,51 @@
         if (S.phase === "result" && S.result) drawResultCard(S.result);
       }
 
-      function drawSpeedStreaks(x, y, w, k, bloom) {
-        ctx.strokeStyle = "rgba(215,238,248,0.55)";
-        ctx.lineWidth = 1.4;
-        const n = 5 + Math.round(k * 7);
-        for (let i = 0; i < n; i++) {
-          const ox = x + (Math.random() - 0.5) * w * 2.4;
-          const oy = y + (Math.random() - 0.5) * w * 1.4 - w * 0.2;
-          const len = (10 + k * 46) * (0.5 + Math.random() * 0.8);
-          ctx.globalAlpha = 0.25 + Math.random() * 0.4;
-          ctx.beginPath();
-          ctx.moveTo(ox, oy - len);
-          ctx.lineTo(ox, oy);
-          ctx.stroke();
+      // parachute after it hits the water: detaches, crumples, and settles flat
+      // on the surface just downwind of the capsule (or slides under, on a fail)
+      function drawDitchedChute(x, wy, w, tS, dir, impact) {
+        const spread = Math.max(0, Math.min(1, (tS - 0.15) / 1.0));
+        const cw = w * (1.35 + spread * 1.25);
+        const ch = w * (0.85 * (1 - spread) + 0.13);
+        const ox = x + dir * w * (0.35 + spread * 0.95);
+        let oy = wy - ch * 0.3;
+        let alpha;
+        if (impact === "fail") {
+          oy += Math.max(0, tS - 0.4) * w * 0.85;
+          alpha = Math.max(0, 1 - Math.max(0, tS - 1.1) / 1.4);
+        } else {
+          alpha = Math.max(0.3, 1 - Math.max(0, tS - 2.4) / 2.6);
         }
-        ctx.globalAlpha = 1;
+        if (alpha <= 0.02) return;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        // slack shroud lines from the capsule out to the crumpled canopy
+        ctx.strokeStyle = "rgba(232,238,244,0.6)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x - w * 0.13, wy - w * 0.08);
+        ctx.quadraticCurveTo((x + ox) / 2, wy + w * 0.06, ox - cw * 0.14, oy + ch * 0.1);
+        ctx.moveTo(x + w * 0.13, wy - w * 0.08);
+        ctx.quadraticCurveTo((x + ox) / 2, wy - w * 0.02, ox + cw * 0.14, oy + ch * 0.1);
+        ctx.stroke();
+        // crumpled canopy — a shallow scalloped heap lying on the water
+        ctx.beginPath();
+        ctx.moveTo(ox - cw * 0.5, oy + ch * 0.2);
+        ctx.quadraticCurveTo(ox - cw * 0.24, oy - ch, ox - cw * 0.02, oy - ch * 0.5);
+        ctx.quadraticCurveTo(ox + cw * 0.16, oy - ch * 0.05, ox + cw * 0.5, oy + ch * 0.2);
+        ctx.quadraticCurveTo(ox, oy + ch * 0.55, ox - cw * 0.5, oy + ch * 0.2);
+        ctx.closePath();
+        const g = ctx.createLinearGradient(0, oy - ch, 0, oy + ch * 0.4);
+        g.addColorStop(0, "#ff9a5a");
+        g.addColorStop(0.55, "#ffd7a0");
+        g.addColorStop(0.55, "#eef2f6");
+        g.addColorStop(1, "#c4cfda");
+        ctx.fillStyle = g;
+        ctx.fill();
+        ctx.strokeStyle = "rgba(120,140,160,0.5)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.restore();
       }
 
       function drawDriftArrow() {
