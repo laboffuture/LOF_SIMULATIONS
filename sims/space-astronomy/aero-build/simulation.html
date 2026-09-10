@@ -304,6 +304,73 @@
       #checklistWarn { margin-top: 10px; font-family: var(--mono); font-size: 11px; color: var(--accent-pink); display: none; }
       #checklistWarn.show { display: block; }
 
+      /* ================= SINGLE-SCREEN COMPACTION =================
+         The whole panel visible at once, no scroll, on a normal laptop. The long inline
+         explainers are dropped — every one of them is still in its "?" popup. */
+      #app { grid-template-columns: 1fr 444px; }
+      #panel { gap: 0; }
+      .sec { padding: 5px 13px; border-bottom: none; }
+      .sec + .sec { border-top: 1px solid var(--border-color); }
+      .sec-h { font-size: 9px; margin-bottom: 3px; letter-spacing: .09em; }
+      .sec-h .whyBtn { transform: scale(.82); }
+      .ctl { margin-bottom: 4px; }
+      .ctl-top { margin-bottom: 1px; }
+      .ctl-name { font-size: 9px; }
+      .ctl-val { font-size: 9.5px; padding: 1px 5px; }
+      input[type="range"] { height: 5px; }
+      input[type="range"]::-webkit-slider-thumb { width: 13px; height: 13px; }
+      input[type="text"], input[type="number"] { padding: 5px 8px; font-size: 10.5px; }
+      .motorRow input { padding: 5px 8px; }
+      .motorReadout { font-size: 8.5px; margin-top: 3px; gap: 2px 9px; }
+      .seg { padding: 3px; gap: 3px; }
+      .seg button { padding: 5px 3px; font-size: 9px; }
+      .noseSeg button.icon { padding: 4px 3px 3px; }
+      .noseSeg button svg { width: 20px; height: 14px; margin-bottom: 1px; }
+      .noseSeg button .nlab { font-size: 7.5px; margin-top: 0; }
+      .stagecard { padding: 5px 8px; }
+      .tog { font-size: 9px; padding: 1px 0; }
+      #stageFlow { display: none !important; }  /* the "?" staging popup shows this sequence */
+      #finCanvasWrap { padding: 3px; margin-top: 2px; }
+      #finCanvas { height: 34px; }
+      #stabGaugeWrap { padding: 3px; margin-top: 4px !important; }
+      #stabGauge { height: 54px; }
+      .stab-verdict { font-size: 9.5px; margin-top: 0; }
+      .stab-sub { font-size: 8px; }
+      .subnote { font-size: 8px; line-height: 1.3; margin-top: 2px; }
+      .row { font-size: 9.5px; padding: 2px 0; }
+      /* the velocity / pitch mini-graphs are detail — the main trajectory graph carries the flight */
+      #miniGraphs { display: none !important; }
+      #outcomeBanner { font-size: 9px; line-height: 1.35; padding: 6px 8px; margin-top: 5px; }
+      #outcomeBanner b { font-size: 10px; margin-bottom: 2px; }
+      /* the inline "?" strips and long static notes — all live in the popups instead */
+      .hint { display: none; }
+      .sec .subnote.prose { display: none; }
+      /* two-up grids halve the vertical run of slider stacks and the output rows */
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 14px; }
+      .grid2 > .ctl { margin-bottom: 2px; }
+      .grid2 > .ctl.span2 { grid-column: 1 / -1; }
+      .rows2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+      .rows2 .row:nth-last-child(-n+2) { border-bottom: none; }
+      /* Flight outputs: a floating card over the graph, flight view only — keeps the panel scroll-free */
+      #outSec {
+        position: absolute; right: 14px; bottom: 80px; z-index: 4; width: 250px;
+        max-height: calc(100% - 150px); overflow-y: auto;
+        background: rgba(9, 14, 25, 0.92); border: 1px solid var(--border-color);
+        border-left: 3px solid var(--accent-blue); border-radius: 8px;
+        padding: 8px 11px; backdrop-filter: blur(8px); display: none;
+      }
+      #outSec.show { display: block; }
+      #outSec .sec-h { margin-bottom: 5px; }
+
+      /* Flight Manual moves to a compact chip in the launch bar */
+      #panel > .sec:last-child { display: none; }
+      #manualChip {
+        font-family: var(--mono); font-size: 9px; font-weight: 700; background: var(--panel-card);
+        border: 1px solid var(--border-color); color: var(--text-secondary); padding: 5px 9px;
+        border-radius: 6px; cursor: pointer;
+      }
+      #manualChip:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
       @media (max-width: 1000px) {
         html, body { height: auto; overflow: auto; }
         #app { grid-template-columns: 1fr; height: auto; }
@@ -334,10 +401,30 @@
           <div class="evline" id="h_event"></div>
         </div>
 
+        <!-- Flight outputs float over the graph (flight view only) so the panel never scrolls -->
+        <div class="sec sec-out" id="outSec">
+          <div class="sec-h">📊 Flight <span style="color:var(--accent-blue)">Outputs</span></div>
+          <div class="rows2">
+            <div class="row"><dt>Apogee Alt</dt><dd id="o_apoAlt">—</dd></div>
+            <div class="row"><dt>Apogee Downrange</dt><dd id="o_apoDown">—</dd></div>
+            <div class="row click" id="o_weatherRow" data-why="weathercock"><dt>Weathercock</dt><dd id="o_weather">—</dd></div>
+            <div class="row"><dt>Landing Downrange</dt><dd id="o_landDown">—</dd></div>
+            <div class="row"><dt>Landing Speed</dt><dd id="o_landSpeed">—</dd></div>
+            <div class="row"><dt>Flight Time</dt><dd id="o_flightTime">—</dd></div>
+            <div class="row"><dt>Drag Coefficient</dt><dd id="o_cd">—</dd></div>
+          </div>
+          <div id="outcomeBanner"></div>
+          <div id="miniGraphs">
+            <div class="mgraph" data-why="weathercock"><canvas id="gVel"></canvas><div class="mgcap">Velocity (cyan) &amp; Acceleration in g (orange) vs time</div></div>
+            <div class="mgraph" data-why="weathercock"><canvas id="gPitch"></canvas><div class="mgcap">Pitch vs time — tap to learn about weathercocking</div></div>
+          </div>
+        </div>
+
         <div id="launchbar">
           <button id="commitBtn">🚀 Pre-Launch Checklist</button>
           <button class="minibtn" id="backBtn" style="display:none">← Back to Design</button>
           <button class="minibtn" id="resetBtn" style="display:none">↺ Reset Graph</button>
+          <button id="manualChip">? Manual</button>
           <div class="spacer"></div>
           <div id="barBadges">
             <span class="pillbadge info" id="barMotor">C6-5</span>
@@ -361,7 +448,7 @@
                 <span>Two-Stage Rocket</span>
                 <span class="switch"><input type="checkbox" id="stageTog" /><span class="track"></span></span>
               </label>
-              <div class="subnote" id="stageBlurb">
+              <div class="subnote prose" id="stageBlurb">
                 A booster is a second motor stacked <b>below</b> the rocket. It fires first, is dropped when it
                 burns out, and the rocket's own motor lights immediately after — so the rocket carries less
                 dead weight for the rest of the climb.
@@ -377,14 +464,20 @@
             <div class="ctl-top"><span class="ctl-name">Booster Motor (fires first)</span></div>
             <div class="motorRow"><input type="text" id="boosterMotorInput" value="C6-0" maxlength="10" /></div>
             <div class="motorReadout" id="boosterReadout"></div>
-            <div class="subnote">
+            <div class="subnote prose">
               Booster motors end in <b>-0</b>: no delay, no ejection charge — they light the stage above
               the instant they burn out. A delay here would coast before staging.
             </div>
-            <div class="ctl-top" style="margin-top:10px"><span class="ctl-name">Booster Dry Mass</span><span class="ctl-val" id="boosterMassVal">30 g</span></div>
-            <input type="range" id="boosterMass" min="5" max="500" step="1" value="30" />
-            <div class="ctl-top" style="margin-top:10px"><span class="ctl-name">Booster Body Length</span><span class="ctl-val" id="boosterLenVal">150 mm</span></div>
-            <input type="range" id="boosterLen" min="50" max="600" step="5" value="150" />
+            <div class="grid2" style="margin-top:6px">
+              <div class="ctl">
+                <div class="ctl-top"><span class="ctl-name">Booster Dry Mass</span><span class="ctl-val" id="boosterMassVal">30 g</span></div>
+                <input type="range" id="boosterMass" min="5" max="500" step="1" value="30" />
+              </div>
+              <div class="ctl">
+                <div class="ctl-top"><span class="ctl-name">Booster Body Length</span><span class="ctl-val" id="boosterLenVal">150 mm</span></div>
+                <input type="range" id="boosterLen" min="50" max="600" step="5" value="150" />
+              </div>
+            </div>
             <div class="hint" id="stageHint"></div>
           </div>
         </div>
@@ -402,17 +495,19 @@
             </div>
             <div class="hint" id="noseHint"></div>
           </div>
-          <div class="ctl">
-            <div class="ctl-top"><span class="ctl-name">Body Diameter</span><span class="ctl-val" id="diamVal">24 mm</span></div>
-            <input type="range" id="diam" min="10" max="150" step="1" value="24" />
-          </div>
-          <div class="ctl">
-            <div class="ctl-top"><span class="ctl-name">Body Length (Sustainer)</span><span class="ctl-val" id="bodyLenVal">300 mm</span></div>
-            <input type="range" id="bodyLen" min="50" max="1000" step="5" value="300" />
-          </div>
-          <div class="ctl">
-            <div class="ctl-top"><span class="ctl-name">Dry Mass (Sustainer)</span><span class="ctl-val" id="dryMassVal">50 g</span></div>
-            <input type="range" id="dryMass" min="5" max="2000" step="1" value="50" />
+          <div class="grid2">
+            <div class="ctl">
+              <div class="ctl-top"><span class="ctl-name">Body Diameter</span><span class="ctl-val" id="diamVal">24 mm</span></div>
+              <input type="range" id="diam" min="10" max="150" step="1" value="24" />
+            </div>
+            <div class="ctl">
+              <div class="ctl-top"><span class="ctl-name">Dry Mass (Sust.)</span><span class="ctl-val" id="dryMassVal">50 g</span></div>
+              <input type="range" id="dryMass" min="5" max="2000" step="1" value="50" />
+            </div>
+            <div class="ctl span2">
+              <div class="ctl-top"><span class="ctl-name">Body Length (Sustainer)</span><span class="ctl-val" id="bodyLenVal">300 mm</span></div>
+              <input type="range" id="bodyLen" min="50" max="1000" step="5" value="300" />
+            </div>
           </div>
         </div>
 
@@ -420,48 +515,40 @@
         <div class="sec sec-fins">
           <div class="sec-h">🪁 Fins <span style="color:var(--accent-cyan)">Stabilizers</span> <button class="whyBtn" data-why="fins">?</button></div>
           <div id="finCanvasWrap"><canvas id="finCanvas"></canvas></div>
-          <div class="ctl" style="margin-top:10px">
-            <div class="ctl-top"><span class="ctl-name">Fin Count</span><span class="ctl-val" id="finNVal">3</span></div>
-            <input type="range" class="finslider" id="finN" data-why="finCount" min="2" max="5" step="1" value="3" />
-          </div>
-          <div class="ctl">
-            <div class="ctl-top"><span class="ctl-name">Root Chord</span><span class="ctl-val" id="finCrVal">60 mm</span></div>
-            <input type="range" class="finslider" id="finCr" data-why="finRoot" min="15" max="150" step="1" value="60" />
-          </div>
-          <div class="ctl">
-            <div class="ctl-top"><span class="ctl-name">Tip Chord</span><span class="ctl-val" id="finCtVal">30 mm</span></div>
-            <input type="range" class="finslider" id="finCt" data-why="finTip" min="0" max="100" step="1" value="30" />
-          </div>
-          <div class="ctl">
-            <div class="ctl-top"><span class="ctl-name">Span</span><span class="ctl-val" id="finSpanVal">50 mm</span></div>
-            <input type="range" class="finslider" id="finSpan" data-why="finSpan" min="10" max="150" step="1" value="50" />
-          </div>
-          <div class="ctl">
-            <div class="ctl-top"><span class="ctl-name">Sweep</span><span class="ctl-val" id="finSweepVal">20 mm</span></div>
-            <input type="range" class="finslider" id="finSweep" data-why="finSweep" min="0" max="150" step="1" value="20" />
+          <div class="grid2" style="margin-top:6px">
+            <div class="ctl">
+              <div class="ctl-top"><span class="ctl-name">Fin Count</span><span class="ctl-val" id="finNVal">3</span></div>
+              <input type="range" class="finslider" id="finN" data-why="finCount" min="2" max="5" step="1" value="3" />
+            </div>
+            <div class="ctl">
+              <div class="ctl-top"><span class="ctl-name">Span</span><span class="ctl-val" id="finSpanVal">50 mm</span></div>
+              <input type="range" class="finslider" id="finSpan" data-why="finSpan" min="10" max="150" step="1" value="50" />
+            </div>
+            <div class="ctl">
+              <div class="ctl-top"><span class="ctl-name">Root Chord</span><span class="ctl-val" id="finCrVal">60 mm</span></div>
+              <input type="range" class="finslider" id="finCr" data-why="finRoot" min="15" max="150" step="1" value="60" />
+            </div>
+            <div class="ctl">
+              <div class="ctl-top"><span class="ctl-name">Tip Chord</span><span class="ctl-val" id="finCtVal">30 mm</span></div>
+              <input type="range" class="finslider" id="finCt" data-why="finTip" min="0" max="100" step="1" value="30" />
+            </div>
+            <div class="ctl span2">
+              <div class="ctl-top"><span class="ctl-name">Sweep</span><span class="ctl-val" id="finSweepVal">20 mm</span></div>
+              <input type="range" class="finslider" id="finSweep" data-why="finSweep" min="0" max="150" step="1" value="20" />
+            </div>
           </div>
           <div class="hint" id="finHint"></div>
-          <p class="subnote">Drag the green marker on the rocket in the Design view to set the Center of Gravity.</p>
-        </div>
-
-        <!-- STABILITY -->
-        <div class="sec sec-stab">
-          <div class="sec-h">⚖️ Stability <span style="color:var(--accent-pink)">Static Margin</span> <button class="whyBtn" data-why="margin">?</button></div>
-          <div id="stabGaugeWrap">
+          <!-- stability gauge lives with the fins — it is a readout of the fin + CG setup -->
+          <div id="stabGaugeWrap" style="margin-top:6px">
             <canvas id="stabGauge"></canvas>
             <div class="stab-verdict" id="stabVerdict">STABLE</div>
             <div class="stab-sub" id="stabSub">margin 1.20 cal · CP 320mm · CG 260mm</div>
           </div>
         </div>
 
-        <!-- RECOVERY -->
+        <!-- RECOVERY + LAUNCH -->
         <div class="sec sec-rec">
-          <div class="sec-h">🪂 Recovery <span style="color:var(--accent-green)">Parachute</span> <button class="whyBtn" data-why="recovery">?</button></div>
-          <p class="subnote" style="margin:-4px 0 10px">
-            Getting the rocket back undamaged. The chute must open near the top of the flight — and be
-            big enough to slow the landing, but not so big it drifts away.
-          </p>
-
+          <div class="sec-h">🪂 Recovery <span style="color:var(--accent-green)">&amp; Launch</span> <button class="whyBtn" data-why="recovery">?</button></div>
           <div class="ctl">
             <div class="ctl-top"><span class="ctl-name">Deploy Mode</span> <button class="whyBtn" data-why="deployMode">?</button></div>
             <div class="seg" id="recSeg">
@@ -471,64 +558,28 @@
             <div class="hint" id="recModeHint"></div>
           </div>
 
-          <div class="ctl">
-            <div class="ctl-top"><span class="ctl-name">Ejection Delay</span><span class="ctl-val delaytag" id="delayVal">5 s</span></div>
-            <p class="subnote">
-              Not yours to choose — it is the number after the dash in the motor code, a fuse built into the
-              motor. Change the motor to change it. <span class="delaytag" data-why="delay"
-              style="cursor:pointer;text-decoration:underline dotted;color:var(--accent-amber)">Why does this matter?</span>
-            </p>
-            <div class="subnote" id="delayMatch"></div>
-          </div>
-
-          <div class="ctl">
-            <div class="ctl-top"><span class="ctl-name">Parachute Area (Main)</span><span class="ctl-val" id="recAreaVal">225 cm²</span></div>
-            <input type="range" id="recArea" min="50" max="3000" step="25" value="225" />
-            <div class="subnote">
-              How much canopy the rocket hangs under. Bigger canopy → slower, safer landing, but more
-              wind drift. Predicted touchdown for this design:
-              <span class="liveval" id="descentRate">—</span>
-              <span id="descentBand" style="color:var(--text-muted)"></span>
+          <div class="grid2">
+            <div class="ctl">
+              <div class="ctl-top"><span class="ctl-name">Ejection Delay <span class="delaytag" data-why="delay" style="cursor:pointer">ⓘ</span></span><span class="ctl-val delaytag" id="delayVal">5 s</span></div>
+              <div class="subnote" id="delayMatch"></div>
             </div>
-          </div>
-
-          <div class="ctl" id="backupCtl" style="display:none">
-            <div class="ctl-top"><span class="ctl-name">Main Deploy Altitude</span><span class="ctl-val" id="backupAltVal">150 m</span></div>
-            <input type="range" id="backupAlt" min="20" max="300" step="5" value="150" />
-            <div class="subnote">
-              In Dual Deploy the small drogue comes out at apogee and the big main chute waits until the
-              rocket has fallen to this height — less time in the wind, so it lands closer to the pad.
+            <div class="ctl">
+              <div class="ctl-top"><span class="ctl-name">Parachute Area</span><span class="ctl-val" id="recAreaVal">225 cm²</span></div>
+              <input type="range" id="recArea" min="50" max="3000" step="25" value="225" />
+              <div class="subnote">touchdown <span class="liveval" id="descentRate">—</span> <span id="descentBand" style="color:var(--text-muted)"></span></div>
             </div>
-          </div>
-        </div>
-
-        <!-- LAUNCH / WIND -->
-        <div class="sec sec-env">
-          <div class="sec-h">🌬️ Launch <span style="color:var(--accent-amber)">Conditions</span></div>
-          <div class="ctl">
-            <div class="ctl-top"><span class="ctl-name">Launch Angle (from vertical)</span><span class="ctl-val" id="launchAngleVal">0°</span></div>
-            <input type="range" id="launchAngle" min="0" max="15" step="1" value="0" />
-          </div>
-          <div class="ctl">
-            <div class="ctl-top"><span class="ctl-name">Crosswind Speed</span><span class="ctl-val" id="windVal">0.0 m/s</span></div>
-            <input type="range" id="wind" min="0" max="10" step="0.5" value="0" />
-          </div>
-        </div>
-
-        <!-- OUTPUTS -->
-        <div class="sec sec-out">
-          <div class="sec-h">📊 Flight <span style="color:var(--accent-blue)">Outputs</span></div>
-          <div class="row"><dt>Apogee Altitude</dt><dd id="o_apoAlt">—</dd></div>
-          <div class="row"><dt>Apogee Downrange</dt><dd id="o_apoDown">—</dd></div>
-          <div class="row click" id="o_weatherRow" data-why="weathercock"><dt>Weathercock Angle</dt><dd id="o_weather">—</dd></div>
-          <div class="row"><dt>Landing Downrange</dt><dd id="o_landDown">—</dd></div>
-          <div class="row"><dt>Landing Speed</dt><dd id="o_landSpeed">—</dd></div>
-          <div class="row"><dt>Total Flight Time</dt><dd id="o_flightTime">—</dd></div>
-          <div class="row"><dt>Drag Coefficient</dt><dd id="o_cd">—</dd></div>
-          <div id="outcomeBanner"></div>
-          <div id="miniGraphs">
-            <div class="mgraph" data-why="weathercock"><canvas id="gVel"></canvas><div class="mgcap">Velocity (cyan) &amp; Acceleration in g (orange) vs time</div></div>
-            <div class="mgraph" data-why="weathercock"><canvas id="gPitch"></canvas><div class="mgcap">Pitch vs time — tap to learn about weathercocking</div></div>
+            <div class="ctl span2" id="backupCtl" style="display:none">
+              <div class="ctl-top"><span class="ctl-name">Main Deploy Altitude</span><span class="ctl-val" id="backupAltVal">150 m</span></div>
+              <input type="range" id="backupAlt" min="20" max="300" step="5" value="150" />
+            </div>
+            <div class="ctl">
+              <div class="ctl-top"><span class="ctl-name">Launch Angle</span><span class="ctl-val" id="launchAngleVal">0°</span></div>
+              <input type="range" id="launchAngle" min="0" max="15" step="1" value="0" />
+            </div>
+            <div class="ctl">
+              <div class="ctl-top"><span class="ctl-name">Crosswind</span><span class="ctl-val" id="windVal">0.0 m/s</span></div>
+              <input type="range" id="wind" min="0" max="10" step="0.5" value="0" />
+            </div>
           </div>
         </div>
 
@@ -975,6 +1026,7 @@
         $("backBtn").style.display = v === "flight" ? "" : "none";
         $("resetBtn").style.display = v === "flight" && S.history.length ? "" : "none";
         $("commitBtn").style.display = v === "flight" ? "none" : "";
+        $("outSec").classList.toggle("show", v === "flight" && !!S.flight);
       }
       $("backBtn").addEventListener("click", () => setView("design"));
       $("resetBtn").addEventListener("click", () => {
@@ -986,6 +1038,7 @@
         $("outcomeBanner").className = "";
         $("outcomeBanner").innerHTML = "";
         $("miniGraphs").classList.remove("show");
+        $("outSec").classList.remove("show");
         setView("design");
       });
 
@@ -1040,6 +1093,7 @@
 
       /* ============ HELP MANUAL ============ */
       $("helpBtn").addEventListener("click", () => $("manualScrim").classList.add("show"));
+      $("manualChip").addEventListener("click", () => $("manualScrim").classList.add("show"));
       $("manualClose").addEventListener("click", () => $("manualScrim").classList.remove("show"));
       $("manualScrim").addEventListener("click", (e) => { if (e.target.id === "manualScrim") $("manualScrim").classList.remove("show"); });
 
@@ -1319,6 +1373,7 @@
         banner.innerHTML = body;
         $("miniGraphs").classList.add("show");
         drawMiniGraphs(f);
+        $("outSec").classList.add("show");
       }
 
       /* ============ CANVAS: shared setup ============ */
