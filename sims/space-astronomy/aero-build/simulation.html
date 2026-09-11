@@ -1990,7 +1990,13 @@
             const grounded = f.boosterTrack.y[lastBi] <= 0.3;
             ctx.save();
             ctx.translate(BX, BY);
-            if (!grounded) ctx.rotate(curT * 7.0);
+            // A slow, gentle tumble reads as "unguided debris"; the old rate (7 rad per SIM
+            // second) span roughly a full spin per real second once ascent got slowed down and
+            // the booster got bigger and brighter — dizzying rather than informative. Timed off
+            // real elapsed time since separation so it stays slow regardless of replay pace.
+            if (!grounded && f._sepFlashStart) {
+              ctx.rotate(((performance.now() - f._sepFlashStart) / 1000) * 1.1);
+            }
             ctx.fillStyle = "#ffa726";
             ctx.strokeStyle = "#a85d0a"; ctx.lineWidth = 1.2;
             rr(ctx, -5, -11, 10, 22, 2.2); ctx.fill(); ctx.stroke();
