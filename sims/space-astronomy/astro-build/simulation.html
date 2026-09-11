@@ -687,8 +687,12 @@
         new THREE.PlaneGeometry(COMPARE_WORLD_W, COMPARE_WORLD_H),
         new THREE.MeshBasicMaterial({ map: cmpTexture, transparent: true, side: THREE.DoubleSide, depthWrite: false }),
       );
-      compareMesh.rotation.x = -Math.PI / 2;
-      compareMesh.position.set(1, -2.3, 0.4);
+      // Stood up on a shallow backward lean — like a sign facing the camera — rather
+      // than laid flat on the ground: a flat ground plane reads as an unreadable
+      // sliver from the default elevated view, and this way its face still turns
+      // to follow the model as you orbit, the same as everything else in the scene.
+      compareMesh.rotation.x = -0.22;
+      compareMesh.position.set(1, -3.6, 0.4);
       b3Scene.add(compareMesh);
       function rebuildCompareTexture() {
         cmpTexCtx.clearRect(0, 0, cmpTexCv.width, cmpTexCv.height);
