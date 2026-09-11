@@ -1111,7 +1111,12 @@
         const d = design();
         const cp = computeCP(d);
         const margin = marginOf(cp, d);
-        const leverArm = (cp.Xcp - S.cgX) / 1000; // m
+        // Shifted by one caliber: the gauge and the design brief both teach "below 1 the
+        // rocket tumbles," but the raw Barrowman lever arm only goes divergent below 0 —
+        // so a margin the UI already calls UNSTABLE (0-1 cal) used to fly perfectly true.
+        // Subtracting one caliber's worth here makes the flight actually go unstable
+        // exactly where the gauge says it will, instead of only below a true zero margin.
+        const leverArm = (cp.Xcp - S.cgX - S.diam) / 1000; // m
         const diamM = S.diam / 1000;
         const A = Math.PI * (diamM / 2) ** 2;
         const L = d.totalLen / 1000;
