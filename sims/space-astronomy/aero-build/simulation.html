@@ -1346,11 +1346,35 @@
           wind: S.wind, maxT: t, cp, d,
           // for the flight-to-flight comparison overlay
           noseLabel: NOSE[S.nose].label, cdCoastTotal: cdCoast, flightNo: S.history.length + 1,
-          // Replay pace: aim for ~26 s of real time regardless of flight length, so a quick
-          // little flight isn't a blur and a long one doesn't drag forever either.
-          stepsPerFrame: Math.max(0.45, Math.min(4.5, history.t.length / (26 * 60))),
           replayIdx: 0, playing: true, playT: 0,
         };
+
+        // Replay pace — split at apogee instead of one flat rate for the whole flight, and
+        // timed against real elapsed seconds (not frames — a loaded page rendering this much
+        // canvas work does not reliably hit 60fps, so a frame-count rate ran noticeably slower
+        // than intended). A flat rate that hits a nice TOTAL duration mostly reflects the
+        // parachute descent, which is usually most of the flight's sim-time — so liftoff,
+        // staging and the booster's own fall (all early, well before apogee) got compressed
+        // into a fraction of a second. Ascent now plays close to real time (floored/ceilinged
+        // so a very short or very long one is still watchable); descent is paced separately.
+        {
+          const f = S.flight;
+          let apogeeIdx = f.apogeeT != null ? f.history.t.length - 1 : -1;
+          if (f.apogeeT != null) {
+            for (let i = 0; i < f.history.t.length; i++) { if (f.history.t[i] >= f.apogeeT) { apogeeIdx = i; break; } }
+          }
+          const ascentSamples = apogeeIdx >= 0 ? apogeeIdx + 1 : f.history.t.length;
+          const descentSamples = Math.max(0, f.history.t.length - ascentSamples);
+          const ASCENT_RATE_REF = 24;    // samples/second =~ real-time-ish pace (0.05s per sample)
+          const ascentNaturalSec = ascentSamples / ASCENT_RATE_REF;
+          const ascentSec = Math.max(5, Math.min(14, ascentNaturalSec));
+          f.ascentIdx = apogeeIdx;
+          f.ascentRate = Math.max(5, ascentSamples / ascentSec);       // samples per real second
+          const DESCENT_RATE_REF = 132;
+          const descentNaturalSec = descentSamples / DESCENT_RATE_REF;
+          const descentSec = Math.max(8, Math.min(18, descentNaturalSec));
+          f.descentRate = descentSamples > 0 ? Math.max(30, descentSamples / descentSec) : f.ascentRate;
+        }
         S.history.push(S.flight);
         populateOutputs(S.flight);
         setView("flight");
@@ -1840,7 +1864,7 @@
       }
 
       /* ============ FLIGHT VIEW ============ */
-      function drawFlight() {
+      function drawFlight(dt) {
         ctx.clearRect(0, 0, CW, CH);
         const f = S.flight;
         const g = ctx.createLinearGradient(0, 0, 0, CH);
@@ -2170,10 +2194,14 @@
         }
         ctx.restore();
 
-        // advance playback — paced by stepsPerFrame (see launchFlight) instead of a flat rate,
-        // so the whole climb, staging and recovery run slowly enough to actually watch
+        // advance playback — ascent (liftoff through apogee, which is also where staging and
+        // the booster's own fall happen) paces separately from descent, see launchFlight.
+        // Rates are samples PER REAL SECOND, scaled by dt, so the pace holds regardless of
+        // the actual frame rate.
         if (f.playing) {
-          f.replayIdx += f.stepsPerFrame || 1.2;
+          const inAscent = f.ascentIdx == null || f.replayIdx < f.ascentIdx;
+          const rate = (inAscent ? f.ascentRate : f.descentRate) || 70;
+          f.replayIdx += rate * (dt || 1 / 60);
           if (f.replayIdx >= f.history.x.length - 1) { f.replayIdx = f.history.x.length - 1; f.playing = false; }
           const spd = f.history.v[idx] || 0;
           $("h_alt").textContent = alt.toFixed(1) + " m";
@@ -2269,9 +2297,12 @@
         drawFinCanvas();
       }
 
-      function loop() {
+      let _lastLoopT = 0;
+      function loop(now) {
+        const dt = _lastLoopT ? Math.min(0.1, Math.max(0, (now - _lastLoopT) / 1000)) : 1 / 60;
+        _lastLoopT = now;
         if (S.view === "design") drawDesign();
-        else drawFlight();
+        else drawFlight(dt);
         requestAnimationFrame(loop);
       }
 
