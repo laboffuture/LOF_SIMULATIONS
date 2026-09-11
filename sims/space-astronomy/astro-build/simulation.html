@@ -562,60 +562,6 @@
         plane: { label: "Airbus A380 wingspan", len: 80, emoji: "✈️" },
         whale: { label: "blue whale", len: 30, emoji: "\u{1F40B}" },
       };
-      // 2D silhouette drawing, reused both for the flat comparison-object floor
-      // texture below. Takes an explicit context so it can target an offscreen
-      // canvas rather than the page's own 2D canvas.
-      function drawCompareShape(g, kind, cxs, fy, SC) {
-        g.save();
-        if (kind === "field") {
-          const L = 105 * SC, W = 22 * SC;
-          g.fillStyle = "rgba(34,120,60,0.16)";
-          rrp(g, cxs - L / 2, fy - W / 2, L, W, 4); g.fill();
-          g.strokeStyle = "rgba(150,220,170,0.55)"; g.lineWidth = 1.5;
-          rrp(g, cxs - L / 2, fy - W / 2, L, W, 4); g.stroke();
-          g.beginPath(); g.moveTo(cxs, fy - W / 2); g.lineTo(cxs, fy + W / 2); g.stroke();
-          g.beginPath(); g.arc(cxs, fy, W * 0.16, 0, Math.PI * 2); g.stroke();
-          for (const sgn of [-1, 1]) {
-            const bw = 0.12 * L;
-            g.strokeRect(sgn < 0 ? cxs - L / 2 : cxs + L / 2 - bw, fy - W * 0.3, bw, W * 0.6);
-          }
-        } else if (kind === "plane") {
-          const span = 80 * SC;
-          g.strokeStyle = "rgba(180,200,220,0.7)"; g.fillStyle = "rgba(180,200,220,0.2)"; g.lineWidth = 1.4;
-          rrp(g, cxs - span * 0.09, fy - span * 0.34, span * 0.18, span * 0.68, span * 0.05);
-          g.fill(); g.stroke();
-          for (const sgn of [-1, 1]) {
-            g.beginPath();
-            g.moveTo(cxs + sgn * span / 2, fy + span * 0.06);
-            g.lineTo(cxs + sgn * span * 0.07, fy - span * 0.02);
-            g.lineTo(cxs + sgn * span * 0.07, fy + span * 0.14);
-            g.lineTo(cxs + sgn * span / 2, fy + span * 0.2);
-            g.closePath(); g.fill(); g.stroke();
-          }
-          g.beginPath();
-          g.moveTo(cxs, fy - span * 0.34);
-          g.lineTo(cxs - span * 0.05, fy - span * 0.44);
-          g.lineTo(cxs + span * 0.02, fy - span * 0.34);
-          g.closePath(); g.fill(); g.stroke();
-        } else if (kind === "whale") {
-          const len = 30 * SC;
-          g.fillStyle = "rgba(90,140,170,0.45)"; g.strokeStyle = "rgba(150,200,220,0.75)"; g.lineWidth = 1.4;
-          g.beginPath();
-          g.moveTo(cxs - len / 2, fy);
-          g.quadraticCurveTo(cxs - len * 0.2, fy - len * 0.14, cxs + len * 0.32, fy - len * 0.05);
-          g.quadraticCurveTo(cxs + len * 0.46, fy - len * 0.02, cxs + len * 0.5, fy - len * 0.1);
-          g.lineTo(cxs + len * 0.42, fy + len * 0.02);
-          g.quadraticCurveTo(cxs + len * 0.2, fy + len * 0.1, cxs - len / 2, fy);
-          g.closePath(); g.fill(); g.stroke();
-          g.beginPath();
-          g.moveTo(cxs + len * 0.46, fy - len * 0.02);
-          g.lineTo(cxs + len * 0.58, fy - len * 0.13);
-          g.lineTo(cxs + len * 0.5, fy + len * 0.02);
-          g.lineTo(cxs + len * 0.58, fy + len * 0.15);
-          g.closePath(); g.fill();
-        }
-        g.restore();
-      }
       function validNext() {
         return ORDER.filter((k) => !S.placed.has(k) && (COMP[k].attach == null || S.placed.has(COMP[k].attach)));
       }
@@ -677,47 +623,134 @@
         b3Scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.12, transparent: true, opacity: 0.8 })));
       }
 
-      // ---- comparison-object floor plane (a real mesh — it turns with everything else) ----
-      const COMPARE_WORLD_W = 16, COMPARE_WORLD_H = 7; // world units; *B_SCALE = metres covered
-      const cmpTexCv = document.createElement("canvas");
-      cmpTexCv.width = 1024; cmpTexCv.height = 448;
-      const cmpTexCtx = cmpTexCv.getContext("2d");
-      const cmpTexture = new THREE.CanvasTexture(cmpTexCv);
-      const compareMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(COMPARE_WORLD_W, COMPARE_WORLD_H),
-        new THREE.MeshBasicMaterial({ map: cmpTexture, transparent: true, side: THREE.DoubleSide, depthWrite: false }),
-      );
-      // Stood up on a shallow backward lean — like a sign facing the camera — rather
-      // than laid flat on the ground: a flat ground plane reads as an unreadable
-      // sliver from the default elevated view, and this way its face still turns
-      // to follow the model as you orbit, the same as everything else in the scene.
-      compareMesh.rotation.x = -0.22;
-      compareMesh.position.set(1, -3.6, 0.4);
-      b3Scene.add(compareMesh);
-      function rebuildCompareTexture() {
-        cmpTexCtx.clearRect(0, 0, cmpTexCv.width, cmpTexCv.height);
-        if (S.compareObj === "none") { compareMesh.visible = false; cmpTexture.needsUpdate = true; return; }
-        compareMesh.visible = true;
+      // ---- comparison objects — real volumetric 3D shapes, not a flat texture, so
+      // they read correctly from every angle (top, bottom, either side, front, back)
+      // instead of looking like a mirrored decal once the camera passes behind one.
+      const CMP_ANCHOR = new THREE.Vector3(1, -3.4, 0.2);
+      function buildFieldGroup() {
+        const g = new THREE.Group();
+        const L = 105 / B_SCALE, W = 68 / B_SCALE; // real FIFA pitch, to scale
+        g.add(new THREE.Mesh(
+          new THREE.BoxGeometry(L, 0.05, W),
+          new THREE.MeshStandardMaterial({ color: 0x1c4a2c, metalness: 0.05, roughness: 0.92 }),
+        ));
+        const lineMat = new THREE.LineBasicMaterial({ color: 0xdfead0 });
+        function addLine(points) {
+          const geo = new THREE.BufferGeometry().setFromPoints(points.map((p) => new THREE.Vector3(p[0], 0.031, p[1])));
+          g.add(new THREE.Line(geo, lineMat));
+        }
+        addLine([[-L / 2, -W / 2], [L / 2, -W / 2], [L / 2, W / 2], [-L / 2, W / 2], [-L / 2, -W / 2]]);
+        addLine([[0, -W / 2], [0, W / 2]]);
+        {
+          const pts = [], R = W * 0.16;
+          for (let i = 0; i <= 32; i++) { const a = (i / 32) * Math.PI * 2; pts.push([Math.cos(a) * R, Math.sin(a) * R]); }
+          addLine(pts);
+        }
+        for (const sgn of [-1, 1]) {
+          const bw = 0.12 * L, bh = W * 0.6;
+          const x0 = sgn < 0 ? -L / 2 : L / 2 - bw, x1 = sgn < 0 ? -L / 2 + bw : L / 2;
+          addLine([[x0, -bh / 2], [x1, -bh / 2], [x1, bh / 2], [x0, bh / 2], [x0, -bh / 2]]);
+        }
+        // goal posts — real height, so there is still something to see from a side-on view
+        const postMat = new THREE.MeshStandardMaterial({ color: 0xe9edf4, metalness: 0.2, roughness: 0.4 });
+        for (const sgn of [-1, 1]) {
+          const goalW = W * 0.14, postH = 0.22, postR = 0.012;
+          for (const s2 of [-1, 1]) {
+            const post = new THREE.Mesh(new THREE.CylinderGeometry(postR, postR, postH, 8), postMat);
+            post.position.set(sgn * L / 2, postH / 2, s2 * goalW / 2);
+            g.add(post);
+          }
+          const bar = new THREE.Mesh(new THREE.CylinderGeometry(postR, postR, goalW, 8), postMat);
+          bar.rotation.x = Math.PI / 2;
+          bar.position.set(sgn * L / 2, postH, 0);
+          g.add(bar);
+        }
+        return g;
+      }
+      function buildPlaneGroup() {
+        // One continuous piece per surface (no mirrored left/right pair) — a swept,
+        // split wing lit from one fixed sun angle shades its two halves very
+        // differently and reads as broken/asymmetric; a single straight-through
+        // piece has one uniform face normal, so it lights evenly across its span.
+        const g = new THREE.Group();
+        const span = 80 / B_SCALE, fuseLen = span * 0.62;
+        const mat = new THREE.MeshStandardMaterial({ color: 0xd7dee8, metalness: 0.35, roughness: 0.4 });
+        const darkMat = new THREE.MeshStandardMaterial({ color: 0x4a5766, metalness: 0.25, roughness: 0.5 });
+        const fuseGeo = new THREE.CylinderGeometry(span * 0.052, span * 0.04, fuseLen, 18);
+        fuseGeo.rotateZ(Math.PI / 2);
+        g.add(new THREE.Mesh(fuseGeo, mat));
+        const noseGeo = new THREE.ConeGeometry(span * 0.052, span * 0.13, 18);
+        noseGeo.rotateZ(-Math.PI / 2);
+        const nose = new THREE.Mesh(noseGeo, mat);
+        nose.position.set(fuseLen / 2 + span * 0.065, 0, 0);
+        g.add(nose);
+        const wing = new THREE.Mesh(new THREE.BoxGeometry(span * 0.16, span * 0.02, span * 0.94), mat);
+        wing.position.set(-span * 0.03, -span * 0.02, 0);
+        g.add(wing);
+        const stab = new THREE.Mesh(new THREE.BoxGeometry(span * 0.08, span * 0.015, span * 0.26), darkMat);
+        stab.position.set(-fuseLen / 2 + span * 0.03, 0, 0);
+        g.add(stab);
+        const fin = new THREE.Mesh(new THREE.BoxGeometry(span * 0.1, span * 0.13, span * 0.014), darkMat);
+        fin.position.set(-fuseLen / 2 + span * 0.05, span * 0.07, 0);
+        fin.rotation.z = -0.1;
+        g.add(fin);
+        return g;
+      }
+      function buildWhaleGroup() {
+        const g = new THREE.Group();
+        const len = 30 / B_SCALE;
+        const mat = new THREE.MeshStandardMaterial({ color: 0x3d5d70, metalness: 0.15, roughness: 0.55 });
+        const body = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), mat);
+        body.scale.set(len / 2, len * 0.09, len * 0.11);
+        g.add(body);
+        for (const sgn of [-1, 1]) { // tail fluke — horizontal, unlike a fish's vertical tail
+          const fluke = new THREE.Mesh(new THREE.ConeGeometry(len * 0.05, len * 0.16, 3), mat);
+          fluke.rotation.z = Math.PI / 2;
+          fluke.rotation.y = sgn * 0.5;
+          fluke.position.set(-len * 0.52, 0, sgn * len * 0.02);
+          fluke.scale.set(1, 1, 0.35);
+          g.add(fluke);
+        }
+        for (const sgn of [-1, 1]) { // pectoral fins
+          const finM = new THREE.Mesh(new THREE.ConeGeometry(len * 0.03, len * 0.16, 3), mat);
+          finM.rotation.z = sgn * 1.15;
+          finM.position.set(len * 0.14, -len * 0.05, sgn * len * 0.11);
+          finM.scale.set(1, 1, 0.3);
+          g.add(finM);
+        }
+        const bump = new THREE.Mesh(new THREE.ConeGeometry(len * 0.025, len * 0.05, 8), mat);
+        bump.position.set(-len * 0.28, len * 0.09, 0);
+        g.add(bump);
+        return g;
+      }
+      const cmpGroups = { field: buildFieldGroup(), plane: buildPlaneGroup(), whale: buildWhaleGroup() };
+      for (const g of Object.values(cmpGroups)) { g.position.copy(CMP_ANCHOR); g.visible = false; b3Scene.add(g); }
+      // label stays as a camera-facing sprite (never mirrors, unlike a flat plane) —
+      // it always reads correctly no matter which way the model has been spun
+      const cmpLabelCv = document.createElement("canvas");
+      cmpLabelCv.width = 640; cmpLabelCv.height = 110;
+      const cmpLabelCtx = cmpLabelCv.getContext("2d");
+      const cmpLabelTex = new THREE.CanvasTexture(cmpLabelCv);
+      const cmpLabelSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: cmpLabelTex, transparent: true, depthWrite: false }));
+      b3Scene.add(cmpLabelSprite);
+      function updateCompareVisual() {
+        for (const k of Object.keys(cmpGroups)) cmpGroups[k].visible = k === S.compareObj;
+        if (S.compareObj === "none") { cmpLabelSprite.visible = false; return; }
+        cmpLabelSprite.visible = true;
         const info = COMPARE_OBJS[S.compareObj];
-        const pxPerM = (cmpTexCv.width / COMPARE_WORLD_W) / B_SCALE;
-        const cxs = cmpTexCv.width / 2, fy = cmpTexCv.height * 0.42;
-        cmpTexCtx.globalAlpha = 0.92;
-        drawCompareShape(cmpTexCtx, S.compareObj, cxs, fy, pxPerM);
-        const L = info.len * pxPerM, by = fy + 46;
-        cmpTexCtx.strokeStyle = "rgba(150,220,170,0.85)"; cmpTexCtx.lineWidth = 2;
-        cmpTexCtx.beginPath();
-        cmpTexCtx.moveTo(cxs - L / 2, by - 7); cmpTexCtx.lineTo(cxs - L / 2, by + 7);
-        cmpTexCtx.moveTo(cxs + L / 2, by - 7); cmpTexCtx.lineTo(cxs + L / 2, by + 7);
-        cmpTexCtx.moveTo(cxs - L / 2, by); cmpTexCtx.lineTo(cxs + L / 2, by);
-        cmpTexCtx.stroke();
-        cmpTexCtx.font = "700 22px 'Roboto Mono', monospace";
-        cmpTexCtx.textAlign = "center"; cmpTexCtx.textBaseline = "middle";
+        cmpLabelCtx.clearRect(0, 0, cmpLabelCv.width, cmpLabelCv.height);
+        cmpLabelCtx.font = "700 44px 'Roboto Mono', monospace";
+        cmpLabelCtx.textAlign = "center"; cmpLabelCtx.textBaseline = "middle";
         const label = info.emoji + " " + info.label + " ≈ " + info.len + " m";
-        const tw = cmpTexCtx.measureText(label).width + 32;
-        cmpTexCtx.fillStyle = "rgba(10,20,35,0.85)"; cmpTexCtx.fillRect(cxs - tw / 2, by - 16, tw, 32);
-        cmpTexCtx.fillStyle = "rgba(180,240,200,0.98)";
-        cmpTexCtx.fillText(label, cxs, by);
-        cmpTexture.needsUpdate = true;
+        const tw = Math.min(cmpLabelCv.width - 20, cmpLabelCtx.measureText(label).width + 44);
+        cmpLabelCtx.fillStyle = "rgba(10,20,35,0.85)";
+        cmpLabelCtx.fillRect(cmpLabelCv.width / 2 - tw / 2, 25, tw, 64);
+        cmpLabelCtx.fillStyle = "rgba(180,240,200,0.98)";
+        cmpLabelCtx.fillText(label, cmpLabelCv.width / 2, cmpLabelCv.height / 2);
+        cmpLabelTex.needsUpdate = true;
+        const worldW = (tw / cmpLabelCv.width) * 4.4;
+        cmpLabelSprite.scale.set(worldW, worldW * (cmpLabelCv.height / cmpLabelCv.width), 1);
+        cmpLabelSprite.position.copy(CMP_ANCHOR).add(new THREE.Vector3(0, 0.55, 0));
       }
 
       // ---- module meshes (real cylinders — the lighting alone now sells the 3D shape) ----
@@ -1589,7 +1622,7 @@
         b.addEventListener("click", () => {
           S.compareObj = b.dataset.cmp;
           document.querySelectorAll(".cmpbtn").forEach((x) => x.classList.toggle("on", x === b));
-          rebuildCompareTexture();
+          updateCompareVisual();
         });
       });
       $("buildResetBtn").addEventListener("click", () => {
@@ -1690,7 +1723,7 @@
       fit();
       cv.style.display = "none";
       fitBuild3D();
-      rebuildCompareTexture();
+      updateCompareVisual();
       buildTray();
       showPane("build");
       requestAnimationFrame(loop);
