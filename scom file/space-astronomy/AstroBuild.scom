@@ -43,6 +43,23 @@
       /* ---------- STAGE ---------- */
       #stage { position: relative; overflow: hidden; background: radial-gradient(circle at 50% 30%, #0b1224, #05070f 70%); }
       #scene { display: block; width: 100%; height: 100%; touch-action: none; }
+      #build3d { position: absolute; inset: 0; touch-action: none; }
+      #build3d canvas { display: block; width: 100%; height: 100%; }
+      #build3dTags { position: absolute; inset: 0; pointer-events: none; }
+      .chip3d {
+        position: absolute; transform: translate(-50%, -100%); pointer-events: none; white-space: nowrap;
+        font-family: var(--mono); font-size: 10px; font-weight: 800; letter-spacing: .04em;
+        border: 1.5px solid currentColor; border-radius: 5px; padding: 2px 5px; background: rgba(8,12,22,0.85);
+      }
+      .chip3d.RUS, .chip3d.CAN { color: #e86a6a; }
+      .chip3d.USA { color: #5b9ef0; }
+      .chip3d.ESA { color: #f0b429; }
+      .chip3d.JPN { color: #ef6ba0; }
+      #buildDoneBanner {
+        position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 4; display: none;
+        background: rgba(52,211,153,0.15); border: 1.5px solid #34d399; border-radius: 10px; padding: 9px 20px;
+        font-family: var(--sans); font-weight: 800; font-size: 13.5px; color: #34d399; white-space: nowrap;
+      }
 
       #titlecard {
         position: absolute; top: 14px; left: 16px; z-index: 3; pointer-events: none;
@@ -218,13 +235,15 @@
   <body>
     <div id="app">
       <div id="stage">
+        <div id="build3d"></div>
         <canvas id="scene"></canvas>
         <div id="titlecard">
           <h1>Astro Build</h1>
           <p>Build the Space Station — then fly it around Earth</p>
         </div>
         <div id="phaseTag" class="build">Build Mode</div>
-        <div id="hintbar">Pick a part on the right, then drop it on a <b>glowing dot</b>. Drag the empty space — sideways to spin, up/down to tilt.</div>
+        <div id="buildDoneBanner">Station complete! Press ▶ Go Live in Orbit</div>
+        <div id="hintbar">Pick a part on the right, then drop it on a <b>glowing dot</b>. Drag anywhere to orbit all the way around — the floor turns with it.</div>
       </div>
 
       <div id="panel">
@@ -351,6 +370,8 @@
       </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
       "use strict";
       const $ = (id) => document.getElementById(id);
@@ -441,6 +462,7 @@
       };
       const ORDER = ["unity", "zvezda", "destiny", "harmony", "columbus", "kibo", "quest", "truss", "arrays", "arm"];
       const TOTAL = ORDER.length + 1; // + pre-placed Zarya
+      const CCODE = { Russia: "RUS", USA: "USA", Europe: "ESA", Japan: "JPN", Canada: "CAN" };
 
       const PARTNERS = [
         { flag: "\u{1F1FA}\u{1F1F8}", name: "NASA", sub: "United States", gave: "Unity & Harmony nodes, the Destiny lab, the Quest airlock, the main truss and all eight solar wings." },
@@ -467,10 +489,7 @@
         placed: new Set(["zarya"]),
         armed: null,               // component key picked from tray
         drag: null,                // {key, x, y, moved}
-        yaw: -0.08,                // view spin for build (drag left/right to change)
-        pitchAdj: 0,               // extra tilt for build (drag up/down to change)
         compareObj: "field",       // which size-comparison object is shown
-        rotating: false,
         snap: null,                // {key, t} fly-in animation
         // live
         orbit: Math.PI,            // radians around Earth (start on the sunlit side)
@@ -507,387 +526,391 @@
       }
 
       /* =================================================================
-         BUILD MODE  — 2.5D isometric assembly
+         BUILD MODE — a real 3D scene (Three.js + OrbitControls), the same
+         pattern as the Axes-3 robot-arm sim: the camera freely orbits the
+         whole model in 3 degrees of freedom, floor included, instead of the
+         old 2D-canvas trick that only faked a narrow yaw/tilt and left the
+         ground plane fixed in screen space no matter how you dragged.
          ================================================================= */
-      const PITCH = 0.14;   // near-flat side view; drag adds a little yaw for depth
-      function bScale() {
-        return Math.min((CW * 0.74) / 120, (CH * 0.6) / 78);
+      const B_SCALE = 10; // metres per Three.js world unit
+      function b3(x, y, z) { return new THREE.Vector3(x / B_SCALE, -y / B_SCALE, (z || 0) / B_SCALE); }
+      function compPos3(key) { const c = COMP[key]; return b3(c.pos[0], c.pos[1], c.z); }
+      function moduleColorHex(kind) {
+        return { module: 0x9aa6b8, node: 0x8695ab, lab: 0x9aa6b8, airlock: 0x9a8f79 }[kind] || 0x9aa6b8;
       }
-      // small country badge drawn on the canvas (emoji flags don't render reliably in canvas)
-      function flagChip(x, y, key) {
-        const codes = { Russia: ["RUS", "#e23b3b"], USA: ["USA", "#3b7de2"], Europe: ["ESA", "#f0b429"],
-                        Japan: ["JPN", "#e23b6b"], Canada: ["CAN", "#e23b3b"] };
-        const c = COMP[key], cc = codes[c.country] || ["", "#888"];
-        ctx.save();
-        ctx.font = "700 9px 'Roboto Mono', monospace";
-        ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        const w = 26, h = 13;
-        ctx.fillStyle = "rgba(8,12,22,0.85)";
-        rr(x - w / 2, y - h / 2, w, h, 3); ctx.fill();
-        ctx.strokeStyle = cc[1]; ctx.lineWidth = 1; ctx.stroke();
-        ctx.fillStyle = cc[1];
-        ctx.beginPath(); ctx.arc(x - w / 2 + 5, y, 2.2, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#e8eef7";
-        ctx.fillText(cc[0], x + 3, y + 0.5);
-        ctx.restore();
+      function orientSegment(mesh, a, b, baseLen) {
+        const dir = new THREE.Vector3().subVectors(b, a);
+        const len = dir.length();
+        mesh.scale.set(1, len / baseLen, 1);
+        mesh.position.copy(a).addScaledVector(dir, 0.5);
+        mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
       }
-      function proj(x, y, z) {
-        const c = Math.cos(S.yaw), s = Math.sin(S.yaw);
-        const rx = x * c + z * s;
-        const rz = -x * s + z * c;
-        const SC = bScale();
-        const pit = PITCH + S.pitchAdj;
-        return {
-          X: CW * 0.5 + rx * SC,
-          Y: CH * 0.46 + y * SC * Math.cos(pit) - rz * SC * Math.sin(pit),
-          d: rz,
-        };
+      function makeConnector(pA, pB, radius, color) {
+        const dir = new THREE.Vector3().subVectors(pB, pA);
+        const len = Math.max(0.01, dir.length());
+        const geo = new THREE.CylinderGeometry(radius, radius, len, 8);
+        const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color, metalness: 0.3, roughness: 0.6 }));
+        mesh.position.copy(pA).addScaledVector(dir, 0.5);
+        mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+        return mesh;
       }
-
-      function moduleColor(kind) {
-        return {
-          module: ["#c9d3e0", "#8f9bb0", "#6b7688"],
-          node:   ["#b9c6d8", "#8695ab", "#5f6d80"],
-          lab:    ["#d5dbe6", "#9aa6b8", "#727f92"],
-          airlock:["#c2b6a0", "#9a8f79", "#6f665533".slice(0,7)],
-        }[kind] || ["#c9d3e0", "#8f9bb0", "#6b7688"];
-      }
-
-      // draw a shaded "cylinder" module in projected space — end caps + AO + specular
-      // streak sell the 3D tube shape instead of a flat rounded rectangle.
-      function drawModule(key, opts) {
-        opts = opts || {};
-        const c = COMP[key];
-        const SC = bScale();
-        // Project BOTH ends of the module's long axis, not just its center — the
-        // on-screen distance between them is the true foreshortened length, and
-        // the angle between them is how far it has tilted. That's what makes a
-        // full 360° spin look like a rotating tube instead of a flat card that
-        // silently stays full-width no matter which way it's facing.
-        const pA = proj(c.pos[0] - c.w / 2, c.pos[1], c.z);
-        const pB = proj(c.pos[0] + c.w / 2, c.pos[1], c.z);
-        const p = { X: (pA.X + pB.X) / 2, Y: (pA.Y + pB.Y) / 2 };
-        const w = Math.max(4, Math.hypot(pB.X - pA.X, pB.Y - pA.Y));
-        const ang = Math.atan2(pB.Y - pA.Y, pB.X - pA.X);
-        const h = c.h * SC;
-        const cols = moduleColor(c.kind);
-        ctx.save();
-        ctx.translate(p.X, p.Y);
-        if (opts.alpha != null) ctx.globalAlpha = opts.alpha;
-
-        // shadow — stays screen-aligned (doesn't roll with the module), but its
-        // length shrinks with the module's own foreshortened length
-        ctx.fillStyle = "rgba(0,0,0,0.3)";
-        ctx.beginPath();
-        ctx.ellipse(4, h * 0.55 + 6, w * 0.52, h * 0.28, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.rotate(ang);
-        const capR = Math.min(h / 2, 12);
-        // body
-        const g = ctx.createLinearGradient(0, -h / 2, 0, h / 2);
-        g.addColorStop(0, cols[0]); g.addColorStop(0.42, cols[1]); g.addColorStop(1, cols[2]);
-        ctx.fillStyle = g;
-        rr(-w / 2, -h / 2, w, h, capR);
-        ctx.fill();
-
-        // end caps — elliptical "lids" so the body reads as a round tube, not a flat card
-        for (const ex of [-w / 2 + capR * 0.72, w / 2 - capR * 0.72]) {
-          const eg = ctx.createLinearGradient(ex, -h / 2, ex, h / 2);
-          eg.addColorStop(0, "rgba(255,255,255,0.4)");
-          eg.addColorStop(0.5, "rgba(255,255,255,0.06)");
-          eg.addColorStop(1, "rgba(0,0,0,0.32)");
-          ctx.fillStyle = eg;
-          ctx.beginPath(); ctx.ellipse(ex, 0, capR * 0.85, h / 2 - 1, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.strokeStyle = "rgba(20,26,40,0.4)"; ctx.lineWidth = 1; ctx.stroke();
-        }
-        ctx.strokeStyle = "rgba(20,26,40,0.55)"; ctx.lineWidth = 1.4;
-        rr(-w / 2, -h / 2, w, h, capR); ctx.stroke();
-
-        // panel seam lines
-        ctx.strokeStyle = "rgba(30,40,55,0.4)"; ctx.lineWidth = 1;
-        for (const fx of [-0.34, 0.34]) {
-          ctx.beginPath(); ctx.moveTo(fx * w, -h / 2 + 2); ctx.lineTo(fx * w, h / 2 - 2); ctx.stroke();
-        }
-
-        // soft specular streak along the top curve of the cylinder
-        const hlG = ctx.createLinearGradient(-w * 0.42, 0, w * 0.42, 0);
-        hlG.addColorStop(0, "rgba(255,255,255,0)");
-        hlG.addColorStop(0.5, "rgba(255,255,255,0.6)");
-        hlG.addColorStop(1, "rgba(255,255,255,0)");
-        ctx.strokeStyle = hlG; ctx.lineWidth = 2.4;
-        ctx.beginPath(); ctx.moveTo(-w * 0.4, -h * 0.27); ctx.lineTo(w * 0.4, -h * 0.27); ctx.stroke();
-
-        // ambient-occlusion falloff along the underside
-        const aoG = ctx.createLinearGradient(0, h * 0.15, 0, h / 2);
-        aoG.addColorStop(0, "rgba(0,0,0,0)"); aoG.addColorStop(1, "rgba(0,0,0,0.35)");
-        ctx.fillStyle = aoG;
-        rr(-w / 2, -h / 2, w, h, capR); ctx.fill();
-
-        if (c.kind === "airlock") {
-          ctx.fillStyle = "#3a4658";
-          ctx.beginPath(); ctx.arc(w * 0.32, 0, h * 0.26, 0, Math.PI * 2); ctx.fill();
-          ctx.strokeStyle = "rgba(255,255,255,0.25)"; ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.arc(w * 0.32, 0, h * 0.26, 0, Math.PI * 2); ctx.stroke();
-        }
-        if (c.kind === "lab") {
-          ctx.fillStyle = "rgba(60,90,120,0.75)";
-          ctx.beginPath(); ctx.ellipse(0, 0, w * 0.12, h * 0.2, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 1; ctx.stroke();
-        }
-        ctx.restore();
-        if (opts.flag !== false) flagChip(p.X, p.Y - h / 2 - 12, key);
-      }
-
-      function drawTruss(opts) {
-        opts = opts || {};
-        const c = COMP.truss, SC = bScale();
-        const a = proj(-c.w / 2 + c.pos[0], c.pos[1], c.z);
-        const b = proj(c.w / 2 + c.pos[0], c.pos[1], c.z);
-        ctx.save();
-        if (opts.alpha != null) ctx.globalAlpha = opts.alpha;
-        ctx.strokeStyle = "#8b96a8"; ctx.lineWidth = Math.max(5, c.h * SC);
-        ctx.lineCap = "round";
-        ctx.beginPath(); ctx.moveTo(a.X, a.Y); ctx.lineTo(b.X, b.Y); ctx.stroke();
-        // lattice ticks
-        ctx.strokeStyle = "rgba(30,40,55,0.5)"; ctx.lineWidth = 1;
-        for (let i = 0; i <= 24; i++) {
-          const t = i / 24;
-          const x = a.X + (b.X - a.X) * t, y = a.Y + (b.Y - a.Y) * t;
-          ctx.beginPath(); ctx.moveTo(x, y - 5); ctx.lineTo(x, y + 5); ctx.stroke();
-        }
-        ctx.restore();
-        flagChip((a.X + b.X) / 2, a.Y - 14, "truss");
-      }
-
-      // eight solar wings: two tall blue panels hanging up and down at each truss end
-      function drawArrays(opts) {
-        opts = opts || {};
-        const c = COMP.truss, SC = bScale();
-        const alpha = opts.alpha != null ? opts.alpha : 1;
-        // panels sit side-by-side along the truss (the rotation axis), so their
-        // thickness in that direction foreshortens with yaw just like a module does
-        const yawScale = Math.max(0.12, Math.abs(Math.cos(S.yaw)));
-        const panelH = 33 * SC, panelW = 8 * SC * yawScale, gap = 3 * SC * yawScale;
-        for (const endSign of [-1, 1]) {
-          const end = proj(c.pos[0] + endSign * (c.w / 2 - 5), c.pos[1], c.z);
-          for (const dir of [-1, 1]) {          // up / down from the truss
-            for (let pair = 0; pair < 2; pair++) {
-              const px = end.X + (pair - 0.5) * (panelW + gap);
-              const y0 = dir < 0 ? end.Y - 5 - panelH : end.Y + 5;
-              ctx.save();
-              ctx.globalAlpha = alpha * 0.94;
-              const g2 = ctx.createLinearGradient(px - panelW / 2, 0, px + panelW / 2, 0);
-              g2.addColorStop(0, opts.dim ? "#1b1f29" : "#153356");
-              g2.addColorStop(0.5, opts.dim ? "#2b3040" : "#3178b8");
-              g2.addColorStop(1, opts.dim ? "#1b1f29" : "#153356");
-              ctx.fillStyle = g2;
-              rr(px - panelW / 2, y0, panelW, panelH, 2); ctx.fill();
-              ctx.globalAlpha = alpha;
-              ctx.strokeStyle = opts.dim ? "rgba(120,130,150,0.4)" : "rgba(130,190,245,0.65)";
-              ctx.lineWidth = 1; ctx.stroke();
-              ctx.strokeStyle = opts.dim ? "rgba(255,255,255,0.05)" : "rgba(150,200,255,0.25)";
-              for (let s = 1; s < 15; s++) {
-                const yy = y0 + panelH * s / 15;
-                ctx.beginPath(); ctx.moveTo(px - panelW / 2, yy); ctx.lineTo(px + panelW / 2, yy); ctx.stroke();
-              }
-              ctx.beginPath(); ctx.moveTo(px, y0); ctx.lineTo(px, y0 + panelH); ctx.stroke();
-              // little stem to the truss
-              ctx.strokeStyle = "rgba(150,165,190,0.5)"; ctx.lineWidth = 2;
-              ctx.beginPath(); ctx.moveTo(px, dir < 0 ? y0 + panelH : y0); ctx.lineTo(end.X, end.Y); ctx.stroke();
-              ctx.restore();
-            }
-          }
-        }
-      }
-
-      function drawArm(opts) {
-        opts = opts || {};
-        const SC = bScale();
-        const base = proj(COMP.arm.pos[0], COMP.truss.pos[1], COMP.truss.z);
-        ctx.save();
-        if (opts.alpha != null) ctx.globalAlpha = opts.alpha;
-        ctx.strokeStyle = "#e8e2d0"; ctx.lineWidth = Math.max(4, 1.6 * SC); ctx.lineCap = "round";
-        const sway = Math.sin((performance.now() - S.t0) / 1400) * 0.35;
-        const j1x = base.X + 26, j1y = base.Y + 24 + sway * 8;
-        const j2x = j1x + 30 + sway * 10, j2y = j1y + 10;
-        ctx.beginPath(); ctx.moveTo(base.X, base.Y); ctx.lineTo(j1x, j1y); ctx.lineTo(j2x, j2y); ctx.stroke();
-        ctx.fillStyle = "#c9c2ac";
-        for (const [jx, jy] of [[base.X, base.Y], [j1x, j1y], [j2x, j2y]]) {
-          ctx.beginPath(); ctx.arc(jx, jy, Math.max(3, 0.5 * SC), 0, Math.PI * 2); ctx.fill();
-        }
-        ctx.restore();
-        flagChip(j2x + 16, j2y, "arm");
-      }
-
-      function connectionPoint(key) {
-        // world position where the glowing dot / piece lands
-        const c = COMP[key];
-        return proj(c.pos[0], c.pos[1], c.z);
-      }
-      function validNext() {
-        return ORDER.filter((k) => !S.placed.has(k) && (COMP[k].attach == null || S.placed.has(COMP[k].attach)));
-      }
-
       // Interchangeable size-comparison objects (point 3 of the redesign): the
-      // football field, an airliner wingspan, or a blue whale — laid flat under
-      // the station at the same scale, or switched off entirely from the panel.
+      // football field, an airliner wingspan, or a blue whale — laid flat on
+      // the floor at the same scale, or switched off entirely from the panel.
       const COMPARE_OBJS = {
         field: { label: "football field", len: 105, emoji: "⚽" },
         plane: { label: "Airbus A380 wingspan", len: 80, emoji: "✈️" },
         whale: { label: "blue whale", len: 30, emoji: "\u{1F40B}" },
       };
-      function drawCompareShape(kind, cxs, fy, SC) {
-        ctx.save();
+      // 2D silhouette drawing, reused both for the flat comparison-object floor
+      // texture below. Takes an explicit context so it can target an offscreen
+      // canvas rather than the page's own 2D canvas.
+      function drawCompareShape(g, kind, cxs, fy, SC) {
+        g.save();
         if (kind === "field") {
           const L = 105 * SC, W = 22 * SC;
-          ctx.fillStyle = "rgba(34,120,60,0.16)";
-          rr(cxs - L / 2, fy - W / 2, L, W, 4); ctx.fill();
-          ctx.strokeStyle = "rgba(150,220,170,0.55)"; ctx.lineWidth = 1.5;
-          rr(cxs - L / 2, fy - W / 2, L, W, 4); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(cxs, fy - W / 2); ctx.lineTo(cxs, fy + W / 2); ctx.stroke();
-          ctx.beginPath(); ctx.arc(cxs, fy, W * 0.16, 0, Math.PI * 2); ctx.stroke();
+          g.fillStyle = "rgba(34,120,60,0.16)";
+          rrp(g, cxs - L / 2, fy - W / 2, L, W, 4); g.fill();
+          g.strokeStyle = "rgba(150,220,170,0.55)"; g.lineWidth = 1.5;
+          rrp(g, cxs - L / 2, fy - W / 2, L, W, 4); g.stroke();
+          g.beginPath(); g.moveTo(cxs, fy - W / 2); g.lineTo(cxs, fy + W / 2); g.stroke();
+          g.beginPath(); g.arc(cxs, fy, W * 0.16, 0, Math.PI * 2); g.stroke();
           for (const sgn of [-1, 1]) {
             const bw = 0.12 * L;
-            ctx.strokeRect(sgn < 0 ? cxs - L / 2 : cxs + L / 2 - bw, fy - W * 0.3, bw, W * 0.6);
+            g.strokeRect(sgn < 0 ? cxs - L / 2 : cxs + L / 2 - bw, fy - W * 0.3, bw, W * 0.6);
           }
         } else if (kind === "plane") {
           const span = 80 * SC;
-          ctx.strokeStyle = "rgba(180,200,220,0.7)"; ctx.fillStyle = "rgba(180,200,220,0.2)"; ctx.lineWidth = 1.4;
-          rr(cxs - span * 0.09, fy - span * 0.34, span * 0.18, span * 0.68, span * 0.05);
-          ctx.fill(); ctx.stroke();
+          g.strokeStyle = "rgba(180,200,220,0.7)"; g.fillStyle = "rgba(180,200,220,0.2)"; g.lineWidth = 1.4;
+          rrp(g, cxs - span * 0.09, fy - span * 0.34, span * 0.18, span * 0.68, span * 0.05);
+          g.fill(); g.stroke();
           for (const sgn of [-1, 1]) {
-            ctx.beginPath();
-            ctx.moveTo(cxs + sgn * span / 2, fy + span * 0.06);
-            ctx.lineTo(cxs + sgn * span * 0.07, fy - span * 0.02);
-            ctx.lineTo(cxs + sgn * span * 0.07, fy + span * 0.14);
-            ctx.lineTo(cxs + sgn * span / 2, fy + span * 0.2);
-            ctx.closePath(); ctx.fill(); ctx.stroke();
+            g.beginPath();
+            g.moveTo(cxs + sgn * span / 2, fy + span * 0.06);
+            g.lineTo(cxs + sgn * span * 0.07, fy - span * 0.02);
+            g.lineTo(cxs + sgn * span * 0.07, fy + span * 0.14);
+            g.lineTo(cxs + sgn * span / 2, fy + span * 0.2);
+            g.closePath(); g.fill(); g.stroke();
           }
-          ctx.beginPath();
-          ctx.moveTo(cxs, fy - span * 0.34);
-          ctx.lineTo(cxs - span * 0.05, fy - span * 0.44);
-          ctx.lineTo(cxs + span * 0.02, fy - span * 0.34);
-          ctx.closePath(); ctx.fill(); ctx.stroke();
+          g.beginPath();
+          g.moveTo(cxs, fy - span * 0.34);
+          g.lineTo(cxs - span * 0.05, fy - span * 0.44);
+          g.lineTo(cxs + span * 0.02, fy - span * 0.34);
+          g.closePath(); g.fill(); g.stroke();
         } else if (kind === "whale") {
           const len = 30 * SC;
-          ctx.fillStyle = "rgba(90,140,170,0.45)"; ctx.strokeStyle = "rgba(150,200,220,0.75)"; ctx.lineWidth = 1.4;
-          ctx.beginPath();
-          ctx.moveTo(cxs - len / 2, fy);
-          ctx.quadraticCurveTo(cxs - len * 0.2, fy - len * 0.14, cxs + len * 0.32, fy - len * 0.05);
-          ctx.quadraticCurveTo(cxs + len * 0.46, fy - len * 0.02, cxs + len * 0.5, fy - len * 0.1);
-          ctx.lineTo(cxs + len * 0.42, fy + len * 0.02);
-          ctx.quadraticCurveTo(cxs + len * 0.2, fy + len * 0.1, cxs - len / 2, fy);
-          ctx.closePath(); ctx.fill(); ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(cxs + len * 0.46, fy - len * 0.02);
-          ctx.lineTo(cxs + len * 0.58, fy - len * 0.13);
-          ctx.lineTo(cxs + len * 0.5, fy + len * 0.02);
-          ctx.lineTo(cxs + len * 0.58, fy + len * 0.15);
-          ctx.closePath(); ctx.fill();
+          g.fillStyle = "rgba(90,140,170,0.45)"; g.strokeStyle = "rgba(150,200,220,0.75)"; g.lineWidth = 1.4;
+          g.beginPath();
+          g.moveTo(cxs - len / 2, fy);
+          g.quadraticCurveTo(cxs - len * 0.2, fy - len * 0.14, cxs + len * 0.32, fy - len * 0.05);
+          g.quadraticCurveTo(cxs + len * 0.46, fy - len * 0.02, cxs + len * 0.5, fy - len * 0.1);
+          g.lineTo(cxs + len * 0.42, fy + len * 0.02);
+          g.quadraticCurveTo(cxs + len * 0.2, fy + len * 0.1, cxs - len / 2, fy);
+          g.closePath(); g.fill(); g.stroke();
+          g.beginPath();
+          g.moveTo(cxs + len * 0.46, fy - len * 0.02);
+          g.lineTo(cxs + len * 0.58, fy - len * 0.13);
+          g.lineTo(cxs + len * 0.5, fy + len * 0.02);
+          g.lineTo(cxs + len * 0.58, fy + len * 0.15);
+          g.closePath(); g.fill();
         }
-        ctx.restore();
+        g.restore();
       }
-      function drawCompareObject() {
-        if (S.compareObj === "none") return;
+      function validNext() {
+        return ORDER.filter((k) => !S.placed.has(k) && (COMP[k].attach == null || S.placed.has(COMP[k].attach)));
+      }
+
+      const build3dMount = $("build3d");
+      const b3Scene = new THREE.Scene();
+      const b3Camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
+      const BUILD_CAM_DEFAULT = new THREE.Vector3(5.5, 5.8, 18);
+      const BUILD_TARGET_DEFAULT = new THREE.Vector3(1, 0.1, 0);
+      const b3Renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "default" });
+      b3Renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      build3dMount.appendChild(b3Renderer.domElement);
+      const b3Controls = new THREE.OrbitControls(b3Camera, b3Renderer.domElement);
+      b3Controls.enableDamping = true;
+      b3Controls.dampingFactor = 0.08;
+      b3Controls.minDistance = 5;
+      b3Controls.maxDistance = 30;
+      b3Controls.maxPolarAngle = Math.PI / 2 - 0.02; // free 360° spin, but don't dive under the floor
+      b3Camera.position.copy(BUILD_CAM_DEFAULT);
+      b3Controls.target.copy(BUILD_TARGET_DEFAULT);
+      b3Controls.update();
+      function resetBuildView() {
+        b3Camera.position.copy(BUILD_CAM_DEFAULT);
+        b3Controls.target.copy(BUILD_TARGET_DEFAULT);
+        b3Controls.update();
+      }
+      function fitBuild3D() {
+        const w = build3dMount.clientWidth, h = build3dMount.clientHeight;
+        if (!w || !h) return;
+        b3Camera.aspect = w / h;
+        b3Camera.updateProjectionMatrix();
+        b3Renderer.setSize(w, h, false);
+      }
+      if (typeof ResizeObserver !== "undefined") new ResizeObserver(fitBuild3D).observe(build3dMount);
+      else window.addEventListener("resize", fitBuild3D);
+
+      b3Scene.add(new THREE.HemisphereLight(0xaeb9ff, 0x0a0e18, 0.95));
+      const b3Sun = new THREE.DirectionalLight(0xfff2d9, 1.15);
+      b3Sun.position.set(6, 10, 6);
+      b3Scene.add(b3Sun);
+      const b3Fill = new THREE.DirectionalLight(0x5b8def, 0.4);
+      b3Fill.position.set(-8, 3, -6);
+      b3Scene.add(b3Fill);
+
+      // a faint 3D starfield so the view keeps depth cues as the camera orbits
+      {
+        const starCount = 300;
+        const starPos = new Float32Array(starCount * 3);
+        for (let i = 0; i < starCount; i++) {
+          const r = 30 + ((i * 53.1) % 25);
+          const theta = (i * 2.399) % (Math.PI * 2);
+          const phi = Math.acos(2 * (((i * 0.618) % 1)) - 1);
+          starPos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+          starPos[i * 3 + 1] = r * Math.cos(phi);
+          starPos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+        }
+        const starGeo = new THREE.BufferGeometry();
+        starGeo.setAttribute("position", new THREE.BufferAttribute(starPos, 3));
+        b3Scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.12, transparent: true, opacity: 0.8 })));
+      }
+
+      // ---- comparison-object floor plane (a real mesh — it turns with everything else) ----
+      const COMPARE_WORLD_W = 16, COMPARE_WORLD_H = 7; // world units; *B_SCALE = metres covered
+      const cmpTexCv = document.createElement("canvas");
+      cmpTexCv.width = 1024; cmpTexCv.height = 448;
+      const cmpTexCtx = cmpTexCv.getContext("2d");
+      const cmpTexture = new THREE.CanvasTexture(cmpTexCv);
+      const compareMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(COMPARE_WORLD_W, COMPARE_WORLD_H),
+        new THREE.MeshBasicMaterial({ map: cmpTexture, transparent: true, side: THREE.DoubleSide, depthWrite: false }),
+      );
+      compareMesh.rotation.x = -Math.PI / 2;
+      compareMesh.position.set(1, -2.3, 0.4);
+      b3Scene.add(compareMesh);
+      function rebuildCompareTexture() {
+        cmpTexCtx.clearRect(0, 0, cmpTexCv.width, cmpTexCv.height);
+        if (S.compareObj === "none") { compareMesh.visible = false; cmpTexture.needsUpdate = true; return; }
+        compareMesh.visible = true;
         const info = COMPARE_OBJS[S.compareObj];
-        if (!info) return;
-        const SC = bScale();
-        const pit = PITCH + S.pitchAdj;
-        const cxs = CW * 0.5;
-        const fy = CH * 0.46 + 43 * SC * Math.cos(pit);
-        ctx.save();
-        ctx.globalAlpha = 0.9;
-        drawCompareShape(S.compareObj, cxs, fy, SC);
-        const L = info.len * SC;
-        const by = fy + 34;
-        ctx.strokeStyle = "rgba(150,220,170,0.8)"; ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.moveTo(cxs - L / 2, by - 4); ctx.lineTo(cxs - L / 2, by + 4);
-        ctx.moveTo(cxs + L / 2, by - 4); ctx.lineTo(cxs + L / 2, by + 4);
-        ctx.moveTo(cxs - L / 2, by); ctx.lineTo(cxs + L / 2, by);
-        ctx.stroke();
-        ctx.font = "700 11px 'Roboto Mono', monospace";
-        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        const pxPerM = (cmpTexCv.width / COMPARE_WORLD_W) / B_SCALE;
+        const cxs = cmpTexCv.width / 2, fy = cmpTexCv.height * 0.42;
+        cmpTexCtx.globalAlpha = 0.92;
+        drawCompareShape(cmpTexCtx, S.compareObj, cxs, fy, pxPerM);
+        const L = info.len * pxPerM, by = fy + 46;
+        cmpTexCtx.strokeStyle = "rgba(150,220,170,0.85)"; cmpTexCtx.lineWidth = 2;
+        cmpTexCtx.beginPath();
+        cmpTexCtx.moveTo(cxs - L / 2, by - 7); cmpTexCtx.lineTo(cxs - L / 2, by + 7);
+        cmpTexCtx.moveTo(cxs + L / 2, by - 7); cmpTexCtx.lineTo(cxs + L / 2, by + 7);
+        cmpTexCtx.moveTo(cxs - L / 2, by); cmpTexCtx.lineTo(cxs + L / 2, by);
+        cmpTexCtx.stroke();
+        cmpTexCtx.font = "700 22px 'Roboto Mono', monospace";
+        cmpTexCtx.textAlign = "center"; cmpTexCtx.textBaseline = "middle";
         const label = info.emoji + " " + info.label + " ≈ " + info.len + " m";
-        const tw = ctx.measureText(label).width + 20;
-        ctx.fillStyle = "#0b1526"; ctx.fillRect(cxs - tw / 2, by - 8, tw, 16);
-        ctx.fillStyle = "rgba(160,230,180,0.95)";
-        ctx.fillText(label, cxs, by);
-        ctx.restore();
+        const tw = cmpTexCtx.measureText(label).width + 32;
+        cmpTexCtx.fillStyle = "rgba(10,20,35,0.85)"; cmpTexCtx.fillRect(cxs - tw / 2, by - 16, tw, 32);
+        cmpTexCtx.fillStyle = "rgba(180,240,200,0.98)";
+        cmpTexCtx.fillText(label, cxs, by);
+        cmpTexture.needsUpdate = true;
       }
 
-      function drawBuild() {
-        ctx.clearRect(0, 0, CW, CH);
-        drawStars();
-        drawCompareObject();
-        const SC = bScale();
-
-        // ---- structure behind the modules: truss, solar wings ----
-        const hasTruss = S.placed.has("truss");
-        if (hasTruss) {
-          // vertical riser from Destiny straight up to the truss
-          const a = proj(COMP.destiny.pos[0], COMP.destiny.pos[1], COMP.destiny.z);
-          const bY = proj(COMP.destiny.pos[0], COMP.truss.pos[1], COMP.truss.z).Y;
-          ctx.strokeStyle = "rgba(150,165,190,0.55)"; ctx.lineWidth = Math.max(3, 0.9 * SC);
-          ctx.beginPath(); ctx.moveTo(a.X, a.Y); ctx.lineTo(a.X, bY); ctx.stroke();
-          if (S.placed.has("arrays")) drawArrays({ alpha: S.snap && S.snap.key === "arrays" ? S.snap.t : 1 });
-          drawTruss({ alpha: S.snap && S.snap.key === "truss" ? S.snap.t : 1 });
+      // ---- module meshes (real cylinders — the lighting alone now sells the 3D shape) ----
+      const b3Modules = {};
+      for (const key of ["zarya", "zvezda", "unity", "destiny", "harmony", "columbus", "kibo", "quest"]) {
+        const c = COMP[key];
+        const radius = (c.h / 2) / B_SCALE, length = c.w / B_SCALE;
+        const geo = new THREE.CylinderGeometry(radius, radius, length, 22);
+        geo.rotateZ(Math.PI / 2);
+        const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: moduleColorHex(c.kind), metalness: 0.35, roughness: 0.55 }));
+        mesh.position.copy(compPos3(key));
+        mesh.visible = false;
+        // seam rings for a paneled, less-flat look
+        const ringGeo = new THREE.TorusGeometry(radius * 1.03, radius * 0.06, 8, 20);
+        const ringMat = new THREE.MeshStandardMaterial({ color: 0x2a3140, metalness: 0.4, roughness: 0.5 });
+        for (const t of [-0.28, 0.28]) {
+          const ring = new THREE.Mesh(ringGeo, ringMat);
+          ring.rotation.y = Math.PI / 2;
+          ring.position.set(t * length, 0, 0);
+          mesh.add(ring);
         }
-
-        // ---- modules, painter-sorted by depth ----
-        const drawList = [];
-        for (const k of S.placed) {
-          if (["truss", "arrays", "arm"].includes(k)) continue;
-          drawList.push({ k, d: proj(COMP[k].pos[0], COMP[k].pos[1], COMP[k].z).d });
+        if (c.kind === "airlock" || c.kind === "lab") {
+          const deco = new THREE.Mesh(
+            new THREE.CircleGeometry(radius * 0.55, 16),
+            new THREE.MeshStandardMaterial({ color: c.kind === "airlock" ? 0x2a3140 : 0x2c4d78, metalness: 0.2, roughness: 0.5, side: THREE.DoubleSide }),
+          );
+          deco.position.set(length / 2 * 0.92, 0, 0);
+          deco.rotation.y = Math.PI / 2;
+          mesh.add(deco);
         }
-        drawList.sort((a, b) => a.d - b.d);
+        b3Scene.add(mesh);
+        b3Modules[key] = mesh;
+      }
 
-        // connectors between placed modules
-        ctx.strokeStyle = "rgba(200,215,235,0.4)"; ctx.lineWidth = Math.max(4, 1.1 * SC);
-        for (const k of S.placed) {
-          const c = COMP[k];
-          if (!c.attach || !S.placed.has(c.attach) || ["truss", "array", "arm"].includes(c.kind)) continue;
-          const a = proj(c.pos[0], c.pos[1], c.z);
-          const b = proj(COMP[c.attach].pos[0], COMP[c.attach].pos[1], COMP[c.attach].z);
-          ctx.beginPath(); ctx.moveTo(a.X, a.Y); ctx.lineTo(b.X, b.Y); ctx.stroke();
+      // truss + riser (static geometry — only visibility toggles)
+      const trussLen3 = COMP.truss.w / B_SCALE;
+      const trussGeo3 = new THREE.CylinderGeometry(0.08, 0.08, trussLen3, 10);
+      trussGeo3.rotateZ(Math.PI / 2);
+      const trussMesh3 = new THREE.Mesh(trussGeo3, new THREE.MeshStandardMaterial({ color: 0x8b96a8, metalness: 0.5, roughness: 0.5 }));
+      trussMesh3.position.copy(compPos3("truss"));
+      trussMesh3.visible = false;
+      b3Scene.add(trussMesh3);
+      b3Modules.truss = trussMesh3;
+      const riserMesh3 = makeConnector(compPos3("destiny"), b3(COMP.destiny.pos[0], COMP.truss.pos[1], COMP.truss.z), 0.05, 0x96a5be);
+      riserMesh3.visible = false;
+      b3Scene.add(riserMesh3);
+
+      // connectors between attached modules (skips truss/arrays/arm, which have their own visuals)
+      const b3Connectors = {};
+      for (const key of ORDER) {
+        const c = COMP[key];
+        if (!c.attach || ["truss", "array", "arm"].includes(c.kind)) continue;
+        const mesh = makeConnector(compPos3(key), compPos3(c.attach), 0.09, 0xc8d7eb);
+        mesh.visible = false;
+        b3Scene.add(mesh);
+        b3Connectors[key] = mesh;
+      }
+
+      // eight solar wings — static boxes at the truss ends
+      const b3Arrays = [];
+      {
+        const c = COMP.truss;
+        const panelLen = 33 / B_SCALE, panelW = 8 / B_SCALE, gap = 3 / B_SCALE;
+        const arrMat = new THREE.MeshStandardMaterial({ color: 0x1c3f66, metalness: 0.55, roughness: 0.3 });
+        for (const endSign of [-1, 1]) {
+          const endX = (c.pos[0] + endSign * (c.w / 2 - 5)) / B_SCALE;
+          const endY = -c.pos[1] / B_SCALE, endZ = c.z / B_SCALE;
+          for (const dir of [-1, 1]) {
+            for (let pair = 0; pair < 2; pair++) {
+              const offsetX = (pair - 0.5) * (panelW + gap);
+              const mesh = new THREE.Mesh(new THREE.BoxGeometry(panelW, panelLen, 0.025), arrMat);
+              mesh.position.set(endX + offsetX, endY + dir * (panelLen / 2 + 0.05), endZ);
+              mesh.visible = false;
+              b3Scene.add(mesh);
+              b3Arrays.push(mesh);
+            }
+          }
         }
+      }
 
-        for (const it of drawList) {
-          drawModule(it.k, { alpha: S.snap && S.snap.key === it.k ? S.snap.t : 1 });
+      // Canadarm2 — two segments + joint spheres, gently swaying once placed
+      const b3ArmGroup = new THREE.Group();
+      b3ArmGroup.visible = false;
+      b3Scene.add(b3ArmGroup);
+      const b3ArmBase = b3(COMP.arm.pos[0], COMP.truss.pos[1], COMP.truss.z);
+      const b3ArmMat = new THREE.MeshStandardMaterial({ color: 0xe8e2d0, metalness: 0.3, roughness: 0.5 });
+      const b3JointMat = new THREE.MeshStandardMaterial({ color: 0xc9c2ac, metalness: 0.4, roughness: 0.4 });
+      const armSeg1Base = 1, armSeg2Base = 1;
+      const armSeg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, armSeg1Base, 8), b3ArmMat);
+      const armSeg2 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, armSeg2Base, 8), b3ArmMat);
+      const armJ0 = new THREE.Mesh(new THREE.SphereGeometry(0.065, 12, 10), b3JointMat);
+      const armJ1 = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 10), b3JointMat);
+      const armJ2 = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 10), b3JointMat);
+      b3ArmGroup.add(armSeg1, armSeg2, armJ0, armJ1, armJ2);
+      function updateArm(now) {
+        const sway = Math.sin((now - S.t0) / 1400) * 0.35;
+        const j0p = b3ArmBase;
+        const j1p = j0p.clone().add(new THREE.Vector3(0.55, -0.28 - sway * 0.08, sway * 0.1));
+        const j2p = j1p.clone().add(new THREE.Vector3(0.5, -0.16 - sway * 0.1, sway * 0.14));
+        armJ0.position.copy(j0p); armJ1.position.copy(j1p); armJ2.position.copy(j2p);
+        orientSegment(armSeg1, j0p, j1p, armSeg1Base);
+        orientSegment(armSeg2, j1p, j2p, armSeg2Base);
+      }
+
+      // glowing connection-point markers for the currently valid next parts
+      const b3Points = {};
+      for (const key of ORDER) {
+        const mesh = new THREE.Mesh(
+          new THREE.SphereGeometry(0.16, 16, 12),
+          new THREE.MeshBasicMaterial({ color: 0x2fb8c9, transparent: true, opacity: 0.6 }),
+        );
+        mesh.position.copy(compPos3(key));
+        mesh.visible = false;
+        b3Scene.add(mesh);
+        b3Points[key] = mesh;
+      }
+
+      // country-code chips — plain HTML overlays, projected from each placed
+      // module's 3D position every frame (crisper and simpler than drawing
+      // badges into the WebGL scene itself).
+      const chipLayer = document.createElement("div");
+      chipLayer.id = "build3dTags";
+      build3dMount.appendChild(chipLayer);
+      const CHIP_KEYS = ["zarya", "unity", "zvezda", "destiny", "harmony", "columbus", "kibo", "quest", "truss", "arm"];
+      const b3Chips = {};
+      for (const key of CHIP_KEYS) {
+        const code = CCODE[COMP[key].country] || "";
+        const el = document.createElement("div");
+        el.className = "chip3d " + code;
+        el.textContent = code;
+        chipLayer.appendChild(el);
+        b3Chips[key] = el;
+      }
+      function chipAnchor(key) {
+        if (key === "arm") return compPos3("arm").add(new THREE.Vector3(0, 0.35, 0));
+        const mesh = b3Modules[key];
+        const up = mesh ? mesh.geometry.parameters.radiusTop || 0.3 : 0.3;
+        return compPos3(key).add(new THREE.Vector3(0, up + 0.22, 0));
+      }
+      const _b3pv = new THREE.Vector3();
+      function projectToScreen3D(vec3) {
+        _b3pv.copy(vec3).project(b3Camera);
+        if (_b3pv.z > 1 || _b3pv.z < -1) return null;
+        const w = build3dMount.clientWidth, h = build3dMount.clientHeight;
+        return { x: (_b3pv.x * 0.5 + 0.5) * w, y: (-_b3pv.y * 0.5 + 0.5) * h };
+      }
+      function connectionScreenPos(key) {
+        const mesh = b3Points[key];
+        return mesh ? projectToScreen3D(mesh.position) : null;
+      }
+
+      function renderBuild3D(dt) {
+        const now = performance.now();
+        for (const key of Object.keys(b3Modules)) {
+          const mesh = b3Modules[key];
+          const placed = S.placed.has(key);
+          mesh.visible = placed;
+          if (placed) {
+            const t = S.snap && S.snap.key === key ? Math.min(1, S.snap.t) : 1;
+            mesh.scale.setScalar(Math.max(0.06, t));
+          }
         }
-        if (S.placed.has("arm")) drawArm({ alpha: S.snap && S.snap.key === "arm" ? S.snap.t : 1 });
+        for (const key of Object.keys(b3Connectors)) {
+          b3Connectors[key].visible = S.placed.has(key) && S.placed.has(COMP[key].attach);
+        }
+        riserMesh3.visible = S.placed.has("truss");
+        const arraysOn = S.placed.has("truss") && S.placed.has("arrays");
+        b3Arrays.forEach((m) => { m.visible = arraysOn; });
+        b3ArmGroup.visible = S.placed.has("arm");
+        if (b3ArmGroup.visible) updateArm(now);
 
-        // glowing connection points for the currently valid next pieces
         const vlist = validNext();
-        const pulse = 0.5 + 0.5 * Math.sin((performance.now() - S.t0) / 260);
-        for (const k of vlist) {
-          const armedThis = S.armed === k || (S.drag && S.drag.key === k);
-          if (S.armed && !armedThis) continue; // when a card is armed, only show its point
-          const p = connectionPoint(k);
-          const R = (armedThis ? 20 : 13) + pulse * 6;
-          ctx.beginPath();
-          ctx.strokeStyle = "rgba(47,184,201," + (0.35 + pulse * 0.45) + ")";
-          ctx.lineWidth = 2.5;
-          ctx.arc(p.X, p.Y, R, 0, Math.PI * 2); ctx.stroke();
-          ctx.fillStyle = "rgba(47,184,201," + (0.25 + pulse * 0.35) + ")";
-          ctx.beginPath(); ctx.arc(p.X, p.Y, R * 0.42, 0, Math.PI * 2); ctx.fill();
-          if (armedThis) {
-            ctx.fillStyle = "#2fb8c9"; ctx.font = "700 11px 'Roboto Mono', monospace";
-            ctx.textAlign = "center"; ctx.textBaseline = "bottom";
-            ctx.fillText("drop here ↓", p.X, p.Y - R - 4);
+        const activeSet = new Set(vlist);
+        const pulse = 0.5 + 0.5 * Math.sin((now - S.t0) / 260);
+        for (const key of Object.keys(b3Points)) {
+          const armedThis = S.armed === key || (S.drag && S.drag.key === key);
+          const show = activeSet.has(key) && (!S.armed || armedThis);
+          const mesh = b3Points[key];
+          mesh.visible = show;
+          if (show) {
+            mesh.scale.setScalar((armedThis ? 1.6 : 1) * (0.85 + pulse * 0.35));
+            mesh.material.opacity = 0.5 + pulse * 0.35;
           }
         }
 
-        // done banner
-        if (S.placed.size >= TOTAL) {
-          ctx.fillStyle = "rgba(52,211,153,0.15)";
-          rr(CW * 0.5 - 150, 16, 300, 40, 10); ctx.fill();
-          ctx.strokeStyle = "#34d399"; ctx.lineWidth = 1.5; ctx.stroke();
-          ctx.fillStyle = "#34d399"; ctx.font = "800 14px 'Outfit', sans-serif";
-          ctx.textAlign = "center"; ctx.textBaseline = "middle";
-          ctx.fillText("Station complete! Press ▶ Go Live in Orbit", CW * 0.5, 36);
+        for (const key of Object.keys(b3Chips)) {
+          const el = b3Chips[key];
+          if (!S.placed.has(key)) { el.style.display = "none"; continue; }
+          const pos = projectToScreen3D(chipAnchor(key));
+          if (!pos) { el.style.display = "none"; continue; }
+          el.style.display = "block";
+          el.style.left = pos.x + "px";
+          el.style.top = pos.y + "px";
         }
+
+        b3Controls.update();
+        b3Renderer.render(b3Scene, b3Camera);
       }
 
       /* =================================================================
@@ -1405,7 +1428,6 @@
       }
 
       /* ================= PANEL / TRAY ================= */
-      const CCODE = { Russia: "RUS", USA: "USA", Europe: "ESA", Japan: "JPN", Canada: "CAN" };
       function buildTray() {
         const tray = $("tray");
         tray.innerHTML = "";
@@ -1443,6 +1465,7 @@
           ? "All parts placed — ready for orbit!"
           : "Glowing dots show where the next parts can attach.";
         $("goLiveBtn").disabled = n < TOTAL;
+        $("buildDoneBanner").style.display = n >= TOTAL ? "block" : "none";
       }
 
       function placeComponent(key) {
@@ -1468,13 +1491,18 @@
         $("phaseTag").classList.add("live");
         $("hintbar").innerHTML = "Watch the solar wings turn to the Sun and the power dip in Earth's shadow. <b>Tap a module</b> to look inside.";
         showPane("live");
+        build3dMount.style.display = "none";
+        cv.style.display = "block";
       }
       function backToBuild() {
         S.mode = "build"; S.openMod = null;
         $("phaseTag").textContent = "Build Mode";
         $("phaseTag").classList.remove("live");
-        $("hintbar").innerHTML = "Pick a part on the right, then drop it on a <b>glowing dot</b>. Drag the empty space — sideways to spin, up/down to tilt.";
+        $("hintbar").innerHTML = "Pick a part on the right, then drop it on a <b>glowing dot</b>. Drag anywhere to orbit all the way around — the floor turns with it.";
         showPane("build");
+        cv.style.display = "none";
+        build3dMount.style.display = "block";
+        fitBuild3D();
       }
 
       /* ================= EVENTS ================= */
@@ -1508,11 +1536,11 @@
         const d = S.drag; S.drag = null;
         d.card.classList.remove("dragging");
         ghost.style.display = "none";
-        // dropped over the canvas near the point? OR just a tap? -> place
-        const r = cv.getBoundingClientRect();
-        const overCanvas = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
-        const p = connectionPoint(d.key);
-        const near = overCanvas && Math.hypot(e.clientX - r.left - p.X, e.clientY - r.top - p.Y) < 110;
+        // dropped over the 3D stage near the point? OR just a tap? -> place
+        const r = build3dMount.getBoundingClientRect();
+        const overStage = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+        const p = connectionScreenPos(d.key);
+        const near = overStage && p && Math.hypot(e.clientX - r.left - p.x, e.clientY - r.top - p.y) < 90;
         if (!d.moved || near) placeComponent(d.key);
         else refreshTray();
       });
@@ -1527,45 +1555,43 @@
         ghost.querySelector(".gname").textContent = COMP[S.drag.key].name;
       }
 
-      // canvas: rotate in build, drop target, click modules in live
+      // live-mode canvas: tap the orbiting station to open the map (build mode's
+      // view is a separate WebGL surface below, driven entirely by OrbitControls)
       cv.addEventListener("pointerdown", (e) => {
-        if (S.mode === "build") {
-          if (S.armed) {
-            const p = connectionPoint(S.armed), q = evPos(e);
-            if (Math.hypot(q.x - p.X, q.y - p.Y) < 120) { placeComponent(S.armed); return; }
-          }
-          S.rotating = true; S._lastX = e.clientX; S._lastY = e.clientY;
-          cv.setPointerCapture(e.pointerId);
-        } else if (S.mode === "live") {
-          // tapping anywhere near the orbiting station opens the station map
-          const q = evPos(e);
-          const G = earthGeom();
-          const stx = G.cx + Math.cos(S.orbit) * G.orbitR;
-          const sty = G.cy + Math.sin(S.orbit) * G.orbitR;
-          if (Math.hypot(q.x - stx, q.y - sty) < Math.max(CW, CH) * 0.09) openMap();
-        }
+        if (S.mode !== "live") return;
+        const q = evPos(e);
+        const G = earthGeom();
+        const stx = G.cx + Math.cos(S.orbit) * G.orbitR;
+        const sty = G.cy + Math.sin(S.orbit) * G.orbitR;
+        if (Math.hypot(q.x - stx, q.y - sty) < Math.max(CW, CH) * 0.09) openMap();
       });
-      cv.addEventListener("pointermove", (e) => {
-        if (S.rotating) {
-          S.yaw += (e.clientX - S._lastX) * 0.0085;   // full 360° spin — no clamp
-          S.pitchAdj += (e.clientY - S._lastY) * 0.0045;
-          S.pitchAdj = Math.max(-0.16, Math.min(0.58, S.pitchAdj));
-          S._lastX = e.clientX; S._lastY = e.clientY;
-        }
+
+      // build-mode 3D stage: a plain click near a lit connection point places the
+      // armed part; any drag beyond that is OrbitControls freely orbiting the model
+      const b3Raycaster = new THREE.Raycaster();
+      b3Renderer.domElement.addEventListener("click", (e) => {
+        if (!S.armed) return;
+        const mesh = b3Points[S.armed];
+        if (!mesh || !mesh.visible) return;
+        const r = b3Renderer.domElement.getBoundingClientRect();
+        const ndc = new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+        b3Raycaster.setFromCamera(ndc, b3Camera);
+        if (b3Raycaster.intersectObject(mesh, false).length) { placeComponent(S.armed); return; }
+        const p = projectToScreen3D(mesh.position);
+        if (p && Math.hypot(e.clientX - r.left - p.x, e.clientY - r.top - p.y) < 46) placeComponent(S.armed);
       });
-      cv.addEventListener("pointerup", () => { S.rotating = false; });
-      cv.addEventListener("pointerleave", () => { S.rotating = false; });
 
       document.querySelectorAll(".cmpbtn").forEach((b) => {
         b.addEventListener("click", () => {
           S.compareObj = b.dataset.cmp;
           document.querySelectorAll(".cmpbtn").forEach((x) => x.classList.toggle("on", x === b));
+          rebuildCompareTexture();
         });
       });
       $("buildResetBtn").addEventListener("click", () => {
         S.placed = new Set(["zarya"]);
         S.armed = null; S.drag = null; S.snap = null;
-        S.yaw = -0.08; S.pitchAdj = 0;
+        resetBuildView();
         refreshTray();
       });
       $("goLiveBtn").addEventListener("click", goLive);
@@ -1624,7 +1650,7 @@
         if (S.snap) { S.snap.t += dt * 4; if (S.snap.t >= 1) S.snap = null; }
 
         if (S.mode === "build") {
-          drawBuild();
+          renderBuild3D(dt);
         } else {
           // one orbit in ~78 s
           S.orbit += dt * (Math.PI * 2) / 78;
@@ -1658,6 +1684,9 @@
 
       /* ================= BOOT ================= */
       fit();
+      cv.style.display = "none";
+      fitBuild3D();
+      rebuildCompareTexture();
       buildTray();
       showPane("build");
       requestAnimationFrame(loop);
