@@ -40,7 +40,7 @@ const PROJECTS = [
 
   // ---------------- SPACE & ASTRONOMY ----------------
   { id: "solsync", title: "SolSync", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/SolSync/simulation.html", description: "Explore Moon phases, tidal locking, and eclipses through orbit and telescope views." },
-  { id: "apogee", title: "Apogee — Orbital Mechanics Sandbox", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/apogee/simulation.html", description: "Launch satellites and shape their orbits in an interactive orbital mechanics sandbox." },
+  { id: "orbital-spin", title: "Orbital Spin", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/Orbital-Spin/simulation.html", description: "Launch satellites and shape their orbits in an interactive orbital mechanics sandbox." },
   { id: "leapfrog", title: "Project Leapfrog — Flight Physics Lab", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/leapfrog/simulation.html", description: "Free-exploration flight physics lab: experiment with gravity, thrust, and trajectories." },
   { id: "mirror-maze-spectrum", title: "Mirror Maze Spectrum", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/mirror-maze-spectrum/simulation.html", description: "An optics bench: bend, split, and color a light beam with mirrors, prisms, gratings, filters, and lenses." },
   { id: "aerovoyage", title: "AeroVoyage — Rotor Lift Lab", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/aerovoyage/simulation.html", description: "Fly one rotor drone across Earth, Mars, Titan, and the Moon to see why the same design behaves differently on each world." },
