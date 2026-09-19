@@ -1,0 +1,1664 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>AeroVoyage — Planetary Rotor Flight Simulator</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-dark: #090d16;
+        --bg-stage: #0c101c;
+        --panel-bg: #121826;
+        --panel-card: rgba(26, 35, 52, 0.8);
+        --panel-card-hover: rgba(35, 47, 68, 0.95);
+        --border-color: rgba(255, 255, 255, 0.12);
+        --border-highlight: rgba(0, 242, 254, 0.45);
+        --accent-cyan: #00f2fe;
+        --accent-blue: #4facfe;
+        --accent-orange: #ff6b35;
+        --accent-pink: #ff2a85;
+        --accent-green: #22c55e;
+        --accent-glow: rgba(0, 242, 254, 0.3);
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+        --mono: "Roboto Mono", ui-monospace, monospace;
+        --sans: "Outfit", system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        height: 100%;
+        background: var(--bg-dark);
+        color: var(--text-primary);
+        font-family: var(--sans);
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+      #app {
+        display: grid;
+        grid-template-columns: 1fr 390px;
+        height: 100vh;
+      }
+
+      /* ---- STAGE ---- */
+      #stage {
+        position: relative;
+        overflow: hidden;
+        background: var(--bg-stage);
+      }
+      #scene {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* HIGH VISIBILITY PLANET SELECTOR BAR */
+      #worldtabs {
+        position: absolute;
+        top: 14px;
+        left: 16px;
+        right: 16px;
+        z-index: 5;
+        background: rgba(9, 13, 22, 0.88);
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border-highlight);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px var(--accent-glow);
+      }
+      .wt-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-primary);
+        margin-bottom: 10px;
+      }
+      .wt-head .title-badge {
+        background: linear-gradient(90deg, #00f2fe, #4facfe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+        font-size: 11.5px;
+      }
+      .wt-head .hint-badge {
+        background: rgba(0, 242, 254, 0.15);
+        color: var(--accent-cyan);
+        border: 1px solid rgba(0, 242, 254, 0.3);
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 9px;
+      }
+      .wt-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      .wtab {
+        position: relative;
+        display: grid;
+        grid-template-columns: 54px 1fr;
+        align-items: center;
+        gap: 12px;
+        background: linear-gradient(180deg, rgba(26, 35, 52, 0.95), rgba(15, 20, 34, 0.95));
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        padding: 10px 12px;
+        cursor: pointer;
+        text-align: left;
+        color: var(--text-primary);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
+      }
+      .wtab:hover {
+        border-color: var(--accent-cyan);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 242, 254, 0.35);
+      }
+      .wtab.on {
+        border-color: var(--accent-cyan);
+        background: linear-gradient(180deg, rgba(0, 242, 254, 0.18), rgba(15, 20, 34, 0.98));
+        color: #ffffff;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px var(--accent-glow), inset 0 0 15px rgba(0, 242, 254, 0.15);
+      }
+      .wtab.on::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: -7px;
+        width: 12px;
+        height: 12px;
+        background: #00f2fe;
+        transform: translateX(-50%) rotate(45deg);
+        box-shadow: 0 0 10px var(--accent-cyan);
+      }
+      .worb {
+        width: 54px;
+        height: 54px;
+        display: block;
+        border-radius: 50%;
+        transition: transform 0.25s ease, filter 0.25s ease;
+      }
+      .wtab:hover .worb {
+        transform: scale(1.1);
+      }
+      .wtab.on .worb {
+        filter: drop-shadow(0 0 12px var(--accent-cyan));
+      }
+      .wtab .wn {
+        font-family: var(--sans);
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        line-height: 1.1;
+      }
+      .wtab .wsub {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--text-secondary);
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .wtab.on .wsub {
+        color: var(--accent-cyan);
+        font-weight: 700;
+      }
+      .target-badge {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 8.5px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        padding: 3px 8px;
+        border-radius: 4px;
+        margin-top: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-secondary);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        transition: all 0.2s ease;
+      }
+      .wtab.on .target-badge.active {
+        background: var(--accent-cyan);
+        color: var(--bg-dark);
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 10px var(--accent-glow);
+      }
+      .wtab:hover .target-badge:not(.active) {
+        background: rgba(0, 242, 254, 0.2);
+        color: var(--accent-cyan);
+        border-color: var(--accent-cyan);
+      }
+
+      #titlecard {
+        position: absolute;
+        top: 156px;
+        left: 18px;
+        pointer-events: none;
+        z-index: 3;
+        background: rgba(9, 13, 22, 0.85);
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        backdrop-filter: blur(8px);
+      }
+      #titlecard h1 {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        background: linear-gradient(90deg, #00f2fe, #4facfe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      #titlecard p {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        letter-spacing: 0.05em;
+        margin-top: 3px;
+        color: var(--text-secondary);
+      }
+
+      /* throttle bar */
+      #throttlebar {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        z-index: 5;
+        background: rgba(18, 24, 38, 0.92);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      }
+      #throttlebar .tlab {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent-cyan);
+      }
+      .stepbtn {
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 6px 10px;
+        height: 32px;
+        flex: none;
+        background: var(--panel-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .stepbtn:hover {
+        border-color: var(--accent-cyan);
+        color: var(--accent-cyan);
+        background: var(--panel-card-hover);
+      }
+      #throttle {
+        flex: 1;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.12);
+        cursor: pointer;
+        outline: none;
+      }
+      #throttle::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 22px;
+        height: 22px;
+        background: var(--accent-cyan);
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid var(--bg-dark);
+        box-shadow: 0 0 12px var(--accent-glow);
+        transition: transform 0.1s ease;
+      }
+      #throttle::-webkit-slider-thumb:hover {
+        transform: scale(1.15);
+      }
+
+      .bmeter {
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .bmeter .k {
+        font-size: 8.5px;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        display: block;
+      }
+      .bmeter .v {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--accent-cyan);
+        line-height: 1.1;
+      }
+      .resetbtn {
+        border-color: var(--accent-pink, #ff2a85);
+        color: var(--accent-pink, #ff2a85);
+      }
+      .resetbtn:hover {
+        background: var(--accent-pink, #ff2a85);
+        color: #fff;
+      }
+      #zoomctl {
+        position: absolute;
+        top: 156px;
+        right: 16px;
+        z-index: 6;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        background: rgba(9, 13, 22, 0.88);
+        border: 1px solid var(--border-highlight);
+        border-radius: 10px;
+        padding: 6px;
+        backdrop-filter: blur(10px);
+      }
+      #zoomctl button {
+        width: 30px;
+        height: 30px;
+        font-family: var(--mono);
+        font-size: 15px;
+        font-weight: 700;
+        background: var(--panel-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      #zoomctl button:hover {
+        border-color: var(--accent-cyan);
+        color: var(--accent-cyan);
+        background: var(--panel-card-hover);
+      }
+
+      /* ---- PANEL ---- */
+      #panel {
+        background: var(--panel-bg);
+        border-left: 1px solid var(--border-color);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+      }
+      #panel::-webkit-scrollbar {
+        width: 6px;
+      }
+      #panel::-webkit-scrollbar-track {
+        background: var(--panel-bg);
+      }
+      #panel::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 3px;
+      }
+      .sec {
+        border-bottom: 1px solid var(--border-color);
+        padding: 16px 18px;
+      }
+      .sec-h {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .sec-h span {
+        color: var(--accent-cyan);
+        font-size: 9px;
+      }
+
+      /* SIDEBAR PLANET GRID */
+      .side-planet-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .sp-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--panel-card);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 8px 10px;
+        cursor: pointer;
+        color: var(--text-primary);
+        transition: all 0.15s ease;
+        text-align: left;
+      }
+      .sp-btn:hover {
+        border-color: var(--accent-cyan);
+        background: var(--panel-card-hover);
+      }
+      .sp-btn.on {
+        border-color: var(--accent-cyan);
+        background: rgba(0, 242, 254, 0.15);
+        box-shadow: 0 0 10px var(--accent-glow);
+      }
+      .sp-btn .sp-icon {
+        width: 24px;
+        height: 24px;
+        flex: none;
+      }
+      .sp-btn .sp-icon .worb {
+        /* .worb defaults to the big 54px HUD icon size — without this override
+           it overflows the 24px sidebar icon slot and covers the start of the
+           name/sub text next to it */
+        width: 100%;
+        height: 100%;
+      }
+      .sp-btn > div:not(.sp-icon) {
+        min-width: 0;
+      }
+      .sp-btn .sp-name {
+        font-family: var(--sans);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .sp-btn .sp-sub {
+        font-family: var(--mono);
+        font-size: 8px;
+        color: var(--text-muted);
+        overflow-wrap: break-word;
+      }
+      .sp-btn.on .sp-sub {
+        color: var(--accent-cyan);
+      }
+
+      /* telemetry */
+      #telem {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 14px;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 5px 0;
+        border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+      }
+      .row dt {
+        color: var(--text-muted);
+        letter-spacing: 0.03em;
+      }
+      .row dd {
+        font-weight: 700;
+        color: var(--text-primary);
+        font-variant-numeric: tabular-nums;
+      }
+      .row dd .u {
+        color: var(--text-muted);
+        font-size: 9px;
+        font-weight: 400;
+        margin-left: 1px;
+      }
+      .flag {
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      .flag.up { color: var(--accent-green); }
+      .flag.hold { color: var(--accent-cyan); }
+      .flag.down { color: var(--accent-pink); }
+
+      .effwrap {
+        grid-column: 1/-1;
+        margin-top: 10px;
+      }
+      .effwrap .lab {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-family: var(--mono);
+        font-size: 9.5px;
+        color: var(--text-secondary);
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+      }
+      .effwrap .lab #t_effnum {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--accent-cyan);
+        font-variant-numeric: tabular-nums;
+      }
+      .eff {
+        height: 16px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        position: relative;
+        overflow: hidden;
+      }
+      .eff i {
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        background: linear-gradient(90deg, var(--accent-green), #eab308 55%, var(--accent-pink));
+        transition: width 0.1s linear;
+      }
+      .eff b {
+        position: absolute;
+        top: -2px; bottom: -2px; width: 2px;
+        margin-left: -1px; background: #ffffff;
+        pointer-events: none; transition: left 0.2s;
+      }
+      .eff b.unreach { background: var(--accent-pink); }
+
+      .effscale {
+        position: relative;
+        height: 12px;
+        font-family: var(--mono);
+        font-size: 8px;
+        color: var(--text-muted);
+        margin-top: 4px;
+      }
+      .effscale span { position: absolute; top: 0; transform: translateX(-50%); }
+      .effscale span.first { transform: none; left: 0; }
+      .effscale span.last { transform: none; left: auto; right: 0; }
+
+      .effnote {
+        font-family: var(--mono);
+        font-size: 9px;
+        line-height: 1.5;
+        color: var(--text-secondary);
+        margin-top: 6px;
+      }
+      .effnote b { font-weight: 700; }
+      .effnote.warn b { color: var(--accent-pink); }
+      .effnote.ok b { color: var(--accent-green); }
+
+      /* controls */
+      .ctl { margin-bottom: 14px; }
+      .ctl-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+      .ctl-name { font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); }
+      .ctl-val { font-family: var(--mono); font-size: 11.5px; font-weight: 700; color: var(--accent-cyan); }
+      input[type="range"] {
+        -webkit-appearance: none; appearance: none;
+        width: 100%; height: 5px; border-radius: 3px;
+        background: rgba(255, 255, 255, 0.12); cursor: pointer; outline: none;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none; width: 16px; height: 16px;
+        background: var(--accent-cyan); border-radius: 50%;
+        cursor: pointer; border: 2px solid var(--bg-dark);
+        box-shadow: 0 0 10px var(--accent-glow);
+      }
+
+      .rotorpick {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+      }
+      .rcard {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        background: linear-gradient(180deg, rgba(26, 35, 52, 0.85), rgba(15, 20, 34, 0.95));
+        border: 1.5px solid var(--border-color);
+        border-radius: 8px;
+        padding: 9px 4px 7px;
+        cursor: pointer;
+        color: var(--text-secondary);
+        overflow: hidden;
+        transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
+      }
+      .rcard:hover {
+        border-color: var(--accent-cyan);
+        color: var(--text-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 242, 254, 0.25);
+      }
+      .rcard.on {
+        background: linear-gradient(180deg, rgba(0, 242, 254, 0.18), rgba(15, 20, 34, 0.98));
+        border-color: var(--accent-cyan);
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px var(--accent-glow);
+      }
+      .rcard.on::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--accent-cyan);
+        box-shadow: 0 0 10px var(--accent-cyan);
+      }
+      .rdiag {
+        width: 44px;
+        height: 44px;
+        display: block;
+      }
+      .rcard .rot {
+        animation: rspin 2.5s linear infinite;
+        transform-origin: center;
+      }
+      .rotorpick.spinning .rcard .rot {
+        animation-duration: 0.25s;
+      }
+      @keyframes rspin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .tog {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        padding: 6px 0;
+        cursor: pointer;
+        color: var(--text-secondary);
+      }
+      .tog input {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 34px;
+        height: 18px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 9px;
+        position: relative;
+        cursor: pointer;
+        transition: 0.2s;
+        flex: none;
+      }
+      .tog input:checked { background: var(--accent-cyan); }
+      .tog input::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 14px;
+        height: 14px;
+        background: var(--bg-dark);
+        border-radius: 50%;
+        transition: 0.2s;
+      }
+      .tog input:checked::after { left: 18px; }
+
+      .pitchlab {
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--text-muted);
+        margin-top: 4px;
+      }
+
+      .eqbox {
+        font-family: var(--mono); font-size: 11px; line-height: 1.7;
+        color: var(--text-primary); background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color); border-left: 3px solid var(--accent-cyan);
+        padding: 10px 12px; border-radius: 6px; overflow-x: auto;
+      }
+      #gGraph {
+        width: 100%; height: 130px; border: 1px solid var(--border-color);
+        border-radius: 6px; background: #06080e; margin-top: 10px; display: block;
+      }
+      .btn {
+        font-family: var(--mono); font-size: 10.5px; font-weight: 700;
+        background: var(--panel-card); border: 1px solid var(--border-color);
+        color: var(--text-primary); padding: 9px 12px; border-radius: 6px;
+        cursor: pointer; width: 100%; transition: all 0.15s ease;
+      }
+      .btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+      #scrim {
+        position: fixed; inset: 0; background: rgba(5, 7, 12, 0.85);
+        backdrop-filter: blur(10px); z-index: 20; display: none;
+        align-items: center; justify-content: center; padding: 20px;
+      }
+      #scrim.show { display: flex; }
+      .ovl {
+        background: var(--panel-bg); border: 1px solid var(--border-highlight);
+        border-radius: 12px; max-width: 560px; width: 100%;
+        max-height: 86vh; overflow-y: auto; padding: 26px 28px;
+      }
+
+      /* ---- RESPONSIVE: stack the stage above the panel on tablet/mobile ---- */
+      @media (max-width: 900px) {
+        html, body {
+          height: auto;
+          overflow: auto;
+        }
+        #app {
+          grid-template-columns: 1fr;
+          height: auto;
+        }
+        #stage {
+          height: clamp(300px, 82vw, 460px);
+        }
+        #panel {
+          overflow-y: visible;
+        }
+        .wt-row {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="stage">
+        <canvas id="scene"></canvas>
+
+        <!-- HIGH VISIBILITY PLANET SELECTOR BAR -->
+        <div id="worldtabs">
+          <div class="wt-head">
+            <span class="title-badge">🌍 PLANETARY FLIGHT TARGETS</span>
+            <span class="hint-badge">CLICK PLANET TO SWITCH ATMOSPHERE</span>
+          </div>
+          <div class="wt-row" id="wtabRow"></div>
+        </div>
+
+        <div id="titlecard">
+          <h1>AeroVoyage Lab</h1>
+          <p>Planetary Aerodynamics &amp; Rotor Lift Simulation</p>
+        </div>
+
+        <!-- VIEW ZOOM CONTROL -->
+        <div id="zoomctl">
+          <button id="zoomIn" title="Zoom in">+</button>
+          <button id="zoomOut" title="Zoom out">&minus;</button>
+        </div>
+
+        <!-- THROTTLE CONTROL BAR -->
+        <div id="throttlebar">
+          <span class="tlab">Throttle Control</span>
+          <button class="stepbtn" id="tSub10">-10%</button>
+          <button class="stepbtn" id="tSub1">-1%</button>
+          <input type="range" id="throttle" min="0" max="100" value="0" />
+          <button class="stepbtn" id="tAdd1">+1%</button>
+          <button class="stepbtn" id="tAdd10">+10%</button>
+          <div class="bmeter">
+            <span class="k">Motor Power</span>
+            <span class="v" id="thval">0%</span>
+          </div>
+          <button class="stepbtn resetbtn" id="resetBtn" title="Reset flight — cut throttle and return to ground instantly">⟲ Reset Flight</button>
+        </div>
+      </div>
+
+      <div id="panel">
+        <!-- SIDEBAR PLANET QUICK SWITCH -->
+        <div class="sec">
+          <div class="sec-h">Flight Target Atmosphere <span>Location</span></div>
+          <div class="side-planet-grid" id="sidePlanetGrid"></div>
+        </div>
+
+        <!-- TELEMETRY -->
+        <div class="sec">
+          <div class="sec-h">Flight Telemetry <span>HUD Gauges</span></div>
+          <div id="telem">
+            <div class="row"><dt>Altitude</dt><dd id="t_alt">0.0 <span class="u">m</span></dd></div>
+            <div class="row"><dt>Vertical Speed</dt><dd id="t_vspeed">0.0 <span class="u">m/s</span></dd></div>
+            <div class="row"><dt>Motor RPM</dt><dd id="t_rpm">0 <span class="u">RPM</span></dd></div>
+            <div class="row"><dt>Flight State</dt><dd id="t_state"><span class="flag hold">PARKED</span></dd></div>
+            <div class="row"><dt>Rotor Thrust</dt><dd id="t_thrust">0.0 <span class="u">N</span></dd></div>
+            <div class="row"><dt>Vehicle Weight</dt><dd id="t_weight">17.7 <span class="u">N</span></dd></div>
+
+            <div class="effwrap">
+              <div class="lab">
+                <span>Hover Effort (vs Earth Baseline)</span>
+                <span id="t_effnum">0%</span>
+              </div>
+              <div class="eff" id="effbar">
+                <i id="efffill" style="width: 0%"></i>
+                <b id="efftarget" style="left: 25%"></b>
+              </div>
+              <div class="effscale">
+                <span class="first">0%</span>
+                <span style="left: 25%">100%</span>
+                <span style="left: 50%">200%</span>
+                <span style="left: 75%">300%</span>
+                <span class="last">400%+</span>
+              </div>
+              <div class="effnote" id="effnote"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DRONE BUILDER CONTROLS -->
+        <div class="sec">
+          <div class="sec-h">Vehicle Configuration <span>Specs</span></div>
+
+          <div class="ctl">
+            <div class="ctl-top">
+              <span class="ctl-name">Rotor Configuration</span>
+            </div>
+            <div class="rotorpick" id="rotorPick"></div>
+          </div>
+
+          <div class="ctl">
+            <div class="ctl-top">
+              <span class="ctl-name">Vehicle Mass <span class="sym">(m)</span></span>
+              <span class="ctl-val" id="massVal">1.80 kg</span>
+            </div>
+            <input type="range" id="mass" min="0.4" max="5.0" step="0.1" value="1.8" />
+          </div>
+
+          <div class="ctl">
+            <div class="ctl-top">
+              <span class="ctl-name">Rotor Diameter <span class="sym">(Radius R)</span></span>
+              <span class="ctl-val" id="radVal">Medium (15 cm)</span>
+            </div>
+            <input type="range" id="radius" min="0.08" max="0.32" step="0.01" value="0.15" />
+          </div>
+
+          <div class="ctl">
+            <div class="ctl-top">
+              <span class="ctl-name">Blade Pitch Angle <span class="sym">(Thrust C<sub>t</sub>)</span></span>
+              <span class="ctl-val" id="pitchVal">Standard Pitch</span>
+            </div>
+            <input type="range" id="pitch" min="0" max="2" step="1" value="1" />
+            <div class="pitchlab">
+              <span>Shallow</span>
+              <span>Standard</span>
+              <span>Steep</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ENVIRONMENT & MATH -->
+        <div class="sec">
+          <div class="sec-h">Environment &amp; Physics <span>Analysis</span></div>
+          <label class="tog"
+            ><span>Crosswind Shear &amp; Gusts</span><input type="checkbox" id="windTog"
+          /></label>
+          <div class="ctl" id="windCtl" style="display: none; margin-top: 8px">
+            <div class="ctl-top">
+              <span class="ctl-name">Wind Velocity</span>
+              <span class="ctl-val" id="windVal">0.0 m/s</span>
+            </div>
+            <input type="range" id="wind" min="0" max="20" step="0.5" value="0" />
+          </div>
+
+          <label class="tog" style="margin-top: 6px"
+            ><span>Show Lift Equation &amp; Curves</span><input type="checkbox" id="mathTog"
+          /></label>
+
+          <div id="mathSec" style="display: none; margin-top: 10px">
+            <div class="eqbox" id="eqbox"></div>
+            <canvas id="gGraph"></canvas>
+            <div class="graphcap">Hover RPM required across planetary atmospheres</div>
+          </div>
+        </div>
+
+        <!-- HELP -->
+        <div class="sec">
+          <button class="btn" id="helpBtn">? Mission Flight Manual</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HELP OVERLAY -->
+    <div id="scrim">
+      <div class="ovl">
+        <h2>AeroVoyage Flight Manual</h2>
+        <div class="sub">Aerodynamics across Solar System Atmospheres</div>
+        <p>
+          Rotorcraft generate aerodynamic lift by spinning blades to push atmospheric gas downwards. Lift force depends on atmospheric density (&rho;), rotor radius (R), and rotation speed (&omega;).
+        </p>
+        <ol>
+          <li><b>Earth:</b> Standard atmosphere (&rho; = 1.225 kg/m³) and gravity (9.81 m/s²).</li>
+          <li><b>Mars:</b> Extremely thin air (&rho; = 0.016 kg/m³). High-speed rotors (Ingenuity mission) required to achieve lift.</li>
+          <li><b>Titan:</b> Dense atmosphere (&rho; = 5.2 kg/m³) and low gravity (1.35 m/s²). Ideal environment for heavy aerial explorers (Dragonfly mission).</li>
+          <li><b>Moon:</b> Vacuum environment (&rho; = 0). Rotorcraft cannot fly without an atmosphere to push against.</li>
+        </ol>
+        <button class="close" id="helpClose">Begin Flight</button>
+      </div>
+    </div>
+
+    <script>
+      "use strict";
+      const $ = (id) => document.getElementById(id);
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+      const TAU = Math.PI * 2;
+
+      const RHO_EARTH = 1.225;
+      const CT_MED = 0.0345;
+      const CT = [0.025, 0.0345, 0.045];
+      const RPM_MAX = 16000;
+      const OMEGA_MAX = (RPM_MAX * TAU) / 60;
+      const DEFAULT = { mass: 1.8, radius: 0.15, pitch: 1, rotors: 4 };
+
+      const WORLDS = {
+        earth: {
+          name: "Earth",
+          g: 9.81,
+          rhoF: 1.0,
+          sub: "Air 1.22 kg/m³ · 9.8 m/s²",
+          svgOrb: `<svg class="worb" viewBox="0 0 54 54"><defs><radialGradient id="orbEarth" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#93c5fd"/><stop offset="35%" stop-color="#3b82f6"/><stop offset="75%" stop-color="#1d4ed8"/><stop offset="100%" stop-color="#0f172a"/></radialGradient></defs><circle cx="27" cy="27" r="24" fill="none" stroke="#60a5fa" stroke-width="2.5" opacity="0.6"/><circle cx="27" cy="27" r="22" fill="url(#orbEarth)"/><path d="M14 18c3-5 10-6 15-3s7 6 3 11-8 6-12 3-8-4-6-11z" fill="#22c55e" opacity="0.9"/><path d="M28 30c4-2 9 1 11 5s-3 8-7 7-6-5-4-12z" fill="#15803d" opacity="0.85"/><path d="M12 24c6-3 14-2 22-4s8 3 10 2" stroke="#ffffff" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.75"/><path d="M16 14c5-2 11 0 16 1" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6"/></svg>`,
+          sky: ["#0f2b48", "#1e4d7b", "#3b82f6"],
+          ground: "#1b4332",
+          dust: "rgba(255, 255, 255, 0.3)",
+          star: false,
+          far: "#13382c",
+          hills: ["#2d6a4f", "#1b4332"],
+          sun: { x: 0.8, y: 0.18, c: "#fef08a", r: 24 },
+          downwash: "rgba(255, 255, 255, 0.4)",
+        },
+        mars: {
+          name: "Mars",
+          g: 3.71,
+          rhoF: 0.016,
+          sub: "Thin Air (1.6%) · 3.7 m/s²",
+          svgOrb: `<svg class="worb" viewBox="0 0 54 54"><defs><radialGradient id="orbMars" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#fed7aa"/><stop offset="40%" stop-color="#f97316"/><stop offset="80%" stop-color="#c2410c"/><stop offset="100%" stop-color="#451a03"/></radialGradient></defs><circle cx="27" cy="27" r="24" fill="none" stroke="#fb923c" stroke-width="2" opacity="0.5"/><circle cx="27" cy="27" r="22" fill="url(#orbMars)"/><path d="M12 28c6 2 14-3 22 0s8 6 12 3" stroke="#7c2d12" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.85"/><circle cx="20" cy="18" r="4" fill="#7c2d12" opacity="0.5"/><circle cx="36" cy="32" r="3" fill="#7c2d12" opacity="0.5"/><path d="M18 7c4-2 12-2 16 0c-2 3-6 4-8 4s-6-1-8-4z" fill="#fef3c7" opacity="0.95"/></svg>`,
+          sky: ["#3a150c", "#6c2b18", "#a84320"],
+          ground: "#5c1d0e",
+          dust: "rgba(249, 115, 22, 0.4)",
+          star: false,
+          far: "#3b1107",
+          hills: ["#7f2811", "#5c1d0e"],
+          sun: { x: 0.78, y: 0.2, c: "#fed7aa", r: 16 },
+          downwash: "rgba(249, 115, 22, 0.5)",
+        },
+        titan: {
+          name: "Titan",
+          g: 1.35,
+          rhoF: 4.24,
+          sub: "Dense Air (424%) · 1.4 m/s²",
+          svgOrb: `<svg class="worb" viewBox="0 0 54 54"><defs><radialGradient id="orbTitan" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="45%" stop-color="#eab308"/><stop offset="80%" stop-color="#a16207"/><stop offset="100%" stop-color="#451a03"/></radialGradient></defs><circle cx="27" cy="27" r="24" fill="none" stroke="#fde047" stroke-width="3" opacity="0.75"/><circle cx="27" cy="27" r="22" fill="url(#orbTitan)"/><ellipse cx="27" cy="18" rx="18" ry="4" fill="#854d0e" opacity="0.45"/><ellipse cx="27" cy="34" rx="16" ry="3.5" fill="#713f12" opacity="0.5"/><path d="M16 15c4-1 9 0 13 3" stroke="#fef9c3" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7"/></svg>`,
+          sky: ["#2d1b00", "#5c3d00", "#9a6a1c"],
+          ground: "#422e06",
+          dust: "rgba(234, 179, 8, 0.4)",
+          star: false,
+          far: "#2a1c02",
+          hills: ["#5e4409", "#422e06"],
+          sun: { x: 0.74, y: 0.22, c: "#fef08a", r: 20 },
+          downwash: "rgba(234, 179, 8, 0.5)",
+        },
+        moon: {
+          name: "Moon",
+          g: 1.62,
+          rhoF: 0,
+          sub: "Vacuum (0%) · 1.6 m/s²",
+          svgOrb: `<svg class="worb" viewBox="0 0 54 54"><defs><radialGradient id="orbMoon" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#f8fafc"/><stop offset="50%" stop-color="#94a3b8"/><stop offset="85%" stop-color="#475569"/><stop offset="100%" stop-color="#0f172a"/></radialGradient></defs><circle cx="27" cy="27" r="22" fill="url(#orbMoon)"/><circle cx="20" cy="20" r="7" fill="#1e293b" opacity="0.6"/><circle cx="34" cy="28" r="8" fill="#1e293b" opacity="0.65"/><circle cx="22" cy="35" r="5" fill="#1e293b" opacity="0.5"/><circle cx="34" cy="18" r="3.5" fill="none" stroke="#e2e8f0" stroke-width="1.2"/><circle cx="16" cy="30" r="3" fill="none" stroke="#e2e8f0" stroke-width="1.2"/></svg>`,
+          sky: ["#020408", "#050810", "#080d1a"],
+          ground: "#334155",
+          dust: "none",
+          star: true,
+          far: "#1e293b",
+          hills: ["#475569", "#334155"],
+          sun: null,
+          downwash: null,
+        },
+      };
+      const ORDER = ["earth", "mars", "titan", "moon"];
+
+      function hoverOmega(m, g, rhoF, N, R, ct) {
+        const rho = RHO_EARTH * rhoF;
+        if (rho <= 0) return Infinity;
+        return Math.sqrt((m * g) / N / (ct * rho * R * R * R * R));
+      }
+      const BASE_OMEGA = hoverOmega(
+        DEFAULT.mass,
+        WORLDS.earth.g,
+        1,
+        DEFAULT.rotors,
+        DEFAULT.radius,
+        CT_MED,
+      );
+
+      const S = {
+        world: "earth",
+        mass: DEFAULT.mass,
+        radius: DEFAULT.radius,
+        pitchIdx: DEFAULT.pitch,
+        rotors: DEFAULT.rotors,
+        throttle: 0,
+        windOn: false,
+        wind: 0,
+        mathOn: false,
+        alt: 0,
+        vel: 0,
+        phase: 0,
+        drift: 0,
+        omega: 0,
+        rpm: 0,
+        thrust: 0,
+        weight: 0,
+        hoverRPM: 0,
+        effort: 0,
+      };
+
+      function ctNow() { return CT[S.pitchIdx]; }
+      function rhoNow() { return RHO_EARTH * WORLDS[S.world].rhoF; }
+
+      function derive() {
+        const w = WORLDS[S.world], g = w.g, rho = rhoNow(), N = S.rotors, R = S.radius, ct = ctNow(), m = S.mass;
+        S.weight = m * g;
+        S.omega = (S.throttle / 100) * OMEGA_MAX;
+        S.rpm = (S.omega * 60) / TAU;
+        S.thrust = N * ct * rho * R * R * R * R * S.omega * S.omega;
+        const oh = hoverOmega(m, g, w.rhoF, N, R, ct);
+        S.hoverRPM = isFinite(oh) ? (oh * 60) / TAU : Infinity;
+        S.effort = S.omega > 0 ? Math.pow(S.omega / BASE_OMEGA, 3) * 100 : 0;
+      }
+
+      function step(dt) {
+        const m = S.mass, damp = 2.2;
+        const a = (S.thrust - S.weight - damp * S.vel) / m;
+        S.vel += a * dt;
+        S.alt += S.vel * dt;
+        // Cap altitude so an over-throttled climb can't build up a huge, invisible
+        // altitude that then takes ages to bleed back off — flights stay bounded and
+        // quick to bring back down even if lifted way too high.
+        const altCap = VIS_ALT + 8;
+        if (S.alt > altCap) {
+          S.alt = altCap;
+          if (S.vel > 0) S.vel = 0;
+        }
+        if (S.alt <= 0) {
+          S.alt = 0;
+          if (S.vel < 0) S.vel = 0;
+        }
+        const targetDrift = S.windOn ? S.wind * 0.9 * (0.3 + clamp(S.alt / 12, 0, 1)) : 0;
+        S.drift += (targetDrift - S.drift) * clamp(dt * 2, 0, 1);
+        S.phase += S.omega * dt * 0.03;
+      }
+
+      const cv = $("scene"), ctx = cv.getContext("2d");
+      let DPR = Math.max(1, window.devicePixelRatio || 1), CW = 0, CH = 0;
+
+      function fit() {
+        DPR = Math.max(1, window.devicePixelRatio || 1);
+        const r = cv.parentElement.getBoundingClientRect();
+        cv.width = Math.max(1, r.width * DPR);
+        cv.height = Math.max(1, r.height * DPR);
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        CW = r.width; CH = r.height;
+        if (S.mathOn) drawGraph();
+      }
+      window.addEventListener("resize", fit);
+
+      const VIS_ALT_MIN = 10, VIS_ALT_MAX = 40, VIS_ALT_STEP = 5;
+      let VIS_ALT = 20; // zoomed-out default (was 14) so more of the flight is visible on screen
+
+      function setZoom(v) {
+        VIS_ALT = clamp(v, VIS_ALT_MIN, VIS_ALT_MAX);
+      }
+
+      function drawScene() {
+        const w = WORLDS[S.world];
+        const groundY = CH * 0.8;
+        const t = performance.now() / 1000;
+
+        const sky = ctx.createLinearGradient(0, 0, 0, groundY);
+        sky.addColorStop(0, w.sky[0]);
+        sky.addColorStop(0.6, w.sky[1]);
+        sky.addColorStop(1, w.sky[2] || w.sky[1]);
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, CW, groundY);
+
+        if (w.sun) {
+          const sx = CW * w.sun.x, sy = groundY * w.sun.y;
+          const sGrad = ctx.createRadialGradient(sx, sy, 2, sx, sy, w.sun.r * 3);
+          sGrad.addColorStop(0, w.sun.c);
+          sGrad.addColorStop(0.3, w.sun.c);
+          sGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+          ctx.fillStyle = sGrad;
+          ctx.beginPath();
+          ctx.arc(sx, sy, w.sun.r * 3, 0, TAU);
+          ctx.fill();
+        }
+
+        if (w.star) {
+          ctx.fillStyle = "#ffffff";
+          for (let i = 0; i < 110; i++) {
+            const sx = (i * 107.3) % CW, sy = (i * 59.7) % groundY;
+            const alpha = 0.3 + 0.5 * Math.sin(t * 3 + i);
+            ctx.globalAlpha = clamp(alpha, 0.15, 1);
+            ctx.fillRect(sx, sy, i % 3 === 0 ? 2 : 1.2, i % 3 === 0 ? 2 : 1.2);
+          }
+          ctx.globalAlpha = 1;
+        }
+
+        if (w.hills) {
+          ctx.fillStyle = w.hills[0];
+          ctx.beginPath();
+          ctx.moveTo(0, groundY);
+          for (let x = 0; x <= CW; x += 40) {
+            const h = Math.sin(x * 0.008) * 22 + Math.cos(x * 0.015) * 14;
+            ctx.lineTo(x, groundY - 30 + h);
+          }
+          ctx.lineTo(CW, groundY);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        ctx.fillStyle = w.ground;
+        ctx.fillRect(0, groundY, CW, CH - groundY);
+
+        if (S.windOn && S.wind > 0.2) {
+          ctx.strokeStyle = "rgba(0, 242, 254, 0.4)";
+          ctx.lineWidth = 1.5;
+          const n = Math.round(S.wind);
+          for (let i = 0; i < n; i++) {
+            const yy = groundY * 0.2 + (i * groundY * 0.7) / n;
+            const xx = ((t * S.wind * 30 + i * 140) % (CW + 120)) - 60;
+            ctx.beginPath();
+            ctx.moveTo(xx, yy);
+            ctx.lineTo(xx + 30 + S.wind * 2, yy);
+            ctx.stroke();
+          }
+        }
+
+        const cx = CW * 0.42 + S.drift * 10;
+        const dy = groundY - 24 - clamp(S.alt / VIS_ALT, 0, 1) * (groundY - 76);
+
+        if (S.thrust > S.weight * 0.4 && w.rhoF > 0 && S.alt < 8) {
+          const power = clamp(S.thrust / (S.weight || 1), 0.3, 2.5);
+          ctx.fillStyle = w.downwash || "rgba(255,255,255,.4)";
+          for (let p = 0; p < 8; p++) {
+            const side = p % 2 === 0 ? 1 : -1;
+            const px = cx + side * (15 + ((t * 90 + p * 30) % 100) * power * 0.8);
+            const py = groundY - 2 - Math.random() * 5;
+            const sz = 3 + Math.random() * 6;
+            ctx.globalAlpha = clamp(1 - (Math.abs(px - cx) / 110), 0, 0.6);
+            ctx.beginPath();
+            ctx.arc(px, py, sz, 0, TAU);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
+
+        drawDrone(cx, dy);
+
+        if (S.alt / VIS_ALT > 1) {
+          ctx.fillStyle = "#00f2fe";
+          ctx.font = '700 11px "Roboto Mono",monospace';
+          ctx.textAlign = "center";
+          ctx.fillText("▲ ASCENDING ABOVE FLYABLE CEILING", cx, 54);
+        }
+
+        drawSeesaw(CW * 0.18, groundY + (CH - groundY) * 0, groundY);
+      }
+
+      function drawDrone(cx, cy) {
+        const N = S.rotors, R = S.radius;
+        const arm = Math.max(28, R * 160);
+        const rr = Math.max(10, R * 95);
+
+        const thrustScale = clamp(S.thrust * 3.5, 0, 80);
+        const weightScale = clamp(S.weight * 3.5, 0, 80);
+
+        if (S.thrust > 0.1) {
+          ctx.strokeStyle = "#00f2fe";
+          ctx.fillStyle = "#00f2fe";
+          ctx.lineWidth = 3;
+          ctx.shadowColor = "#00f2fe";
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(cx, cy - thrustScale);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - thrustScale - 6);
+          ctx.lineTo(cx - 5, cy - thrustScale + 2);
+          ctx.lineTo(cx + 5, cy - thrustScale + 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        if (S.weight > 0.1) {
+          ctx.strokeStyle = "#ff2a85";
+          ctx.fillStyle = "#ff2a85";
+          ctx.lineWidth = 3;
+          ctx.shadowColor = "#ff2a85";
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(cx, cy + weightScale);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(cx, cy + weightScale + 6);
+          ctx.lineTo(cx - 5, cy + weightScale - 2);
+          ctx.lineTo(cx + 5, cy + weightScale - 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        ctx.fillStyle = "#1e293b";
+        ctx.strokeStyle = "#00f2fe";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, 16, 10, 0, 0, TAU);
+        ctx.fill();
+        ctx.stroke();
+
+        for (let i = 0; i < N; i++) {
+          const ang = N === 2 ? (i ? Math.PI : 0) : -Math.PI / 2 + (i * TAU) / N;
+          const ex = cx + Math.cos(ang) * arm;
+          const ey = cy + Math.sin(ang) * arm * 0.55;
+
+          ctx.strokeStyle = "#475569";
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(ex, ey);
+          ctx.stroke();
+
+          ctx.fillStyle = i === 0 ? "#22c55e" : "#ff2a85";
+          ctx.beginPath();
+          ctx.arc(ex, ey, 3, 0, TAU);
+          ctx.fill();
+
+          const spinning = S.omega > 1;
+          ctx.save();
+          ctx.translate(ex, ey);
+          if (spinning) {
+            ctx.globalAlpha = 0.5;
+            ctx.strokeStyle = "#00f2fe";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, rr, rr * 0.4, 0, 0, TAU);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+          }
+          ctx.rotate(S.phase * (i % 2 ? -1 : 1));
+          ctx.strokeStyle = spinning ? "rgba(255, 255, 255, 0.9)" : "#cbd5e1";
+          ctx.lineWidth = 2.5;
+          for (let b = 0; b < 2; b++) {
+            ctx.rotate(Math.PI);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(rr, 0);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        ctx.fillStyle = S.omega > 1 ? "#ff6b35" : "#64748b";
+        ctx.beginPath();
+        ctx.arc(cx, cy, 4, 0, TAU);
+        ctx.fill();
+      }
+
+      function drawSeesaw(cx, _ignore, groundY) {
+        // keep at least 100px clear of the bottom of the stage — on a short
+        // (mobile) canvas, groundY+(CH-groundY)*0.5 sits close enough to the
+        // bottom edge to collide with the throttle control bar overlaid there
+        const y = Math.min(groundY + (CH - groundY) * 0.5, CH - 100);
+        const half = 64;
+        const diff = S.thrust - S.weight;
+        const ratio = S.weight > 0 ? clamp(diff / S.weight, -1, 1) : 0;
+        const tilt = Math.atan(ratio * 0.9);
+
+        ctx.fillStyle = "#334155";
+        ctx.strokeStyle = "#00f2fe";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(cx, y);
+        ctx.lineTo(cx - 12, y + 18);
+        ctx.lineTo(cx + 12, y + 18);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(cx, y);
+        ctx.rotate(-tilt);
+        ctx.strokeStyle = "#1e293b";
+        ctx.lineWidth = 6;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-half, 0);
+        ctx.lineTo(half, 0);
+        ctx.stroke();
+
+        ctx.fillStyle = "#ff2a85";
+        ctx.beginPath();
+        ctx.arc(-half, 0, 8, 0, TAU);
+        ctx.fill();
+
+        ctx.fillStyle = "#00f2fe";
+        ctx.beginPath();
+        ctx.arc(half, 0, 8, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.font = '700 8.5px "Roboto Mono",monospace';
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#ff2a85";
+        ctx.fillText("WEIGHT", cx - half, y + 34);
+        ctx.fillStyle = "#00f2fe";
+        ctx.fillText("THRUST", cx + half, y + 34);
+
+        ctx.font = '700 9.5px "Roboto Mono",monospace';
+        ctx.textAlign = "center";
+        const msg =
+          ratio > 0.03
+            ? "THRUST OVERCOMES GRAVITY → ASCENDING"
+            : ratio < -0.03
+              ? "WEIGHT EXCEEDS THRUST → DESCENT"
+              : "FORCE BALANCE → STABLE HOVER";
+        ctx.fillStyle = ratio > 0.03 ? "#22c55e" : ratio < -0.03 ? "#ff2a85" : "#00f2fe";
+        ctx.fillText(msg, cx, y - 24);
+      }
+
+      /* ---------- WORLD SWITCHING & BUILD TABS ---------- */
+      function buildTabs() {
+        const row = $("wtabRow");
+        row.innerHTML = "";
+        ORDER.forEach((key) => {
+          const w = WORLDS[key];
+          const isActive = S.world === key;
+          const btn = document.createElement("button");
+          btn.className = `wtab ${isActive ? "on" : ""}`;
+          btn.onclick = () => switchWorld(key);
+
+          btn.innerHTML =
+            w.svgOrb +
+            `<div>` +
+            `<div class="wn">${w.name}</div>` +
+            `<div class="wsub">${w.sub}</div>` +
+            `<span class="target-badge ${isActive ? "active" : ""}">${isActive ? "⚡ ACTIVE TARGET" : "FLY HERE ➔"}</span>` +
+            `</div>`;
+          row.appendChild(btn);
+        });
+
+        // Also build sidebar quick selector
+        const sideGrid = $("sidePlanetGrid");
+        if (sideGrid) {
+          sideGrid.innerHTML = "";
+          ORDER.forEach((key) => {
+            const w = WORLDS[key];
+            const isActive = S.world === key;
+            const sbtn = document.createElement("button");
+            sbtn.className = `sp-btn ${isActive ? "on" : ""}`;
+            sbtn.onclick = () => switchWorld(key);
+            sbtn.innerHTML =
+              `<div class="sp-icon">${w.svgOrb}</div>` +
+              `<div><div class="sp-name">${w.name}</div><div class="sp-sub">${w.sub}</div></div>`;
+            sideGrid.appendChild(sbtn);
+          });
+        }
+      }
+
+      function switchWorld(key) {
+        if (S.world === key) return;
+        S.world = key;
+        buildTabs();
+        derive();
+        updateTelemetry();
+        if (S.mathOn) {
+          updateEquation();
+          buildTable();
+          drawGraph();
+        }
+      }
+
+      function buildRotorPicker() {
+        const el = $("rotorPick");
+        if (!el) return;
+        el.innerHTML = "";
+        const configs = [
+          { n: 2, name: "Bi", label: "2 Rotors" },
+          { n: 4, name: "Quad", label: "4 Rotors" },
+          { n: 6, name: "Hexa", label: "6 Rotors" },
+          { n: 8, name: "Octo", label: "8 Rotors" },
+        ];
+
+        el.classList.toggle("spinning", S.omega > 1);
+
+        configs.forEach(({ n, name, label }) => {
+          const card = document.createElement("div");
+          const isActive = S.rotors === n;
+          card.className = `rcard ${isActive ? "on" : ""}`;
+          card.onclick = () => {
+            S.rotors = n;
+            buildRotorPicker();
+            derive();
+            updateTelemetry();
+            if (S.mathOn) {
+              updateEquation();
+              drawGraph();
+            }
+          };
+
+          let svgContent = `<circle cx="25" cy="25" r="4.5" fill="${isActive ? "#00f2fe" : "#94a3b8"}" />`;
+          for (let i = 0; i < n; i++) {
+            const ang = -Math.PI / 2 + (i * TAU) / n;
+            const rx = 25 + Math.cos(ang) * 16;
+            const ry = 25 + Math.sin(ang) * 16;
+
+            svgContent += `<line x1="25" y1="25" x2="${rx}" y2="${ry}" stroke="${isActive ? "rgba(0,242,254,0.6)" : "#475569"}" stroke-width="2.5" stroke-linecap="round"/>`;
+
+            const dir = i % 2 === 0 ? "normal" : "reverse";
+            svgContent +=
+              `<g transform="translate(${rx},${ry})">` +
+              `<circle cx="0" cy="0" r="5" fill="none" stroke="${isActive ? "#00f2fe" : "#64748b"}" stroke-dasharray="2 2" stroke-width="1"/>` +
+              `<g class="rot" style="animation-direction:${dir}">` +
+              `<line x1="-5" y1="0" x2="5" y2="0" stroke="${isActive ? "#ffffff" : "#cbd5e1"}" stroke-width="2" stroke-linecap="round"/>` +
+              `</g>` +
+              `<circle cx="0" cy="0" r="1.5" fill="${i === 0 ? "#22c55e" : "#ff2a85"}"/>` +
+              `</g>`;
+          }
+
+          card.innerHTML =
+            `<svg class="rdiag" viewBox="0 0 50 50">${svgContent}</svg>` +
+            `<span class="rname">${name}</span>` +
+            `<span class="rload">${label}</span>` +
+            `<span class="target-badge ${isActive ? "active" : ""}" style="font-size:7.5px; padding:2px 5px; margin-top:2px;">${isActive ? "ACTIVE" : "SELECT"}</span>`;
+
+          el.appendChild(card);
+        });
+      }
+
+      function buildBars() {
+        $("tSub10").onclick = () => setThrottle(S.throttle - 10);
+        $("tSub1").onclick = () => setThrottle(S.throttle - 1);
+        $("tAdd1").onclick = () => setThrottle(S.throttle + 1);
+        $("tAdd10").onclick = () => setThrottle(S.throttle + 10);
+        $("throttle").oninput = (e) => setThrottle(+e.target.value);
+        $("resetBtn").onclick = resetFlight;
+        $("zoomIn").onclick = () => setZoom(VIS_ALT - VIS_ALT_STEP);
+        $("zoomOut").onclick = () => setZoom(VIS_ALT + VIS_ALT_STEP);
+      }
+
+      function setThrottle(val) {
+        S.throttle = clamp(val, 0, 100);
+        $("throttle").value = S.throttle;
+        $("thval").textContent = Math.round(S.throttle) + "%";
+        derive();
+        updateTelemetry();
+      }
+
+      // Instantly bring the vehicle back to the ground instead of waiting it out —
+      // cuts throttle and zeroes altitude/velocity/drift.
+      function resetFlight() {
+        S.alt = 0;
+        S.vel = 0;
+        S.drift = 0;
+        setThrottle(0);
+      }
+
+      function updateTelemetry() {
+        $("t_alt").innerHTML = `${S.alt.toFixed(1)} <span class="u">m</span>`;
+        $("t_vspeed").innerHTML = `${S.vel.toFixed(1)} <span class="u">m/s</span>`;
+        $("t_rpm").innerHTML = `${Math.round(S.rpm)} <span class="u">RPM</span>`;
+        $("t_thrust").innerHTML = `${S.thrust.toFixed(1)} <span class="u">N</span>`;
+        $("t_weight").innerHTML = `${S.weight.toFixed(1)} <span class="u">N</span>`;
+
+        let stateText = "PARKED", stateClass = "hold";
+        if (S.alt > 0.05) {
+          if (S.vel > 0.2) { stateText = "CLIMBING"; stateClass = "up"; }
+          else if (S.vel < -0.2) { stateText = "DESCENT"; stateClass = "down"; }
+          else { stateText = "HOVERING"; stateClass = "hold"; }
+        }
+        $("t_state").innerHTML = `<span class="flag ${stateClass}">${stateText}</span>`;
+
+        const MAX_EFFORT_SCALE = 400; // 400% Earth baseline effort scale
+        const currentEffort = S.effort; // 0..400+
+        const fillWidthPct = clamp((currentEffort / MAX_EFFORT_SCALE) * 100, 0, 100);
+
+        $("efffill").style.width = fillWidthPct + "%";
+        $("t_effnum").textContent = Math.round(currentEffort) + "%";
+
+        const hoverEffort = isFinite(S.hoverRPM)
+          ? Math.pow((S.hoverRPM * TAU / 60) / BASE_OMEGA, 3) * 100
+          : Infinity;
+
+        const targetPosPct = isFinite(hoverEffort)
+          ? clamp((hoverEffort / MAX_EFFORT_SCALE) * 100, 0, 100)
+          : 100;
+
+        $("efftarget").style.left = targetPosPct + "%";
+
+        const unreach = !isFinite(S.hoverRPM) || S.hoverRPM > RPM_MAX || hoverEffort > MAX_EFFORT_SCALE;
+        $("efftarget").className = unreach ? "unreach" : "";
+
+        const note = $("effnote");
+        if (S.world === "moon") {
+          note.className = "effnote warn";
+          note.innerHTML = "<b>Vacuum:</b> Impossible to hover. Zero atmosphere = zero lift.";
+        } else if (unreach) {
+          note.className = "effnote warn";
+          note.innerHTML = `<b>Exceeds Limit:</b> Hover requires <b>${Math.round(S.hoverRPM)} RPM</b> (${Math.round(hoverEffort)}% Earth baseline effort), exceeding motor limit.`;
+        } else {
+          note.className = "effnote ok";
+          note.innerHTML = `Hover requires <b>${Math.round(S.hoverRPM)} RPM</b> (${Math.round(hoverEffort)}% Earth baseline effort).`;
+        }
+      }
+
+      function updateEquation() {
+        const eq = $("eqbox");
+        const w = WORLDS[S.world];
+        if (w.rhoF <= 0) {
+          eq.innerHTML = `<span class="lbl">Lift Equation:</span><br>T = N &middot; C<sub>t</sub> &middot; &rho; &middot; R<sup>4</sup> &middot; &omega;<sup>2</sup><br><span class="res" style="color:#ff2a85;">&rho; = 0 kg/m³ &implies; Thrust = 0.0 N</span>`;
+          return;
+        }
+        const rho = rhoNow(), ct = ctNow(), N = S.rotors, R = S.radius;
+        eq.innerHTML =
+          `<span class="lbl">Lift Equation:</span> T = N &middot; C<sub>t</sub> &middot; &rho; &middot; R<sup>4</sup> &middot; &omega;<sup>2</sup><br>` +
+          `T = ${N} &times; ${ct} &times; ${rho.toFixed(3)} &times; ${R.toFixed(2)}<sup>4</sup> &times; &omega;<sup>2</sup><br>` +
+          `<span class="res">Required Hover RPM = <b>${isFinite(S.hoverRPM) ? Math.round(S.hoverRPM) : "Infinity"} RPM</b></span>`;
+      }
+
+      function buildTable() {}
+
+      function drawGraph() {
+        const gc = $("gGraph");
+        if (!gc) return;
+        const ctxG = gc.getContext("2d");
+        const W = gc.clientWidth || 300, H = gc.clientHeight || 130;
+        gc.width = W * DPR; gc.height = H * DPR;
+        ctxG.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+        ctxG.fillStyle = "#06080e";
+        ctxG.fillRect(0, 0, W, H);
+
+        const pad = 30;
+        const gw = W - pad * 2, gh = H - pad * 2;
+
+        ctxG.strokeStyle = "rgba(255,255,255,0.1)";
+        ctxG.lineWidth = 1;
+        ctxG.strokeRect(pad, pad / 2, gw, gh);
+
+        const keys = ["earth", "mars", "titan"];
+        const maxVal = 16000;
+
+        keys.forEach((k, idx) => {
+          const w = WORLDS[k];
+          const oh = hoverOmega(S.mass, w.g, w.rhoF, S.rotors, S.radius, ctNow());
+          const rpm = isFinite(oh) ? (oh * 60) / TAU : maxVal;
+          const barH = clamp(rpm / maxVal, 0, 1) * gh;
+
+          const bx = pad + (idx + 0.5) * (gw / keys.length);
+          const bw = 28;
+
+          ctxG.fillStyle = k === S.world ? "#00f2fe" : "rgba(255,255,255,0.3)";
+          ctxG.fillRect(bx - bw / 2, pad / 2 + gh - barH, bw, barH);
+
+          ctxG.font = '600 9px "Roboto Mono",monospace';
+          ctxG.fillStyle = "#94a3b8";
+          ctxG.textAlign = "center";
+          ctxG.fillText(w.name, bx, pad / 2 + gh + 12);
+        });
+      }
+
+      $("mass").oninput = (e) => {
+        S.mass = +e.target.value;
+        $("massVal").textContent = S.mass.toFixed(2) + " kg";
+        derive();
+        updateTelemetry();
+        if (S.mathOn) { updateEquation(); drawGraph(); }
+      };
+      $("radius").oninput = (e) => {
+        S.radius = +e.target.value;
+        $("radVal").textContent = `${Math.round(S.radius * 100)} cm`;
+        derive();
+        updateTelemetry();
+        if (S.mathOn) { updateEquation(); drawGraph(); }
+      };
+      $("pitch").oninput = (e) => {
+        S.pitchIdx = +e.target.value;
+        $("pitchVal").textContent = ["Shallow", "Standard", "Steep"][S.pitchIdx];
+        derive();
+        updateTelemetry();
+        if (S.mathOn) { updateEquation(); drawGraph(); }
+      };
+
+      $("windTog").onchange = (e) => {
+        S.windOn = e.target.checked;
+        $("windCtl").style.display = S.windOn ? "block" : "none";
+      };
+      $("wind").oninput = (e) => {
+        S.wind = +e.target.value;
+        $("windVal").textContent = S.wind.toFixed(1) + " m/s";
+      };
+
+      $("mathTog").onchange = (e) => {
+        S.mathOn = e.target.checked;
+        $("mathSec").style.display = S.mathOn ? "block" : "none";
+        if (S.mathOn) { updateEquation(); drawGraph(); }
+      };
+
+      $("helpBtn").onclick = () => $("scrim").classList.add("show");
+      $("helpClose").onclick = () => $("scrim").classList.remove("show");
+      $("scrim").addEventListener("click", (e) => {
+        if (e.target === $("scrim")) $("scrim").classList.remove("show");
+      });
+
+      /* ---------- MAIN LOOP ---------- */
+      let last = performance.now(), acc = 0;
+      const FIXED = 1 / 120;
+      function loop(now) {
+        let dt = (now - last) / 1000;
+        last = now;
+        dt = clamp(dt, 0, 0.1);
+        derive();
+        acc += dt;
+        let guard = 0;
+        while (acc >= FIXED && guard < 20) {
+          step(FIXED);
+          acc -= FIXED;
+          guard++;
+        }
+        drawScene();
+        updateTelemetry();
+        requestAnimationFrame(loop);
+      }
+
+      /* ---------- INIT ---------- */
+      buildTabs();
+      buildRotorPicker();
+      buildBars();
+      fit();
+      derive();
+      updateTelemetry();
+      requestAnimationFrame(loop);
+    </script>
+  </body>
+</html>

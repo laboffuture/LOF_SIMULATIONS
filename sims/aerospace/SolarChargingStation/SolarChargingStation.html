@@ -1,0 +1,1594 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solar Charging Station · Sun to Stored Power</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #eef1f4;
+        --panel: #fcfdfe;
+        --panel2: #f3f6f8;
+        --line: #dbe2e8;
+        --txt: #17293b;
+        --mut: #4c5c6b;
+        --dim: #8a949d;
+        --accent: #e8590c;
+        --accent-press: #c94a08;
+        --sky: #2a78d6;
+        --sky-soft: #e3eefb;
+        --volt: #fab219;
+        --curr: #2a78d6;
+        --warn: #fab219;
+        --danger: #d03b3b;
+        --ok: #0ca30c;
+        --ok-ink: #006300;
+        --shadow: 0 1px 2px rgba(23, 41, 59, 0.08);
+        --r: 10px;
+        --head: "Orbitron", sans-serif;
+        --body: "Rajdhani", sans-serif;
+        --mono: "IBM Plex Mono", Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        font-family: var(--body);
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--txt);
+        background: var(--bg);
+        height: 100vh;
+        overflow: hidden;
+        padding: 12px clamp(12px, 2.4vw, 30px);
+        display: flex;
+        flex-direction: column;
+      }
+      h1,
+      h3,
+      .badge {
+        font-family: var(--head);
+      }
+      header.top {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+        flex: 0 0 auto;
+      }
+      .logo {
+        font-size: 26px;
+        line-height: 1;
+      }
+      .title h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--txt);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 290px 1fr 300px;
+        gap: 14px;
+        align-items: stretch;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      @media (max-width: 1180px) {
+        body {
+          overflow: auto;
+          height: auto;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+          flex: 0 0 auto;
+        }
+        .card.controls,
+        .card.readings {
+          width: 100%;
+        }
+        .card.stage {
+          width: 100%;
+          flex: 0 0 auto;
+          height: clamp(280px, 78vw, 460px);
+        }
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        box-shadow: var(--shadow);
+        padding: 16px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
+      }
+      .card.stage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .card.stage canvas {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .card h3 {
+        margin: 0 0 3px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--mut);
+      }
+      .card .sub {
+        font-size: 12.5px;
+        color: var(--mut);
+        margin: 0 0 10px;
+        line-height: 1.45;
+      }
+
+      .ctrl {
+        margin: 14px 0;
+      }
+      .ctrl .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+      }
+      .ctrl label {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--txt);
+      }
+      .ctrl .val {
+        font-family: var(--head);
+        font-size: 12px;
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .toggle {
+        display: flex;
+        gap: 8px;
+        margin-top: 5px;
+        flex-wrap: wrap;
+      }
+      .toggle button {
+        flex: 1;
+        min-width: 60px;
+        cursor: pointer;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--mut);
+        padding: 8px 6px;
+        border-radius: 8px;
+        font-size: 12.5px;
+        font-weight: 600;
+        transition: 0.15s;
+        font-family: var(--body);
+      }
+      .toggle button:hover {
+        border-color: var(--dim);
+        color: var(--txt);
+      }
+      .toggle button.on {
+        color: var(--txt);
+        border-color: var(--sky);
+        background: var(--sky-soft);
+        font-weight: 700;
+      }
+      .hint {
+        font-size: 11.5px;
+        color: var(--dim);
+        margin-top: 6px;
+        line-height: 1.4;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        accent-color: var(--sky);
+        height: 26px;
+        cursor: pointer;
+      }
+      .anglemarks {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--dim);
+        margin-top: -4px;
+      }
+
+      .stage-foot {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+      .btn {
+        cursor: pointer;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--txt);
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 12.5px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        transition: 0.15s;
+        font-family: var(--head);
+        display: flex;
+        gap: 7px;
+        align-items: center;
+      }
+      .btn:hover {
+        border-color: var(--dim);
+      }
+      .btn.start {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .btn.start:hover {
+        background: var(--accent-press);
+        border-color: var(--accent-press);
+      }
+      .btn.start.on {
+        background: var(--ok);
+        border-color: var(--ok);
+        color: #fff;
+      }
+      .btn.reset {
+        background: var(--panel);
+        border-color: var(--line);
+        color: var(--mut);
+      }
+
+      canvas {
+        width: 100%;
+        height: 100%;
+        aspect-ratio: 640 / 520;
+        object-fit: contain;
+        display: block;
+        border-radius: 8px;
+        background: var(--panel2);
+      }
+      .modechip {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.03em;
+        background: var(--panel2);
+        color: var(--mut);
+        border: 1px solid var(--line);
+      }
+      .modechip.run {
+        background: #e9f7e9;
+        color: var(--ok-ink);
+        border-color: #bfe3bb;
+      }
+
+      .reading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .reading:last-child {
+        border-bottom: none;
+      }
+      .reading .k {
+        font-size: 13px;
+        color: var(--mut);
+      }
+      .reading .v {
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--txt);
+      }
+
+      .meter {
+        height: 10px;
+        border-radius: 5px;
+        background: var(--panel2);
+        position: relative;
+        overflow: hidden;
+        margin: 6px 0 4px;
+        border: 1px solid var(--line);
+      }
+      .meter .fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0;
+        border-radius: 5px;
+        transition:
+          width 0.15s,
+          background 0.25s;
+      }
+      .meterlabels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--dim);
+        margin-bottom: 10px;
+      }
+
+      .badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 13.5px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        justify-content: center;
+        margin-top: 4px;
+        transition: 0.2s;
+      }
+      .b-off {
+        background: var(--panel2);
+        color: var(--dim);
+        border: 1px solid var(--line);
+      }
+      .b-on {
+        background: #e9f7e9;
+        color: var(--ok-ink);
+        border: 1px solid #bfe3bb;
+      }
+      .b-charge {
+        background: #fdf6e8;
+        color: #9a7008;
+        border: 1px solid #f2e0b8;
+      }
+      .devnote {
+        font-size: 11.5px;
+        color: var(--mut);
+        text-align: center;
+        margin-top: 6px;
+        line-height: 1.4;
+        min-height: 32px;
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 14px;
+        padding: 12px 8px;
+        border-radius: 8px;
+        background: var(--panel2);
+        border: 1px solid var(--line);
+      }
+      .flow .node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        flex: 1;
+        opacity: 0.4;
+        transition: 0.25s;
+      }
+      .flow .node.hot {
+        opacity: 1;
+      }
+      .flow .node .ic {
+        font-size: 19px;
+      }
+      .flow .node .lb {
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        color: var(--mut);
+        text-transform: uppercase;
+      }
+      .flow .arrow {
+        color: var(--dim);
+        font-size: 13px;
+        flex: 0 0 auto;
+        transition: 0.25s;
+      }
+      .flow .arrow.hot {
+        color: var(--accent);
+      }
+
+      .sect {
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid var(--line);
+      }
+      .sect-label {
+        display: block;
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--txt);
+        margin-bottom: 8px;
+      }
+
+      .helpwrap {
+        position: fixed;
+        top: 14px;
+        right: clamp(12px, 2.4vw, 30px);
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .helpbtns {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .helpbtn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head);
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #fff;
+        background: var(--sky);
+        border: 1px solid var(--sky);
+        border-radius: 8px;
+        padding: 8px 14px;
+        box-shadow: 0 6px 14px rgba(42, 120, 214, 0.24);
+        transition:
+          transform 0.15s ease,
+          background 0.15s ease;
+      }
+      .helpbtn:hover {
+        transform: translateY(-1px);
+      }
+      .helpbtn:focus-visible {
+        outline: 2px solid var(--txt);
+        outline-offset: 2px;
+      }
+      .helpbtn.on {
+        background: var(--accent);
+        border-color: var(--accent);
+        box-shadow: 0 6px 14px rgba(232, 89, 12, 0.26);
+      }
+      .helpbar {
+        display: none;
+        margin-top: 8px;
+        width: 380px;
+        max-width: min(380px, 88vw);
+        max-height: 72vh;
+        overflow-y: auto;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        box-shadow: 0 14px 30px rgba(23, 41, 59, 0.16);
+        padding: 14px 16px;
+        font-size: 13.5px;
+        line-height: 1.5;
+        color: var(--txt);
+      }
+      .helpbar.show {
+        display: block;
+      }
+      .tabpanel {
+        display: none;
+      }
+      .tabpanel.on {
+        display: block;
+      }
+      .tabpanel ol,
+      .tabpanel ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .tabpanel li {
+        margin-bottom: 6px;
+      }
+      .tabpanel li:last-child {
+        margin-bottom: 0;
+      }
+      .tabpanel b {
+        color: var(--sky);
+      }
+      @media (max-width: 900px) {
+        .helpwrap {
+          position: static;
+          align-items: stretch;
+          margin-bottom: 10px;
+          flex: 0 0 auto;
+        }
+        .helpbar {
+          width: 100%;
+          max-width: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .helpbtn {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="helpwrap">
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">
+          What You'll Learn
+        </button>
+      </div>
+      <div class="helpbar" id="helpbar">
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li>Pick <b>Day</b> or <b>Night</b> — solar power only exists by day.</li>
+            <li>
+              By day, set the <b>Sunlight Intensity</b> and drag the
+              <b>Panel Angle</b> slider — try to land near the marked sweet
+              spot.
+            </li>
+            <li>Choose the <b>Device Load</b> the station is powering.</li>
+            <li>
+              By <b>Day</b>, the battery charges from the panel and powers the
+              device at the same time. By <b>Night</b> there's no sunlight, so
+              only the device draws from what's stored.
+            </li>
+            <li>Press <b>Start</b> and watch the readings and energy flow.</li>
+            <li>
+              Try this: let the battery build up during the <b>Day</b>, then
+              switch to <b>Night</b> — the device keeps running on what you
+              stored, with no panel left to top it back up.
+            </li>
+            <li>Press <b>Reset</b> to clear the battery and start over.</li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <ul>
+            <li>Solar power is only generated when sunlight is available</li>
+            <li>Stronger sunlight and a correctly angled panel generate more power</li>
+            <li>A wrongly angled panel captures far less usable sunlight</li>
+            <li>Stored battery energy can be used anytime, including at night</li>
+            <li>A heavier device load drains a battery faster</li>
+            <li>By day a charging station can charge its battery and power a device at the same time; by night it can only draw from what's stored</li>
+            <li>How energy changes form: sunlight → electrical energy → stored energy → device power</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <header class="top">
+      <div class="logo">☀️</div>
+      <div class="title">
+        <h1>Solar Charging Station</h1>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card controls">
+        <h3>Charging Bench</h3>
+        <p class="sub">
+          Set the conditions, then press Start to see how sunlight becomes
+          stored, usable power.
+        </p>
+
+        <div class="ctrl">
+          <div class="row">
+            <label>Time Mode</label><span class="val" id="timeVal">Day</span>
+          </div>
+          <div class="toggle" id="timeToggle">
+            <button data-v="day">☀️ Day</button>
+            <button data-v="night">🌙 Night</button>
+          </div>
+          <p class="hint" id="timeHint">Sunlight is available. The solar panel can generate power and charge the battery.</p>
+        </div>
+
+        <div class="ctrl">
+          <div class="row">
+            <label>Sunlight Intensity</label
+            ><span class="val" id="sunVal">Medium</span>
+          </div>
+          <div class="toggle" id="sunToggle">
+            <button data-v="low">Low</button>
+            <button data-v="medium">Medium</button>
+            <button data-v="high">High</button>
+          </div>
+          <p class="hint">Only matters during the Day.</p>
+        </div>
+
+        <div class="ctrl">
+          <div class="row">
+            <label>Panel Angle</label><span class="val" id="angleVal">0°</span>
+          </div>
+          <input type="range" id="angleSlider" min="-90" max="90" value="0" step="1" />
+          <div class="anglemarks"><span>-90° down</span><span>★ 0° optimal</span><span>90° up</span></div>
+          <p class="hint">
+            Closer to the marked sweet spot faces the panel more directly at
+            the sun, so more sunlight is captured.
+          </p>
+        </div>
+
+        <div class="ctrl">
+          <div class="row"><label>Device Load</label></div>
+          <div class="toggle" id="loadToggle">
+            <button data-v="led">LED</button>
+            <button data-v="pump">Pump</button>
+            <button data-v="phone">Phone</button>
+          </div>
+          <p class="hint" id="loadNote">A small LED barely drains the battery.</p>
+        </div>
+
+        <div class="ctrl">
+          <div class="row">
+            <label>Battery Behavior</label><span class="val" id="battModeVal">Charging + Powering Device</span>
+          </div>
+          <p class="hint" id="battModeHint">
+            By day the panel charges the battery while the device runs from it
+            at the same time. By night there's no sunlight, so only the device
+            draws from the battery.
+          </p>
+        </div>
+
+        <div class="stage-foot">
+          <button class="btn start" id="startBtn">▶ Start</button>
+          <button class="btn reset" id="resetBtn">↺ Reset</button>
+        </div>
+        <p class="hint" id="statusHint" style="margin-top: 10px">
+          Set the conditions, then press Start.
+        </p>
+      </section>
+
+      <section class="card stage">
+        <canvas id="stage" width="640" height="520"></canvas>
+        <span class="modechip" id="modeChip">Idle — press Start</span>
+      </section>
+
+      <section class="card readings">
+        <h3>Live Readings</h3>
+        <p class="sub">What the station is generating, storing, and using.</p>
+
+        <div class="reading">
+          <span class="k">Solar Power Generated</span
+          ><span class="v" id="solarVal">Zero</span>
+        </div>
+
+        <div class="reading">
+          <span class="k">Battery Level</span
+          ><span class="v" id="battVal">0%</span>
+        </div>
+        <div class="meter">
+          <div class="fill" id="battFill" style="background: var(--ok)"></div>
+        </div>
+        <div class="meterlabels"><span>0%</span><span>50%</span><span>100%</span></div>
+
+        <div class="sect">
+          <label class="sect-label">Charging Status</label>
+          <div class="badge b-off" id="chargeBadge">Not Charging</div>
+        </div>
+
+        <div class="sect">
+          <label class="sect-label">Device Status</label>
+          <div class="badge b-off" id="deviceBadge">OFF</div>
+          <p class="devnote" id="devNote">Press Start to begin.</p>
+        </div>
+
+        <div class="sect">
+          <label class="sect-label">Energy Flow</label>
+          <div class="flow" id="flowRow">
+            <div class="node" data-n="sun">
+              <span class="ic">☀️</span><span class="lb">Sun</span>
+            </div>
+            <span class="arrow" data-a="1">→</span>
+            <div class="node" data-n="panel">
+              <span class="ic">🔆</span><span class="lb">Panel</span>
+            </div>
+            <span class="arrow" data-a="2">→</span>
+            <div class="node" data-n="battery">
+              <span class="ic">🔋</span><span class="lb">Battery</span>
+            </div>
+            <span class="arrow" data-a="3">→</span>
+            <div class="node" data-n="device">
+              <span class="ic">📱</span><span class="lb">Device</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      (function () {
+        var bar = document.getElementById("helpbar");
+        var btns = document.querySelectorAll(".helpbtn");
+        var panels = document.querySelectorAll(".tabpanel");
+        function closeAll() {
+          bar.classList.remove("show");
+          btns.forEach(function (b) {
+            b.classList.remove("on");
+          });
+          panels.forEach(function (p) {
+            p.classList.remove("on");
+          });
+        }
+        btns.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var already = btn.classList.contains("on");
+            closeAll();
+            if (already) return;
+            btn.classList.add("on");
+            document
+              .querySelector('.tabpanel[data-panel="' + btn.dataset.tab + '"]')
+              .classList.add("on");
+            bar.classList.add("show");
+          });
+        });
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && bar.classList.contains("show")) closeAll();
+        });
+      })();
+    </script>
+
+    <script>
+      (() => {
+        "use strict";
+
+        const SUN = {
+          low: { label: "Low", power: 30 },
+          medium: { label: "Medium", power: 65 },
+          high: { label: "High", power: 100 },
+        };
+        const RESET_ANGLE = 0; // where the slider returns to on Reset — flat/horizontal
+        const LOADS = {
+          led: { label: "LED", drain: 0.6, chargingLabel: false, note: "A small LED barely drains the battery." },
+          pump: { label: "Water Pump", drain: 1.6, chargingLabel: false, note: "The pump needs the battery charged past a minimum level — the water flow gets stronger as the battery fills." },
+          phone: { label: "Phone", drain: 1.0, chargingLabel: true, note: "The phone itself shows as Charging while it draws power." },
+        };
+        const PUMP_MIN_BATTERY = 15; // % — below this the pump has no water pressure at all
+        const BLOOM_RAMP_TIME = 3; // seconds for the flowers to fully bloom (or wilt back down)
+        const CHARGE_RATE = 5.5; // %/sec at 100% solar power
+        const LOW_BATTERY_CUTOFF = 1; // % — below this, the device can't be powered
+
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const TAU = Math.PI * 2;
+        const $ = (id) => document.getElementById(id);
+        function rr(c, x, y, w, h, r) {
+          r = Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2);
+          c.beginPath();
+          c.moveTo(x + r, y);
+          c.arcTo(x + w, y, x + w, y + h, r);
+          c.arcTo(x + w, y + h, x, y + h, r);
+          c.arcTo(x, y + h, x, y, r);
+          c.arcTo(x, y, x + w, y, r);
+          c.closePath();
+        }
+
+        const S = {
+          timeMode: "day",
+          sunlight: "medium",
+          panelAngle: 0,
+          device: "led",
+          running: false,
+          battery: 0,
+          solarRaw: 0,
+          deviceOn: false,
+          chargeActive: false,
+          useActive: false,
+          chargingStatus: "Not Charging",
+          pumpPhase: 0,
+          pumpWatering: false,
+          bloomLevel: 0,
+          particles: [],
+        };
+
+        // The sun moves on its own (left to right across the sky), but the
+        // panel is angled manually by the student — the optimal stays fixed
+        // at dead center. Angle convention: 0°=flat/horizontal (optimal),
+        // moving the slider either positive or negative tilts the panel up
+        // toward vertical, mirrored on the two sides.
+        const OPTIMAL_ANGLE = 0;
+
+        function computeSolarRaw() {
+          if (S.timeMode !== "day") return 0;
+          const base = SUN[S.sunlight].power;
+          const angleDiff = Math.abs(S.panelAngle - OPTIMAL_ANGLE);
+          const eff = clamp(1 - angleDiff / 180, 0.15, 1);
+          return base * eff;
+        }
+        function solarLabel(raw) {
+          if (raw <= 0.5) return "Zero";
+          if (raw < 35) return "Low";
+          if (raw < 70) return "Medium";
+          return "High";
+        }
+
+        /* ---------- controls ---------- */
+        function wireToggle(id, onPick) {
+          const el = $(id);
+          el.querySelectorAll("button").forEach((b) => {
+            b.addEventListener("click", () => {
+              el.querySelectorAll("button").forEach((x) => x.classList.remove("on"));
+              b.classList.add("on");
+              onPick(b.dataset.v);
+            });
+          });
+        }
+        const TIME_HINT = {
+          day: "Sunlight is available. The solar panel can generate power and charge the battery.",
+          night: "No solar power is generated at night. The device can run only if enough battery is stored.",
+        };
+        const BATT_MODE_LABEL = {
+          day: "Charging + Powering Device",
+          night: "Powering Device Only",
+        };
+        wireToggle("timeToggle", (v) => {
+          S.timeMode = v;
+          $("timeVal").textContent = v === "day" ? "Day" : "Night";
+          $("timeHint").textContent = TIME_HINT[v];
+          $("battModeVal").textContent = BATT_MODE_LABEL[v];
+        });
+        wireToggle("sunToggle", (v) => {
+          S.sunlight = v;
+          $("sunVal").textContent = SUN[v].label;
+        });
+        wireToggle("loadToggle", (v) => {
+          S.device = v;
+          $("loadNote").textContent = LOADS[v].note;
+        });
+        $("angleSlider").addEventListener("input", (e) => {
+          S.panelAngle = Number(e.target.value);
+          $("angleVal").textContent = S.panelAngle + "°";
+        });
+        document.querySelector('#timeToggle button[data-v="day"]').classList.add("on");
+        document.querySelector('#sunToggle button[data-v="medium"]').classList.add("on");
+        document.querySelector('#loadToggle button[data-v="led"]').classList.add("on");
+
+        const startBtn = $("startBtn");
+        startBtn.addEventListener("click", () => {
+          S.running = !S.running;
+          startBtn.classList.toggle("on", S.running);
+          startBtn.textContent = S.running ? "⏸ Pause" : "▶ Start";
+          $("statusHint").textContent = S.running
+            ? "Running — change settings any time to see the effect."
+            : "Paused. Press Start to continue.";
+        });
+        $("resetBtn").addEventListener("click", () => {
+          S.running = false;
+          simTime = 0;
+          S.battery = 0;
+          S.solarRaw = 0;
+          S.deviceOn = false;
+          S.chargingStatus = "Not Charging";
+          S.particles = [];
+          S.pumpWatering = false;
+          S.bloomLevel = 0;
+          S.panelAngle = RESET_ANGLE;
+          $("angleSlider").value = RESET_ANGLE;
+          $("angleVal").textContent = RESET_ANGLE + "°";
+          startBtn.classList.remove("on");
+          startBtn.textContent = "▶ Start";
+          $("statusHint").textContent = "Set the conditions, then press Start.";
+        });
+
+        /* ---------- simulation update ---------- */
+        function update(dt) {
+          S.solarRaw = computeSolarRaw();
+
+          if (!S.running) {
+            $("modeChip").textContent = "Idle — press Start";
+            $("modeChip").classList.remove("run");
+            S.chargeActive = false;
+            S.useActive = false;
+            S.pumpWatering = false;
+            return;
+          }
+          $("modeChip").textContent = S.timeMode === "day" ? "Running — Daytime" : "Running — Nighttime";
+          $("modeChip").classList.add("run");
+
+          // By day, charging and powering the device happen at the same time.
+          // By night there's no sunlight, so only the device draws from the battery.
+          S.chargeActive = S.timeMode === "day" && S.solarRaw > 0;
+          const canRun = S.battery > LOW_BATTERY_CUTOFF;
+          S.deviceOn = canRun;
+          S.useActive = S.deviceOn;
+
+          let delta = 0;
+          if (S.chargeActive) delta += CHARGE_RATE * (S.solarRaw / 100) * dt;
+          if (canRun) delta -= LOADS[S.device].drain * dt;
+          S.battery = clamp(S.battery + delta, 0, 100);
+
+          if (S.chargeActive) {
+            S.chargingStatus = S.battery >= 100 ? "Fully Charged" : "Charging";
+          } else {
+            S.chargingStatus = S.battery >= 100 ? "Fully Charged" : "Not Charging";
+          }
+
+          const pumpIntensity = S.device === "pump" && S.deviceOn ? clamp((S.battery - PUMP_MIN_BATTERY) / (100 - PUMP_MIN_BATTERY), 0, 1) : 0;
+          S.pumpWatering = pumpIntensity > 0.02;
+          if (S.pumpWatering) S.pumpPhase += dt * 3.2;
+          // flowers ease into (and out of) bloom over BLOOM_RAMP_TIME seconds,
+          // instead of snapping the instant the water starts
+          const bloomTarget = S.pumpWatering ? 1 : 0;
+          S.bloomLevel = clamp(S.bloomLevel + Math.sign(bloomTarget - S.bloomLevel) * (dt / BLOOM_RAMP_TIME), 0, 1);
+
+          // wire particles — panel->battery while charging, battery->device while powering
+          if (Math.random() < (S.chargeActive ? 0.35 : 0)) {
+            S.particles.push({ seg: "charge", u: 0 });
+          }
+          if (Math.random() < (S.useActive ? 0.35 : 0)) {
+            S.particles.push({ seg: "use", u: 0 });
+          }
+          S.particles.forEach((p) => (p.u += dt * 0.9));
+          S.particles = S.particles.filter((p) => p.u < 1);
+        }
+
+        function updateUI() {
+          $("solarVal").textContent = solarLabel(S.solarRaw);
+          $("battVal").textContent = Math.round(S.battery) + "%";
+          const bf = $("battFill");
+          bf.style.width = S.battery + "%";
+          bf.style.background = S.battery < 20 ? "var(--danger)" : S.battery < 100 ? "var(--volt)" : "var(--ok)";
+
+          const cb = $("chargeBadge");
+          cb.textContent = S.chargingStatus;
+          cb.className = "badge " + (S.chargingStatus === "Fully Charged" ? "b-on" : S.chargingStatus === "Charging" ? "b-charge" : "b-off");
+
+          const db = $("deviceBadge");
+          const devText = S.deviceOn ? (LOADS[S.device].chargingLabel ? "Charging" : "ON") : "OFF";
+          db.textContent = devText;
+          db.className = "badge " + (S.deviceOn ? "b-on" : "b-off");
+
+          let note;
+          if (!S.running) note = "Press Start to begin.";
+          else if (S.timeMode === "day") {
+            if (S.solarRaw > 0 && S.deviceOn) note = "Charging from the panel and running the " + LOADS[S.device].label + " at the same time.";
+            else if (S.solarRaw > 0) note = "Battery is charging from the panel — too low right now to power the device too.";
+            else if (S.deviceOn) note = "No sunlight at this angle — running the " + LOADS[S.device].label + " from stored battery power.";
+            else note = "No sunlight reaching the panel, and the battery is too low to power the device.";
+          } else {
+            note = S.deviceOn
+              ? "Running the " + LOADS[S.device].label + " from stored battery power."
+              : "Battery is too low to power the device — charge it during the day first.";
+          }
+          $("devNote").textContent = note;
+
+          const sunHot = S.timeMode === "day" && S.solarRaw > 0;
+          const chargeHot = S.chargeActive;
+          const useHot = S.useActive;
+          document.querySelector('.node[data-n="sun"]').classList.toggle("hot", sunHot);
+          document.querySelector('.node[data-n="panel"]').classList.toggle("hot", sunHot);
+          document.querySelector('.arrow[data-a="1"]').classList.toggle("hot", sunHot);
+          document.querySelector('.arrow[data-a="2"]').classList.toggle("hot", chargeHot);
+          document.querySelector('.node[data-n="battery"]').classList.toggle("hot", S.battery > 0);
+          document.querySelector('.arrow[data-a="3"]').classList.toggle("hot", useHot);
+          document.querySelector('.node[data-n="device"]').classList.toggle("hot", S.deviceOn);
+        }
+
+        /* ---------- canvas ---------- */
+        const canvas = $("stage");
+        const ctx = canvas.getContext("2d");
+        const DESIGN_W = 640,
+          DESIGN_H = 520;
+        let W, H, GROUND, PANEL_PX, PANEL_PY, BATT_X, BATT_Y, DEV_X, DEV_Y, SUN_BASE_Y, SUN_X, SUN_Y;
+
+        function layout() {
+          const cw = Math.max(360, Math.round(canvas.clientWidth || DESIGN_W));
+          const ch = Math.max(300, Math.round(canvas.clientHeight || DESIGN_H));
+          const dpr = (window.devicePixelRatio || 1) * 1.5;
+          canvas.width = Math.round(cw * dpr);
+          canvas.height = Math.round(ch * dpr);
+          const k = Math.min(cw / DESIGN_W, ch / DESIGN_H);
+          ctx.setTransform(dpr * k, 0, 0, dpr * k, 0, 0);
+          W = cw / k;
+          H = ch / k;
+
+          GROUND = H * 0.86;
+          PANEL_PX = W * 0.28;
+          PANEL_PY = GROUND - 6;
+          BATT_X = W * 0.5;
+          BATT_Y = GROUND - 74;
+          DEV_X = W * 0.78;
+          DEV_Y = GROUND - 90;
+          SUN_BASE_Y = H * 0.16;
+        }
+
+        // Sweeps the sun (and moon) smoothly from the left edge of the canvas
+        // to the right edge and back — a full left-right-left cycle takes
+        // SUN_CYCLE seconds. Runs before update()/draw() each frame. The
+        // panel angle is manual — this only moves the sun, not the panel.
+        const SUN_CYCLE = 50;
+        function updateSunPosition(t) {
+          const frac = (1 - Math.cos((t / SUN_CYCLE) * TAU)) / 2; // smooth 0 -> 1 -> 0
+          SUN_X = W * (0.06 + frac * 0.88);
+          SUN_Y = SUN_BASE_Y + Math.sin(t * 0.05) * (H * 0.02);
+        }
+
+        function drawSky(t) {
+          const g = ctx.createLinearGradient(0, 0, 0, H);
+          if (S.timeMode === "day") {
+            g.addColorStop(0, "#bfe0f7");
+            g.addColorStop(1, "#eef7fb");
+          } else {
+            g.addColorStop(0, "#0c1530");
+            g.addColorStop(1, "#1c2b4d");
+          }
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, W, H);
+
+          drawClouds(t);
+
+          if (S.timeMode === "night") {
+            ctx.fillStyle = "rgba(255,255,255,0.85)";
+            for (let i = 0; i < 40; i++) {
+              const sx = (i * 97.3) % W;
+              const sy = (i * 53.7) % (GROUND * 0.7);
+              ctx.globalAlpha = 0.3 + 0.5 * Math.abs(Math.sin(i * 12.9));
+              ctx.beginPath();
+              ctx.arc(sx, sy, 1.2, 0, TAU);
+              ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+          }
+
+          ctx.fillStyle = S.timeMode === "day" ? "#bcd98a" : "#141f38";
+          ctx.fillRect(0, GROUND, W, H - GROUND);
+
+          if (S.device === "pump") drawFlowerField();
+        }
+
+        function drawClouds(t) {
+          // a few soft, slowly-drifting cloud puffs — dim silhouettes at night
+          const puffs = [
+            { x: 0.1, y: 0.11, scale: 1.0, speed: 3.2 },
+            { x: 0.4, y: 0.2, scale: 0.72, speed: 4.6 },
+            { x: 0.66, y: 0.08, scale: 1.2, speed: 2.6 },
+            { x: 0.87, y: 0.23, scale: 0.85, speed: 3.9 },
+          ];
+          const bumps = [
+            [-18, 4, 16, 11],
+            [-8, -6, 15, 11],
+            [6, -7, 16, 12],
+            [18, 3, 14, 10],
+            [0, 6, 20, 10],
+          ];
+          ctx.fillStyle = S.timeMode === "day" ? "#ffffff" : "#22345a";
+          ctx.globalAlpha = S.timeMode === "day" ? 0.88 : 0.3;
+          puffs.forEach((p) => {
+            const cx = ((p.x * W + t * p.speed) % (W + 160)) - 80;
+            const cy = p.y * H;
+            const s = p.scale;
+            bumps.forEach(([dx, dy, rw, rh]) => {
+              ctx.beginPath();
+              ctx.ellipse(cx + dx * s, cy + dy * s, rw * s, rh * s, 0, 0, TAU);
+              ctx.fill();
+            });
+          });
+          ctx.globalAlpha = 1;
+        }
+
+        function drawFlowerField() {
+          // a richer field of grass and flowers, shown while the Water Pump is
+          // selected, replacing the plain ground fill
+          const bandH = H - GROUND;
+          const g2 = ctx.createLinearGradient(0, GROUND, 0, H);
+          if (S.timeMode === "day") {
+            g2.addColorStop(0, "#a8d47a");
+            g2.addColorStop(1, "#8fc766");
+          } else {
+            g2.addColorStop(0, "#182a1c");
+            g2.addColorStop(1, "#0f1c13");
+          }
+          ctx.fillStyle = g2;
+          ctx.fillRect(0, GROUND, W, bandH);
+
+          ctx.strokeStyle = S.timeMode === "day" ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.07)";
+          ctx.lineWidth = 1;
+          for (let i = 0; i < 60; i++) {
+            const gx = (i * 53.7) % W;
+            const gy = GROUND + (bandH * 0.15) + ((i * 31.3) % (bandH * 0.8));
+            ctx.beginPath();
+            ctx.moveTo(gx, gy);
+            ctx.lineTo(gx + 2, gy - 6);
+            ctx.stroke();
+          }
+
+          const bloom = S.bloomLevel; // 0..1 — eases up as the pump waters them, and back down when it stops
+          const petalColors = ["#ff6fa5", "#ffd166", "#ffffff", "#b185db", "#ff9770"];
+          for (let i = 0; i < 26; i++) {
+            const fx = (i * 71.9 + 15) % W;
+            const fy = GROUND + (bandH * 0.2) + ((i * 37.1) % (bandH * 0.7));
+            const size = (2.4 + (i % 3)) * (1 + bloom * 0.7);
+            ctx.globalAlpha = lerp(S.timeMode === "day" ? 1 : 0.55, 1, bloom);
+            if (bloom > 0.02) {
+              ctx.fillStyle = `rgba(255, 240, 190, ${(0.5 * bloom).toFixed(2)})`;
+              ctx.beginPath();
+              ctx.arc(fx, fy, size * 1.6, 0, TAU);
+              ctx.fill();
+            }
+            ctx.fillStyle = petalColors[i % petalColors.length];
+            for (let p = 0; p < 5; p++) {
+              const a = (p / 5) * TAU;
+              ctx.beginPath();
+              ctx.arc(fx + Math.cos(a) * size, fy + Math.sin(a) * size, size * 0.75, 0, TAU);
+              ctx.fill();
+            }
+            ctx.fillStyle = "#ffd166";
+            ctx.beginPath();
+            ctx.arc(fx, fy, size * 0.55, 0, TAU);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+        }
+
+        function drawSunOrMoon(t) {
+          // SUN_X/SUN_Y are kept current by updateSunPosition(), called once
+          // per frame before update()/draw() so the panel's sun-tracking math
+          // and this drawing always agree on where the sun currently is
+          if (S.timeMode === "day") {
+            const r = 26 + Math.sin(t * 1.5) * 1.5;
+            const rayLen = { low: 8, medium: 14, high: 22 }[S.sunlight];
+            ctx.strokeStyle = "#f6b93b";
+            ctx.lineWidth = 3;
+            ctx.lineCap = "round";
+            for (let i = 0; i < 8; i++) {
+              const a = (i / 8) * TAU + t * 0.3;
+              ctx.beginPath();
+              ctx.moveTo(SUN_X + Math.cos(a) * (r + 4), SUN_Y + Math.sin(a) * (r + 4));
+              ctx.lineTo(SUN_X + Math.cos(a) * (r + 4 + rayLen), SUN_Y + Math.sin(a) * (r + 4 + rayLen));
+              ctx.stroke();
+            }
+            ctx.fillStyle = "#fbc531";
+            ctx.beginPath();
+            ctx.arc(SUN_X, SUN_Y, r, 0, TAU);
+            ctx.fill();
+          } else {
+            ctx.fillStyle = "#e9edf6";
+            ctx.beginPath();
+            ctx.arc(SUN_X, SUN_Y, 22, 0, TAU);
+            ctx.fill();
+            ctx.fillStyle = "#1c2b4d";
+            ctx.beginPath();
+            ctx.arc(SUN_X + 10, SUN_Y - 6, 20, 0, TAU);
+            ctx.fill();
+          }
+        }
+
+        // Pedestal dimensions, shared between drawPanel() and batteryWireStart()
+        // so the wire always meets the panel exactly where it's drawn.
+        const POST_H = 34,
+          BASE_W = 46,
+          BASE_H = 10,
+          POST_W = 12,
+          PANEL_HALFLEN = 26,
+          PANEL_THICK = 22,
+          HINGE_GAP = 3;
+
+        function drawPanel() {
+          // A white pedestal-mounted, two-panel folding solar array (matching the
+          // reference photo): the foot plate + post are fixed on the ground and
+          // never move — only the panel plate above the post pivots as the angle
+          // changes, hinged exactly at the post's top, extending equally to both
+          // sides of the pivot.
+          const angleRad = (S.panelAngle * Math.PI) / 180;
+          const pivotY = PANEL_PY - POST_H;
+
+          // foot plate — fixed, sits on the ground
+          ctx.fillStyle = "rgba(23,41,59,0.14)";
+          ctx.beginPath();
+          ctx.ellipse(PANEL_PX, PANEL_PY + BASE_H / 2 + 3, BASE_W / 2 + 4, 6, 0, 0, TAU);
+          ctx.fill();
+          ctx.fillStyle = "#c23b3b";
+          rr(ctx, PANEL_PX - BASE_W / 2, PANEL_PY - BASE_H / 2, BASE_W, BASE_H, 3);
+          ctx.fill();
+          ctx.strokeStyle = "#7a2323";
+          ctx.lineWidth = 1;
+          rr(ctx, PANEL_PX - BASE_W / 2, PANEL_PY - BASE_H / 2, BASE_W, BASE_H, 3);
+          ctx.stroke();
+          ctx.fillStyle = "#2b2f36";
+          [
+            [-BASE_W / 2 + 5, -BASE_H / 2 + 3],
+            [BASE_W / 2 - 5, -BASE_H / 2 + 3],
+            [-BASE_W / 2 + 5, BASE_H / 2 - 3],
+            [BASE_W / 2 - 5, BASE_H / 2 - 3],
+          ].forEach(([dx, dy]) => {
+            ctx.beginPath();
+            ctx.arc(PANEL_PX + dx, PANEL_PY + dy, 1.3, 0, TAU);
+            ctx.fill();
+          });
+
+          // vertical post — fixed, connects the foot plate to the pivot
+          ctx.fillStyle = "#c23b3b";
+          rr(ctx, PANEL_PX - POST_W / 2, pivotY, POST_W, PANEL_PY - BASE_H / 2 - pivotY, 2);
+          ctx.fill();
+          ctx.strokeStyle = "#7a2323";
+          ctx.lineWidth = 1;
+          rr(ctx, PANEL_PX - POST_W / 2, pivotY, POST_W, PANEL_PY - BASE_H / 2 - pivotY, 2);
+          ctx.stroke();
+
+          ctx.save();
+          ctx.translate(PANEL_PX, pivotY);
+          // ctx.rotate operates on the coordinate system (not a direction vector).
+          // S.panelAngle is -90..90 here: 0°=flat/horizontal, and moving the
+          // slider either positive or negative tilts it up toward vertical
+          // (mirrored on the two sides).
+          ctx.rotate(Math.PI / 2 - angleRad);
+          const onSun = S.timeMode === "day" && S.solarRaw > 0;
+
+          // mount bracket, centered on the pivot — rotates with the panel
+          ctx.fillStyle = "#c7cdd6";
+          rr(ctx, -PANEL_THICK / 2 - 3, -6, PANEL_THICK + 6, 12, 3);
+          ctx.fill();
+
+          // two panel halves, centered on the pivot and sharing a hinge at the middle
+          [-1, 1].forEach((side) => {
+            const near = (side * HINGE_GAP) / 2;
+            const far = side * PANEL_HALFLEN;
+            const top = Math.min(near, far);
+            const h = Math.abs(far - near);
+
+            ctx.fillStyle = "#eef1f4";
+            rr(ctx, -PANEL_THICK / 2 - 2, top - 2, PANEL_THICK + 4, h + 4, 3);
+            ctx.fill();
+
+            ctx.fillStyle = onSun ? "#2455a4" : "#3a4f6b";
+            rr(ctx, -PANEL_THICK / 2, top, PANEL_THICK, h, 2);
+            ctx.fill();
+
+            // photovoltaic cell grid
+            ctx.strokeStyle = "rgba(255,255,255,0.4)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, top);
+            ctx.lineTo(0, top + h);
+            for (let i = 1; i < 3; i++) {
+              const y = top + (h / 3) * i;
+              ctx.moveTo(-PANEL_THICK / 2, y);
+              ctx.lineTo(PANEL_THICK / 2, y);
+            }
+            ctx.stroke();
+
+            if (onSun) {
+              ctx.fillStyle = "rgba(255, 220, 130, 0.35)";
+              rr(ctx, -PANEL_THICK / 2, top, PANEL_THICK, h, 2);
+              ctx.fill();
+            }
+          });
+
+          // hinge strip joining the two halves, right at the pivot
+          ctx.fillStyle = "#c7cdd6";
+          rr(ctx, -PANEL_THICK / 2 - 2, -HINGE_GAP / 2 - 1, PANEL_THICK + 4, HINGE_GAP + 2, 1.5);
+          ctx.fill();
+
+          // exposed red/black wire pair at one panel's outer corner, like the photo
+          const wx = PANEL_THICK / 2 + 1,
+            wy = PANEL_HALFLEN - 4;
+          ctx.strokeStyle = "#c23b3b";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(wx, wy);
+          ctx.lineTo(wx + 6, wy + 5);
+          ctx.stroke();
+          ctx.strokeStyle = "#2b2f36";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(wx, wy + 4);
+          ctx.lineTo(wx + 6, wy + 9);
+          ctx.stroke();
+
+          ctx.restore();
+        }
+
+        function batteryWireStart() {
+          const angleRad = (S.panelAngle * Math.PI) / 180;
+          const pivotY = PANEL_PY - POST_H;
+          const theta = Math.PI / 2 - angleRad; // matches drawPanel()'s ctx.rotate()
+          // matches the exposed wire-pair corner drawn in drawPanel()
+          const lx = PANEL_THICK / 2 + 3,
+            ly = PANEL_HALFLEN;
+          const gx = lx * Math.cos(theta) - ly * Math.sin(theta);
+          const gy = lx * Math.sin(theta) + ly * Math.cos(theta);
+          return { x: PANEL_PX + gx, y: pivotY + gy };
+        }
+
+        function deviceWireEnd() {
+          // where the battery-to-device wire should actually touch each
+          // device's drawn body — they don't all sit at the same anchor point
+          // (the pump stands on the ground, the others float at device height)
+          if (S.device === "pump") return { x: DEV_X, y: GROUND - 4 };
+          if (S.device === "phone") return { x: DEV_X, y: DEV_Y + 24 };
+          return { x: DEV_X, y: DEV_Y + 19 }; // led
+        }
+
+        function drawWire(x1, y1, x2, y2, active) {
+          ctx.strokeStyle = active ? "#e8590c" : "#aab3c2";
+          ctx.lineWidth = 3;
+          ctx.setLineDash(active ? [] : [5, 5]);
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        function drawBattery() {
+          const w = 54,
+            h = 78;
+          const x = BATT_X - w / 2,
+            y = BATT_Y - h;
+          // a light, high-contrast casing so the battery reads clearly against
+          // both the bright day sky and the dark navy night sky
+          ctx.fillStyle = "#eef1f4";
+          rr(ctx, x, y, w, h, 6);
+          ctx.fill();
+          ctx.strokeStyle = "#aab3c2";
+          ctx.lineWidth = 1.5;
+          rr(ctx, x, y, w, h, 6);
+          ctx.stroke();
+          ctx.fillStyle = "#eef1f4";
+          rr(ctx, BATT_X - 10, y - 8, 20, 8, 2);
+          ctx.fill();
+          ctx.strokeStyle = "#aab3c2";
+          rr(ctx, BATT_X - 10, y - 8, 20, 8, 2);
+          ctx.stroke();
+
+          const pad = 5;
+          const innerH = h - pad * 2;
+          const fillH = innerH * clamp(S.battery / 100, 0, 1);
+          ctx.fillStyle = S.battery < 20 ? "#d03b3b" : S.battery < 100 ? "#fab219" : "#0ca30c";
+          rr(ctx, x + pad, y + pad + (innerH - fillH), w - pad * 2, fillH, 3);
+          ctx.fill();
+
+          // percentage sits on its own dark chip so it never camouflages
+          // against whatever sky color is currently behind it
+          const label = Math.round(S.battery) + "%";
+          ctx.font = "700 12px 'IBM Plex Mono', monospace";
+          const chipW = ctx.measureText(label).width + 16,
+            chipH = 18;
+          ctx.fillStyle = "#17293b";
+          rr(ctx, BATT_X - chipW / 2, y + h + 6, chipW, chipH, 4);
+          ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(label, BATT_X, y + h + 6 + chipH / 2 + 1);
+          ctx.textBaseline = "alphabetic";
+        }
+
+        function drawDevice(t) {
+          const x = DEV_X,
+            y = S.device === "pump" ? GROUND : DEV_Y; // the pump stands on the ground, not floating
+          const on = S.deviceOn;
+          ctx.save();
+          ctx.translate(x, y);
+
+          if (S.device === "led") {
+            ctx.fillStyle = on ? "#fde68a" : "#c7cdd6";
+            ctx.beginPath();
+            ctx.arc(0, 0, 16, 0, TAU);
+            ctx.fill();
+            ctx.strokeStyle = "#8a949d";
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+            if (on) {
+              ctx.strokeStyle = "rgba(250, 204, 21, 0.6)";
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.arc(0, 0, 22 + Math.sin(t * 6) * 2, 0, TAU);
+              ctx.stroke();
+            }
+            ctx.fillStyle = "#8a949d";
+            rr(ctx, -6, 14, 12, 10, 2);
+            ctx.fill();
+          } else if (S.device === "pump") {
+            // a big, ground-mounted hand pump standing in the flower field —
+            // water pressure builds up with the battery level: nothing below
+            // PUMP_MIN_BATTERY, a full strong stream as it approaches 100%
+            const intensity = on ? clamp((S.battery - PUMP_MIN_BATTERY) / (100 - PUMP_MIN_BATTERY), 0, 1) : 0;
+            // painted parts stay their own color whether running or not — only
+            // the water tells you it's actually pumping
+            const bodyColor = "#e8590c";
+            const spoutColor = "#c9973b";
+
+            // footing, flush with the ground
+            ctx.fillStyle = "#4c5c6b";
+            rr(ctx, -16, -4, 32, 7, 2);
+            ctx.fill();
+
+            // tall main column
+            ctx.fillStyle = bodyColor;
+            rr(ctx, -10, -48, 20, 45, 5);
+            ctx.fill();
+            ctx.strokeStyle = "#aab3c2";
+            ctx.lineWidth = 1.2;
+            rr(ctx, -10, -48, 20, 45, 5);
+            ctx.stroke();
+            ctx.fillStyle = "rgba(255,255,255,0.22)";
+            rr(ctx, -10, -48, 20, 12, 4);
+            ctx.fill();
+
+            // pump handle
+            ctx.strokeStyle = "#4c5c6b";
+            ctx.lineWidth = 4;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(6, -44);
+            ctx.lineTo(20, -50);
+            ctx.stroke();
+            ctx.fillStyle = "#4c5c6b";
+            ctx.beginPath();
+            ctx.arc(6, -44, 3, 0, TAU);
+            ctx.fill();
+
+            // spout
+            ctx.fillStyle = spoutColor;
+            rr(ctx, 8, -18, 13, 9, 2);
+            ctx.fill();
+
+            if (on && intensity > 0.02) {
+              const dropCount = Math.max(1, Math.round(intensity * 6));
+              for (let i = 0; i < dropCount; i++) {
+                const phase = (S.pumpPhase + i * 0.3) % 1;
+                const dx = 20 + Math.sin(phase * 5 + i) * 1.6;
+                const dy = -10 + phase * (14 + intensity * 16);
+                ctx.globalAlpha = clamp(1 - phase * 0.7, 0, 1);
+                ctx.fillStyle = "#4fb0e6";
+                ctx.beginPath();
+                ctx.ellipse(dx, dy, 2, 3.2, 0, 0, TAU);
+                ctx.fill();
+              }
+              ctx.globalAlpha = 1;
+
+              ctx.fillStyle = "rgba(79, 176, 230, 0.5)";
+              ctx.beginPath();
+              ctx.ellipse(20, 4, 6 + intensity * 10, 3 + intensity * 2.5, 0, 0, TAU);
+              ctx.fill();
+            }
+          } else if (S.device === "phone") {
+            // a medium-slate case (not the old near-black one) with a light
+            // outline, so it reads clearly against the dark night sky too
+            ctx.fillStyle = "#5b6b7d";
+            rr(ctx, -14, -26, 28, 52, 6);
+            ctx.fill();
+            ctx.strokeStyle = "#aab3c2";
+            ctx.lineWidth = 1.2;
+            rr(ctx, -14, -26, 28, 52, 6);
+            ctx.stroke();
+            ctx.fillStyle = on ? "#7fd858" : "#232b36";
+            rr(ctx, -11, -22, 22, 44, 3);
+            ctx.fill();
+
+            // a single horizontal battery-level bar across the bottom of the
+            // screen — the whole width of the device, filling left-to-right
+            // with the shared station's charge level, no number
+            const barW = 19,
+              barH = 4.5;
+            const barX = -barW / 2,
+              barY = 22 - barH - 2; // sits right above the screen's bottom edge
+            ctx.fillStyle = "rgba(0,0,0,0.4)";
+            rr(ctx, barX - 1, barY - 1, barW + 2, barH + 2, 2);
+            ctx.fill();
+            const fillW = barW * clamp(S.battery / 100, 0, 1);
+            if (fillW > 0.5) {
+              ctx.fillStyle = "#ffffff";
+              rr(ctx, barX, barY, fillW, barH, 1.5);
+              ctx.fill();
+            }
+
+            if (on) {
+              ctx.fillStyle = "#fff";
+              ctx.beginPath();
+              ctx.moveTo(2, -14);
+              ctx.lineTo(-6, 2);
+              ctx.lineTo(0, 2);
+              ctx.lineTo(-3, 16);
+              ctx.lineTo(8, -2);
+              ctx.lineTo(2, -2);
+              ctx.closePath();
+              ctx.fill();
+            }
+          }
+          ctx.restore();
+        }
+
+        function drawParticles() {
+          const c0 = batteryWireStart();
+          S.particles.forEach((p) => {
+            let x, y, color;
+            if (p.seg === "charge") {
+              x = lerp(c0.x, BATT_X, p.u);
+              y = lerp(c0.y, BATT_Y - 40, p.u);
+              color = "#f6b93b";
+            } else {
+              const d1 = deviceWireEnd();
+              x = lerp(BATT_X, d1.x, p.u);
+              y = lerp(BATT_Y - 40, d1.y, p.u);
+              color = "#2a78d6";
+            }
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 1 - p.u * 0.3;
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, TAU);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          });
+        }
+
+        function draw(t) {
+          drawSky(t);
+          drawSunOrMoon(t);
+          drawPanel();
+          const c0 = batteryWireStart();
+          drawWire(c0.x, c0.y, BATT_X, BATT_Y - 40, S.chargeActive);
+          const d0 = deviceWireEnd();
+          drawWire(BATT_X, BATT_Y - 40, d0.x, d0.y, S.useActive);
+          drawBattery();
+          drawDevice(t);
+          drawParticles();
+        }
+
+        /* ---------- loop ---------- */
+        let lastT = null;
+        // simTime only advances while running, so the sun, clouds, and every
+        // other animated flourish stay frozen until Start is pressed, instead
+        // of drifting on their own beforehand. The panel itself is manual —
+        // it only changes when the student drags the slider.
+        let simTime = 0;
+        function loop(t) {
+          if (lastT == null) lastT = t;
+          const dt = Math.min(0.05, (t - lastT) / 1000);
+          lastT = t;
+          if (S.running) simTime += dt;
+          updateSunPosition(simTime);
+          update(dt);
+          updateUI();
+          draw(simTime);
+          requestAnimationFrame(loop);
+        }
+        layout();
+        updateSunPosition(0);
+        updateUI();
+        draw(0);
+        requestAnimationFrame(loop);
+
+        if (window.ResizeObserver) {
+          let first = true;
+          new ResizeObserver(() => {
+            if (first) {
+              first = false;
+              return;
+            }
+            layout();
+          }).observe(canvas.parentElement);
+        }
+        window.addEventListener("resize", layout);
+      })();
+    </script>
+  </body>
+</html>

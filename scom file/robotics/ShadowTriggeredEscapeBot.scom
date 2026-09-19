@@ -1,0 +1,3300 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sensor-Based Escape Simulation · Shadow Triggered Escape Bot</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #eef6ff;
+        --panel: #ffffff;
+        --panel2: #f4f8ff;
+        --line: #dbe6f5;
+        --txt: #25324a;
+        --mut: #5f6f8a;
+        --dim: #93a2ba;
+        --accent: #ff8fab;
+        --accent2: #7cc6ff;
+        --leaf: #7ac77a;
+        --sun: #ffd84d;
+        --ultra: #3fbfa8;
+        --warn: #f7a23b;
+        --danger: #ff6b81;
+        --ok: #54c48a;
+        --shadow: 0 12px 34px rgba(80, 110, 160, 0.14);
+        --r: 20px;
+        --head: "Orbitron", sans-serif;
+        --body: "Rajdhani", sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        font-family: var(--body);
+        font-size: 15.5px;
+        font-weight: 500;
+        color: var(--txt);
+        background:
+          radial-gradient(900px 500px at 10% -5%, #fff6fb 0, transparent 60%),
+          radial-gradient(900px 600px at 100% 0%, #eaf7ff 0, transparent 55%),
+          linear-gradient(180deg, #f3f9ff, #eaf6ee);
+        min-height: 100vh;
+        padding: 22px clamp(12px, 3vw, 40px) 40px;
+      }
+      h1,
+      h3,
+      .tab,
+      .badge,
+      .action .big,
+      .title p {
+        font-family: var(--head);
+      }
+      header.top {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .logo {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        font-size: 28px;
+        background: linear-gradient(145deg, #fff, #eaf3ff);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+      }
+      .title h1 {
+        margin: 0;
+        font-size: 21px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: #2b3a57;
+      }
+      .title p {
+        margin: 4px 0 0;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        color: var(--mut);
+      }
+
+      .tabs {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+      }
+      .tab {
+        cursor: pointer;
+        border: 2px solid var(--line);
+        background: #fff;
+        padding: 13px 20px;
+        border-radius: 16px;
+        font-size: 13.5px;
+        font-weight: 600;
+        letter-spacing: 0.4px;
+        color: var(--mut);
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        transition: 0.18s;
+        user-select: none;
+        box-shadow: var(--shadow);
+      }
+      .tab:hover {
+        transform: translateY(-2px);
+        border-color: #bcd6f5;
+      }
+      .tab.active {
+        color: #fff;
+        border-color: transparent;
+        background: linear-gradient(145deg, var(--accent2), #5ab0f5);
+        box-shadow: 0 10px 24px rgba(90, 176, 245, 0.35);
+      }
+      .tab.light.active {
+        background: linear-gradient(145deg, var(--sun), #ffbf3d);
+        color: #5a4a12;
+      }
+      .tab.ultra.active {
+        background: linear-gradient(145deg, var(--ultra), #279d88);
+        box-shadow: 0 10px 24px rgba(63, 191, 168, 0.35);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 300px 1fr 296px;
+        gap: 18px;
+        align-items: start;
+      }
+      @media (max-width: 1150px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        box-shadow: var(--shadow);
+        padding: 20px;
+      }
+      .card h3 {
+        margin: 0 0 4px;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: #2b3a57;
+      }
+      .card .sub {
+        font-size: 14px;
+        color: var(--mut);
+        margin: 0 0 14px;
+        line-height: 1.5;
+      }
+
+      .ctrl {
+        margin: 18px 0;
+      }
+      .ctrl.sect {
+        padding-top: 14px;
+        border-top: 2px dashed var(--line);
+      }
+      .ctrl .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 8px;
+      }
+      .ctrl label {
+        font-size: 14.5px;
+        font-weight: 600;
+        color: var(--txt);
+      }
+      .ctrl .val {
+        font-family: var(--head);
+        font-size: 13px;
+        color: #e0759a;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      input[type="range"] {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 10px;
+        border-radius: 10px;
+        outline: none;
+        background: linear-gradient(90deg, var(--accent2), var(--accent))
+          no-repeat;
+        background-size: var(--fill, 50%) 100%;
+        box-shadow: inset 0 0 0 2px var(--line);
+        cursor: pointer;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #fff;
+        border: 4px solid var(--accent2);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+        cursor: grab;
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #fff;
+        border: 4px solid var(--accent2);
+        cursor: grab;
+      }
+      .hint {
+        font-size: 12.5px;
+        color: var(--dim);
+        margin-top: 6px;
+        line-height: 1.4;
+      }
+
+      .toggle {
+        display: flex;
+        gap: 10px;
+        margin-top: 6px;
+      }
+      .toggle button {
+        flex: 1;
+        cursor: pointer;
+        border: 2px solid var(--line);
+        background: #fff;
+        color: var(--mut);
+        padding: 12px;
+        border-radius: 14px;
+        font-size: 13.5px;
+        font-weight: 600;
+        transition: 0.15s;
+        font-family: var(--body);
+      }
+      .toggle button.on {
+        color: #fff;
+        border-color: transparent;
+        background: linear-gradient(145deg, var(--danger), #ff5470);
+        box-shadow: 0 8px 18px rgba(255, 107, 129, 0.32);
+      }
+      .toggle button.on.safe {
+        background: linear-gradient(145deg, var(--ok), #3fb87a);
+        box-shadow: 0 8px 18px rgba(84, 196, 138, 0.3);
+      }
+      canvas {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 16px;
+        background: #cdeafc;
+      }
+      .stage-foot {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+        justify-content: center;
+      }
+      .btn {
+        cursor: pointer;
+        border: 2px solid var(--line);
+        background: #fff;
+        color: var(--txt);
+        padding: 11px 17px;
+        border-radius: 14px;
+        font-size: 13.5px;
+        font-weight: 600;
+        transition: 0.15s;
+        font-family: var(--body);
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        border-color: #bcd6f5;
+      }
+      .btn.sun {
+        background: linear-gradient(145deg, #fff0bf, #ffe38a);
+        border-color: #f2d873;
+      }
+      .btn.dark {
+        background: linear-gradient(145deg, #dfe7f5, #c9d6ec);
+        border-color: #b9c8e2;
+      }
+      .btn.start {
+        background: linear-gradient(145deg, #d7f5e4, #bcecd0);
+        border-color: #a9e6c2;
+        color: #1f7a4d;
+      }
+      .btn.pause {
+        background: linear-gradient(145deg, #ffe8d0, #ffd6a8);
+        border-color: #f5b478;
+        color: #9a5a1a;
+      }
+      .btn.start.on {
+        background: linear-gradient(145deg, #54c48a, #3fb87a);
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(84, 196, 138, 0.4);
+      }
+      .btn.pause.on {
+        background: linear-gradient(145deg, #ffb02e, #ff8f3d);
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(255, 143, 61, 0.35);
+      }
+
+      .reading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 2px dashed var(--line);
+      }
+      .reading:last-child {
+        border-bottom: none;
+      }
+      .reading .k {
+        font-size: 13.5px;
+        color: var(--mut);
+      }
+      .reading .v {
+        font-family: var(--head);
+        font-size: 13px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .meter {
+        height: 16px;
+        border-radius: 10px;
+        background: #eef3fa;
+        position: relative;
+        overflow: hidden;
+        margin: 8px 0 4px;
+        border: 2px solid var(--line);
+      }
+      .meter .fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        border-radius: 10px;
+        transition:
+          width 0.15s,
+          background 0.3s;
+      }
+      .meter .thr {
+        position: absolute;
+        top: -4px;
+        bottom: -4px;
+        width: 3px;
+        background: var(--warn);
+        border-radius: 3px;
+      }
+      .meterlabels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--dim);
+        margin-top: 4px;
+      }
+
+      .badge {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 13px;
+        border-radius: 16px;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        justify-content: center;
+        margin-top: 8px;
+      }
+      .b-safe {
+        background: #e5f8ee;
+        color: #2f9e69;
+        border: 2px solid #b8ecce;
+      }
+      .b-danger {
+        background: #ffe9ec;
+        color: #e0455e;
+        border: 2px solid #ffc4ce;
+      }
+      .b-warn {
+        background: #fff3e0;
+        color: #b5690a;
+        border: 2px solid #ffd699;
+      }
+
+      .action {
+        margin-top: 14px;
+        padding: 16px;
+        border-radius: 16px;
+        background: linear-gradient(145deg, #fff7fa, #eef6ff);
+        border: 2px solid var(--line);
+        text-align: center;
+      }
+      .action .lab {
+        font-size: 11px;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--dim);
+        font-weight: 600;
+      }
+      .action .big {
+        font-size: 18px;
+        font-weight: 700;
+        margin-top: 6px;
+        letter-spacing: 0.3px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="logo">🐰</div>
+      <div class="title">
+        <h1>SHADOW TRIGGERED ESCAPE BOT</h1>
+        <p>LDR · MOTION SENSOR · ULTRASONIC · LOF ROBOTICS</p>
+      </div>
+    </header>
+
+    <nav class="tabs" id="tabs">
+      <div class="tab light active" data-s="light">🌗 LDR Sensor</div>
+      <div class="tab motion" data-s="motion">📡 Motion Sensor</div>
+      <div class="tab ultra" data-s="ultra">📏 Ultrasonic Sensor</div>
+    </nav>
+
+    <div class="grid">
+      <section class="card">
+        <h3 id="paramTitle"></h3>
+        <p class="sub" id="paramSub"></p>
+        <div id="controls"></div>
+      </section>
+
+      <section class="card">
+        <canvas id="stage" width="760" height="470"></canvas>
+        <div class="stage-foot" id="foot"></div>
+      </section>
+
+      <section class="card">
+        <h3>What the Bot Senses</h3>
+        <div id="readings"></div>
+        <div id="meterWrap" style="margin-top: 6px">
+          <div class="meter">
+            <div class="fill" id="meterFill"></div>
+            <div class="thr" id="meterThr"></div>
+          </div>
+          <div class="meterlabels">
+            <span id="meterMin">0</span><span id="meterLbl"></span
+            ><span id="meterMax">100</span>
+          </div>
+        </div>
+        <div class="badge b-safe" id="badge">
+          <span id="badgeText">Safe</span>
+        </div>
+        <div class="action">
+          <div class="lab">Bot is…</div>
+          <div class="big" id="actText">Eating a carrot 🥕</div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      (() => {
+        "use strict";
+        const cv = document.getElementById("stage"),
+          g = cv.getContext("2d");
+        const W = cv.width,
+          H = cv.height,
+          GROUND = 372;
+        const HOME_X = Math.round(W * 0.42); // bot's home spot, centred between two bushes
+        const BURROW_X = Math.round(W * 0.9); // burrow far to the right
+        const SENSOR = { x: HOME_X, y: GROUND - 6 }; // radar sensor location
+        const BUSHES = [
+          { x: Math.round(W * 0.06), s: 1.05 },
+          { x: Math.round(W * 0.14), s: 0.95 },
+          { x: Math.round(W * 0.22), s: 1.2 }, // LEFT flank
+          { x: Math.round(W * 0.62), s: 1.2 }, // RIGHT flank
+          { x: Math.round(W * 0.7), s: 1.05 },
+          { x: Math.round(W * 0.8), s: 0.95 },
+        ];
+        const PXCM = 1.5; // px-per-cm scale for the ultrasonic tab
+        // Vertical forest trail (ultrasonic tab): bot walks TOP -> BOTTOM toward a burrow at the far end,
+        // with trees/bushes lining both sides. A gentler, lower-angle perspective (wider far end, shorter
+        // "distant sky") and a soft curve down the middle so it reads as a real path, not a centred wedge.
+        const CX = Math.round(W * 0.5),
+          TRAIL_Y0 = 130,
+          TRAIL_Y1 = 330,
+          BURROW_Y = TRAIL_Y1 + 40;
+        const PATH_TOP_W = 126,
+          PATH_BOT_W = 198;
+        function pathT(y) {
+          return Math.max(
+            0,
+            Math.min(1, (y - TRAIL_Y0) / (TRAIL_Y1 - TRAIL_Y0)),
+          );
+        }
+        function pathHalfWidthAt(y) {
+          const tt = pathT(y);
+          return (PATH_TOP_W + (PATH_BOT_W - PATH_TOP_W) * tt) / 2;
+        }
+        // Off-centre, asymmetric wander instead of a symmetric bulge that snaps back to dead-centre at
+        // both ends — a real trail drifts to one side, not a mirrored wedge. Two sine harmonics at
+        // different frequencies/phases keep it from ever reading as a straight centred line.
+        function pathCenterXAt(y) {
+          const tt = pathT(y);
+          // A late, sharply-ramping bias (negligible until tt is close to 1) pulls the very end of
+          // the trail the rest of the way into the bottom-right corner, where the tree house sits,
+          // without disturbing the wander through the rest of the walk.
+          const cornerPull = Math.pow(tt, 4) * 150;
+          return (
+            CX -
+            34 +
+            92 * tt +
+            Math.sin(tt * Math.PI) * 58 +
+            Math.sin(tt * Math.PI * 2.4 + 0.6) * 14 +
+            cornerPull
+          );
+        }
+        // Small deterministic wobble applied to each edge independently (different phase per side) so
+        // the dirt boundary looks worn/uneven rather than a mathematically perfect parallel curve.
+        function edgeJitter(y, phase) {
+          const tt = pathT(y);
+          return (
+            Math.sin(tt * 9 + phase) * 3.2 +
+            Math.sin(tt * 17 + phase * 1.8) * 1.6
+          );
+        }
+        function depthScale(y) {
+          const tt = pathT(y);
+          return 0.65 + 0.55 * tt;
+        }
+        // Bushes only, no trees, immediately hugging the path edges — trees that close to the
+        // trail were crowding it and made the dirt hard to read; low bushes keep the border green
+        // without blocking the view down the path (bigger trees still frame the scene further out
+        // via FILLER_PROPS/WALL_PROPS/TOP_TREELINE).
+        const SIDE_PROPS = [];
+        for (let i = 0; i < 15; i++) {
+          const py = TRAIL_Y0 + 16 + i * ((TRAIL_Y1 - TRAIL_Y0 - 10) / 14),
+            hw = pathHalfWidthAt(py),
+            cxp = pathCenterXAt(py);
+          SIDE_PROPS.push({
+            x: cxp - hw - 14 - Math.random() * 16,
+            y: py + (Math.random() * 10 - 5),
+            type: "bush",
+          });
+          SIDE_PROPS.push({
+            x: cxp + hw + 14 + Math.random() * 16,
+            y: py + (Math.random() * 10 - 5),
+            type: "bush",
+          });
+        }
+        const PATH_SPECKS = [];
+        for (let i = 0; i < 26; i++) {
+          PATH_SPECKS.push({
+            ty: TRAIL_Y0 + 10 + Math.random() * (TRAIL_Y1 - TRAIL_Y0 + 30),
+            dx: (Math.random() * 2 - 1) * 0.75,
+            leaf: Math.random() < 0.5,
+            rot: Math.random() * 3,
+          });
+        }
+        // Background filler foliage: fleshes out the ground on both sides of the path so nothing
+        // reads as flat empty space between the path-hugging props and the corner trees. Trees
+        // get a much higher size floor than bushes — no tiny toy-sized trees anywhere, even up
+        // near the horizon where depth scaling alone would otherwise shrink them down small. Kept
+        // an extra step further off the path edge than before, especially lower down (bigger, near
+        // trees), so a dense canopy still leaves the path itself as the clear, uncluttered feature.
+        // Doubled the count and biased heavily toward (tall) trees over bushes so there's no bare
+        // negative space left anywhere off the path — the trail is the only thing kept clear.
+        const FILLER_PROPS = [];
+        for (let i = 0; i < 260; i++) {
+          const y = TRAIL_Y0 - 70 + Math.random() * (H - TRAIL_Y0 + 90);
+          const cy = Math.max(TRAIL_Y0, Math.min(TRAIL_Y1, y));
+          const hw = pathHalfWidthAt(cy),
+            cxp = pathCenterXAt(cy),
+            side = Math.random() < 0.5 ? -1 : 1;
+          const nearness = depthScale(cy); // 0.65 (far/top) .. 1.2 (near/bottom)
+          const clearance = 24 + nearness * 26; // keeps bigger, closer trees further from the path edge
+          const x = cxp + side * (hw + clearance + Math.random() * (W * 0.55));
+          const type = Math.random() < 0.28 ? "bush" : "tree";
+          if (x > -10 && x < W + 10)
+            FILLER_PROPS.push({
+              x,
+              y,
+              s:
+                type === "tree"
+                  ? 0.85 + Math.random() * 0.65
+                  : 0.4 + Math.random() * 0.5,
+              type,
+            });
+        }
+        // A guaranteed solid tree line hugging each canvas edge, top to bottom — the random filler
+        // above can leave lucky gaps, this makes sure the sides always read as "full of tall
+        // trees", with the same no-tiny-trees floor as the filler above. Denser rows and a heavier
+        // tree bias than before.
+        const WALL_PROPS = [];
+        for (let i = 0; i < 15; i++) {
+          const y = TRAIL_Y0 - 50 + i * ((H - TRAIL_Y0 + 90) / 14);
+          const typeL = Math.random() < 0.2 ? "bush" : "tree",
+            typeR = Math.random() < 0.2 ? "bush" : "tree";
+          WALL_PROPS.push({
+            x: 8 + Math.random() * 24,
+            y: y + (Math.random() * 14 - 7),
+            s:
+              typeL === "tree"
+                ? 0.8 + Math.random() * 0.5
+                : 0.4 + Math.random() * 0.4,
+            type: typeL,
+          });
+          WALL_PROPS.push({
+            x: W - 8 - Math.random() * 24,
+            y: y + (Math.random() * 14 - 7),
+            s:
+              typeR === "tree"
+                ? 0.8 + Math.random() * 0.5
+                : 0.4 + Math.random() * 0.4,
+            type: typeR,
+          });
+        }
+        // A denser, more imposing treeline right along the top edge specifically — reinforces that
+        // the FAR end of the trail (the "high" part of the frame) is where the forest is thickest,
+        // the near/bottom foreground stays comparatively open around the path.
+        const TOP_TREELINE = [];
+        for (let i = 0; i < 13; i++) {
+          const x = 30 + i * ((W - 60) / 12) + (Math.random() * 16 - 8);
+          const y = TRAIL_Y0 - 55 + Math.random() * 30;
+          const hw = pathHalfWidthAt(TRAIL_Y0);
+          if (Math.abs(x - pathCenterXAt(TRAIL_Y0)) < hw + 20) continue; // leave the trail mouth clear
+          TOP_TREELINE.push({ x, y, s: 0.85 + Math.random() * 0.35 });
+        }
+        // Fine ground texture (grass tufts) across the whole floor for extra fill, cheap to draw.
+        const GROUND_SPECKS = [];
+        for (let i = 0; i < 90; i++) {
+          GROUND_SPECKS.push({
+            x: Math.random() * W,
+            y: TRAIL_Y0 - 40 + Math.random() * (H - TRAIL_Y0 + 60),
+            h: 4 + Math.random() * 7,
+            rot: Math.random() * 0.6 - 0.3,
+          });
+        }
+        const NUT_Y = TRAIL_Y0 + (TRAIL_Y1 - TRAIL_Y0) * 0.4,
+          NUT_PAUSE = 280; // where the bot stops for a snack, and how long (frames)
+
+        /* ---------- STATE ---------- */
+        let sensor = "light",
+          t = 0;
+        const P = {
+          light: { sunlight: 85, threshold: 45 },
+          motion: { range: 150, speed: 1.2 },
+          ultra: { safe: 30, range: 110, size: 1 },
+        };
+        let paused = true,
+          started = false; // ultrasonic-tab run state
+        let motionSelectedDir = "away"; // Motion Sensor tab: which direction is armed, chosen in the left panel before pressing Send Threat
+        let human = {
+          x: W + 60,
+          y: GROUND - 6,
+          vx: 0,
+          vy: 0,
+          mode: "away",
+          active: false,
+          entered: false,
+          face: -1,
+          fromSide: "right",
+          frozen: false,
+          scale: 1,
+          willReturn: false,
+          returned: false,
+          turnX: 0,
+        };
+        let cloud = -280;
+        let bird = {
+          active: false,
+          x: -90,
+          y: 100,
+          vx: 1,
+          vy: 0,
+          phase: "cruise",
+          timer: 0,
+          targetX: 0,
+          cruiseY: 100,
+        };
+        let birdThreat = false;
+        const rab = {
+          x: HOME_X,
+          y: GROUND - 8,
+          state: "eating",
+          hop: 0,
+          dip: 0,
+          chew: 0,
+          face: 1,
+          dir: 1,
+          tx: HOME_X,
+          ty: 0,
+          hide: "burrow",
+          bush: 1,
+          hideProp: 0,
+          tilt: 0,
+          blockT: 0,
+          ateNut: false,
+          eatT: 0,
+        };
+        let obstacles = []; // ultrasonic-tab obstacles on the trail — {x,y,size}, as many as the learner adds
+        // Ultrasonic ping/echo animation state: a pulse repeatedly travels OUT from the bot, and either
+        // bounces BACK the moment it reaches an obstacle (an echo — this is how a real ultrasonic sensor
+        // times a round trip to compute distance) or fades once it passes the detection range unanswered.
+        let ping = {
+          dist: 0,
+          phase: "out",
+          speed: 6.5,
+          echoFlash: 0,
+          fadeT: 0,
+          lastDist: null,
+        };
+        /* ---------- PARAM DEFS ---------- */
+        const DEFS = {
+          light: {
+            title: "LDR Sensor",
+            sub: "The bot watches the light. If it gets dark (below the danger line) OR a predator’s shadow passes over it, the bot runs to the burrow. When it is bright and clear, it eats its carrot.",
+            controls: [
+              [
+                "sunlight",
+                "Light Intensity",
+                0,
+                100,
+                1,
+                (v) => v + " %",
+                "Slide to make it brighter or darker",
+              ],
+              [
+                "threshold",
+                "Shadow Threshold",
+                10,
+                90,
+                1,
+                (v) => v + " %",
+                "If light drops below this, the bot detects danger",
+              ],
+            ],
+          },
+          motion: {
+            title: "Motion Sensor",
+            sub: "The bot watches for movement. If a moving threat walks TOWARD it and enters the detection zone, it hops to the nearest bush and hides. If the threat walks away, it keeps eating.",
+            controls: [
+              [
+                "range",
+                "Detection Range",
+                80,
+                300,
+                5,
+                (v) => v + " cm",
+                "Size of the radar ring around the bot",
+              ],
+              [
+                "speed",
+                "Threat Speed",
+                0.5,
+                3,
+                0.1,
+                (v) => v.toFixed(1) + " ×",
+                "How fast the threat approaches",
+              ],
+            ],
+          },
+          ultra: {
+            title: "Ultrasonic Sensor",
+            sub: "The bot walks slowly down a forest trail toward its tree house, pinging sound waves ahead of it. Set the size below, then click the trail to drop an obstacle — click an obstacle again to remove it. Get too close to one and the bot darts off the trail into the nearest tree or bush. Press Reset to send it down the trail again.",
+            controls: [
+              [
+                "safe",
+                "Safe Distance Limit",
+                10,
+                90,
+                1,
+                (v) => v + " cm",
+                "Minimum gap the bot needs before it reacts",
+              ],
+              [
+                "range",
+                "Detection Range",
+                40,
+                160,
+                5,
+                (v) => v + " cm",
+                "How far ahead the sensor can sense anything at all",
+              ],
+              [
+                "size",
+                "Obstacle Size",
+                0.6,
+                1.8,
+                0.1,
+                (v) => v.toFixed(1) + " ×",
+                "Size of the next obstacle you add",
+              ],
+            ],
+          },
+        };
+
+        /* ---------- UI: CONTROLS PANEL ---------- */
+        const controlsEl = document.getElementById("controls"),
+          footEl = document.getElementById("foot");
+        function buildControls() {
+          const titleEl = document.getElementById("paramTitle"),
+            subEl = document.getElementById("paramSub");
+          controlsEl.innerHTML = "";
+          {
+            const d = DEFS[sensor];
+            titleEl.textContent = d.title;
+            subEl.textContent = d.sub;
+            d.controls.forEach(([key, label, min, max, step, fmt, hint]) => {
+              const val = P[sensor][key];
+              const w = document.createElement("div");
+              w.className = "ctrl";
+              w.innerHTML = `<div class="row"><label>${label}</label><span class="val" id="v_${key}">${fmt(val)}</span></div>
+        <input type="range" min="${min}" max="${max}" step="${step}" value="${val}" id="r_${key}">
+        <div class="hint">${hint}</div>`;
+              controlsEl.appendChild(w);
+              const inp = w.querySelector("input");
+              const fill = () =>
+                inp.style.setProperty(
+                  "--fill",
+                  ((inp.value - min) / (max - min)) * 100 + "%",
+                );
+              fill();
+              inp.addEventListener("input", () => {
+                P[sensor][key] = parseFloat(inp.value);
+                document.getElementById("v_" + key).textContent = fmt(
+                  parseFloat(inp.value),
+                );
+                fill();
+              });
+            });
+            if (sensor === "motion") {
+              const w = document.createElement("div");
+              w.className = "ctrl";
+              w.innerHTML = `<div class="row"><label>Threat Direction</label></div>
+        <div class="toggle"><button id="tgToward">Threat Toward</button><button id="tgAway">Threat Away</button></div>
+        <div class="hint">Choose a direction, then press “Send Threat” below the stage to release it.</div>`;
+              controlsEl.appendChild(w);
+              document.getElementById("tgToward").onclick = () => {
+                motionSelectedDir = "toward";
+                updateThreatDirButtons();
+              };
+              document.getElementById("tgAway").onclick = () => {
+                motionSelectedDir = "away";
+                updateThreatDirButtons();
+              };
+              updateThreatDirButtons();
+            }
+          }
+          buildFoot();
+        }
+        const ROUTES = [
+          { sx: W + 50, sy: GROUND - 6 },
+          { sx: -50, sy: GROUND - 6 },
+          { sx: W + 50, sy: H - 28 },
+          { sx: -50, sy: H - 28 },
+          // from behind the bot — spawns up near the horizon and walks down through the scene,
+          // instead of only ever entering from the left or right edge
+          { sx: HOME_X - 90, sy: 96 },
+          { sx: HOME_X + 70, sy: 100 },
+          { sx: HOME_X - 10, sy: 90 },
+        ];
+        // "Away" paths must never come this close to the sensor at their nearest point — keeps
+        // the threat from ever visibly walking through or touching the bot while still letting
+        // a big enough Detection Range reach out and catch it, same as a real motion sensor would.
+        const AWAY_MIN_CLEARANCE = 70;
+        function setDir(mode) {
+          rab.x = HOME_X;
+          rab.y = GROUND - 8;
+          rab.state = "eating";
+          rab.dip = 0;
+          rab.hop = 0;
+          rab.face = 1;
+          rab.tx = HOME_X;
+          if (mode === "toward") {
+            const r = ROUTES[Math.floor(Math.random() * ROUTES.length)];
+            human.x = r.sx;
+            human.y = r.sy;
+            human.scale = 1;
+            human.fromSide = r.sx < W / 2 ? "left" : "right";
+            const dx = SENSOR.x - human.x,
+              dy = SENSOR.y - human.y,
+              L = Math.hypot(dx, dy);
+            human.vx = dx / L;
+            human.vy = dy / L;
+            human.face = human.vx < 0 ? -1 : 1;
+            human.mode = "toward";
+            human.active = true;
+            human.entered = false;
+            human.frozen = false;
+          } else if (Math.random() < 0.4) {
+            // Also from behind, same as "Toward" now can — but "Away" must still mean not heading
+            // AT the bot: spawn off to one side of the sensor by at least AWAY_MIN_CLEARANCE and
+            // keep drifting a little further that way while walking down, so the path passes
+            // beside the bot, never through it. Offset + drift are kept small enough that turning
+            // Detection Range up still reliably lets it get caught.
+            const farLeft = Math.random() < 0.5;
+            const offset = AWAY_MIN_CLEARANCE + Math.random() * 70;
+            const startX = Math.max(
+              20,
+              Math.min(W - 20, farLeft ? HOME_X - offset : HOME_X + offset),
+            );
+            human.x = startX;
+            human.y = 88 + Math.random() * 20;
+            human.scale = 1.06;
+            const drift = (farLeft ? -1 : 1) * (0.03 + Math.random() * 0.06); // keeps moving away from the sensor's x, never toward it, but only gently
+            const L = Math.hypot(drift, 1);
+            human.vx = drift / L;
+            human.vy = 1 / L;
+            human.face = human.vx < 0 ? -1 : 1;
+            human.fromSide = farLeft ? "left" : "right";
+            human.mode = "away";
+            human.active = true;
+            human.entered = true;
+            human.frozen = false;
+            human.willReturn = false;
+            human.returned = false;
+            human.turnX = 0;
+          } else {
+            const fromLeft = Math.random() < 0.5;
+            // A horizontal lane, but never one that passes within AWAY_MIN_CLEARANCE of the
+            // sensor's own height — otherwise the crossing point (where the path's x lines up
+            // with the bot) would bring it right up against the bot. Picks either a lane set back
+            // toward the horizon or one down in the near foreground, both comfortably clear.
+            const useBack = Math.random() < 0.6;
+            const laneY = useBack
+              ? 130 +
+                Math.random() *
+                  Math.max(20, SENSOR.y - AWAY_MIN_CLEARANCE - 130)
+              : SENSOR.y +
+                AWAY_MIN_CLEARANCE +
+                Math.random() *
+                  Math.max(4, H - 16 - (SENSOR.y + AWAY_MIN_CLEARANCE));
+            human.x = fromLeft ? -60 : W + 60;
+            human.y = laneY;
+            human.scale = 1.06;
+            human.vx = fromLeft ? 1 : -1;
+            human.vy = 0;
+            human.face = human.vx < 0 ? -1 : 1;
+            human.fromSide = fromLeft ? "left" : "right"; // so oppositeBush() still picks correctly if this "away" stroll ever trips the sensor
+            human.mode = "away";
+            human.active = true;
+            human.entered = false;
+            human.frozen = false;
+            // About half the time, turn around partway across instead of always walking straight through
+            // and vanishing — so the person sometimes comes back the way they came.
+            human.willReturn = Math.random() < 0.5;
+            human.returned = false;
+            human.turnX = W * 0.32 + Math.random() * W * 0.36;
+          }
+        }
+        function buildFoot() {
+          if (sensor === "light") {
+            footEl.innerHTML = `<button class="btn sun" id="fSun">☀️ Make it Sunny</button>
+      <button class="btn dark" id="fDark">☁️ Cast a Shadow</button>
+      <button class="btn" id="fBird" style="background:linear-gradient(145deg,#e9e0ff,#cfc0ff);border-color:#c1b0ff">🦅 Send Predator</button>
+      <button class="btn" id="fReset">↺ Reset</button>`;
+            document.getElementById("fSun").onclick = () =>
+              setSlider("sunlight", 95);
+            document.getElementById("fDark").onclick = () =>
+              setSlider("sunlight", 22);
+            document.getElementById("fBird").onclick = sendBird;
+          } else if (sensor === "motion") {
+            footEl.innerHTML = `<button class="btn" id="fSendThreat" style="background:linear-gradient(145deg,#ffd7de,#ffbcc7);border-color:#ffb0bd">🚶 Send Threat</button>
+      <button class="btn" id="fReset">↺ Reset</button>`;
+            document.getElementById("fSendThreat").onclick = () =>
+              setDir(motionSelectedDir);
+          } else {
+            // ultra
+            footEl.innerHTML = `<button class="btn start" id="fStart">▶ Start</button>
+      <button class="btn pause" id="fPause">⏸ Pause</button>
+      <button class="btn" id="fClearObs" style="background:linear-gradient(145deg,#dceafc,#c3daf6);border-color:#b3cdee">🧹 Clear All</button>
+      <button class="btn" id="fReset">↺ Reset</button>`;
+            document.getElementById("fStart").onclick = () => {
+              started = true;
+              setPaused(false);
+            };
+            document.getElementById("fPause").onclick = () => setPaused(true);
+            document.getElementById("fClearObs").onclick = clearObstacle;
+            setPaused(paused);
+          }
+          document.getElementById("fReset").onclick = reset;
+        }
+        function setSlider(key, v) {
+          const r = document.getElementById("r_" + key);
+          if (r) {
+            r.value = v;
+            r.dispatchEvent(new Event("input"));
+          }
+        }
+        // Reflects the armed-but-not-yet-sent direction in the left panel toggle — separate from
+        // setDir(), which only fires once "Send Threat" is actually pressed below the stage.
+        function updateThreatDirButtons() {
+          const a = document.getElementById("tgToward"),
+            b = document.getElementById("tgAway");
+          if (a && b) {
+            a.className = motionSelectedDir === "toward" ? "on" : "";
+            b.className = motionSelectedDir === "away" ? "on safe" : "";
+          }
+        }
+        function setPaused(v) {
+          paused = v;
+          const s = document.getElementById("fStart"),
+            p = document.getElementById("fPause");
+          if (s && p) {
+            s.classList.toggle("on", !paused);
+            p.classList.toggle("on", paused);
+          }
+        }
+        function sendBird() {
+          const r = Math.floor(Math.random() * 4);
+          const fromLeft = r % 2 === 0;
+          bird.cruiseY = 88 + Math.random() * 30;
+          bird.x = fromLeft ? -90 : W + 90;
+          bird.vx = fromLeft ? 1 : -1;
+          bird.y = r < 2 ? bird.cruiseY : 66;
+          bird.vy = r < 2 ? 0 : 0.18;
+          bird.phase = "cruise";
+          bird.timer = 0;
+          bird.targetX = 0;
+          bird.active = true;
+          birdThreat = false;
+        }
+        function reset() {
+          rab.y = GROUND - 8;
+          rab.dip = 0;
+          rab.hop = 0;
+          rab.tilt = 0;
+          rab.blockT = 0;
+          if (sensor === "ultra") {
+            rab.state = "walking";
+            rab.x = CX;
+            rab.y = TRAIL_Y0;
+            rab.face = 1;
+            rab.ateNut = false;
+            rab.eatT = 0;
+            rab.pauseT = 0;
+          } else {
+            rab.x = HOME_X;
+            rab.state = "eating";
+            rab.face = 1;
+            rab.tx = HOME_X;
+          }
+          obstacles = [];
+          ping.dist = 0;
+          ping.phase = "out";
+          ping.echoFlash = 0;
+          ping.fadeT = 0;
+          ping.lastDist = null;
+          human.active = false;
+          human.mode = "away";
+          human.x = W + 60;
+          human.frozen = false;
+          cloud = -280;
+          bird.active = false;
+          bird.phase = "cruise";
+          birdThreat = false;
+          P.light.sunlight = 85;
+          P.light.threshold = 45;
+          P.motion.range = 150;
+          P.motion.speed = 1.2;
+          P.ultra.safe = 30;
+          P.ultra.range = 110;
+          P.ultra.size = 1;
+          paused = true;
+          started = false;
+          if (DEFS[sensor])
+            DEFS[sensor].controls.forEach(([key]) =>
+              setSlider(key, P[sensor][key]),
+            );
+          motionSelectedDir = "away";
+          updateThreatDirButtons();
+          setPaused(true);
+        }
+        document.getElementById("tabs").addEventListener("click", (e) => {
+          const tb = e.target.closest(".tab");
+          if (!tb) return;
+          document
+            .querySelectorAll(".tab")
+            .forEach((x) => x.classList.remove("active"));
+          tb.classList.add("active");
+          sensor = tb.dataset.s;
+          reset();
+          buildControls();
+        });
+
+        /* ---------- SENSOR LOGIC ---------- */
+        function lightLevel() {
+          let cov = 0;
+          if (cloud > -170) {
+            const d = Math.abs(cloud + 140 - BURROW_X);
+            cov = Math.max(0, 1 - d / 220);
+          }
+          return Math.round(P.light.sunlight * (1 - cov * 0.55));
+        }
+        function computeLight() {
+          const L = lightLevel();
+          return {
+            danger: L < P.light.threshold || birdThreat,
+            L,
+            dark: L < P.light.threshold,
+          };
+        }
+        function computeMotion() {
+          const dx = human.x - SENSOR.x,
+            dy = human.y - SENSOR.y;
+          // ry must match drawRingTilted's ellipse ratio exactly — otherwise the visible red zone and
+          // the actual detection math disagree about what's "inside".
+          const rx = P.motion.range,
+            ry = P.motion.range * 0.58;
+          const inside = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) < 1;
+          const dist = Math.round(Math.hypot(dx, dy));
+          // A real motion sensor doesn't know or care whether a person "meant" to walk toward it —
+          // it only sees whether they're inside the detection zone right now. So danger depends on
+          // `inside` alone: crank the range up enough and even the "away" stroll lane can trigger it.
+          const danger = human.active && inside;
+          return { danger, dist, inside, onField: human.active };
+        }
+        function clearObstacle() {
+          obstacles = [];
+        }
+        // Click-to-place obstacles on the Ultrasonic tab's canvas, the same interaction the
+        // Heat-Seeker Rover sim uses for its wall tiles: click an empty spot on the trail to add
+        // an obstacle sized by the Obstacle Size slider, click an existing one to remove it.
+        const ULTRA_HIT_R = 26; // click/hover radius for "you're pointing at this obstacle"
+        function ultraPointFromEvent(e) {
+          const r = cv.getBoundingClientRect();
+          return {
+            x: (e.clientX - r.left) * (W / r.width),
+            y: (e.clientY - r.top) * (H / r.height),
+          };
+        }
+        function ultraHitObstacle(px, py) {
+          let idx = -1,
+            best = 1e9;
+          obstacles.forEach((o, i) => {
+            const d = Math.hypot(o.x - px, o.y - py);
+            if (d < ULTRA_HIT_R && d < best) {
+              best = d;
+              idx = i;
+            }
+          });
+          return idx;
+        }
+        // Where a click at (px,py) would actually place a new obstacle — snapped onto the trail's
+        // current y-range and width so it always lands on the path, not off in the trees.
+        function ultraPlacementSpot(px, py) {
+          const oy = Math.max(TRAIL_Y0 + 6, Math.min(TRAIL_Y1 - 6, py));
+          const hw = pathHalfWidthAt(oy);
+          const cx = pathCenterXAt(oy);
+          const ox = Math.max(cx - hw, Math.min(cx + hw, px));
+          return { x: ox, y: oy };
+        }
+        let ultraHover = null; // {x,y,removeIdx} — live preview of what a click would do right now
+        cv.addEventListener("pointermove", (e) => {
+          if (sensor !== "ultra") {
+            ultraHover = null;
+            return;
+          }
+          const p = ultraPointFromEvent(e);
+          const removeIdx = ultraHitObstacle(p.x, p.y);
+          ultraHover =
+            removeIdx >= 0
+              ? {
+                  x: obstacles[removeIdx].x,
+                  y: obstacles[removeIdx].y,
+                  removeIdx,
+                }
+              : { ...ultraPlacementSpot(p.x, p.y), removeIdx: -1 };
+        });
+        cv.addEventListener("pointerleave", () => {
+          ultraHover = null;
+        });
+        cv.addEventListener("pointerdown", (e) => {
+          if (sensor !== "ultra") return;
+          const p = ultraPointFromEvent(e);
+          const removeIdx = ultraHitObstacle(p.x, p.y);
+          if (removeIdx >= 0) {
+            obstacles.splice(removeIdx, 1);
+          } else {
+            obstacles.push({
+              ...ultraPlacementSpot(p.x, p.y),
+              size: P.ultra.size,
+            });
+          }
+        });
+        function nearestSideProp() {
+          let best = 0,
+            bd = 1e9;
+          SIDE_PROPS.forEach((p, i) => {
+            const d = Math.hypot(p.x - rab.x, p.y - rab.y);
+            if (d < bd) {
+              bd = d;
+              best = i;
+            }
+          });
+          return best;
+        }
+        // An ultrasonic sensor only "sees" what's roughly in front of it, not something dropped
+        // off to the side in the trees. Checking that against the BOT's current x doesn't work on
+        // a winding trail like this one — the path itself bends by up to ~90px between where the
+        // bot is standing and where an obstacle sits a bit further down, so an obstacle placed
+        // correctly on the path could easily measure "sideways" of the bot's current position
+        // through no fault of its own, and never get detected at all. Checking against the PATH's
+        // own centre at the obstacle's own y fixes that: anything actually on the trail (which is
+        // all a click can ever place, since clicks are already snapped onto the path) reads as
+        // dead ahead regardless of how much the trail curves in between; only something dragged
+        // out past the path's edge — into the trees — reads as off to the side and undetected.
+        const ULTRA_OFFPATH_MARGIN = 14; // a little slack past the path's own edge before "not detected" kicks in
+        // Finds whichever obstacle is nearest ahead of a given y and actually sitting on the
+        // trail — with several obstacles now allowed at once, both the ping animation and the
+        // actual danger check need to agree on which one the sensor is "looking at".
+        function nearestObstacleAhead(fromY) {
+          let best = null,
+            bestFwd = Infinity;
+          for (const o of obstacles) {
+            const fwd = o.y - fromY;
+            if (fwd < -4) continue;
+            const onPathX = pathCenterXAt(o.y),
+              halfW = pathHalfWidthAt(o.y);
+            if (Math.abs(o.x - onPathX) > halfW + ULTRA_OFFPATH_MARGIN)
+              continue; // truly off the trail — not detected
+            if (fwd < bestFwd) {
+              bestFwd = fwd;
+              best = o;
+            }
+          }
+          return best;
+        }
+        // Advances one pulse of the ping/echo cycle. Runs independently of the flee logic below —
+        // this only decides what the wave animation looks like, so the bot still reacts instantly
+        // off live geometry while the wave itself visibly takes time to travel out and back.
+        function updatePing() {
+          const noseY = rab.y - 16;
+          const maxPx = P.ultra.range * PXCM;
+          const nearestForPing = nearestObstacleAhead(noseY);
+          const targetPx = nearestForPing
+            ? Math.max(0, nearestForPing.y - noseY)
+            : null;
+          if (ping.phase === "out") {
+            ping.dist += ping.speed;
+            if (
+              targetPx != null &&
+              targetPx <= maxPx &&
+              ping.dist >= targetPx
+            ) {
+              ping.dist = targetPx;
+              ping.phase = "back";
+              ping.lastDist = Math.round(targetPx / PXCM);
+            } else if (ping.dist >= maxPx) {
+              ping.dist = maxPx;
+              ping.phase = "fade";
+              ping.fadeT = 0;
+            }
+          } else if (ping.phase === "back") {
+            ping.dist -= ping.speed * 1.35; // the echo returns a little faster than it went out — reads as a "snap back", not a mirrored crawl
+            if (ping.dist <= 0) {
+              ping.dist = 0;
+              ping.phase = "out";
+              ping.echoFlash = 16;
+            }
+          } else {
+            // fade — pulse went the full detection range with nothing to bounce off
+            ping.fadeT++;
+            if (ping.fadeT > 16) {
+              ping.dist = 0;
+              ping.phase = "out";
+            }
+          }
+          if (ping.echoFlash > 0) ping.echoFlash--;
+        }
+        function ultraStep() {
+          let distCm = null,
+            detected = false;
+          const nearestObs = nearestObstacleAhead(rab.y);
+          if (nearestObs) {
+            const fwd = nearestObs.y - rab.y;
+            distCm = Math.max(0, fwd) / PXCM;
+            detected = distCm <= P.ultra.range;
+          }
+          const danger = detected && distCm <= P.ultra.safe;
+
+          if (!paused) {
+            // sliders (Safe Distance / Detection Range) stay live either way, but nothing moves or reacts until Start is pressed
+            if (
+              (rab.state === "walking" || rab.state === "nutbreak") &&
+              danger
+            ) {
+              const pi = nearestSideProp(),
+                p = SIDE_PROPS[pi];
+              rab.state = "fleeing";
+              rab.hideProp = pi;
+              rab.tx = p.x;
+              rab.ty = p.y;
+              rab.face = p.x < rab.x ? -1 : 1;
+            } else if (rab.state === "walking") {
+              if (!rab.ateNut && rab.y >= NUT_Y) {
+                rab.state = "nutbreak";
+                rab.eatT = 0;
+                rab.ateNut = true;
+                rab.hop = 0;
+              } else {
+                // A little natural variety so the walk doesn't feel like a metronome: pace gently speeds
+                // up and slows down, and every so often the bot pauses for a beat as if scanning around
+                // (it still reacts instantly to a real obstacle — this only touches the idle amble).
+                rab.pauseT = rab.pauseT || 0;
+                if (rab.pauseT > 0) {
+                  rab.pauseT--;
+                  rab.tilt = Math.sin(rab.pauseT * 0.35) * 0.12;
+                  rab.hop = Math.abs(Math.sin(t * 0.05)) * 3;
+                } else {
+                  if (Math.random() < 0.0028)
+                    rab.pauseT = 24 + Math.floor(Math.random() * 30);
+                  const wobble = 0.7 + 0.6 * (0.5 + 0.5 * Math.sin(t * 0.016));
+                  rab.y += 0.28 * wobble;
+                  rab.x = pathCenterXAt(rab.y);
+                  rab.hop = Math.abs(Math.sin(t * 0.05)) * 8;
+                  rab.tilt = 0;
+                }
+                rab.face = 1;
+                if (rab.y >= TRAIL_Y1) {
+                  rab.y = TRAIL_Y1;
+                  rab.x = pathCenterXAt(rab.y);
+                  rab.state = "arrived";
+                  rab.hop = 0;
+                  rab.tilt = 0;
+                }
+              }
+            } else if (rab.state === "nutbreak") {
+              rab.eatT++;
+              rab.chew += 0.18;
+              if (rab.eatT > NUT_PAUSE) rab.state = "walking";
+            } else if (rab.state === "fleeing") {
+              const dx = rab.tx - rab.x,
+                dy = rab.ty - rab.y,
+                L = Math.hypot(dx, dy) || 1,
+                step = 2.4;
+              if (L <= step) {
+                rab.x = rab.tx;
+                rab.y = rab.ty;
+                rab.state = "hiding";
+                rab.dip = 0;
+              } else {
+                rab.x += (dx / L) * step;
+                rab.y += (dy / L) * step;
+                rab.hop = Math.abs(Math.sin(t * 0.22)) * 12;
+              }
+            } else if (rab.state === "hiding") {
+              rab.hop = 0;
+              rab.dip = Math.min(14, rab.dip + 0.8);
+            }
+            // 'arrived' is terminal — nothing to update until Reset
+          }
+          const level = !detected
+            ? 0
+            : distCm > P.ultra.safe
+              ? 1
+              : distCm > P.ultra.safe * 0.5
+                ? 2
+                : 3;
+          return { distCm, detected, danger, level };
+        }
+        function nearestHideout() {
+          let best = {
+            type: "burrow",
+            x: BURROW_X,
+            bush: -1,
+            d: Math.abs(BURROW_X - rab.x),
+          };
+          BUSHES.forEach((b, i) => {
+            const d = Math.abs(b.x - rab.x);
+            if (d < best.d) best = { type: "bush", x: b.x, bush: i, d };
+          });
+          return best;
+        }
+        function oppositeBush() {
+          const wantRight = human.fromSide === "left";
+          let best = -1,
+            bd = 1e9;
+          BUSHES.forEach((b, i) => {
+            const onRight = b.x > HOME_X;
+            if (onRight === wantRight) {
+              const d = Math.abs(b.x - rab.x);
+              if (d < bd) {
+                bd = d;
+                best = i;
+              }
+            }
+          });
+          if (best < 0) best = wantRight ? 3 : 2; // fallback flank bush (right-side / left-side) if somehow nothing matched
+          return best;
+        }
+
+        /* ---------- SHARED BOT MOVEMENT ---------- */
+        function fleeStep(danger, hideType, hideX, bushIdx, speed) {
+          if (danger && (rab.state === "eating" || rab.state === "returning")) {
+            rab.state = "fleeing";
+            rab.hide = hideType;
+            rab.bush = bushIdx;
+            rab.tx = hideX;
+          }
+          if (!danger && rab.state === "hiding") rab.state = "returning";
+          if (rab.state === "fleeing") {
+            rab.face = rab.tx >= rab.x ? 1 : -1;
+            rab.x += Math.sign(rab.tx - rab.x) * speed;
+            rab.hop = Math.abs(Math.sin(t * 0.14)) * 15;
+            if (Math.abs(rab.x - rab.tx) <= speed) {
+              rab.x = rab.tx;
+              rab.state = "hiding";
+            }
+          } else if (rab.state === "hiding") {
+            rab.hop = 0;
+            rab.dip = Math.min(hideType === "burrow" ? 30 : 16, rab.dip + 0.8);
+          } else if (rab.state === "returning") {
+            rab.dip = Math.max(0, rab.dip - 0.7);
+            if (rab.dip <= 0) {
+              rab.face = HOME_X >= rab.x ? 1 : -1;
+              rab.x += Math.sign(HOME_X - rab.x) * speed;
+              rab.hop = Math.abs(Math.sin(t * 0.14)) * 15;
+              if (Math.abs(rab.x - HOME_X) <= speed) {
+                rab.x = HOME_X;
+                rab.state = "eating";
+                rab.face = 1;
+              }
+            }
+          } else {
+            rab.hop = (Math.sin(t * 0.05) + 1) * 1.5;
+            rab.chew += 0.25;
+          }
+        }
+
+        /* ---------- DRAW HELPERS (shared art) ---------- */
+        function rr(x, y, w, h, r) {
+          g.beginPath();
+          g.moveTo(x + r, y);
+          g.arcTo(x + w, y, x + w, y + h, r);
+          g.arcTo(x + w, y + h, x, y + h, r);
+          g.arcTo(x, y + h, x, y, r);
+          g.arcTo(x, y, x + w, y, r);
+          g.closePath();
+        }
+        function puff(x, y, s) {
+          g.save();
+          g.translate(x, y);
+          g.scale(s, s);
+          for (const [dx, dy, r] of [
+            [0, 0, 20],
+            [26, -6, 26],
+            [54, 0, 20],
+            [26, 12, 18],
+          ]) {
+            g.beginPath();
+            g.arc(dx, dy, r, 0, 7);
+            g.fill();
+          }
+          g.restore();
+        }
+
+        function drawBush(b) {
+          const bx = b.x,
+            by = GROUND - 4,
+            s = b.s;
+          g.save();
+          g.translate(bx, by);
+          g.scale(s, s);
+          g.fillStyle = "rgba(0,0,0,.12)";
+          g.beginPath();
+          g.ellipse(0, 6, 40, 9, 0, 0, 7);
+          g.fill();
+          const d = g.createLinearGradient(0, -56, 0, 10);
+          d.addColorStop(0, "#7fd07a");
+          d.addColorStop(1, "#4f9a48");
+          g.fillStyle = d;
+          for (const [dx, dy, r] of [
+            [-26, -2, 24],
+            [-4, -20, 30],
+            [24, -6, 26],
+            [6, -2, 28],
+            [40, 2, 20],
+            [-40, 4, 18],
+          ]) {
+            g.beginPath();
+            g.arc(dx, dy, r, 0, 7);
+            g.fill();
+          }
+          g.fillStyle = "rgba(255,255,255,.14)";
+          for (const [dx, dy, r] of [
+            [-8, -28, 10],
+            [18, -16, 8],
+          ]) {
+            g.beginPath();
+            g.arc(dx, dy, r, 0, 7);
+            g.fill();
+          }
+          g.restore();
+        }
+        function burrowArch() {
+          const x = BURROW_X,
+            y = GROUND,
+            aw = 28;
+          g.beginPath();
+          g.moveTo(x - aw, y + 8);
+          g.lineTo(x - aw, y - 8);
+          g.arc(x, y - 8, aw, Math.PI, 0, false);
+          g.lineTo(x + aw, y + 8);
+          g.closePath();
+        }
+        function drawBurrow() {
+          const x = BURROW_X,
+            y = GROUND;
+          const gm = g.createLinearGradient(0, y - 62, 0, y + 4);
+          gm.addColorStop(0, "#7fce72");
+          gm.addColorStop(1, "#4d9646");
+          g.fillStyle = gm;
+          g.beginPath();
+          g.ellipse(x, y + 4, 62, 54, 0, Math.PI, 2 * Math.PI);
+          g.fill();
+          g.fillStyle = "#a9814f";
+          g.beginPath();
+          g.ellipse(x, y + 8, 66, 16, 0, 0, 7);
+          g.fill();
+          g.fillStyle = "#946e3f";
+          g.beginPath();
+          g.ellipse(x, y + 8, 66, 16, 0, Math.PI, 2 * Math.PI);
+          g.fill();
+          const op = g.createLinearGradient(0, y - 36, 0, y + 8);
+          op.addColorStop(0, "#3a2a1a");
+          op.addColorStop(1, "#120c06");
+          burrowArch();
+          g.fillStyle = op;
+          g.fill();
+          burrowArch();
+          g.lineWidth = 9;
+          g.strokeStyle = "#8a6238";
+          g.stroke();
+          burrowArch();
+          g.lineWidth = 3;
+          g.strokeStyle = "#6d4b29";
+          g.stroke();
+          g.fillStyle = "#9aa0a8";
+          for (const [dx, dy] of [
+            [-48, 12],
+            [46, 13],
+            [-32, 17],
+            [36, 18],
+          ]) {
+            g.beginPath();
+            g.ellipse(x + dx, y + dy, 6, 4, 0, 0, 7);
+            g.fill();
+          }
+          g.strokeStyle = "#3f8a3a";
+          g.lineWidth = 2.5;
+          for (const gx of [-54, -38, -22, 34, 48, 58]) {
+            g.beginPath();
+            g.moveTo(x + gx, y - 14);
+            g.lineTo(x + gx - 3, y - 28);
+            g.moveTo(x + gx, y - 14);
+            g.lineTo(x + gx + 3, y - 27);
+            g.stroke();
+          }
+        }
+        function drawBurrowFront() {
+          const x = BURROW_X,
+            y = GROUND;
+          g.fillStyle = "#a9814f";
+          g.beginPath();
+          g.ellipse(x, y + 8, 66, 16, 0, 0, 7);
+          g.fill();
+          g.fillStyle = "#946e3f";
+          g.beginPath();
+          g.ellipse(x, y + 8, 66, 16, 0, Math.PI, 2 * Math.PI);
+          g.fill();
+        }
+        function drawBurrowHidden() {
+          const y = GROUND;
+          const op = g.createLinearGradient(0, y - 36, 0, y + 8);
+          op.addColorStop(0, "#3a2a1a");
+          op.addColorStop(1, "#120c06");
+          burrowArch();
+          g.fillStyle = op;
+          g.fill();
+          burrowArch();
+          g.lineWidth = 3;
+          g.strokeStyle = "#6d4b29";
+          g.stroke();
+        }
+        function scene(dark, withBushes) {
+          if (withBushes === undefined) withBushes = true;
+          const sky = g.createLinearGradient(0, 0, 0, GROUND);
+          if (dark) {
+            sky.addColorStop(0, "#8fa6c8");
+            sky.addColorStop(1, "#b9cbe0");
+          } else {
+            sky.addColorStop(0, "#bfe6ff");
+            sky.addColorStop(1, "#e8f7ff");
+          }
+          g.fillStyle = sky;
+          g.fillRect(0, 0, W, GROUND);
+          if (sensor === "light") {
+            const b = P.light.sunlight / 100,
+              x = 96,
+              y = 74;
+            const gl = g.createRadialGradient(x, y, 6, x, y, 92);
+            gl.addColorStop(0, `rgba(255,225,110,${0.6 * b + 0.12})`);
+            gl.addColorStop(1, "rgba(255,225,110,0)");
+            g.fillStyle = gl;
+            g.beginPath();
+            g.arc(x, y, 92, 0, 7);
+            g.fill();
+            g.fillStyle = `rgb(255,${200 + Math.round(30 * b)},${70 + Math.round(20 * b)})`;
+            g.beginPath();
+            g.arc(x, y, 32, 0, 7);
+            g.fill();
+          } else {
+            g.fillStyle = "#ffe066";
+            g.beginPath();
+            g.arc(96, 74, 30, 0, 7);
+            g.fill();
+          }
+          g.fillStyle = "rgba(255,255,255,.9)";
+          puff(560, 66, 1);
+          puff(300, 50, 0.8);
+          g.fillStyle = dark ? "#9fc39a" : "#a9dca0";
+          g.beginPath();
+          g.moveTo(0, GROUND);
+          g.bezierCurveTo(150, 300, 320, 350, 480, 312);
+          g.bezierCurveTo(620, 282, 700, 330, W, 306);
+          g.lineTo(W, GROUND);
+          g.closePath();
+          g.fill();
+          const gr = g.createLinearGradient(0, GROUND, 0, H);
+          gr.addColorStop(0, dark ? "#6faa5f" : "#8ed17e");
+          gr.addColorStop(1, dark ? "#4f8a45" : "#69b45c");
+          g.fillStyle = gr;
+          g.fillRect(0, GROUND, W, H - GROUND);
+          g.strokeStyle = "rgba(90,150,80,.5)";
+          g.lineWidth = 2;
+          for (let i = 0; i < 46; i++) {
+            const x = i * 17 + 8;
+            g.beginPath();
+            g.moveTo(x, H);
+            g.lineTo(x + 3, H - 9 - ((i * 7) % 7));
+            g.stroke();
+          }
+          if (withBushes) {
+            BUSHES.forEach(drawBush);
+            drawBurrow();
+          }
+          if (dark) {
+            g.fillStyle = "rgba(30,40,70,.16)";
+            g.fillRect(0, 0, W, GROUND);
+          }
+        }
+        function shadowCloud(x) {
+          g.save();
+          g.fillStyle = "rgba(90,105,140,.92)";
+          for (const [dx, dy, r] of [
+            [0, 0, 32],
+            [40, -12, 40],
+            [84, 0, 32],
+            [124, 6, 26],
+            [36, 18, 30],
+            [84, 18, 30],
+          ]) {
+            g.beginPath();
+            g.arc(x + dx, 108 + dy, r, 0, 7);
+            g.fill();
+          }
+          g.restore();
+          const sx = x + 70,
+            sh = g.createRadialGradient(sx, GROUND - 4, 4, sx, GROUND - 4, 110);
+          sh.addColorStop(0, "rgba(0,0,0,.38)");
+          sh.addColorStop(1, "rgba(0,0,0,0)");
+          g.fillStyle = sh;
+          g.beginPath();
+          g.ellipse(sx, GROUND - 4, 110, 20, 0, 0, 7);
+          g.fill();
+        }
+        // A small cottage for background flavour — sits up near the horizon, well clear of the bushes/
+        // sensor/walking lanes below so it never interferes with anything interactive.
+        function drawHouse(x, y, s) {
+          g.save();
+          g.translate(x, y);
+          g.scale(s, s);
+          g.fillStyle = "rgba(0,0,0,.15)";
+          g.beginPath();
+          g.ellipse(0, 34, 46, 10, 0, 0, 7);
+          g.fill();
+          g.fillStyle = "#f2d9b6";
+          g.fillRect(-34, -10, 68, 44);
+          g.strokeStyle = "#c9a876";
+          g.lineWidth = 2;
+          g.strokeRect(-34, -10, 68, 44);
+          g.fillStyle = "#c1543f";
+          g.beginPath();
+          g.moveTo(-42, -10);
+          g.lineTo(0, -46);
+          g.lineTo(42, -10);
+          g.closePath();
+          g.fill();
+          g.strokeStyle = "#9c3f2e";
+          g.lineWidth = 2;
+          g.stroke();
+          g.fillStyle = "#a5776a";
+          g.fillRect(18, -40, 10, 18);
+          g.fillStyle = "#6b4a2a";
+          g.beginPath();
+          g.roundRect(-8, 10, 16, 24, [4, 4, 0, 0]);
+          g.fill();
+          g.fillStyle = "#e8c98f";
+          g.beginPath();
+          g.arc(4, 22, 1.4, 0, 7);
+          g.fill();
+          g.fillStyle = "#bfe6ff";
+          g.beginPath();
+          g.roundRect(-26, -2, 14, 14, 3);
+          g.fill();
+          g.beginPath();
+          g.roundRect(12, -2, 14, 14, 3);
+          g.fill();
+          g.strokeStyle = "#8a6238";
+          g.lineWidth = 1.5;
+          g.beginPath();
+          g.roundRect(-26, -2, 14, 14, 3);
+          g.stroke();
+          g.beginPath();
+          g.roundRect(12, -2, 14, 14, 3);
+          g.stroke();
+          g.restore();
+        }
+        // One flower-bed mound (no fence of its own) — the building block for the big garden below.
+        function drawFlowerBed(x, y, s) {
+          g.save();
+          g.translate(x, y);
+          g.scale(s, s);
+          g.fillStyle = "rgba(0,0,0,.12)";
+          g.beginPath();
+          g.ellipse(0, 10, 32, 8, 0, 0, 7);
+          g.fill();
+          const d = g.createLinearGradient(0, -6, 0, 10);
+          d.addColorStop(0, "#8a6238");
+          d.addColorStop(1, "#6d4b29");
+          g.fillStyle = d;
+          g.beginPath();
+          g.ellipse(0, 6, 28, 8, 0, 0, 7);
+          g.fill();
+          const colors = [
+            "#ff8fab",
+            "#ffd84d",
+            "#ff6b6b",
+            "#c792ea",
+            "#7ec8e3",
+          ];
+          for (let i = 0; i < 10; i++) {
+            const fx = -24 + i * 5.3,
+              fy = 2 + Math.sin(i * 1.3) * 3;
+            g.strokeStyle = "#4a7a3a";
+            g.lineWidth = 1.2;
+            g.beginPath();
+            g.moveTo(fx, fy + 2);
+            g.lineTo(fx, fy + 7);
+            g.stroke();
+            g.fillStyle = colors[i % colors.length];
+            g.beginPath();
+            g.arc(fx, fy, 2.6, 0, 7);
+            g.fill();
+          }
+          g.restore();
+        }
+        // A row of leafy cabbages — squat rosettes of overlapping curved leaves.
+        function drawCabbageRow(x0, x1, y, s) {
+          g.save();
+          g.translate(0, y);
+          g.scale(s, s);
+          const n = Math.max(2, Math.round((x1 - x0) / 22));
+          for (let i = 0; i < n; i++) {
+            const cx = x0 + ((x1 - x0) * (i + 0.5)) / n;
+            g.save();
+            g.translate(cx, 0);
+            g.fillStyle = "rgba(0,0,0,.14)";
+            g.beginPath();
+            g.ellipse(0, 6, 11, 4, 0, 0, 7);
+            g.fill();
+            const leaf = g.createRadialGradient(-2, -2, 1, 0, 0, 11);
+            leaf.addColorStop(0, "#a9e08a");
+            leaf.addColorStop(1, "#5a9a4a");
+            g.fillStyle = leaf;
+            for (const [dx, dy, r] of [
+              [0, 0, 9],
+              [-6, 2, 6],
+              [6, 2, 6],
+              [0, 5, 6],
+            ]) {
+              g.beginPath();
+              g.arc(dx, dy, r, 0, 7);
+              g.fill();
+            }
+            g.fillStyle = "rgba(255,255,255,.18)";
+            g.beginPath();
+            g.arc(-3, -3, 3, 0, 7);
+            g.fill();
+            g.restore();
+          }
+          g.restore();
+        }
+        // A row of carrots — just the leafy feathered tops poking out of the soil.
+        function drawCarrotRow(x0, x1, y, s) {
+          g.save();
+          g.translate(0, y);
+          g.scale(s, s);
+          const n = Math.max(2, Math.round((x1 - x0) / 15));
+          g.strokeStyle = "#3f8a3a";
+          g.lineWidth = 1.4;
+          for (let i = 0; i < n; i++) {
+            const cx = x0 + ((x1 - x0) * (i + 0.5)) / n;
+            for (const a of [-0.5, -0.15, 0.15, 0.5]) {
+              g.beginPath();
+              g.moveTo(cx, 4);
+              g.lineTo(cx + Math.sin(a) * 6, 4 - 10 - Math.cos(a) * 2);
+              g.stroke();
+            }
+          }
+          g.restore();
+        }
+        // A row of tomato plants on stakes — small bushy plant with red fruit dots.
+        function drawTomatoRow(x0, x1, y, s) {
+          g.save();
+          g.translate(0, y);
+          g.scale(s, s);
+          const n = Math.max(2, Math.round((x1 - x0) / 30));
+          for (let i = 0; i < n; i++) {
+            const cx = x0 + ((x1 - x0) * (i + 0.5)) / n;
+            g.save();
+            g.translate(cx, 0);
+            g.strokeStyle = "#a5865f";
+            g.lineWidth = 2;
+            g.beginPath();
+            g.moveTo(0, 6);
+            g.lineTo(0, -16);
+            g.stroke();
+            g.fillStyle = "#4f9a48";
+            for (const [dx, dy, r] of [
+              [-5, -2, 6],
+              [5, -4, 6],
+              [0, -10, 6],
+              [-3, -14, 5],
+            ]) {
+              g.beginPath();
+              g.arc(dx, dy, r, 0, 7);
+              g.fill();
+            }
+            g.fillStyle = "#e0453f";
+            for (const [dx, dy] of [
+              [-4, -1],
+              [4, -6],
+              [-1, -12],
+            ]) {
+              g.beginPath();
+              g.arc(dx, dy, 2.2, 0, 7);
+              g.fill();
+            }
+            g.restore();
+          }
+          g.restore();
+        }
+        // A small garden marker pin — a thin stake with a bright colour flag, the kind used to
+        // label plant rows. Purely decorative colour accents scattered through the beds.
+        function drawMarkerPin(x, y, s, color) {
+          g.save();
+          g.translate(x, y);
+          g.scale(s, s);
+          g.strokeStyle = "#7a5a38";
+          g.lineWidth = 1.6;
+          g.beginPath();
+          g.moveTo(0, 4);
+          g.lineTo(0, -12);
+          g.stroke();
+          g.fillStyle = color;
+          g.beginPath();
+          g.moveTo(0, -12);
+          g.lineTo(9, -9);
+          g.lineTo(0, -6);
+          g.closePath();
+          g.fill();
+          g.restore();
+        }
+        // A big, clearly-visible vegetable garden along the back of the field: a tall picket
+        // fence enclosing three full rows (cabbages, carrots, tomatoes) plus a flower bed, with
+        // bright marker pins dotted between the rows — a proper kitchen garden, not a decoration.
+        function drawBigGarden(x0, x1, y, s) {
+          g.save();
+          g.translate(0, y);
+          g.scale(s, s);
+          const soil = g.createLinearGradient(0, -34, 0, 34);
+          soil.addColorStop(0, "#8a6238");
+          soil.addColorStop(1, "#6d4b29");
+          g.fillStyle = "rgba(0,0,0,.16)";
+          g.beginPath();
+          g.ellipse((x0 + x1) / 2, 34, (x1 - x0) / 2 + 8, 20, 0, 0, 7);
+          g.fill();
+          g.fillStyle = soil;
+          g.beginPath();
+          g.ellipse((x0 + x1) / 2, 30, (x1 - x0) / 2, 30, 0, 0, 7);
+          g.fill();
+          g.strokeStyle = "#e8dcc0";
+          g.lineWidth = 3.5;
+          for (let x = x0; x <= x1; x += 13) {
+            g.beginPath();
+            g.moveTo(x, 8);
+            g.lineTo(x, -18);
+            g.stroke();
+          }
+          g.beginPath();
+          g.moveTo(x0, -12);
+          g.lineTo(x1, -12);
+          g.stroke();
+          g.strokeStyle = "#c9a876";
+          g.lineWidth = 1.5;
+          g.beginPath();
+          g.moveTo(x0, -4);
+          g.lineTo(x1, -4);
+          g.stroke();
+          g.restore();
+          // three rows, each set back a little further (small y offset) for a hint of depth
+          const rowY = [y + 8, y + 20, y + 33];
+          drawCarrotRow(x0 + 10, x1 - 10, rowY[0], s);
+          drawCabbageRow(x0 + 10, x1 - 10, rowY[1], s);
+          drawTomatoRow(x0 + 14, x1 - 14, rowY[2], s);
+          drawFlowerBed((x0 + x1) / 2, rowY[2] + 22, s * 0.9);
+          const pinColors = [
+            "#ff5c5c",
+            "#ffd23f",
+            "#4fd67a",
+            "#4fa0ff",
+            "#c774e8",
+          ];
+          const pinCount = Math.max(4, Math.round((x1 - x0) / 55));
+          for (let i = 0; i < pinCount; i++) {
+            const px = x0 + 6 + ((x1 - x0 - 12) * i) / (pinCount - 1);
+            const py = rowY[i % 3] - 6;
+            drawMarkerPin(px, py, s * 0.85, pinColors[i % pinColors.length]);
+          }
+        }
+        // --- Motion Sensor tab: a moderate elevated tilt — noticeably more overhead than a flat side
+        // view, short of a straight-down bird's-eye. The ground gets a shorter sky/taller-grass
+        // treatment plus a soft perspective grid, and the detection zone is a flatter ellipse (still
+        // clearly round, not a full circle) — but the bot and the person stay their normal, recognisable
+        // selves (drawRabbit/drawHuman, same sprites used on every other tab), not top-down icons.
+        function drawMotionFieldTilted(dark) {
+          const horizon = 118; // shorter sky than the flat side view, taller than the true top-down's zero
+          const sky = g.createLinearGradient(0, 0, 0, horizon);
+          if (dark) {
+            sky.addColorStop(0, "#8fa6c8");
+            sky.addColorStop(1, "#b9cbe0");
+          } else {
+            sky.addColorStop(0, "#bfe6ff");
+            sky.addColorStop(1, "#dcf3ff");
+          }
+          g.fillStyle = sky;
+          g.fillRect(0, 0, W, horizon);
+          g.fillStyle = "rgba(95,160,85,.5)"; // hazy distant tree line at the horizon
+          for (let i = 0; i < 16; i++) {
+            const x = i * (W / 15),
+              r = 20 + ((i * 37) % 16);
+            g.beginPath();
+            g.arc(x, horizon, r, Math.PI, 0);
+            g.fill();
+          }
+          const gr = g.createLinearGradient(0, horizon, 0, H);
+          gr.addColorStop(0, dark ? "#6faa5f" : "#8ed17e");
+          gr.addColorStop(1, dark ? "#4f8a45" : "#69b45c");
+          g.fillStyle = gr;
+          g.fillRect(0, horizon, W, H - horizon);
+          g.strokeStyle = "rgba(255,255,255,.15)";
+          g.lineWidth = 1;
+          const rows = 7;
+          for (let i = 1; i < rows; i++) {
+            const tt = i / rows,
+              y = horizon + (H - horizon) * Math.pow(tt, 1.5);
+            g.beginPath();
+            g.moveTo(0, y);
+            g.lineTo(W, y);
+            g.stroke();
+          }
+          drawBigGarden(W * 0.02, W * 0.38, horizon + 46, 1);
+          drawHouse(W * 0.86, horizon + 44, 0.78);
+          BUSHES.forEach(drawBush);
+          if (dark) {
+            g.fillStyle = "rgba(30,40,70,.16)";
+            g.fillRect(0, 0, W, horizon);
+          }
+        }
+        // Detection zone: flatter than the original flat-view ellipse (reads more like a slightly
+        // overhead view) but still clearly an ellipse, not a full circle — pairs with the recognisable
+        // side-view characters instead of forcing a full top-down look.
+        function drawRingTilted(danger) {
+          const rx = P.motion.range,
+            ry = rx * 0.58;
+          // A real motion sensor passively WATCHES a fixed zone — it doesn't emit visible pulses
+          // like an ultrasonic sensor does. So this is a single static coverage area (bold outline
+          // + a light wash inside), not a repeating animated wave — no sweep, no looping ring.
+          const color = danger ? "255,45,70" : "255,196,20";
+          g.save();
+          g.fillStyle = `rgba(${color},.14)`;
+          g.beginPath();
+          g.ellipse(SENSOR.x, SENSOR.y, rx, ry, 0, 0, 7);
+          g.fill();
+          g.shadowColor = `rgba(${color},1)`;
+          g.shadowBlur = danger ? 10 : 8;
+          g.strokeStyle = `rgba(${color},1)`;
+          g.lineWidth = danger ? 5 : 4;
+          g.beginPath();
+          g.ellipse(SENSOR.x, SENSOR.y, rx, ry, 0, 0, 7);
+          g.stroke();
+          g.shadowBlur = 0;
+          g.fillStyle = `rgba(${color},1)`;
+          g.beginPath();
+          g.arc(SENSOR.x, SENSOR.y, 5.5, 0, 7);
+          g.fill();
+          g.restore();
+        }
+        function drawBird() {
+          if (!bird.active) return;
+          const x = bird.x,
+            y = bird.y,
+            on = Math.abs(x - rab.x) < 42;
+          g.fillStyle = on ? "rgba(0,0,0,.42)" : "rgba(0,0,0,.26)";
+          g.beginPath();
+          g.ellipse(x, GROUND - 4, 36, 12, 0, 0, 7);
+          g.fill();
+          const f = Math.sin(t * 0.25) * 9;
+          g.save();
+          g.translate(x, y);
+          g.fillStyle = "#3a4258";
+          g.beginPath();
+          g.moveTo(0, 2);
+          g.quadraticCurveTo(-22, -8 - f, -48, 2 - f * 0.3);
+          g.quadraticCurveTo(-22, 9, 0, 6);
+          g.closePath();
+          g.fill();
+          g.beginPath();
+          g.moveTo(0, 2);
+          g.quadraticCurveTo(22, -8 - f, 48, 2 - f * 0.3);
+          g.quadraticCurveTo(22, 9, 0, 6);
+          g.closePath();
+          g.fill();
+          g.beginPath();
+          g.ellipse(0, 3, 6, 11, 0, 0, 7);
+          g.fill();
+          g.beginPath();
+          g.arc(bird.vx < 0 ? -8 : 8, -1, 4.5, 0, 7);
+          g.fill();
+          g.beginPath();
+          g.moveTo(bird.vx < 0 ? -12 : 12, -1);
+          g.lineTo(bird.vx < 0 ? -18 : 18, 1);
+          g.lineTo(bird.vx < 0 ? -12 : 12, 3);
+          g.closePath();
+          g.fill();
+          g.restore();
+        }
+        function drawHuman() {
+          if (!human.active) return;
+          const x = human.x,
+            y = human.y,
+            walk = human.frozen ? 0 : Math.sin(t * 0.2) * 6,
+            f = human.face;
+          if (human.mode === "toward" && !human.frozen) {
+            g.strokeStyle = "rgba(255,107,129,.5)";
+            g.lineWidth = 2;
+            for (let i = 1; i <= 3; i++) {
+              g.beginPath();
+              g.moveTo(x - f * (14 + i * 7), y - 40);
+              g.lineTo(x - f * (22 + i * 7), y - 40);
+              g.stroke();
+            }
+          }
+          if (human.frozen) {
+            g.fillStyle = "#e0455e";
+            g.font = "700 20px Orbitron, sans-serif";
+            g.textAlign = "center";
+            g.fillText("!", x, y - 104);
+            g.textAlign = "left";
+          }
+          g.save();
+          g.translate(x, y);
+          g.scale(f * human.scale, human.scale);
+          g.fillStyle = "rgba(0,0,0,.18)";
+          g.beginPath();
+          g.ellipse(0, 4, 18, 5.5, 0, 0, 7);
+          g.fill();
+          // Simple, clean cartoon pedestrian: smooth capsule limbs (no separate hand/shoe blobs
+          // to look lumpy at small size), a soft rounded hoodie body, and a slightly oversized,
+          // friendly head — reads clearly as a person even at a few dozen pixels tall.
+          // Legs
+          g.strokeStyle = "#33415a";
+          g.lineWidth = 9;
+          g.lineCap = "round";
+          g.beginPath();
+          g.moveTo(0, -31);
+          g.lineTo(-7 + walk, -2);
+          g.moveTo(0, -31);
+          g.lineTo(7 - walk, -2);
+          g.stroke();
+          // Hoodie body — one soft rounded capsule, gently shaded
+          const body = g.createLinearGradient(-14, -62, 14, -28);
+          body.addColorStop(0, "#5fa0f0");
+          body.addColorStop(1, "#3f7fd6");
+          g.fillStyle = body;
+          g.beginPath();
+          g.moveTo(-14, -30);
+          g.lineTo(-14, -50);
+          g.arc(0, -50, 14, Math.PI, 0);
+          g.lineTo(14, -30);
+          g.closePath();
+          g.fill();
+          // Arms — same soft capsule strokes as the legs, tucked close to the body
+          g.strokeStyle = "#3f7fd6";
+          g.lineWidth = 7;
+          g.lineCap = "round";
+          g.beginPath();
+          g.moveTo(-11, -48);
+          g.lineTo(-14 - walk * 0.5, -30);
+          g.moveTo(11, -48);
+          g.lineTo(14 + walk * 0.5, -30);
+          g.stroke();
+          // Head — a touch larger than strict proportion, which is what reads as friendly/cute
+          // rather than a shrunken adult figure at this scale.
+          const skin = g.createRadialGradient(-3, -71, 2, 0, -68, 15);
+          skin.addColorStop(0, "#ffdcb3");
+          skin.addColorStop(1, "#eab68f");
+          g.fillStyle = skin;
+          g.beginPath();
+          g.arc(0, -68, 14, 0, 7);
+          g.fill();
+          g.fillStyle = "#5a3d29";
+          g.beginPath();
+          g.arc(0, -71, 15, Math.PI * 1.02, Math.PI * 1.98);
+          g.fill();
+          g.fillStyle = "#3a2b2b";
+          g.beginPath();
+          g.arc(-4.6, -68, 1.6, 0, 7);
+          g.fill();
+          g.beginPath();
+          g.arc(4.6, -68, 1.6, 0, 7);
+          g.fill();
+          g.strokeStyle = "#b5765a";
+          g.lineWidth = 1.3;
+          g.lineCap = "round";
+          g.beginPath();
+          g.arc(0, -63, 3.2, 0.15 * Math.PI, 0.85 * Math.PI);
+          g.stroke();
+          g.restore();
+        }
+        function drawForestScene() {
+          // warm glow deep in the trees (the vanishing point), fading to shaded forest floor
+          const glow = g.createRadialGradient(
+            CX,
+            TRAIL_Y0 - 4,
+            8,
+            CX,
+            TRAIL_Y0 - 4,
+            280,
+          );
+          glow.addColorStop(0, "#fff6d8");
+          glow.addColorStop(0.3, "#dcefb2");
+          glow.addColorStop(0.65, "#5c9256");
+          glow.addColorStop(1, "#26421f");
+          g.fillStyle = glow;
+          g.fillRect(0, 0, W, H);
+          const vg = g.createLinearGradient(0, H * 0.5, 0, H);
+          vg.addColorStop(0, "rgba(15,30,15,0)");
+          vg.addColorStop(1, "rgba(10,22,10,.4)");
+          g.fillStyle = vg;
+          g.fillRect(0, 0, W, H);
+        }
+        // Realistic corner trees, drawn in "top-left" local space then mirrored with g.scale
+        // so one routine covers all four corners. Top corners = overhanging canopy (the tunnel
+        // ceiling); bottom corners = big close-up trunks framing the foreground, like the photo.
+        function drawTopCornerTree(flip) {
+          g.save();
+          g.translate(flip > 0 ? -10 : W + 10, -10);
+          g.scale(flip, 1);
+          g.fillStyle = "#3a2a1a";
+          g.beginPath();
+          g.moveTo(0, 0);
+          g.lineTo(46, 0);
+          g.quadraticCurveTo(28, 70, 14, 140);
+          g.lineTo(-2, 140);
+          g.closePath();
+          g.fill();
+          g.strokeStyle = "rgba(0,0,0,.28)";
+          g.lineWidth = 2;
+          for (const bx of [10, 20, 32]) {
+            g.beginPath();
+            g.moveTo(bx, 8);
+            g.quadraticCurveTo(bx - 5, 70, bx - 9, 132);
+            g.stroke();
+          }
+          const layers = [
+            [20, 58, 92, "#1c3a1a"],
+            [68, 20, 72, "#28551f"],
+            [38, 105, 62, "#336b2b"],
+            [98, 66, 52, "#3f7e34"],
+            [70, 130, 40, "#4c8e40"],
+          ];
+          layers.forEach(([dx, dy, r, c]) => {
+            g.fillStyle = c;
+            g.beginPath();
+            g.arc(dx, dy, r, 0, 7);
+            g.fill();
+          });
+          g.fillStyle = "rgba(255,238,190,.20)";
+          g.beginPath();
+          g.arc(105, 42, 22, 0, 7);
+          g.fill();
+          g.beginPath();
+          g.arc(55, 95, 15, 0, 7);
+          g.fill();
+          g.restore();
+        }
+        function drawBottomCornerTree(flip) {
+          g.save();
+          g.translate(flip > 0 ? -24 : W + 24, H + 10);
+          g.scale(flip, 1);
+          const tg = g.createLinearGradient(-14, 0, 116, 0);
+          tg.addColorStop(0, "#0f0a06");
+          tg.addColorStop(0.45, "#3a2818");
+          tg.addColorStop(0.55, "#4a3420");
+          tg.addColorStop(1, "#150e08");
+          g.fillStyle = tg;
+          g.beginPath();
+          g.moveTo(-14, 4);
+          g.quadraticCurveTo(-8, -95, 20, -210);
+          g.lineTo(72, -210);
+          g.quadraticCurveTo(94, -95, 116, 4);
+          g.closePath();
+          g.fill();
+          g.beginPath();
+          g.moveTo(-14, 4);
+          g.quadraticCurveTo(10, 26, 50, 16);
+          g.quadraticCurveTo(90, 26, 116, 4);
+          g.lineTo(116, 26);
+          g.lineTo(-14, 26);
+          g.closePath();
+          g.fill();
+          g.strokeStyle = "rgba(0,0,0,.32)";
+          g.lineWidth = 3;
+          for (const bx of [8, 32, 58, 84]) {
+            g.beginPath();
+            g.moveTo(bx, -6);
+            g.quadraticCurveTo(bx + 5, -105, bx - 4, -205);
+            g.stroke();
+          }
+          g.strokeStyle = "rgba(255,210,160,.10)";
+          g.lineWidth = 2;
+          for (const bx of [20, 46, 72]) {
+            g.beginPath();
+            g.moveTo(bx, -16);
+            g.lineTo(bx, -198);
+            g.stroke();
+          }
+          g.fillStyle = "rgba(18,36,16,.88)";
+          g.beginPath();
+          g.arc(30, -208, 96, 0, 7);
+          g.fill();
+          g.beginPath();
+          g.arc(90, -190, 70, 0, 7);
+          g.fill();
+          g.restore();
+        }
+        function drawForestPath() {
+          g.save();
+          const grad = g.createLinearGradient(0, TRAIL_Y0, 0, TRAIL_Y1 + 40);
+          grad.addColorStop(0, "rgba(226,208,164,.9)");
+          grad.addColorStop(1, "rgba(146,108,68,.9)");
+          g.fillStyle = grad;
+          const STEPS = 44; // finer resolution so the jittered edges below read as a smooth, worn boundary rather than a faceted polygon
+          g.beginPath();
+          for (let i = 0; i <= STEPS; i++) {
+            const y = TRAIL_Y0 + (TRAIL_Y1 + 40 - TRAIL_Y0) * (i / STEPS),
+              x = pathCenterXAt(y) - pathHalfWidthAt(y) + edgeJitter(y, 1.3);
+            i === 0 ? g.moveTo(x, y) : g.lineTo(x, y);
+          }
+          for (let i = STEPS; i >= 0; i--) {
+            const y = TRAIL_Y0 + (TRAIL_Y1 + 40 - TRAIL_Y0) * (i / STEPS),
+              x = pathCenterXAt(y) + pathHalfWidthAt(y) + edgeJitter(y, 4.7);
+            g.lineTo(x, y);
+          }
+          g.closePath();
+          g.fill();
+          g.restore();
+          PATH_SPECKS.forEach((s) => {
+            const hw = pathHalfWidthAt(s.ty),
+              x = pathCenterXAt(s.ty) + s.dx * hw;
+            g.save();
+            g.translate(x, s.ty);
+            g.rotate(s.rot);
+            g.fillStyle = s.leaf
+              ? "rgba(112,142,64,.65)"
+              : "rgba(96,74,52,.55)";
+            g.beginPath();
+            g.ellipse(0, 0, s.leaf ? 4 : 2.6, s.leaf ? 2.4 : 2.1, 0, 0, 7);
+            g.fill();
+            g.restore();
+          });
+        }
+        function drawFillerProp(p) {
+          // Depth-scaled like everything else on the trail — previously filler props ignored
+          // distance entirely, so a big tree could land right up near the far horizon at full
+          // size, which read as inconsistent perspective rather than a properly graded forest.
+          const s =
+            depthScale(Math.max(TRAIL_Y0, Math.min(TRAIL_Y1, p.y))) * p.s;
+          g.save();
+          g.globalAlpha = 0.72;
+          if (p.type === "tree") drawTree(p.x, p.y, s);
+          else drawBushAt(p.x, p.y, s);
+          g.restore();
+        }
+        function drawTopTreelineProp(p) {
+          drawTree(p.x, p.y, p.s);
+        }
+        function drawWallProp(p) {
+          const s =
+            depthScale(Math.max(TRAIL_Y0, Math.min(TRAIL_Y1, p.y))) * p.s;
+          if (p.type === "tree") drawTree(p.x, p.y, s);
+          else drawBushAt(p.x, p.y, s);
+        }
+        function drawGroundSpeck(p) {
+          g.save();
+          g.translate(p.x, p.y);
+          g.rotate(p.rot);
+          g.strokeStyle = "rgba(40,80,36,.4)";
+          g.lineWidth = 1.6;
+          g.lineCap = "round";
+          g.beginPath();
+          g.moveTo(0, 0);
+          g.lineTo(-p.h * 0.3, -p.h);
+          g.moveTo(0, 0);
+          g.lineTo(0, -p.h * 1.1);
+          g.moveTo(0, 0);
+          g.lineTo(p.h * 0.3, -p.h);
+          g.stroke();
+          g.restore();
+        }
+        function drawTree(x, y, s) {
+          g.save();
+          g.translate(x, y);
+          g.scale(s, s);
+          g.fillStyle = "rgba(0,0,0,.16)";
+          g.beginPath();
+          g.ellipse(0, 6, 22, 6, 0, 0, 7);
+          g.fill();
+          g.fillStyle = "#6b4a2a";
+          g.fillRect(-6, -8, 12, 30);
+          const cg = g.createLinearGradient(0, -78, 0, -4);
+          cg.addColorStop(0, "#4f9e4f");
+          cg.addColorStop(1, "#2f6a32");
+          g.fillStyle = cg;
+          g.beginPath();
+          g.arc(0, -56, 34, 0, 7);
+          g.fill();
+          g.beginPath();
+          g.arc(-20, -38, 24, 0, 7);
+          g.fill();
+          g.beginPath();
+          g.arc(20, -38, 24, 0, 7);
+          g.fill();
+          g.beginPath();
+          g.arc(0, -28, 28, 0, 7);
+          g.fill();
+          g.fillStyle = "rgba(255,255,255,.10)";
+          g.beginPath();
+          g.arc(-10, -64, 12, 0, 7);
+          g.fill();
+          g.restore();
+        }
+        function drawBushAt(x, y, s) {
+          g.save();
+          g.translate(x, y);
+          g.scale(s, s);
+          g.fillStyle = "rgba(0,0,0,.14)";
+          g.beginPath();
+          g.ellipse(0, 8, 28, 7, 0, 0, 7);
+          g.fill();
+          const d = g.createLinearGradient(0, -40, 0, 8);
+          d.addColorStop(0, "#7fd07a");
+          d.addColorStop(1, "#4f9a48");
+          g.fillStyle = d;
+          for (const [dx, dy, r] of [
+            [-18, -2, 17],
+            [0, -16, 22],
+            [18, -4, 18],
+            [5, 1, 19],
+            [-8, -20, 14],
+          ]) {
+            g.beginPath();
+            g.arc(dx, dy, r, 0, 7);
+            g.fill();
+          }
+          g.fillStyle = "rgba(255,255,255,.14)";
+          g.beginPath();
+          g.arc(-5, -20, 7, 0, 7);
+          g.fill();
+          g.fillStyle = "#fff9e8";
+          for (const [fx, fy] of [
+            [-16, 10],
+            [11, 12],
+            [2, 15],
+            [-3, 6],
+            [16, 2],
+          ]) {
+            g.beginPath();
+            g.arc(fx, fy, 1.7, 0, 7);
+            g.fill();
+          }
+          g.restore();
+        }
+        function drawSideProp(p) {
+          const s = depthScale(p.y) * (p.type === "tree" ? 1 : 0.85);
+          if (p.type === "tree") drawTree(p.x, p.y, s);
+          else drawBushAt(p.x, p.y, s);
+        }
+        function drawNutIcon(x, y, scale) {
+          g.save();
+          g.translate(x, y + Math.sin(t * 0.08) * 2);
+          g.scale(scale, scale);
+          g.fillStyle = "rgba(0,0,0,.15)";
+          g.beginPath();
+          g.ellipse(0, 10, 9, 3, 0, 0, 7);
+          g.fill();
+          g.fillStyle = "#8a5a2b";
+          g.beginPath();
+          g.ellipse(0, 3, 6.5, 8.5, 0, 0, 7);
+          g.fill();
+          g.fillStyle = "#5c3d1e";
+          g.beginPath();
+          g.arc(0, -4, 7, Math.PI, 2 * Math.PI);
+          g.fill();
+          g.restore();
+        }
+        function drawSignpost(x, y, scale, text) {
+          g.save();
+          g.translate(x, y);
+          g.scale(scale, scale);
+          g.strokeStyle = "#5c3d1e";
+          g.lineWidth = 6;
+          g.lineCap = "round";
+          g.beginPath();
+          g.moveTo(0, 30);
+          g.lineTo(0, -16);
+          g.stroke();
+          g.save();
+          g.translate(0, -22);
+          g.rotate(-0.05);
+          g.fillStyle = "#9a7248";
+          g.beginPath();
+          g.roundRect(-32, -13, 64, 26, 4);
+          g.fill();
+          g.strokeStyle = "#5c3d1e";
+          g.lineWidth = 2;
+          g.beginPath();
+          g.roundRect(-32, -13, 64, 26, 4);
+          g.stroke();
+          g.fillStyle = "#fff3d0";
+          g.font = "700 9px Rajdhani, sans-serif";
+          g.textAlign = "center";
+          g.textBaseline = "middle";
+          g.fillText(text || "BOT TRAIL", 0, 0);
+          g.restore();
+          g.restore();
+        }
+        // A whimsical wooden rabbit's cottage — round door, round porthole windows, a curved
+        // wood-shingle roof — the storybook-burrow look (think Peter Rabbit / Winnie-the-Pooh's
+        // Rabbit's House), built from log-cabin plank walls rather than a plain plastered cottage.
+        function drawRabbitTreeHouse(x, y, s) {
+          s = s || 1;
+          g.save();
+          g.translate(x, y);
+          g.scale(s, s);
+          g.fillStyle = "rgba(0,0,0,.16)";
+          g.beginPath();
+          g.ellipse(0, 32, 40, 9, 0, 0, 7);
+          g.fill();
+          // Log-cabin plank walls
+          const wood = g.createLinearGradient(-30, -6, -30, 30);
+          wood.addColorStop(0, "#a9773f");
+          wood.addColorStop(1, "#8a5f30");
+          g.fillStyle = wood;
+          g.beginPath();
+          g.roundRect(-30, -6, 60, 36, 6);
+          g.fill();
+          g.strokeStyle = "rgba(60,38,16,.5)";
+          g.lineWidth = 1.4;
+          for (const ly of [2, 9, 16, 23]) {
+            g.beginPath();
+            g.moveTo(-30, ly);
+            g.lineTo(30, ly);
+            g.stroke();
+          }
+          g.strokeStyle = "#5c3d1e";
+          g.lineWidth = 2;
+          g.beginPath();
+          g.roundRect(-30, -6, 60, 36, 6);
+          g.stroke();
+          // Curved wood-shingle roof, warm and rounded rather than a sharp plastered gable
+          const roof = g.createLinearGradient(0, -46, 0, -4);
+          roof.addColorStop(0, "#c98a4b");
+          roof.addColorStop(1, "#9c6530");
+          g.fillStyle = roof;
+          g.beginPath();
+          g.moveTo(-38, -4);
+          g.quadraticCurveTo(-36, -34, 0, -46);
+          g.quadraticCurveTo(36, -34, 38, -4);
+          g.quadraticCurveTo(0, -12, -38, -4);
+          g.closePath();
+          g.fill();
+          g.strokeStyle = "rgba(90,55,20,.4)";
+          g.lineWidth = 1.2;
+          for (const sx of [-24, -10, 6, 22]) {
+            g.beginPath();
+            g.moveTo(sx, -8);
+            g.quadraticCurveTo(sx * 0.4, -30, 0, -42);
+            g.stroke();
+          }
+          // Chimney with a little puff of smoke
+          g.fillStyle = "#8a6238";
+          g.fillRect(16, -40, 9, 16);
+          g.fillStyle = "rgba(220,220,220,.55)";
+          g.beginPath();
+          g.arc(20.5, -46, 5, 0, 7);
+          g.arc(24, -53, 4, 0, 7);
+          g.fill();
+          // Round door — the storybook rabbit-hole touch — with a little porthole and a carrot-
+          // orange knob
+          g.fillStyle = "#5c3d1e";
+          g.beginPath();
+          g.arc(0, 14, 11, Math.PI, 0);
+          g.lineTo(11, 26);
+          g.lineTo(-11, 26);
+          g.closePath();
+          g.fill();
+          g.strokeStyle = "#3f2810";
+          g.lineWidth = 1.5;
+          g.stroke();
+          g.fillStyle = "#7fd4f0";
+          g.beginPath();
+          g.arc(0, 6, 3, 0, 7);
+          g.fill();
+          g.strokeStyle = "#3f2810";
+          g.lineWidth = 1;
+          g.beginPath();
+          g.moveTo(-3, 6);
+          g.lineTo(3, 6);
+          g.moveTo(0, 3);
+          g.lineTo(0, 9);
+          g.stroke();
+          g.fillStyle = "#ff9f43";
+          g.beginPath();
+          g.arc(6, 16, 1.6, 0, 7);
+          g.fill();
+          // Round porthole windows either side of the door, warm and lit
+          for (const wx of [-19, 19]) {
+            g.fillStyle = "#ffe9a8";
+            g.beginPath();
+            g.arc(wx, 10, 6.5, 0, 7);
+            g.fill();
+            g.strokeStyle = "#5c3d1e";
+            g.lineWidth = 2;
+            g.stroke();
+            g.beginPath();
+            g.moveTo(wx - 6.5, 10);
+            g.lineTo(wx + 6.5, 10);
+            g.moveTo(wx, 10 - 6.5);
+            g.lineTo(wx, 10 + 6.5);
+            g.lineWidth = 1;
+            g.stroke();
+          }
+          g.restore();
+        }
+        // The trail's destination: a ground-level tree house, drawn in the bottom-right corner
+        // instead of a burrow. No large tree directly above it anymore — that was overlapping and
+        // blocking the final stretch of path; the corner still gets tree cover from the left-side
+        // bottom corner tree and the background filler/wall trees.
+        function drawTreeHouseEnding(x, y, scale) {
+          scale = scale || 1;
+          drawRabbitTreeHouse(x, y, scale * 0.95);
+          // A little name-board sign staked to the right of the house.
+          drawSignpost(
+            x + 56 * scale,
+            y + 6 * scale,
+            scale * 0.7,
+            "BUNNY'S REST",
+          );
+        }
+        function drawObstacle(x, y, scale) {
+          y = y != null ? y : GROUND - 2;
+          scale = scale || 1;
+          g.save();
+          g.translate(x, y);
+          g.scale(scale, scale);
+          g.fillStyle = "rgba(0,0,0,.18)";
+          g.beginPath();
+          g.ellipse(0, 8, 26, 7, 0, 0, 7);
+          g.fill();
+          const rg = g.createLinearGradient(-22, -30, 22, 6);
+          rg.addColorStop(0, "#9a8f86");
+          rg.addColorStop(1, "#5d534b");
+          g.fillStyle = rg;
+          g.beginPath();
+          g.moveTo(-24, 4);
+          g.quadraticCurveTo(-26, -18, -8, -30);
+          g.quadraticCurveTo(10, -38, 24, -16);
+          g.quadraticCurveTo(30, -2, 20, 6);
+          g.quadraticCurveTo(-4, 12, -24, 4);
+          g.closePath();
+          g.fill();
+          g.strokeStyle = "rgba(0,0,0,.22)";
+          g.lineWidth = 1.5;
+          g.stroke();
+          g.fillStyle = "rgba(255,255,255,.18)";
+          g.beginPath();
+          g.ellipse(-6, -20, 10, 6, -0.4, 0, 7);
+          g.fill();
+          g.restore();
+        }
+        // Ghost preview under the cursor so a learner can see, before clicking, whether they're
+        // about to add a new obstacle (sized per the slider) or remove one that's already there —
+        // the same courtesy the Heat-Seeker Rover sim's wall-tile hover preview gives.
+        function drawUltraHover() {
+          if (!ultraHover) return;
+          const s = depthScale(ultraHover.y);
+          g.save();
+          g.setLineDash([5, 5]);
+          g.lineWidth = 2.5;
+          if (ultraHover.removeIdx >= 0) {
+            g.strokeStyle = "rgba(255,90,110,.95)";
+            g.fillStyle = "rgba(255,90,110,.14)";
+          } else {
+            g.strokeStyle = "rgba(255,255,255,.9)";
+            g.fillStyle = "rgba(255,255,255,.14)";
+          }
+          const r = 24 * s * (ultraHover.removeIdx >= 0 ? 1 : P.ultra.size);
+          g.beginPath();
+          g.arc(ultraHover.x, ultraHover.y, r, 0, 7);
+          g.fill();
+          g.stroke();
+          g.setLineDash([]);
+          g.font = "700 15px Rajdhani, sans-serif";
+          g.textAlign = "center";
+          g.textBaseline = "middle";
+          g.fillStyle =
+            ultraHover.removeIdx >= 0
+              ? "rgba(255,140,155,.95)"
+              : "rgba(255,255,255,.95)";
+          g.fillText(
+            ultraHover.removeIdx >= 0 ? "−" : "+",
+            ultraHover.x,
+            ultraHover.y,
+          );
+          g.textAlign = "left";
+          g.textBaseline = "alphabetic";
+          g.restore();
+        }
+        // Draws the ping/echo pulse described in `ping` (see updatePing): a burst that visibly travels
+        // OUT from the bot's nose, and — only if it actually reaches an obstacle within range — snaps
+        // BACK to the sensor as an echo, flashing "ECHO" with the measured distance the instant it
+        // arrives. That round trip (out, then back) is literally how a real ultrasonic sensor times a
+        // distance, so this makes the calculation itself visible instead of just the final number.
+        // `target` is the obstacle nearestObstacleAhead() is currently tracking (or null). The
+        // whole ping — corridor line, travelling pulse, wavefront arc — now points straight at
+        // it, whichever way it sits, instead of always aiming straight down. With nothing to
+        // aim at, it defaults to a straight-ahead search line.
+        function drawUltraPing(x0, y0, level, live, target) {
+          const color =
+            level <= 1
+              ? "63,214,196"
+              : level === 2
+                ? "255,190,60"
+                : "255,90,110";
+          let dx = 0,
+            dy = 1;
+          if (target) {
+            const ddx = target.x - x0,
+              ddy = target.y - y0,
+              L = Math.hypot(ddx, ddy) || 1;
+            dx = ddx / L;
+            dy = ddy / L;
+          }
+          const ang = Math.atan2(dy, dx);
+          const maxPx = P.ultra.range * PXCM;
+          g.save();
+          // faint corridor showing the sensor's full detection reach, aimed at whatever it's
+          // currently tracking — visible even before Start, so the Detection Range slider means
+          // something while the learner is still setting it up
+          g.strokeStyle = `rgba(${color},.22)`;
+          g.lineWidth = 1.5;
+          g.setLineDash([4, 6]);
+          g.beginPath();
+          g.moveTo(x0, y0);
+          g.lineTo(x0 + dx * maxPx, y0 + dy * maxPx);
+          g.stroke();
+          g.setLineDash([]);
+          if (!live) {
+            g.restore();
+            return;
+          }
+          if (ping.phase !== "fade") {
+            const wx = x0 + dx * ping.dist,
+              wy = y0 + dy * ping.dist;
+            const arcColor = ping.phase === "back" ? "255,255,255" : color;
+            g.shadowColor = `rgba(${color},.85)`;
+            g.shadowBlur = 8;
+            g.strokeStyle = `rgba(${arcColor},.9)`;
+            g.lineWidth = ping.phase === "back" ? 3.2 : 2.6;
+            g.save();
+            g.translate(wx, wy);
+            g.rotate(ang - Math.PI / 2);
+            g.beginPath();
+            g.arc(0, 0, 11, Math.PI / 2 - 0.55, Math.PI / 2 + 0.55);
+            g.stroke();
+            g.restore();
+            // a couple of soft trailing arcs behind the leading edge, direction matches travel
+            for (let i = 1; i <= 2; i++) {
+              const td =
+                ping.phase === "back" ? ping.dist + i * 9 : ping.dist - i * 9;
+              if (td < 0 || td > maxPx) continue;
+              g.globalAlpha = 0.35 / i;
+              g.save();
+              g.translate(x0 + dx * td, y0 + dy * td);
+              g.rotate(ang - Math.PI / 2);
+              g.beginPath();
+              g.arc(0, 0, 11, Math.PI / 2 - 0.5, Math.PI / 2 + 0.5);
+              g.stroke();
+              g.restore();
+            }
+            g.globalAlpha = 1;
+            g.shadowBlur = 0;
+          }
+          if (ping.echoFlash > 0) {
+            const p = ping.echoFlash / 16;
+            g.globalAlpha = p;
+            g.fillStyle = "#ffffff";
+            g.beginPath();
+            g.arc(x0, y0, 6 + (1 - p) * 14, 0, 7);
+            g.fill();
+            g.globalAlpha = 1;
+            if (ping.lastDist != null) {
+              g.font = "700 11px Orbitron, sans-serif";
+              g.textAlign = "center";
+              g.fillStyle = `rgba(${color},${p})`;
+              g.fillText("ECHO · " + ping.lastDist + " cm", x0, y0 - 14);
+              g.textAlign = "left";
+            }
+          }
+          g.restore();
+        }
+        function drawRabbit(extraScale) {
+          extraScale = extraScale || 1;
+          const scared =
+            rab.state === "fleeing" ||
+            rab.state === "hiding" ||
+            rab.state === "blocked";
+          const baseY = rab.y - rab.hop + rab.dip,
+            face = rab.face;
+          g.save();
+          g.translate(rab.x, baseY);
+          g.rotate(rab.tilt || 0);
+          g.scale(0.95 * face * extraScale, 0.95 * extraScale);
+          if (rab.dip < 8) {
+            g.fillStyle = "rgba(0,0,0,.16)";
+            g.beginPath();
+            g.ellipse(0, 10, 30, 8, 0, 0, 7);
+            g.fill();
+          }
+          g.fillStyle = "#ffffff";
+          g.beginPath();
+          g.ellipse(-13, 10, 10, 6, 0, 0, 7);
+          g.ellipse(13, 10, 10, 6, 0, 0, 7);
+          g.fill();
+          g.fillStyle = "#ffffff";
+          g.beginPath();
+          g.arc(-24, -6, 8, 0, 7);
+          g.fill();
+          const bg = g.createLinearGradient(0, -30, 0, 14);
+          bg.addColorStop(0, "#ffffff");
+          bg.addColorStop(1, "#f1e9ff");
+          g.fillStyle = bg;
+          g.beginPath();
+          g.ellipse(0, -8, 25, 28, 0, 0, 7);
+          g.fill();
+          const droop = scared ? 0.5 : 0;
+          for (const s of [-1, 1]) {
+            g.save();
+            g.translate(s * 9, -30);
+            g.rotate(s * (0.12 + droop));
+            g.fillStyle = "#ffffff";
+            rr(-7, -40, 14, 46, 7);
+            g.fill();
+            g.fillStyle = "#ffc2d6";
+            rr(-3.5, -34, 7, 34, 4);
+            g.fill();
+            g.restore();
+          }
+          g.fillStyle = "#ffffff";
+          g.beginPath();
+          g.arc(0, -30, 19, 0, 7);
+          g.fill();
+          g.fillStyle = "#ffd7e4";
+          g.beginPath();
+          g.arc(-13, -25, 5, 0, 7);
+          g.arc(13, -25, 5, 0, 7);
+          g.fill();
+          g.fillStyle = "#3a2b46";
+          g.beginPath();
+          g.arc(-7, -32, 4.2, 0, 7);
+          g.arc(7, -32, 4.2, 0, 7);
+          g.fill();
+          g.fillStyle = "#fff";
+          g.beginPath();
+          g.arc(-8.2, -33.4, 1.5, 0, 7);
+          g.arc(5.8, -33.4, 1.5, 0, 7);
+          g.fill();
+          g.fillStyle = "#ff87ab";
+          g.beginPath();
+          g.moveTo(0, -26);
+          g.lineTo(-3, -23);
+          g.lineTo(3, -23);
+          g.closePath();
+          g.fill();
+          g.strokeStyle = "#d98aa6";
+          g.lineWidth = 1.4;
+          g.beginPath();
+          g.moveTo(0, -23);
+          g.lineTo(0, -20);
+          g.arc(-2.5, -20, 2.5, 0, Math.PI);
+          g.moveTo(2.5, -20);
+          g.arc(2.5, -20, 2.5, 0, Math.PI);
+          g.stroke();
+          g.strokeStyle = "rgba(150,150,170,.7)";
+          g.lineWidth = 1;
+          g.beginPath();
+          g.moveTo(6, -24);
+          g.lineTo(22, -27);
+          g.moveTo(6, -22);
+          g.lineTo(22, -20);
+          g.moveTo(-6, -24);
+          g.lineTo(-22, -27);
+          g.moveTo(-6, -22);
+          g.lineTo(-22, -20);
+          g.stroke();
+          if (rab.state === "eating") {
+            const nod = Math.sin(rab.chew) * 2;
+            g.save();
+            g.translate(0, -14 + nod);
+            g.fillStyle = "#ff9f43";
+            g.beginPath();
+            g.moveTo(-4, 0);
+            g.lineTo(4, 0);
+            g.lineTo(0, 18);
+            g.closePath();
+            g.fill();
+            g.strokeStyle = "#5faa54";
+            g.lineWidth = 2.5;
+            g.beginPath();
+            g.moveTo(0, 0);
+            g.lineTo(-4, -8);
+            g.moveTo(0, 0);
+            g.lineTo(0, -9);
+            g.moveTo(0, 0);
+            g.lineTo(4, -8);
+            g.stroke();
+            g.restore();
+          }
+          if (rab.state === "nutbreak") {
+            const nod = Math.sin(rab.chew) * 2;
+            g.save();
+            g.translate(0, -12 + nod);
+            g.fillStyle = "#8a5a2b";
+            g.beginPath();
+            g.ellipse(0, 3, 5, 7, 0, 0, 7);
+            g.fill();
+            g.fillStyle = "#5c3d1e";
+            g.beginPath();
+            g.arc(0, -3, 5.5, Math.PI, 2 * Math.PI);
+            g.fill();
+            g.restore();
+          }
+          if (rab.state === "blocked") {
+            g.fillStyle = "#e0455e";
+            g.font = "700 18px Orbitron, sans-serif";
+            g.textAlign = "center";
+            g.fillText("↩", 0, -58);
+            g.textAlign = "left";
+          }
+          g.restore();
+        }
+
+        /* ---------- READINGS PANELS ---------- */
+        const readingsEl = document.getElementById("readings");
+        function renderLightReadings(o) {
+          const predTxt = bird.active
+            ? birdThreat
+              ? "Shadow on bot! 🦅"
+              : "Flying over 🦅"
+            : "None";
+          const statusTxt = birdThreat
+            ? "Predator Shadow! 🦅"
+            : o.dark
+              ? "Too Dark 🌑"
+              : "Bright ☀️";
+          const rows = [
+            ["Light Level", o.L + " %"],
+            ["Shadow Threshold", P.light.threshold + " %"],
+            ["Shadow Detected", o.danger ? "Yes" : "No"],
+            ["Predator", predTxt],
+            ["Status", statusTxt],
+          ];
+          readingsEl.innerHTML = rows
+            .map(
+              (r) =>
+                `<div class="reading"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`,
+            )
+            .join("");
+          document.getElementById("meterWrap").style.display = "block";
+          const f = document.getElementById("meterFill");
+          f.style.width = Math.max(0, Math.min(100, o.L)) + "%";
+          f.style.background = o.danger
+            ? "linear-gradient(90deg,#ff6b81,#ff9aa8)"
+            : "linear-gradient(90deg,#7cc6ff,#54c48a)";
+          const thr = document.getElementById("meterThr");
+          thr.style.display = "block";
+          thr.style.left = P.light.threshold + "%";
+          document.getElementById("meterLbl").textContent = "light";
+          const badge = document.getElementById("badge");
+          badge.className = "badge " + (o.danger ? "b-danger" : "b-safe");
+          document.getElementById("badgeText").textContent = o.danger
+            ? "SHADOW DETECTED — DANGER!"
+            : "NO SHADOW — SAFE";
+          const spot = rab.hide === "burrow" ? "burrow" : "bush",
+            spotIcon = rab.hide === "burrow" ? "🕳️" : "🌿";
+          const act = {
+            eating: "Eating a carrot 🥕",
+            fleeing: "Escaping to the " + spot + " 🏃",
+            hiding: "Hiding in the " + spot + " " + spotIcon,
+            returning: "Coming back out 🐇",
+          }[rab.state];
+          document.getElementById("actText").textContent = act;
+        }
+        function renderMotionReadings(o) {
+          const dirTxt = human.frozen
+            ? "Frozen 🥶"
+            : human.mode === "toward"
+              ? "Coming closer ➡️"
+              : "Walking away ⬅️";
+          const threatLvl = !o.onField
+            ? "None"
+            : o.dist > P.motion.range * 0.66
+              ? "Low"
+              : o.dist > P.motion.range * 0.33
+                ? "Medium"
+                : "High";
+          const rows = [
+            ["Threat Distance", o.onField ? o.dist + " cm" : "far away"],
+            ["Detection Range", P.motion.range + " cm"],
+            ["Motion Detected", o.danger ? "Yes" : "No"],
+            ["Threat Level", threatLvl],
+            ["Direction", dirTxt],
+          ];
+          readingsEl.innerHTML = rows
+            .map(
+              (r) =>
+                `<div class="reading"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`,
+            )
+            .join("");
+          document.getElementById("meterWrap").style.display = "block";
+          const meter = o.onField
+            ? Math.max(0, 100 - (o.dist / P.motion.range) * 100)
+            : 0;
+          const f = document.getElementById("meterFill");
+          f.style.width = Math.max(0, Math.min(100, meter)) + "%";
+          f.style.background = o.danger
+            ? "linear-gradient(90deg,#ff6b81,#ff9aa8)"
+            : "linear-gradient(90deg,#7cc6ff,#54c48a)";
+          document.getElementById("meterThr").style.display = "none";
+          document.getElementById("meterLbl").textContent = "closeness";
+          const badge = document.getElementById("badge");
+          badge.className = "badge " + (o.danger ? "b-danger" : "b-safe");
+          document.getElementById("badgeText").textContent = o.danger
+            ? "MOTION NEAR — DANGER!"
+            : "ALL SAFE";
+          const spot = rab.hide === "burrow" ? "burrow" : "bush";
+          const act = {
+            eating: "Eating a carrot 🥕",
+            fleeing: "Turning and escaping to the " + spot + " 🏃",
+            hiding: "Hiding in the " + spot + " 🌿",
+            returning: "Coming back out 🐇",
+          }[rab.state];
+          document.getElementById("actText").textContent = act;
+        }
+        function renderUltraReadings(info) {
+          const distTxt = info.detected
+            ? Math.round(info.distCm) + " cm"
+            : info.distCm != null
+              ? "out of range"
+              : "—";
+          const rows = [
+            ["Obstacle Distance", distTxt],
+            ["Safe Distance", P.ultra.safe + " cm"],
+            ["Detection Range", P.ultra.range + " cm"],
+            ["Obstacle Detected", info.detected ? "Yes" : "No"],
+          ];
+          readingsEl.innerHTML = rows
+            .map(
+              (r) =>
+                `<div class="reading"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`,
+            )
+            .join("");
+          document.getElementById("meterWrap").style.display = "block";
+          const meter = info.detected
+            ? Math.max(0, 100 - (info.distCm / P.ultra.range) * 100)
+            : 0;
+          const f = document.getElementById("meterFill");
+          f.style.width = meter + "%";
+          f.style.background =
+            info.level === 3
+              ? "linear-gradient(90deg,#ff6b81,#ff9aa8)"
+              : info.level === 2
+                ? "linear-gradient(90deg,#ffb02e,#ffd28a)"
+                : "linear-gradient(90deg,#7cc6ff,#54c48a)";
+          const thr = document.getElementById("meterThr");
+          thr.style.display = "block";
+          thr.style.left =
+            Math.max(0, 100 - (P.ultra.safe / P.ultra.range) * 100) + "%";
+          document.getElementById("meterLbl").textContent = "closeness";
+          const decision =
+            rab.state === "hiding"
+              ? "Hidden — Safe"
+              : rab.state === "arrived"
+                ? "Reached Tree House"
+                : info.level === 3
+                  ? "Path Blocked"
+                  : info.level === 2
+                    ? "Caution"
+                    : "Path Clear";
+          const badge = document.getElementById("badge");
+          badge.className =
+            "badge " +
+            (rab.state === "hiding" || rab.state === "arrived"
+              ? "b-safe"
+              : info.level === 3
+                ? "b-danger"
+                : info.level === 2
+                  ? "b-warn"
+                  : "b-safe");
+          const sensing = rab.state === "walking" || rab.state === "nutbreak";
+          document.getElementById("badgeText").textContent = !started
+            ? "READY"
+            : decision.toUpperCase() +
+              (info.detected && sensing
+                ? ""
+                : sensing
+                  ? " — NOTHING IN RANGE"
+                  : "");
+          const actText = document.getElementById("actText");
+          if (!started)
+            actText.textContent = "Set the sliders, then press Start ▶";
+          else if (paused) actText.textContent = "Paused";
+          else
+            actText.textContent =
+              {
+                walking: "Walking down the trail 🐇",
+                nutbreak: "Stopped for a snack 🌰",
+                fleeing: "Darting for cover! 🏃",
+                hiding: "Hiding behind the bush 🌿",
+                arrived: "Made it home safely 🏠",
+              }[rab.state] || "Walking down the trail 🐇";
+        }
+        /* ---------- MAIN LOOP ---------- */
+        function loop() {
+          t++;
+          g.clearRect(0, 0, W, H);
+          if (sensor === "light") {
+            updateBird();
+            const o = computeLight();
+            if (o.dark) {
+              if (cloud < -170) cloud = -280;
+              cloud += 0.7;
+              if (cloud > W + 60) cloud = W + 60;
+            } else {
+              cloud -= 1.6;
+              if (cloud < -280) cloud = -280;
+            }
+            let hideType = "burrow",
+              hideX = BURROW_X,
+              bushIdx = -1;
+            if (birdThreat) {
+              const h = nearestHideout();
+              hideType = h.type;
+              hideX = h.x;
+              bushIdx = h.bush;
+            }
+            fleeStep(o.danger, hideType, hideX, bushIdx, 1.15);
+            scene(o.dark);
+            if (cloud > -170) shadowCloud(cloud);
+            drawBird();
+            const hidden = rab.state === "hiding";
+            if (!hidden) drawRabbit();
+            if (hidden) {
+              if (rab.hide === "burrow") drawBurrowHidden();
+              else drawBush(BUSHES[rab.bush]);
+            } else if (rab.dip > 3) {
+              if (rab.hide === "burrow") drawBurrowFront();
+              else drawBush(BUSHES[rab.bush]);
+            }
+            renderLightReadings(o);
+          } else if (sensor === "motion") {
+            const o = computeMotion();
+            if (human.active) {
+              human.frozen = o.inside;
+              if (!o.inside) {
+                human.x += human.vx * P.motion.speed * 1.15;
+                human.y += human.vy * P.motion.speed * 1.15;
+              }
+              if (
+                human.mode === "away" &&
+                human.willReturn &&
+                !human.returned &&
+                ((human.vx > 0 && human.x >= human.turnX) ||
+                  (human.vx < 0 && human.x <= human.turnX))
+              ) {
+                human.vx = -human.vx;
+                human.face = human.vx < 0 ? -1 : 1;
+                human.fromSide = human.fromSide === "left" ? "right" : "left";
+                human.returned = true;
+              }
+              if (human.x > 0 && human.x < W) human.entered = true;
+              if (
+                human.entered &&
+                (human.x < -70 || human.x > W + 70 || human.y > H + 40)
+              ) {
+                human.active = false;
+                human.mode = "away";
+                human.frozen = false;
+              }
+            }
+            let hideX = HOME_X,
+              bushIdx = 1;
+            if (o.danger) {
+              bushIdx = oppositeBush();
+              hideX = BUSHES[bushIdx].x;
+            }
+            fleeStep(o.danger, "bush", hideX, bushIdx, 1.15);
+            drawMotionFieldTilted(false);
+            drawRingTilted(o.danger);
+            const hidden = rab.state === "hiding";
+            const humanBehind = human.active && human.y < rab.y; // draw whichever is farther back first, so the person can walk behind the bot instead of always covering it
+            if (humanBehind) drawHuman();
+            if (!hidden) drawRabbit();
+            if (hidden) {
+              drawBush(BUSHES[rab.bush]);
+            } else if (rab.dip > 3) {
+              drawBush(BUSHES[rab.bush]);
+            }
+            if (!humanBehind) drawHuman();
+            renderMotionReadings(o);
+          } else {
+            // ultra
+            const info = ultraStep();
+            drawForestScene();
+            drawTopCornerTree(1);
+            drawTopCornerTree(-1);
+            TOP_TREELINE.forEach(drawTopTreelineProp);
+            GROUND_SPECKS.forEach(drawGroundSpeck);
+            FILLER_PROPS.forEach(drawFillerProp);
+            WALL_PROPS.forEach(drawWallProp);
+            drawForestPath();
+            drawSignpost(
+              pathCenterXAt(TRAIL_Y0 + 34) +
+                pathHalfWidthAt(TRAIL_Y0 + 34) +
+                16,
+              TRAIL_Y0 + 34,
+              depthScale(TRAIL_Y0 + 34),
+            );
+            const noseX = rab.x,
+              noseY = rab.y - 16;
+            const sensing = rab.state === "walking" || rab.state === "nutbreak";
+            if (sensing) {
+              if (!paused) updatePing();
+              const pingTarget = nearestObstacleAhead(noseY);
+              drawUltraPing(noseX, noseY, info.level, !paused, pingTarget);
+            }
+            const drawList = SIDE_PROPS.map((p) => ({
+              y: p.y,
+              fn: () => drawSideProp(p),
+            }));
+            if (!rab.ateNut)
+              drawList.push({
+                y: NUT_Y,
+                fn: () =>
+                  drawNutIcon(pathCenterXAt(NUT_Y), NUT_Y, depthScale(NUT_Y)),
+              });
+            obstacles.forEach((o) => {
+              drawList.push({
+                y: o.y,
+                fn: () => drawObstacle(o.x, o.y, depthScale(o.y) * o.size),
+              });
+            });
+            if (rab.state !== "hiding")
+              drawList.push({
+                y: rab.y,
+                fn: () => drawRabbit(depthScale(rab.y)),
+              });
+            drawList.sort((a, b) => a.y - b.y);
+            drawList.forEach((d) => d.fn());
+            drawBottomCornerTree(1);
+            // No right-side corner tree here — the tree house's own big tree now anchors that
+            // corner, and the two used to overlap and crowd right over the final stretch of path.
+            drawTreeHouseEnding(
+              pathCenterXAt(BURROW_Y),
+              BURROW_Y,
+              depthScale(TRAIL_Y1),
+            );
+            drawUltraHover();
+            g.font = "600 12px Rajdhani, sans-serif";
+            g.textAlign = "left";
+            g.fillStyle = "rgba(255,255,255,.6)";
+            g.fillText(
+              "🪨 Click the trail to add or remove an obstacle",
+              14,
+              H - 14,
+            );
+            renderUltraReadings(info);
+          }
+          requestAnimationFrame(loop);
+        }
+        function updateBird() {
+          if (!bird.active) return;
+          if (bird.phase === "cruise") {
+            bird.x += bird.vx * 2.4;
+            bird.y += bird.vy;
+            if (bird.y > 142) bird.y = 142;
+            if (bird.x > 0 && bird.x < W && Math.abs(bird.x - rab.x) < 42) {
+              birdThreat = true;
+              bird.targetX = rab.x;
+              bird.phase = "hover";
+              bird.timer = 0;
+            }
+            if (bird.x < -110 || bird.x > W + 110) {
+              bird.active = false;
+              birdThreat = false;
+            }
+          } else if (bird.phase === "hover") {
+            bird.timer++;
+            bird.y += Math.sin(bird.timer * 0.3) * 0.4;
+            if (bird.timer > 36) {
+              bird.phase = "dive";
+              bird.timer = 0;
+            }
+          } else if (bird.phase === "dive") {
+            bird.x += (bird.targetX - bird.x) * 0.06;
+            bird.y += (GROUND - 66 - bird.y) * 0.12;
+            bird.timer++;
+            if (bird.timer > 60) {
+              bird.phase = "leave";
+            }
+          } else {
+            bird.y += (bird.cruiseY - bird.y) * 0.08;
+            bird.x += bird.vx * 2.8;
+            if (bird.x < -120 || bird.x > W + 120) {
+              bird.active = false;
+              birdThreat = false;
+            }
+          }
+        }
+        buildControls();
+        loop();
+      })();
+    </script>
+  </body>
+</html>
