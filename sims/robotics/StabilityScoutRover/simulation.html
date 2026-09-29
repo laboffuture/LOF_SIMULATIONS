@@ -1,0 +1,3150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stability Scout Rover — Terrain Balance Lab</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #fbf4ef;
+        --panel: #ffffff;
+        --panel2: #fdf6f1;
+        --line: #f0dfd3;
+        --txt: #2b1a12;
+        --mut: #7a5e50;
+        --dim: #b39a8c;
+        --accent: #c2410c;
+        --accent2: #ea580c;
+        --ok: #16a34a;
+        --warn: #d97706;
+        --danger: #dc2626;
+        --shadow: 0 12px 34px rgba(194, 65, 12, 0.12);
+        --r: 20px;
+        --head: "Orbitron", sans-serif;
+        --body: "Rajdhani", sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      body {
+        font-family: var(--body);
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--txt);
+        background:
+          radial-gradient(900px 500px at 8% -5%, #fcebdf 0, transparent 60%),
+          radial-gradient(900px 600px at 100% 0%, #fdf0e6 0, transparent 55%),
+          linear-gradient(180deg, #fffaf6, #f9ede4);
+      }
+      h1,
+      h3,
+      .badge,
+      .action .big,
+      .chip {
+        font-family: var(--head);
+      }
+
+      /* ================= TOP HEADER ================= */
+      header.top {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 18px;
+        background: rgba(251, 244, 239, 0.94);
+        border-bottom: 1px solid var(--line);
+        backdrop-filter: blur(12px);
+        flex: 0 0 auto;
+        position: relative;
+        z-index: 50;
+      }
+      .title {
+        grid-column: 2;
+        text-align: center;
+        min-width: 0;
+      }
+      .title h1 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: #3a1d0e;
+      }
+      .helpbtns {
+        grid-column: 3;
+        justify-self: end;
+        display: flex;
+        gap: 8px;
+      }
+      .helpbtn {
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent2), var(--accent));
+        border: none;
+        padding: 8px 14px;
+        border-radius: 10px;
+        box-shadow: 0 4px 14px rgba(194, 65, 12, 0.32);
+        transition: all 0.15s ease;
+      }
+      .helpbtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(194, 65, 12, 0.45);
+      }
+      .helpbtn.on {
+        box-shadow:
+          inset 0 0 0 2px #fff,
+          0 6px 18px rgba(194, 65, 12, 0.45);
+      }
+      .helpbar {
+        display: none;
+        position: absolute;
+        right: 18px;
+        top: 54px;
+        width: 460px;
+        max-width: min(460px, 90vw);
+        max-height: 75vh;
+        overflow-y: auto;
+        z-index: 60;
+        padding: 20px 34px 16px 18px;
+        background: rgba(255, 255, 255, 0.98);
+        border: 1px solid var(--accent);
+        border-radius: 14px;
+        box-shadow: 0 16px 40px rgba(194, 65, 12, 0.28);
+        backdrop-filter: blur(16px);
+        font-size: 14px;
+        line-height: 1.55;
+        color: var(--txt);
+      }
+      .helpbar.show {
+        display: block;
+      }
+      .helpCloseTop {
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        cursor: pointer;
+        border: none;
+        background: var(--panel2);
+        color: var(--mut);
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1;
+        padding: 5px 8px;
+        border-radius: 8px;
+        transition: 0.15s;
+      }
+      .helpCloseTop:hover {
+        color: #fff;
+        background: var(--danger);
+      }
+      .tabpanel {
+        display: none;
+      }
+      .tabpanel.on {
+        display: block;
+      }
+      .tabpanel ol,
+      .tabpanel ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .tabpanel li {
+        margin-bottom: 8px;
+        font-size: 13.5px;
+        color: var(--txt);
+      }
+      .tabpanel b {
+        color: var(--accent);
+      }
+      @media (max-width: 760px) {
+        header.top {
+          grid-template-columns: 1fr;
+          padding: 8px 12px;
+          gap: 6px;
+        }
+        .helpbtns {
+          grid-row: 1;
+          grid-column: 1;
+          justify-self: center;
+        }
+        .title {
+          grid-row: 2;
+          grid-column: 1;
+        }
+        .helpbar {
+          position: fixed;
+          top: 90px;
+          left: 12px;
+          right: 12px;
+          width: auto;
+          max-width: none;
+        }
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 300px 1fr 320px;
+        gap: 14px;
+        align-items: stretch;
+        flex: 1 1 0;
+        min-height: 0;
+        padding: 12px clamp(12px, 2.4vw, 30px);
+      }
+      @media (max-width: 1220px) {
+        html,
+        body {
+          overflow: auto;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+          flex: 0 0 auto;
+        }
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        box-shadow: var(--shadow);
+        padding: 16px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
+      }
+      .card.stage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        position: relative;
+      }
+      .card h3 {
+        margin: 0 0 3px;
+        font-size: 13.5px;
+        font-weight: 700;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        color: #3a1d0e;
+      }
+      .card .sub {
+        font-size: 12px;
+        color: var(--mut);
+        margin: 0 0 10px;
+        line-height: 1.4;
+      }
+
+      .ctrl {
+        margin: 11px 0;
+      }
+      .ctrl .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 4px;
+      }
+      .ctrl label {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--txt);
+      }
+      .ctrl .val {
+        font-family: var(--head);
+        font-size: 11px;
+        color: var(--accent);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 8px;
+        border-radius: 10px;
+        outline: none;
+        background: linear-gradient(90deg, var(--accent2), var(--accent)) no-repeat;
+        background-size: var(--fill, 50%) 100%;
+        box-shadow: inset 0 0 0 2px var(--line);
+        cursor: pointer;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff;
+        border: 4px solid var(--accent);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+        cursor: grab;
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #fff;
+        border: 4px solid var(--accent);
+        cursor: grab;
+      }
+      .hint {
+        font-size: 11px;
+        color: var(--dim);
+        margin-top: 4px;
+        line-height: 1.3;
+      }
+
+      .toggle {
+        display: flex;
+        gap: 8px;
+        margin-top: 5px;
+        flex-wrap: wrap;
+      }
+      .toggle button {
+        flex: 1;
+        cursor: pointer;
+        border: 2px solid var(--line);
+        background: #fff;
+        color: var(--mut);
+        padding: 8px 4px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        transition: 0.15s;
+        font-family: var(--body);
+      }
+      .toggle button.on {
+        color: #fff;
+        border-color: transparent;
+        background: linear-gradient(145deg, var(--accent2), var(--accent));
+        box-shadow: 0 8px 18px rgba(194, 65, 12, 0.3);
+      }
+      .toggle button:hover:not(:disabled) {
+        border-color: var(--accent2);
+      }
+      .toggle button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .toggle.grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+      .toggle.grid2 > :last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+      }
+      .toggle.small button {
+        font-size: 11px;
+        padding: 7px 4px;
+      }
+      .toggle button .tcode {
+        display: block;
+        font-size: 9px;
+        opacity: 0.75;
+        margin-top: 1px;
+        letter-spacing: 0.2px;
+      }
+      .toggle button.fault.on {
+        background: linear-gradient(145deg, #f87171, var(--danger));
+        box-shadow: 0 8px 18px rgba(220, 38, 38, 0.3);
+      }
+
+      canvas#stage {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        display: block;
+        border-radius: 14px;
+        background: #f4d7c2;
+        flex: 0 1 auto;
+        min-height: 0;
+        touch-action: none;
+      }
+      /* side view of the ground under the rover */
+      .sidewrap {
+        position: relative;
+        width: 100%;
+        height: 175px;
+        flex: 0 0 auto;
+        margin-top: 8px;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 2px solid var(--line);
+        background: #f8e3d2;
+      }
+      .sidewrap canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .sidewrap .tag {
+        position: absolute;
+        left: 10px;
+        top: 8px;
+        font-family: var(--head);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        color: #6b3517;
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 3px 8px;
+        pointer-events: none;
+      }
+      .stage-foot {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+      .btn {
+        cursor: pointer;
+        border: 2px solid var(--line);
+        background: #fff;
+        color: var(--txt);
+        padding: 9px 14px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        transition: 0.15s;
+        font-family: var(--body);
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        justify-content: center;
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent2);
+      }
+      .btn.start {
+        background: linear-gradient(145deg, #d3f5e8, #b7ecd4);
+        border-color: #9ce0bf;
+        color: #0f6b3f;
+      }
+      .btn.pause {
+        background: linear-gradient(145deg, #ffe8d0, #ffd6a8);
+        border-color: #f5b478;
+        color: #9a5a1a;
+      }
+      .btn.start.on {
+        background: linear-gradient(145deg, #16a34a, #0f8a3d);
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(22, 163, 74, 0.4);
+      }
+      .btn.pause.on {
+        background: linear-gradient(145deg, var(--accent2), var(--accent));
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(194, 65, 12, 0.35);
+      }
+      .resets {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 6px;
+      }
+      .resets .btn {
+        flex-direction: column;
+        gap: 1px;
+        padding: 7px 6px;
+      }
+      .resets .btn .tcode {
+        font-size: 9px;
+        color: var(--dim);
+      }
+
+      /* visual flow strip (section 8) */
+      .flow {
+        display: flex;
+        align-items: stretch;
+        gap: 6px;
+        margin-top: 8px;
+        flex: 0 0 auto;
+        width: 100%;
+        max-width: 900px;
+      }
+      .flow .step {
+        flex: 1;
+        min-width: 0;
+        border: 2px solid var(--line);
+        border-radius: 12px;
+        padding: 6px 8px;
+        background: #fff;
+        text-align: center;
+        transition: 0.2s;
+      }
+      .flow .step .lab {
+        font-size: 9.5px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--dim);
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .flow .step .val {
+        font-family: var(--head);
+        font-size: 10.5px;
+        font-weight: 700;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .flow .arrow {
+        align-self: center;
+        color: var(--dim);
+        font-weight: 800;
+      }
+      .flow .step.s-clear {
+        border-color: #9ce0bf;
+        background: #effbf4;
+      }
+      .flow .step.s-caution {
+        border-color: #ffd27a;
+        background: #fff7e6;
+      }
+      .flow .step.s-warn {
+        border-color: #fdba74;
+        background: #fff1e4;
+      }
+      .flow .step.s-danger {
+        border-color: #ffb3bf;
+        background: #fff0f2;
+      }
+      .flow .step.s-fault {
+        border-color: #9ca3af;
+        background: #f3f4f6;
+        color: #6b7280;
+      }
+      @media (max-width: 700px) {
+        .flow {
+          flex-wrap: wrap;
+        }
+        .flow .arrow {
+          display: none;
+        }
+        .flow .step {
+          flex: 1 1 40%;
+        }
+      }
+
+      /* dashboard */
+      .meter {
+        height: 14px;
+        border-radius: 9px;
+        background: #f6eee8;
+        position: relative;
+        margin: 6px 0 4px;
+        border: 2px solid var(--line);
+      }
+      .meter .fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        border-radius: 7px;
+        transition:
+          width 0.12s,
+          background 0.25s;
+      }
+      .meter .thr {
+        position: absolute;
+        top: -5px;
+        bottom: -5px;
+        width: 3px;
+        border-radius: 3px;
+        transform: translateX(-1.5px);
+      }
+      .meter .tgt {
+        position: absolute;
+        top: -6px;
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 7px solid var(--txt);
+        transform: translateX(-5px);
+        transition: left 0.2s;
+      }
+      .meterlabels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--dim);
+        margin-top: 3px;
+      }
+      .reading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 2px dashed var(--line);
+        gap: 8px;
+      }
+      .reading:last-child {
+        border-bottom: none;
+      }
+      .reading .k {
+        font-size: 12px;
+        color: var(--mut);
+      }
+      .reading .v {
+        font-family: var(--head);
+        font-size: 11.5px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+      }
+      .badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border-radius: 14px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        justify-content: center;
+        margin-top: 6px;
+        transition: 0.2s;
+        text-align: center;
+      }
+      .b-clear {
+        background: #e5f8ee;
+        color: #147a3d;
+        border: 2px solid #b8ecce;
+      }
+      .b-caution {
+        background: #fff3dc;
+        color: #8a5b00;
+        border: 2px solid #ffe1a3;
+      }
+      .b-warn {
+        background: #ffedd9;
+        color: #9a3e06;
+        border: 2px solid #fdc592;
+      }
+      .b-danger {
+        background: #ffe9ec;
+        color: #b3261e;
+        border: 2px solid #ffc4ce;
+      }
+      .b-off {
+        background: #f3f4f6;
+        color: #6b7280;
+        border: 2px solid #e5e7eb;
+      }
+      .badge.pulse {
+        animation: pulseWarn 0.9s infinite;
+      }
+      @keyframes pulseWarn {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+        }
+        50% {
+          box-shadow: 0 0 0 7px rgba(220, 38, 38, 0);
+        }
+      }
+      .sect {
+        margin-top: 11px;
+        padding-top: 9px;
+        border-top: 2px dashed var(--line);
+      }
+      .sect-title {
+        font-family: var(--head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: #3a1d0e;
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .qmc {
+        display: grid;
+        grid-template-columns: 96px 1fr;
+        gap: 10px;
+        align-items: center;
+      }
+      .qmc canvas {
+        width: 96px;
+        height: 96px;
+        display: block;
+      }
+      .graph {
+        width: 100%;
+        height: 90px;
+        display: block;
+        border-radius: 10px;
+        background: #fffaf6;
+        border: 2px solid var(--line);
+        margin-top: 6px;
+      }
+      .irs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .ir {
+        border: 2px solid var(--line);
+        border-radius: 10px;
+        padding: 5px 4px;
+        text-align: center;
+        background: #fff;
+      }
+      .ir .lab {
+        font-size: 9.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--dim);
+        font-weight: 700;
+      }
+      .ir .val {
+        font-family: var(--head);
+        font-size: 10px;
+        font-weight: 700;
+        margin-top: 2px;
+      }
+      .ir.det {
+        border-color: #ffb3bf;
+        background: #fff0f2;
+        color: #b3261e;
+      }
+      .ir.clr {
+        border-color: #b8ecce;
+        background: #f1fbf5;
+        color: #147a3d;
+      }
+      .ir.off {
+        border-color: #e5e7eb;
+        background: #f3f4f6;
+        color: #6b7280;
+      }
+      .action {
+        margin-top: 10px;
+        padding: 12px;
+        border-radius: 14px;
+        background: linear-gradient(145deg, #fdf1e8, #fbe6d8);
+        border: 2px solid var(--line);
+        text-align: center;
+      }
+      .action .lab {
+        font-size: 10px;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--dim);
+        font-weight: 600;
+      }
+      .action .big {
+        font-size: 13.5px;
+        font-weight: 700;
+        margin-top: 5px;
+        letter-spacing: 0.3px;
+        color: #3a1d0e;
+        line-height: 1.35;
+      }
+      .chip {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        background: #fdeee4;
+        color: var(--accent);
+        border: 1px solid var(--line);
+        margin-top: 6px;
+      }
+      .warns {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin-top: 4px;
+      }
+      .warn {
+        font-size: 11.5px;
+        font-weight: 700;
+        padding: 6px 9px;
+        border-radius: 10px;
+        background: #ffe9ec;
+        color: #b3261e;
+        border: 2px solid #ffc4ce;
+      }
+      .warn.none {
+        background: #e5f8ee;
+        color: #147a3d;
+        border-color: #b8ecce;
+        text-align: center;
+      }
+      .checks {
+        display: grid;
+        gap: 3px;
+        margin-top: 4px;
+        font-size: 11.5px;
+        color: var(--dim);
+      }
+      .checks .ok {
+        color: var(--ok);
+        font-weight: 700;
+      }
+      .checks .res {
+        display: block;
+        font-size: 10.5px;
+        font-weight: 500;
+        color: var(--dim);
+        margin-left: 16px;
+      }
+      .checks .ok .res {
+        color: #3f8f5c;
+      }
+
+      /* result screen */
+      .result {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(58, 29, 14, 0.35);
+        backdrop-filter: blur(2px);
+        border-radius: var(--r);
+        z-index: 5;
+        padding: 16px;
+      }
+      .result.show {
+        display: flex;
+      }
+      .result .box {
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+        padding: 18px 20px;
+        width: min(450px, 100%);
+        max-height: 100%;
+        overflow-y: auto;
+      }
+      .result h2 {
+        margin: 0 0 4px;
+        font-family: var(--head);
+        font-size: 16px;
+        letter-spacing: 0.6px;
+      }
+      .result .grade {
+        font-family: var(--head);
+        font-size: 30px;
+        font-weight: 800;
+        margin: 6px 0 2px;
+      }
+      .result .btns {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 12px;
+      }
+      .zonebar {
+        display: flex;
+        height: 14px;
+        border-radius: 8px;
+        overflow: hidden;
+        margin: 6px 0 2px;
+        border: 2px solid var(--line);
+      }
+      .zonebar span {
+        display: block;
+        height: 100%;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+          animation: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div></div>
+      <div class="title">
+        <h1>Stability Scout Rover — Terrain Balance Lab</h1>
+      </div>
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">What You'll Learn</button>
+      </div>
+      <div class="helpbar" id="helpbar">
+        <button type="button" class="helpCloseTop" id="helpCloseTop" aria-label="Close">✕</button>
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li>Press <b>▶ Start</b>. The Stability Scout Rover appears on smooth terrain and drives by itself.</li>
+            <li>Watch the <b>QMC Heading Panel</b> and the <b>Stability Meter</b>: the terrain surface type, the heading disturbance, the safe and unsafe threshold lines, the rover speed and the warning indicator.</li>
+            <li>Select a terrain: <b>Smooth</b>, <b>Rocky</b>, <b>Slope</b>, <b>Crack Zone</b> or <b>Unsafe</b>. The rover changes its movement based on stability, not randomly.</li>
+            <li>Study the stability zones: low disturbance means move fast, medium means slow down, high means stop or heavy slow, and a sudden disturbance shows a warning.</li>
+            <li>Adjust <b>QMC Sensitivity</b>, the <b>Safe Threshold</b> and the <b>Unsafe Threshold</b> to see how much earlier or later the rover reacts.</li>
+            <li>Press <b>Place Obstacle</b>. The IR sensors detect it and the rover stops or turns to avoid it. Press <b>Clear Obstacle</b> to remove it.</li>
+            <li>Combine conditions, for example rocky terrain with an obstacle, and see that the rover checks both stability and obstacles before deciding how to move.</li>
+            <li>Choose <b>Full Rescue Route</b> to run the whole mission to the rescue point before the mission timer runs out.</li>
+            <li>Use <b>Fault Injection</b> to see the error and warning messages.</li>
+            <li>Use <b>Reset Rover</b>, <b>Reset Terrain</b>, <b>Reset Sensors</b> or <b>Reset Mission</b> to repeat the experiment.</li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <ul>
+            <li>How QMC heading disturbance can indicate unstable movement</li>
+            <li>How terrain type affects rover stability</li>
+            <li>How safe and unsafe thresholds help classify terrain</li>
+            <li>Why the rover should move fast only on stable terrain</li>
+            <li>Why the rover should slow down on uneven terrain</li>
+            <li>Why unsafe terrain should trigger warning or stop behaviour</li>
+            <li>How IR sensors detect obstacles in the rover path</li>
+            <li>How obstacle avoidance supports safe navigation</li>
+            <li>How speed control helps prevent tipping or crashing</li>
+            <li>How multiple sensors can work together in a rover safety system</li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- ================= CONTROLS ================= -->
+      <section class="card">
+        <h3>Lab Controls</h3>
+        <p class="sub">Change the terrain, the QMC settings and the obstacles, then watch how the rover responds.</p>
+
+        <div class="ctrl">
+          <div class="row"><label>Simulation Mode</label></div>
+          <div class="toggle grid2 small" id="modeToggle">
+            <button data-v="terrain" class="on">Terrain Test</button>
+            <button data-v="qmc">QMC Sensitivity</button>
+            <button data-v="ir">IR Obstacle</button>
+            <button data-v="speed">Speed Control</button>
+            <button data-v="route">Full Rescue Route</button>
+          </div>
+          <p class="hint" id="modeHint"></p>
+        </div>
+
+        <div class="ctrl">
+          <div class="row"><label>Terrain Type</label><span class="val" id="terrVal">Smooth</span></div>
+          <div class="toggle grid2 small" id="terrToggle">
+            <button data-v="smooth" class="on">Smooth<span class="tcode">SMOOTH_TERRAIN</span></button>
+            <button data-v="rocky">Rocky<span class="tcode">ROCKY_TERRAIN</span></button>
+            <button data-v="slope">Slope<span class="tcode">SLOPE_TERRAIN</span></button>
+            <button data-v="crack">Crack Zone<span class="tcode">CRACK_ZONE</span></button>
+            <button data-v="unsafe">Unsafe<span class="tcode">UNSAFE TERRAIN</span></button>
+          </div>
+          <p class="hint" id="terrHint"></p>
+        </div>
+
+        <div class="sect">
+          <h3>QMC Sensitivity &amp; Thresholds</h3>
+          <div id="sliders"></div>
+        </div>
+
+        <div class="sect">
+          <div class="ctrl" style="margin-top: 0">
+            <div class="row"><label>Obstacles</label><span class="val" id="obsCountV">0 / 7</span></div>
+            <div class="toggle">
+              <button id="placeObs">➕ Place Obstacle</button>
+              <button id="clearObs">🧹 Clear Obstacle</button>
+            </div>
+          </div>
+          <div class="ctrl">
+            <div class="row"><label>Obstacle Size</label><span class="val" id="v_obsSize">30 cm</span></div>
+            <input type="range" id="r_obsSize" min="16" max="60" step="2" value="30" />
+            <p class="hint">Changes the selected rock, and the size of new rocks.</p>
+          </div>
+          <p class="hint" id="obsHint">Place up to 7 rocks. Drag a rock on the map to move it; click one to select it.</p>
+        </div>
+
+        <div class="sect">
+          <div class="ctrl" style="margin-top: 0">
+            <div class="row"><label>Fault Injection</label><span class="val" id="faultCountV">none</span></div>
+            <div class="toggle grid2 small" id="faultToggle">
+              <button class="fault" data-f="qmcOff">QMC not responding</button>
+              <button class="fault" data-f="irOff">IR not responding</button>
+              <button class="fault" data-f="thrMissing">Threshold missing</button>
+              <button class="fault" data-f="ignoreObs">Obstacle ignored</button>
+            </div>
+            <p class="hint">Turn on a fault to see its warning message. Click again to fix it.</p>
+          </div>
+        </div>
+
+        <div class="sect">
+          <h3>Reset</h3>
+          <div class="resets">
+            <button class="btn" id="rsRover">↺ Reset Rover<span class="tcode">RESET_ROVER</span></button>
+            <button class="btn" id="rsTerrain">Reset Terrain<span class="tcode">Terrain Reset</span></button>
+            <button class="btn" id="rsSensors">Reset Sensors<span class="tcode">Sensor Reset</span></button>
+            <button class="btn" id="rsMission">Reset Mission<span class="tcode">Mission Reset</span></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= ROVER TERRAIN VIEW ================= -->
+      <section class="card stage">
+        <canvas id="stage" width="2000" height="1280"></canvas>
+        <div class="sidewrap">
+          <canvas id="sideView"></canvas>
+          <span class="tag" id="sideTag">SIDE VIEW · rover's lane</span>
+        </div>
+        <div class="flow" id="flow">
+          <div class="step" id="flTerr"><div class="lab">Terrain Type</div><div class="val" id="flTerrV">—</div></div>
+          <div class="arrow">→</div>
+          <div class="step" id="flQmc"><div class="lab">Heading Disturbance</div><div class="val" id="flQmcV">—</div></div>
+          <div class="arrow">→</div>
+          <div class="step" id="flZone"><div class="lab">Stability Classification</div><div class="val" id="flZoneV">—</div></div>
+          <div class="arrow">→</div>
+          <div class="step" id="flSpd"><div class="lab">Speed Decision</div><div class="val" id="flSpdV">—</div></div>
+          <div class="arrow">→</div>
+          <div class="step" id="flAct"><div class="lab">Rover Movement</div><div class="val" id="flActV">—</div></div>
+        </div>
+        <div class="stage-foot">
+          <button class="btn start" id="fStart">▶ Start</button>
+          <button class="btn pause" id="fPause">⏸ Pause</button>
+        </div>
+        <div class="result" id="result"><div class="box" id="resultBox"></div></div>
+      </section>
+
+      <!-- ================= DASHBOARD ================= -->
+      <section class="card">
+        <h3>Simulation Dashboard</h3>
+        <p class="sub">What the sensors read and what the controller decided.</p>
+
+        <div class="sect-title">Terrain Type</div>
+        <div class="badge b-clear" id="terrBadge">Smooth Terrain</div>
+
+        <div class="sect">
+          <div class="sect-title">QMC Heading Panel</div>
+          <div class="qmc">
+            <canvas id="compass" width="192" height="192"></canvas>
+            <div>
+              <div class="reading"><span class="k">Heading</span><span class="v" id="headV">90°</span></div>
+              <div class="reading"><span class="k">Disturbance</span><span class="v" id="distV">0.0°</span></div>
+              <div class="reading"><span class="k">QMC status</span><span class="v" id="qmcV">Stable</span></div>
+            </div>
+          </div>
+          <canvas id="graph" class="graph"></canvas>
+          <div class="meterlabels"><span>Heading disturbance</span><span>safe · warning · unsafe lines</span></div>
+        </div>
+
+        <div class="sect">
+          <div class="sect-title">Stability Meter</div>
+          <div class="meter">
+            <div class="fill" id="stabFill"></div>
+            <div class="thr" id="thrSafe" style="background: var(--ok)"></div>
+            <div class="thr" id="thrWarn" style="background: var(--warn)"></div>
+            <div class="thr" id="thrUnsafe" style="background: var(--danger)"></div>
+          </div>
+          <div class="meterlabels"><span>0°</span><span id="thrLbl"></span><span>40°</span></div>
+          <div class="badge b-clear" id="stabBadge">Stable</div>
+        </div>
+
+        <div class="sect">
+          <div class="sect-title">Threshold Panel</div>
+          <div class="reading"><span class="k">Safe threshold</span><span class="v" id="tSafeV">8°</span></div>
+          <div class="reading"><span class="k">Unsafe threshold</span><span class="v" id="tUnsafeV">22°</span></div>
+          <div class="reading"><span class="k">QMC sensitivity</span><span class="v" id="tSensV">1.0×</span></div>
+        </div>
+
+        <div class="sect">
+          <div class="sect-title">Rover Speed Panel</div>
+          <div class="reading"><span class="k">Speed response</span><span class="v" id="spdDecV">FAST</span></div>
+          <div class="reading"><span class="k">Rover speed</span><span class="v" id="spdV">0 cm/s</span></div>
+          <div class="meter"><div class="fill" id="spdFill"></div><div class="tgt" id="spdTgt"></div></div>
+          <div class="meterlabels"><span>Stop</span><span>Heavy slow</span><span>Slow</span><span>Fast</span></div>
+        </div>
+
+        <div class="sect">
+          <div class="sect-title">IR Sensor Panel</div>
+          <div class="irs">
+            <div class="ir" id="irL"><div class="lab">Left</div><div class="val">—</div></div>
+            <div class="ir" id="irC"><div class="lab">Front</div><div class="val">—</div></div>
+            <div class="ir" id="irR"><div class="lab">Right</div><div class="val">—</div></div>
+          </div>
+          <div class="badge b-clear" id="irBadge">Path Clear</div>
+          <div class="reading"><span class="k">Obstacle position</span><span class="v" id="obsPosV">None</span></div>
+        </div>
+
+        <div class="sect">
+          <div class="sect-title">Warning Indicator</div>
+          <div class="badge b-off" id="warnBadge">OFF</div>
+        </div>
+
+        <div class="sect">
+          <div class="reading"><span class="k">Battery status</span><span class="v" id="battV">100%</span></div>
+          <div class="meter"><div class="fill" id="battFill" style="background: var(--ok)"></div></div>
+          <div class="reading"><span class="k" id="timeK">Mission timer</span><span class="v" id="timeV">—</span></div>
+        </div>
+
+        <div class="action">
+          <div class="lab">Feedback</div>
+          <div class="big" id="feedbackV">Press Start to begin.</div>
+          <div class="chip" id="stateChip">READY</div>
+        </div>
+
+        <div class="sect">
+          <div class="sect-title">Errors &amp; Warnings</div>
+          <div class="warns" id="warnList"></div>
+        </div>
+
+        <div class="sect" id="routeSect">
+          <div class="sect-title">Rescue Route Sequence</div>
+          <div class="checks" id="routeList"></div>
+        </div>
+
+        <div class="sect">
+          <div class="sect-title">Expected Results <span id="expCount">0 / 16</span></div>
+          <div class="checks" id="expList"></div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      (() => {
+        "use strict";
+        const $ = (id) => document.getElementById(id);
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const rand = (a, b) => a + Math.random() * (b - a);
+        const TAU = Math.PI * 2;
+
+        /* ================= TERRAIN MODEL =================
+           base = typical heading disturbance (°) the surface causes; noise = how much it jitters;
+           safeSpeed = fastest the rover can cross it without tip risk */
+        const TERR = {
+          smooth: { label: "Smooth Terrain", code: "SMOOTH_TERRAIN", base: 2, noise: 1, safeSpeed: 80, col: "#eecaa4" },
+          rocky: { label: "Rocky Terrain", code: "ROCKY_TERRAIN", base: 11, noise: 2.5, safeSpeed: 45, col: "#d9ab80" },
+          slope: { label: "Slope Terrain", code: "SLOPE_TERRAIN", base: 17, noise: 2.5, safeSpeed: 22, col: "#e3b183" },
+          crack: { label: "Crack Zone", code: "CRACK_ZONE", base: 27, noise: 4, safeSpeed: 10, col: "#c7936a", spikes: true },
+          unsafe: { label: "Unsafe Terrain", code: "UNSAFE TERRAIN", base: 36, noise: 8, safeSpeed: 5, col: "#d98c6c" },
+        };
+        const FAST = 60, // cm/s
+          SLOW = 35,
+          HEAVY = 15,
+          ACCEL = 25, // speed changes gradually
+          DECEL = 70,
+          REVERSE = 18;
+        const IR_RANGE = 120; // cm
+        const STOP_DIST = 28;
+        const HALF = 22; // half rover length (cm)
+        const LANES = 3; // left edge, centre, right edge of the path
+        const RESCUE_X = 2700;
+        const TIME_LIMIT = 150; // s
+
+        const P = { sens: 1.0, safe: 8, unsafe: 22 };
+        const warnLine = () => (P.safe + P.unsafe) / 2;
+
+        const ZONES = {
+          stable: { label: "Stable", speed: "FAST", v: FAST, cls: "b-clear", flow: "s-clear" },
+          slight: { label: "Slightly Unstable", speed: "SLOW", v: SLOW, cls: "b-caution", flow: "s-caution" },
+          warn: { label: "Slightly Unstable · Warning", speed: "HEAVY SLOW", v: HEAVY, cls: "b-warn", flow: "s-warn" },
+          unsafe: { label: "Unsafe", speed: "STOP", v: 0, cls: "b-danger", flow: "s-danger" },
+        };
+
+        // section 11
+        const MODES = {
+          terrain: { hint: "Terrain Test Mode: test smooth, rocky, slope, crack and unsafe surfaces.", route: false, terrain: "smooth" },
+          qmc: { hint: "QMC Sensitivity Mode: study how heading disturbance affects stability classification. Adjust the sensitivity and the thresholds.", route: false, terrain: "rocky" },
+          ir: { hint: "IR Obstacle Mode: observe obstacle detection and avoidance. Change the terrain to test combined conditions.", route: false, terrain: "smooth", obstacle: true },
+          speed: { hint: "Speed Control Mode: study fast, slow, heavy slow and stop decisions as the terrain changes.", route: false, terrain: "smooth", cycle: true },
+          route: { hint: "Full Rescue Route Mode: the complete terrain and obstacle mission to the rescue point.", route: true, terrain: "smooth", timed: true },
+        };
+        const CYCLE = [
+          ["smooth", 7],
+          ["rocky", 7],
+          ["slope", 7],
+          ["crack", 6],
+        ];
+        // Full Rescue Route (section 5, step 8): terrain for [left, centre, right] of the path
+        const ROUTE = [
+          { from: 0, to: 600, lanes: ["smooth", "smooth", "smooth"] },
+          { from: 600, to: 1100, lanes: ["rocky", "rocky", "rocky"] },
+          { from: 1100, to: 1600, lanes: ["slope", "slope", "slope"] },
+          { from: 1600, to: 1900, lanes: ["rocky", "crack", "crack"] },
+          { from: 1900, to: 1e9, lanes: ["smooth", "smooth", "smooth"] },
+        ];
+        const ROUTE_OBS = [{ x: 2150, lane: 0 }];
+        const SLOPE_START = ROUTE.find((s) => s.lanes[1] === "slope").from;
+
+        // section 14
+        const FEEDBACK = {
+          idle: "Press Start to begin.",
+          start: "Terrain Balance Lab started.",
+          stable: "Stable terrain detected. Rover can move fast.",
+          slight: "Heading disturbance detected. Slow down.",
+          warn: "Stability warning. Reduce speed.",
+          unsafe: "Strong disturbance detected. Stop or avoid.",
+          irDetected: "Obstacle detected in path.",
+          avoided: "Obstacle cleared. Continue carefully.",
+          recovered: "Heading is stable again.",
+          tooFast: "Reduce speed to prevent tipping.",
+          done: "Rover crossed the terrain safely.",
+        };
+        // section 15
+        const WARN = {
+          qmcOff: "Heading disturbance cannot be read.",
+          irOff: "Obstacle detection unavailable.",
+          thrMissing: "Terrain safety zones are not set.",
+          tooFast: "Speed is unsafe for current terrain.",
+          unsafe: "Strong instability detected. Stop or avoid.",
+          obstacle: "IR obstacle warning.",
+          crash: "Rover may crash.",
+          battery: "Rover power is low.",
+          stops: "Mission efficiency reduced.",
+          tip: "Rover may lose balance.",
+        };
+
+        /* ================= STATE ================= */
+        let mode = "terrain";
+        let testTerrain = "smooth";
+        let cycleIdx = 0,
+          cycleT = 0;
+        const faults = { qmcOff: false, irOff: false, thrMissing: false, ignoreObs: false };
+
+        const rover = { x: 0, lane: 1, targetLane: 1, v: 0, yaw: 0, tip: 0 };
+        let obstacles = [];
+        let obsId = 1;
+
+        const Q = { raw: 0, D: 0, sign: 1, jit: 0, jitT: 0, jitTarget: 0, spike: 0, spikeT: 0.8, sudden: 0, hist: [], histT: 0, past: [], restarting: 0 };
+        let IR = { front: null, left: null, right: null, frontObs: null, off: false };
+
+        let missionClock = 0;
+        let running = false;
+        let state = "idle"; // idle | drive | shift | brake | reverse | hold | bump | done | battery | timeup
+        let st = 0;
+        let brakeReason = null;
+        let shiftReason = null;
+        let careful = false;
+        let tried = new Set();
+        let triedX = 0;
+        let reverseLeft = 0;
+        let pendingLane = null;
+        let avoiding = null;
+        let bumpObs = null;
+        let feedback = FEEDBACK.idle;
+        let lastZone = null;
+        let startMsgT = 0;
+        let targetSpeed = 0;
+        let decision = "FAST";
+        let action = "Ready";
+        let battery = 100;
+        let missionTime = 0;
+        let tooFast = false;
+        let recoverWatch = null;
+
+        const freshStats = () => ({
+          zoneT: { stable: 0, slight: 0, warn: 0, unsafe: 0 },
+          safeDriveT: 0,
+          driveT: 0,
+          stops: 0,
+          unsafeAvoided: 0,
+          irDetected: 0,
+          avoided: 0,
+          collisions: 0,
+          tooFastT: 0,
+          maxTip: 0,
+          route: {},
+        });
+        let stats = freshStats();
+        const exp = {};
+
+        /* ================= ARENA PATHS =================
+           Rover Terrain View is a fixed top-down arena. The test modes use a closed test track;
+           the Full Rescue Route uses a winding path from the start to the rescue point. */
+        const VW = 1000,
+          VH = 640;
+        const LANE_PX = 30;
+        function makePath(prims) {
+          let len = 0;
+          for (const p of prims) {
+            p.s0 = len;
+            p.len = p.type === "line" ? Math.hypot(p.x1 - p.x0, p.y1 - p.y0) : Math.abs(p.a1 - p.a0) * p.r;
+            len += p.len;
+          }
+          return { prims, len };
+        }
+        const H = Math.PI / 2;
+        const ROUTE_PATH = makePath([
+          { type: "line", x0: 60, y0: 100, x1: 840, y1: 100 },
+          { type: "arc", cx: 840, cy: 200, r: 100, a0: -H, a1: H },
+          { type: "line", x0: 840, y0: 300, x1: 160, y1: 300 },
+          { type: "arc", cx: 160, cy: 400, r: 100, a0: -H, a1: -3 * H },
+          { type: "line", x0: 160, y0: 500, x1: 940, y1: 500 },
+        ]);
+        const LOOP_PATH = makePath([
+          { type: "line", x0: 250, y0: 170, x1: 750, y1: 170 },
+          { type: "arc", cx: 750, cy: 320, r: 150, a0: -H, a1: H },
+          { type: "line", x0: 750, y0: 470, x1: 250, y1: 470 },
+          { type: "arc", cx: 250, cy: 320, r: 150, a0: H, a1: 3 * H },
+        ]);
+        const ROUTE_END = 2800; // cm
+        const PX = ROUTE_PATH.len / ROUTE_END; // px per cm
+        const LOOP_CM = LOOP_PATH.len / PX;
+        const isRoute = () => MODES[mode].route;
+        const curPath = () => (isRoute() ? ROUTE_PATH : LOOP_PATH);
+
+        function pathAt(path, sp) {
+          let p = path.prims[path.prims.length - 1];
+          for (const q of path.prims)
+            if (sp < q.s0 + q.len) {
+              p = q;
+              break;
+            }
+          const t = clamp((sp - p.s0) / p.len, 0, 1);
+          if (p.type === "line") return { x: lerp(p.x0, p.x1, t), y: lerp(p.y0, p.y1, t), a: Math.atan2(p.y1 - p.y0, p.x1 - p.x0) };
+          const a = p.a0 + (p.a1 - p.a0) * t;
+          const dir = Math.sign(p.a1 - p.a0);
+          return { x: p.cx + p.r * Math.cos(a), y: p.cy + p.r * Math.sin(a), a: a + dir * H };
+        }
+        // point on the path for distance s (cm) and lateral position lane (0 = left, 1 = centre, 2 = right)
+        function trackPos(s, lane) {
+          const path = curPath();
+          let sp = s * PX;
+          sp = isRoute() ? clamp(sp, 0, path.len - 0.01) : ((sp % path.len) + path.len) % path.len;
+          const p = pathAt(path, sp);
+          const off = (1 - lane) * LANE_PX;
+          return { x: p.x + Math.sin(p.a) * off, y: p.y - Math.cos(p.a) * off, a: p.a };
+        }
+        // distance along the path from the rover to an object (wraps around the closed test track)
+        function relS(o) {
+          let d = o.x - rover.x;
+          if (!isRoute()) {
+            d = ((d % LOOP_CM) + LOOP_CM) % LOOP_CM;
+            if (d > LOOP_CM / 2) d -= LOOP_CM;
+          }
+          return d;
+        }
+
+        function terrainAt(x, lane) {
+          if (isRoute()) {
+            for (const s of ROUTE) if (x >= s.from && x < s.to) return s.lanes[clamp(lane, 0, 2)];
+            return "smooth";
+          }
+          return testTerrain;
+        }
+        const laneIdx = () => clamp(Math.round(rover.lane), 0, 2);
+
+        /* ================= QMC5883L SENSOR ================= */
+        function updateQMC(dt) {
+          const L = laneIdx();
+          const tF = TERR[terrainAt(rover.x + HALF - 4, L)];
+          const tB = TERR[terrainAt(rover.x - HALF + 4, L)];
+          const base = (tF.base + tB.base) / 2;
+          const noise = (tF.noise + tB.noise) / 2;
+          Q.jitT -= dt;
+          if (Q.jitT <= 0) {
+            Q.jitT = noise > 5 ? 0.07 : 0.13;
+            Q.jitTarget = rand(-1, 1);
+          }
+          Q.jit += (Q.jitTarget - Q.jit) * Math.min(1, dt * 10);
+          // cracks cause sudden heading jolts
+          if (tF.spikes || tB.spikes) {
+            Q.spikeT -= dt;
+            if (Q.spikeT <= 0) {
+              Q.spike = rand(9, 15);
+              Q.spikeT = rand(0.6, 1.4);
+            }
+          }
+          Q.spike *= Math.exp(-dt * 5);
+          Q.raw = Math.max(0, base + noise * Q.jit + Q.spike);
+          Q.sign = Q.jit >= 0 ? 1 : -1;
+
+          if (Q.restarting > 0) {
+            Q.restarting -= dt;
+            return;
+          }
+          if (faults.qmcOff) return;
+          Q.D += (Q.raw * P.sens - Q.D) * Math.min(1, dt / 0.35);
+
+          // sudden disturbance: a fast rise within 0.3 s (possible slip, slope or crack)
+          Q.past.push({ t: missionClock, d: Q.D });
+          while (Q.past.length && missionClock - Q.past[0].t > 0.3) Q.past.shift();
+          if (Q.past.length && Q.D - Q.past[0].d > 7) Q.sudden = 1.6;
+          Q.sudden = Math.max(0, Q.sudden - dt);
+
+          Q.histT += dt;
+          if (Q.histT >= 0.05) {
+            Q.histT = 0;
+            Q.hist.push(Q.D);
+            if (Q.hist.length > 240) Q.hist.shift();
+          }
+        }
+        const qmcOk = () => !faults.qmcOff && Q.restarting <= 0;
+        // controller compares the disturbance with the safe and unsafe thresholds
+        function classify() {
+          if (!qmcOk() || faults.thrMissing) return null;
+          if (Q.D >= P.unsafe) return "unsafe";
+          if (Q.D >= warnLine()) return "warn";
+          if (Q.D >= P.safe) return "slight";
+          return "stable";
+        }
+
+        /* ================= IR SENSORS ================= */
+        function obsAhead(lane, from, to) {
+          let best = null;
+          for (const o of obstacles) {
+            if (Math.abs(o.lane - lane) > 0.45) continue;
+            const dx = relS(o) - o.r - HALF;
+            if (dx >= from && dx <= to && (!best || dx < best.dx)) best = { o, dx };
+          }
+          return best;
+        }
+        const irOk = () => !faults.irOff && Q.restarting <= 0;
+        function updateIR() {
+          if (!irOk()) {
+            IR = { front: null, left: null, right: null, frontObs: null, off: true };
+            return;
+          }
+          const f = obsAhead(rover.lane, -HALF, IR_RANGE);
+          const side = (l) => (l < 0 || l > 2 ? "edge" : obsAhead(l, -HALF * 2 - 20, IR_RANGE + 40));
+          IR = {
+            front: f ? Math.max(0, f.dx) : null,
+            frontObs: f ? f.o : null,
+            left: side(Math.round(rover.lane) - 1),
+            right: side(Math.round(rover.lane) + 1),
+            off: false,
+          };
+        }
+        const sideFree = (s) => s !== "edge" && !s;
+        const freeSides = (L) => [L - 1, L + 1].filter((l) => l >= 0 && l < LANES && sideFree(l < L ? IR.left : IR.right));
+
+        /* ================= CONTROLLER (section 6) ================= */
+        function setState(s) {
+          state = s;
+          st = 0;
+        }
+        const say = (m) => (feedback = m);
+        function beginShift(lane, reason, isCareful) {
+          rover.targetLane = lane;
+          shiftReason = reason;
+          careful = isCareful;
+          setState("shift");
+        }
+        // on the rescue route one side of the path can be safer than the other
+        function chooseSaferLane() {
+          if (!isRoute()) return null;
+          const L = laneIdx();
+          for (const l of [L - 1, L + 1].filter((l) => l >= 0 && l < LANES && !tried.has(l))) {
+            if (IR.off || sideFree(l < L ? IR.left : IR.right)) return l;
+          }
+          return null;
+        }
+        function noteDetected(o) {
+          if (o.seen) return;
+          o.seen = true;
+          stats.irDetected++;
+          if (o.user) exp.place = true;
+        }
+
+        function control(dt) {
+          const zone = classify();
+          const L = laneIdx();
+          if (tried.size && rover.x > triedX + 420) tried.clear();
+
+          // without a QMC reading or thresholds the terrain can't be classified, so the rover stops
+          if (zone === null) {
+            targetSpeed = 0;
+            decision = "STOP";
+            action = qmcOk() ? "Stopped: zones not set" : "Stopped: no QMC reading";
+            if (state !== "hold" && state !== "bump") setState("hold");
+            brakeReason = "fault";
+            say(!qmcOk() ? (Q.restarting > 0 ? "Sensors restarting…" : WARN.qmcOff) : WARN.thrMissing);
+            lastZone = null;
+            return;
+          }
+
+          if (zone !== lastZone && startMsgT <= 0) {
+            if (zone === "stable") {
+              say(lastZone && lastZone !== "stable" ? FEEDBACK.recovered : FEEDBACK.stable);
+              if (lastZone && lastZone !== "stable") recoverWatch = { v0: rover.v };
+            } else say(FEEDBACK[zone]);
+            lastZone = zone;
+          }
+
+          const zt = ZONES[zone].v;
+          decision = ZONES[zone].speed;
+
+          switch (state) {
+            case "drive": {
+              targetSpeed = zt;
+              action = zone === "stable" ? "Moving fast" : zone === "slight" ? "Slowing down" : zone === "warn" ? "Heavy slow + warning" : "Stopping";
+              if (zone === "unsafe") {
+                brakeReason = "unsafe";
+                setState("brake");
+                say(FEEDBACK.unsafe);
+                return;
+              }
+              if (IR.front !== null && !faults.ignoreObs) {
+                if (!IR.frontObs.seen) say(FEEDBACK.irDetected);
+                noteDetected(IR.frontObs);
+                const free = freeSides(L);
+                if (free.length) {
+                  // stable → avoid obstacle; unstable → slow down and avoid carefully
+                  avoiding = IR.frontObs;
+                  exp.obsResp = true;
+                  beginShift(free.find((l) => !tried.has(l)) ?? free[0], "obstacle", zone !== "stable");
+                  return;
+                }
+                // path blocked: slow, then stop before the obstacle
+                targetSpeed = Math.min(zt, IR.front < STOP_DIST + 30 ? HEAVY : SLOW);
+                action = "Obstacle ahead";
+                if (IR.front <= STOP_DIST) {
+                  brakeReason = "obstacle";
+                  setState("brake");
+                  exp.obsResp = true;
+                }
+              }
+              break;
+            }
+            case "shift": {
+              targetSpeed = shiftReason === "unsafe" ? 8 : Math.min(zt || 8, careful ? HEAVY : SLOW);
+              const dir = Math.sign(rover.targetLane - rover.lane);
+              const rate = careful || shiftReason === "unsafe" ? 0.45 : 0.85;
+              rover.lane += dir * rate * dt;
+              rover.yaw = lerp(rover.yaw, dir * 0.45, Math.min(1, dt * 6));
+              action = shiftReason === "unsafe" ? "Choosing safer path" : careful ? "Avoiding carefully" : "Turning to avoid";
+              if ((dir > 0 && rover.lane >= rover.targetLane) || (dir < 0 && rover.lane <= rover.targetLane) || dir === 0) {
+                rover.lane = rover.targetLane;
+                setState("drive");
+              }
+              if (zone === "unsafe" && shiftReason !== "unsafe") {
+                brakeReason = "unsafe";
+                setState("brake");
+              }
+              break;
+            }
+            case "brake": {
+              targetSpeed = 0;
+              action = "Stopping";
+              if (rover.v <= 0.5) {
+                rover.v = 0;
+                if (st > 0.6) {
+                  stats.stops++;
+                  const freeObs = IR.front !== null && !faults.ignoreObs ? freeSides(laneIdx()) : [];
+                  if (brakeReason === "unsafe" && freeObs.length) {
+                    // unsafe + obstacle → stop and choose safer path
+                    exp.unsafeStop = true;
+                    noteDetected(IR.frontObs);
+                    avoiding = IR.frontObs;
+                    beginShift(freeObs[0], "unsafe", true);
+                    say("Strong disturbance detected. Stop or avoid.");
+                  } else if (brakeReason === "unsafe") {
+                    exp.unsafeStop = true;
+                    tried.add(laneIdx());
+                    triedX = rover.x;
+                    const lane = chooseSaferLane();
+                    if (lane !== null) {
+                      pendingLane = lane;
+                      reverseLeft = 40;
+                      setState("reverse");
+                    } else setState("hold");
+                  } else setState("hold");
+                }
+              }
+              break;
+            }
+            case "reverse": {
+              targetSpeed = -REVERSE;
+              action = "Backing away";
+              reverseLeft -= Math.abs(rover.v) * dt;
+              if (reverseLeft <= 0) {
+                rover.v = 0;
+                stats.unsafeAvoided++;
+                beginShift(pendingLane, "unsafe", true);
+              }
+              break;
+            }
+            case "hold": {
+              targetSpeed = 0;
+              decision = "STOP";
+              if (brakeReason === "obstacle") {
+                action = "Stopped: path blocked";
+                if (IR.front === null || IR.front > STOP_DIST + 20) {
+                  say(FEEDBACK.avoided);
+                  stats.avoided++;
+                  exp.clear = true;
+                  setState("drive");
+                } else if (freeSides(L).length && st > 0.5) {
+                  avoiding = IR.frontObs;
+                  beginShift(freeSides(L)[0], "obstacle", zone !== "stable");
+                }
+              } else if (brakeReason === "unsafe") {
+                action = "Stopped: unsafe terrain";
+                const freeObs = IR.front !== null && !faults.ignoreObs ? freeSides(L) : [];
+                if (zone !== "unsafe") {
+                  tried.clear();
+                  setState("drive");
+                } else if (freeObs.length && st > 0.5) {
+                  exp.obsResp = true;
+                  noteDetected(IR.frontObs);
+                  avoiding = IR.frontObs;
+                  beginShift(freeObs[0], "unsafe", true);
+                } else if (st > 1 && chooseSaferLane() !== null) {
+                  setState("brake");
+                  st = 1;
+                }
+              } else setState("drive");
+              break;
+            }
+            case "bump": {
+              targetSpeed = 0;
+              decision = "STOP";
+              action = "Crashed into obstacle";
+              if (st > 1.3) {
+                removeObstacle(bumpObs);
+                bumpObs = null;
+                setState("drive");
+              }
+              break;
+            }
+          }
+
+          // collision (IR not responding / obstacle ignored)
+          if (state !== "bump") {
+            for (const o of obstacles) {
+              if (Math.abs(o.lane - rover.lane) < 0.55 && Math.abs(relS(o)) < HALF + o.r) {
+                stats.collisions++;
+                bumpObs = o;
+                rover.v = 0;
+                setState("bump");
+                say(WARN.crash);
+                break;
+              }
+            }
+          }
+          // obstacle avoided and now behind the rover
+          if (avoiding && relS(avoiding) + avoiding.r < -HALF) {
+            say(FEEDBACK.avoided);
+            stats.avoided++;
+            exp.clear = true;
+            avoiding = null;
+          }
+          if (state !== "shift") rover.yaw = lerp(rover.yaw, 0, Math.min(1, dt * 4));
+        }
+
+        /* ================= UPDATE ================= */
+        function update(dt) {
+          missionClock += dt;
+          updateQMC(dt);
+          updateIR();
+          if (!running) return;
+          if (state === "done" || state === "battery" || state === "timeup") return;
+          st += dt;
+          missionTime += dt;
+          if (startMsgT > 0) startMsgT -= dt;
+
+          if (MODES[mode].cycle) {
+            cycleT += dt;
+            if (cycleT >= CYCLE[cycleIdx][1]) {
+              cycleT = 0;
+              cycleIdx = (cycleIdx + 1) % CYCLE.length;
+              setTerrain(CYCLE[cycleIdx][0], true);
+            }
+          }
+
+          control(dt);
+
+          // speed changes gradually, not instantly
+          const a = targetSpeed > rover.v ? ACCEL : DECEL;
+          rover.v += clamp(targetSpeed - rover.v, -a * dt, a * dt);
+          rover.x += rover.v * dt;
+          if (isRoute()) rover.x = Math.max(0, rover.x);
+
+          // tip risk builds when the rover is faster than the terrain allows
+          const L = laneIdx();
+          const allowed = Math.min(TERR[terrainAt(rover.x + HALF - 4, L)].safeSpeed, TERR[terrainAt(rover.x - HALF + 4, L)].safeSpeed);
+          const excess = rover.v - allowed;
+          rover.tip = clamp(rover.tip + (excess > 0 ? excess * 0.7 : -18) * dt, 0, 100);
+          stats.maxTip = Math.max(stats.maxTip, rover.tip);
+          const was = tooFast;
+          tooFast = excess > 3 && rover.v > 5;
+          if (tooFast) {
+            stats.tooFastT += dt;
+            if (!was) say(FEEDBACK.tooFast);
+          }
+
+          const zone = classify();
+          if (zone) stats.zoneT[zone] += dt;
+          if (rover.v > 1) {
+            stats.driveT += dt;
+            if (!tooFast) stats.safeDriveT += dt;
+          }
+
+          const tName = terrainAt(rover.x, L);
+          const rough = { smooth: 0, rocky: 0.12, slope: 0.25, crack: 0.2, unsafe: 0.2 }[tName];
+          battery = clamp(battery - (0.14 + Math.abs(rover.v) * 0.0045 + rough) * dt, 0, 100);
+          if (battery <= 0) {
+            setState("battery");
+            rover.v = 0;
+            say(WARN.battery);
+            showResult("battery");
+            return;
+          }
+          if (MODES[mode].timed && missionTime >= TIME_LIMIT) {
+            missionTime = TIME_LIMIT;
+            setState("timeup");
+            rover.v = 0;
+            say("Time is up before the rover reached the rescue point.");
+            showResult("timeup");
+            return;
+          }
+          trackExpected(zone, tName);
+          if (isRoute() && rover.x >= RESCUE_X) {
+            stats.route.rescue = true;
+            exp.full = true;
+            setState("done");
+            rover.v = 0;
+            say(FEEDBACK.done);
+            showResult("done");
+          }
+        }
+
+        function trackExpected(zone, tName) {
+          if (!zone) return;
+          const v = rover.v;
+          if (tName === "smooth" && zone === "stable" && v >= FAST * 0.9) exp.smooth = true;
+          if (tName === "rocky" && zone === "slight" && v <= SLOW + 3 && v > 1) exp.rocky = true;
+          if (tName === "slope" && zone === "warn" && v <= HEAVY + 3 && v > 0.5) exp.slope = true;
+          if (tName === "crack" && zone === "unsafe") exp.crack = true;
+          if (recoverWatch) {
+            if (zone !== "stable") recoverWatch = null;
+            else if (v > recoverWatch.v0 + 10) {
+              exp.recover = true;
+              recoverWatch = null;
+            }
+          }
+          if (isRoute()) {
+            const R = stats.route;
+            if (tName === "smooth" && rover.x < 600 && v >= FAST * 0.9) R.smooth = true;
+            if (tName === "rocky" && rover.x >= 600 && rover.x < 1100 && zone !== "stable" && v <= SLOW + 3) R.rocky = true;
+            if (tName === "slope" && (zone === "warn" || zone === "unsafe") && v <= HEAVY + 3) R.slope = true;
+            if (rover.x + HALF >= 1590 && rover.x < 1950 && (state === "reverse" || (state === "shift" && shiftReason === "unsafe") || (zone === "unsafe" && v < 1))) R.crack = true;
+            if (stats.avoided > 0 && rover.x > 1950) R.obstacle = true;
+            if (R.obstacle && !avoiding && zone === "stable" && IR.front === null && v > SLOW) R.cont = true;
+          }
+        }
+
+        /* ================= RESULT SCREEN ================= */
+        function showResult(kind) {
+          const ok = kind === "done";
+          const zt = stats.zoneT;
+          const tot = zt.stable + zt.slight + zt.warn + zt.unsafe || 1;
+          const pct = (k) => Math.round((zt[k] / tot) * 100);
+          const safeDrive = stats.driveT ? Math.round((stats.safeDriveT / stats.driveT) * 100) : 100;
+          const score = clamp(Math.round(safeDrive - stats.collisions * 20 - (stats.stops > 6 ? 5 : 0) - (stats.maxTip > 60 ? 10 : 0) - (ok ? 0 : 20)), 0, 100);
+          const title = { done: "Mission Complete", timeup: "Mission Failed · Time Up", battery: "Mission Failed · Battery Empty" }[kind];
+          const sub = { done: FEEDBACK.done, timeup: "The rover did not reach the rescue point in time.", battery: WARN.battery }[kind];
+          const row = (k, v) => `<div class="reading"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+          $("resultBox").innerHTML = `
+            <h2 style="color:${ok ? "var(--ok)" : "var(--danger)"}">${title}</h2>
+            <div class="hint">${sub}</div>
+            <div class="grade" style="color:${score >= 80 ? "var(--ok)" : score >= 50 ? "var(--warn)" : "var(--danger)"}">${score}%</div>
+            <div class="hint">Share of driving time at a safe speed, minus 20 per collision, 10 for high tip risk and 5 for too many stops${ok ? "" : ", 20 for a failed mission"}.</div>
+            <div class="sect">
+              <div class="sect-title">Stability performance</div>
+              <div class="zonebar">
+                <span style="width:${pct("stable")}%;background:#34d399"></span>
+                <span style="width:${pct("slight")}%;background:#fbbf24"></span>
+                <span style="width:${pct("warn")}%;background:#fb923c"></span>
+                <span style="width:${pct("unsafe")}%;background:#f87171"></span>
+              </div>
+              <div class="meterlabels"><span>Stable ${pct("stable")}%</span><span>Slightly unstable ${pct("slight") + pct("warn")}%</span><span>Unsafe ${pct("unsafe")}%</span></div>
+              ${row("Driving at a safe speed", safeDrive + "%")}
+              ${row("Time too fast for the terrain", stats.tooFastT.toFixed(1) + " s")}
+              ${row("Unsafe zones avoided", stats.unsafeAvoided)}
+              ${row("Stops", stats.stops)}
+            </div>
+            <div class="sect">
+              <div class="sect-title">Obstacle performance</div>
+              ${row("Obstacles detected by IR", stats.irDetected)}
+              ${row("Obstacles avoided", stats.avoided)}
+              ${row("Collisions", stats.collisions)}
+            </div>
+            <div class="sect">
+              ${row("Mission time", fmtTime(missionTime))}
+              ${row("Time left", fmtTime(Math.max(0, TIME_LIMIT - missionTime)))}
+              ${row("Battery remaining", Math.round(battery) + "%")}
+            </div>
+            <div class="sect"><div class="sect-title">Rescue route</div><div class="checks">${routeChecks()}</div></div>
+            <div class="btns">
+              <button class="btn start" data-act="again">↺ Run Again</button>
+              <button class="btn" data-act="close">✕ Close</button>
+            </div>`;
+          $("result").classList.add("show");
+        }
+        $("result").addEventListener("click", (e) => {
+          const act = e.target.closest("[data-act]");
+          if (!act) return;
+          $("result").classList.remove("show");
+          if (act.dataset.act === "again") missionReset(true);
+        });
+
+        /* ================= CHECKLISTS ================= */
+        const ROUTE_STEPS = [
+          ["smooth", "1. Start on smooth path", "QMC disturbance is low · Fast movement"],
+          ["rocky", "2. Enter rocky patch", "Disturbance rises · Slow movement"],
+          ["slope", "3. Reach slope", "Disturbance becomes stronger · Warning and heavy slow"],
+          ["crack", "4. Crack zone appears", "Unsafe disturbance · Stop or avoid"],
+          ["obstacle", "5. Obstacle appears", "IR detects object · Avoid obstacle"],
+          ["cont", "6. Path clears", "IR safe and QMC stable · Continue"],
+          ["rescue", "7. Rescue point appears", "Final target reached · Mission complete"],
+        ];
+        const routeChecks = () =>
+          ROUTE_STEPS.map(([k, a, b]) => `<span class="${stats.route[k] ? "ok" : ""}">${stats.route[k] ? "✓" : "○"} ${a}<span class="res">${b}</span></span>`).join("");
+        // section 13
+        const EXPECTED = [
+          ["start", "Start simulation", "Rover appears on smooth terrain"],
+          ["smooth", "Select smooth terrain", "QMC status shows stable and rover moves fast"],
+          ["rocky", "Select rocky terrain", "Heading disturbance increases and rover slows down"],
+          ["slope", "Select slope terrain", "Stability warning appears and rover slows heavily"],
+          ["crack", "Select crack zone", "Unsafe terrain warning appears"],
+          ["unsafeStop", "Unsafe terrain continues", "Rover stops or avoids the zone"],
+          ["place", "Place obstacle", "IR sensor detects obstacle"],
+          ["obsResp", "Obstacle detected", "Rover stops or turns to avoid"],
+          ["clear", "Clear obstacle", "Rover continues movement"],
+          ["recover", "Terrain becomes stable again", "Rover gradually increases speed"],
+          ["sensUp", "Increase QMC sensitivity", "Rover reacts earlier to disturbance"],
+          ["sensDown", "Lower QMC sensitivity", "Rover reacts later to disturbance"],
+          ["safeT", "Adjust safe threshold", "Stable zone classification changes"],
+          ["unsafeT", "Adjust unsafe threshold", "Warning and stop point changes"],
+          ["reset", "Reset simulation", "Rover returns to starting condition"],
+          ["full", "Full mission completed", "Rover crosses terrain safely"],
+        ];
+        let expKey = null,
+          routeKey = null,
+          warnKey = null;
+        function renderChecks() {
+          const k = EXPECTED.map(([id]) => (exp[id] ? 1 : 0)).join("");
+          if (k !== expKey) {
+            expKey = k;
+            $("expList").innerHTML = EXPECTED.map(([id, a, b]) => `<span class="${exp[id] ? "ok" : ""}">${exp[id] ? "✓" : "○"} ${a}<span class="res">${b}</span></span>`).join("");
+            $("expCount").textContent = EXPECTED.filter(([id]) => exp[id]).length + " / " + EXPECTED.length;
+          }
+          $("routeSect").style.display = isRoute() ? "" : "none";
+          const rk = ROUTE_STEPS.map(([id]) => (stats.route[id] ? 1 : 0)).join("");
+          if (rk !== routeKey) {
+            routeKey = rk;
+            $("routeList").innerHTML = routeChecks();
+          }
+        }
+
+        /* ================= DASHBOARD (section 12) ================= */
+        const fmtTime = (s) => String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(Math.floor(s % 60)).padStart(2, "0");
+        const D_MAX = 40;
+        const ended = () => state === "done" || state === "battery" || state === "timeup";
+        function speedWord() {
+          if (state === "idle") return classify() ? ZONES[classify()].speed : "STOP";
+          if (!running && !ended()) return "PAUSED";
+          if (state === "reverse") return "REVERSE";
+          if (state === "shift") return shiftReason === "unsafe" ? "HEAVY SLOW" : careful ? "HEAVY SLOW" : "SLOW";
+          if (state === "brake" || state === "hold" || state === "bump" || ended()) return "STOP";
+          if (IR.front !== null && !faults.ignoreObs) return "AVOIDANCE";
+          return decision;
+        }
+
+        function panel() {
+          const zone = classify();
+          const L = laneIdx();
+          const T = TERR[terrainAt(rover.x, L)];
+          const tb = $("terrBadge");
+          tb.textContent = T.label;
+          tb.className = "badge " + { smooth: "b-clear", rocky: "b-caution", slope: "b-warn", crack: "b-danger", unsafe: "b-danger" }[terrainAt(rover.x, L)];
+          $("terrVal").textContent = T.label.replace(" Terrain", "");
+
+          const ok = qmcOk();
+          const head = 90 + (rover.yaw * 180) / Math.PI + (ok ? Q.sign * Q.D * 0.6 : 0);
+          $("headV").textContent = ok ? Math.round(((head % 360) + 360) % 360) + "°" : "—";
+          $("distV").textContent = ok ? Q.D.toFixed(1) + "°" : "—";
+          $("qmcV").textContent = !ok ? (Q.restarting > 0 ? "Restarting" : "Not responding") : Q.sudden > 0 ? "Sudden disturbance" : Q.D >= P.unsafe ? "Unsafe" : Q.D >= P.safe ? "Disturbed" : "Stable";
+          $("qmcV").style.color = !ok || Q.sudden > 0 || Q.D >= P.unsafe ? "var(--danger)" : Q.D >= P.safe ? "var(--warn)" : "var(--ok)";
+
+          const pctD = (d) => clamp((d / D_MAX) * 100, 0, 100) + "%";
+          $("stabFill").style.width = ok ? pctD(Q.D) : "0%";
+          $("stabFill").style.background = !zone ? "#9ca3af" : zone === "stable" ? "#16a34a" : zone === "slight" ? "#d97706" : zone === "warn" ? "#ea580c" : "#dc2626";
+          const thr = !faults.thrMissing;
+          ["thrSafe", "thrWarn", "thrUnsafe"].forEach((id) => ($(id).style.display = thr ? "" : "none"));
+          $("thrSafe").style.left = pctD(P.safe);
+          $("thrWarn").style.left = pctD(warnLine());
+          $("thrUnsafe").style.left = pctD(P.unsafe);
+          $("thrLbl").textContent = thr ? `safe ${P.safe}° · warning ${+warnLine().toFixed(1)}° · unsafe ${P.unsafe}°` : "not set";
+          const sb = $("stabBadge");
+          if (!zone) {
+            sb.className = "badge b-off";
+            sb.textContent = ok ? "Zones not set" : "No reading";
+          } else {
+            sb.className = "badge " + ZONES[zone].cls + (zone === "unsafe" ? " pulse" : "");
+            sb.textContent = ZONES[zone].label;
+          }
+          $("tSafeV").textContent = thr ? P.safe + "°" : "not set";
+          $("tUnsafeV").textContent = thr ? P.unsafe + "°" : "not set";
+          $("tSensV").textContent = P.sens.toFixed(1) + "×";
+
+          const sw = speedWord();
+          $("spdDecV").textContent = sw;
+          $("spdV").textContent = Math.round(Math.abs(rover.v)) + " cm/s";
+          const spPct = (v) => clamp((Math.abs(v) / 70) * 100, 0, 100) + "%";
+          $("spdFill").style.width = spPct(rover.v);
+          $("spdFill").style.background = tooFast ? "#dc2626" : "linear-gradient(90deg,#fdba74,#c2410c)";
+          $("spdTgt").style.left = spPct(state === "idle" && zone ? ZONES[zone].v : targetSpeed);
+
+          const irCell = (id, s, isFront) => {
+            const el = $(id);
+            const v = el.querySelector(".val");
+            if (IR.off) {
+              el.className = "ir off";
+              v.textContent = "—";
+            } else if (s === "edge") {
+              el.className = "ir off";
+              v.textContent = "Path edge";
+            } else if (isFront ? s !== null : s) {
+              el.className = "ir det";
+              v.textContent = Math.round(isFront ? s : Math.max(0, s.dx)) + " cm";
+            } else {
+              el.className = "ir clr";
+              v.textContent = "Clear";
+            }
+          };
+          irCell("irL", IR.left, false);
+          irCell("irC", IR.front, true);
+          irCell("irR", IR.right, false);
+          const irb = $("irBadge");
+          if (IR.off) {
+            irb.className = "badge b-off";
+            irb.textContent = Q.restarting > 0 ? "Restarting" : "Obstacle detection unavailable";
+          } else if (IR.front !== null) {
+            irb.className = "badge b-danger pulse";
+            irb.textContent = "Obstacle Detected";
+          } else {
+            irb.className = "badge b-clear";
+            irb.textContent = "Path Clear";
+          }
+          const ahead = obstacles.filter((o) => relS(o) > -HALF).sort((a, b) => relS(a) - relS(b))[0];
+          $("obsPosV").textContent = ahead ? Math.max(0, Math.round(relS(ahead) - ahead.r - HALF)) + " cm ahead · " + ["left", "centre", "right"][ahead.lane] : "None";
+
+          // warning indicator: instability or obstacle danger
+          const reasons = [];
+          if (zone === "warn" || zone === "unsafe") reasons.push("Instability");
+          if (Q.sudden > 0 && ok) reasons.push("Sudden disturbance");
+          if (IR.front !== null && !IR.off) reasons.push("Obstacle");
+          if (!zone) reasons.push("Sensor error");
+          const wb = $("warnBadge");
+          if (reasons.length) {
+            wb.className = "badge " + (zone === "unsafe" || !zone ? "b-danger" : "b-warn") + " pulse";
+            wb.textContent = "ON · " + reasons.join(" · ");
+          } else {
+            wb.className = "badge b-off";
+            wb.textContent = "OFF";
+          }
+
+          $("feedbackV").textContent = feedback;
+          $("stateChip").textContent = state === "idle" ? "READY" : !running && !ended() ? "PAUSED" : ended() ? state.toUpperCase() : action.toUpperCase();
+
+          const w = [];
+          if (faults.qmcOff) w.push(WARN.qmcOff);
+          if (faults.irOff) w.push(WARN.irOff);
+          if (faults.thrMissing) w.push(WARN.thrMissing);
+          if (tooFast) w.push(WARN.tooFast);
+          if (zone === "unsafe") w.push(WARN.unsafe);
+          if (IR.front !== null && !IR.off) w.push(WARN.obstacle);
+          if (state === "bump" || ((faults.ignoreObs || faults.irOff) && obstacles.some((o) => Math.abs(o.lane - rover.lane) < 0.5 && relS(o) > 0 && relS(o) < IR_RANGE + 60)))
+            w.push(WARN.crash);
+          if (battery < 20) w.push(WARN.battery);
+          if (stats.stops >= 6) w.push(WARN.stops);
+          if (rover.tip > 60) w.push(WARN.tip);
+          const wk = w.join("|");
+          if (wk !== warnKey) {
+            warnKey = wk;
+            $("warnList").innerHTML = w.length ? w.map((t) => `<div class="warn">⚠ ${t}</div>`).join("") : '<div class="warn none">No warnings</div>';
+          }
+          const nf = Object.values(faults).filter(Boolean).length;
+          $("faultCountV").textContent = nf ? nf + " active" : "none";
+
+          $("battV").textContent = Math.round(battery) + "%";
+          $("battFill").style.width = battery + "%";
+          $("battFill").style.background = battery < 20 ? "var(--danger)" : battery < 45 ? "var(--warn)" : "var(--ok)";
+          if (MODES[mode].timed) {
+            const left = Math.max(0, TIME_LIMIT - missionTime);
+            $("timeK").textContent = "Time left to rescue point";
+            $("timeV").textContent = fmtTime(Math.ceil(left));
+            $("timeV").style.color = left < 30 ? "var(--danger)" : "";
+          } else {
+            $("timeK").textContent = "Mission timer";
+            $("timeV").textContent = fmtTime(missionTime);
+            $("timeV").style.color = "";
+          }
+
+          // Terrain Type → Heading Disturbance → Stability Classification → Speed Decision → Rover Movement
+          const zc = zone ? ZONES[zone].flow : "s-fault";
+          $("flTerrV").textContent = T.label.replace(" Terrain", "");
+          $("flQmc").className = "step " + (ok ? zc : "s-fault");
+          $("flQmcV").textContent = ok ? Q.D.toFixed(1) + "°" : "No reading";
+          $("flZone").className = "step " + zc;
+          $("flZoneV").textContent = zone ? ZONES[zone].label.replace(" · Warning", "") : faults.thrMissing ? "Not set" : "Unknown";
+          $("flSpd").className = "step " + (tooFast ? "s-danger" : zc);
+          $("flSpdV").textContent = sw;
+          $("flAct").className = "step " + (state === "bump" ? "s-danger" : state === "done" ? "s-clear" : "");
+          $("flActV").textContent = state === "idle" ? "Ready" : !running && !ended() ? "Paused" : state === "done" ? "Mission complete" : ended() ? "Stopped" : action;
+
+          $("placeObs").disabled = ended() || obstacles.length >= MAX_OBS;
+          $("obsCountV").textContent = obstacles.length + " / " + MAX_OBS;
+          if (selectedObs && !obstacles.includes(selectedObs)) selectedObs = null;
+          renderChecks();
+        }
+
+        /* ================= DRAWING: ROVER TERRAIN VIEW ================= */
+        const cv = $("stage");
+        const g = cv.getContext("2d");
+        g.setTransform(2, 0, 0, 2, 0, 0);
+        const bg = document.createElement("canvas");
+        bg.width = VW * 2;
+        bg.height = VH * 2;
+        const bgc = bg.getContext("2d");
+        let bgKey = "";
+
+        function hash(i, j) {
+          const s = Math.sin(i * 127.1 + j * 311.7) * 43758.5453;
+          return s - Math.floor(s);
+        }
+        // arena + path + terrain surfaces (redrawn only when the terrain changes)
+        function drawBackground() {
+          const key = mode + "|" + testTerrain;
+          if (key === bgKey) return;
+          bgKey = key;
+          const c = bgc;
+          c.setTransform(2, 0, 0, 2, 0, 0);
+          const gr = c.createLinearGradient(0, 0, 0, VH);
+          gr.addColorStop(0, "#f6ddca");
+          gr.addColorStop(1, "#efcdb4");
+          c.fillStyle = gr;
+          c.fillRect(0, 0, VW, VH);
+          for (let i = 0; i < 260; i++) {
+            c.fillStyle = hash(i, 1) < 0.5 ? "rgba(150,90,55,.18)" : "rgba(255,255,255,.35)";
+            c.beginPath();
+            c.arc(hash(i, 2) * VW, hash(i, 3) * VH, 1 + hash(i, 4) * 2.2, 0, TAU);
+            c.fill();
+          }
+
+          const path = curPath();
+          const tAt = (sp, lane) => terrainAt(sp / PX, lane);
+          const posAt = (sp, lane) => {
+            const p = pathAt(path, clamp(sp, 0, path.len - 0.01));
+            const off = (1 - lane) * LANE_PX;
+            return { x: p.x + Math.sin(p.a) * off, y: p.y - Math.cos(p.a) * off, a: p.a };
+          };
+          // surface of each third of the path
+          c.lineCap = "butt";
+          for (let l = 0; l < LANES; l++) {
+            for (let sp = 0; sp < path.len; sp += 4) {
+              const a = posAt(sp, l),
+                b = posAt(Math.min(sp + 6, path.len), l);
+              c.strokeStyle = TERR[tAt(sp + 2, l)].col;
+              c.lineWidth = LANE_PX + 1;
+              c.beginPath();
+              c.moveTo(a.x, a.y);
+              c.lineTo(b.x, b.y);
+              c.stroke();
+            }
+          }
+          // surface details
+          for (let l = 0; l < LANES; l++) {
+            for (let sp = 0, i = 0; sp < path.len; sp += 12, i++) {
+              const t = tAt(sp, l);
+              const p = posAt(sp, l);
+              const nx = Math.sin(p.a),
+                ny = -Math.cos(p.a);
+              const h = hash(i, l);
+              if (t === "rocky" && h < 0.75) {
+                c.fillStyle = h < 0.35 ? "#9c6340" : "#b07650";
+                c.beginPath();
+                c.arc(p.x + nx * (hash(l, i) - 0.5) * 22, p.y + ny * (hash(l, i) - 0.5) * 22, 2 + h * 3.5, 0, TAU);
+                c.fill();
+              } else if (t === "slope" && i % 2 === 0) {
+                // incline shading across the path
+                c.strokeStyle = "rgba(120,70,40,.28)";
+                c.lineWidth = 1.5;
+                c.beginPath();
+                c.moveTo(p.x - nx * 14, p.y - ny * 14);
+                c.lineTo(p.x + nx * 14, p.y + ny * 14);
+                c.stroke();
+              } else if (t === "crack" && h < 0.8) {
+                c.strokeStyle = "#3b1d10";
+                c.lineWidth = 2;
+                c.beginPath();
+                const tx = Math.cos(p.a),
+                  ty = Math.sin(p.a);
+                let px = p.x - nx * 14,
+                  py = p.y - ny * 14;
+                c.moveTo(px, py);
+                for (let k = 1; k <= 4; k++) {
+                  const j = (hash(i + k, l) - 0.5) * 8;
+                  px = p.x + nx * (-14 + k * 7) + tx * j;
+                  py = p.y + ny * (-14 + k * 7) + ty * j;
+                  c.lineTo(px, py);
+                }
+                c.stroke();
+              } else if (t === "unsafe") {
+                c.strokeStyle = "rgba(220,38,38,.3)";
+                c.lineWidth = 3;
+                c.beginPath();
+                c.moveTo(p.x - nx * 14 - Math.cos(p.a) * 5, p.y - ny * 14 - Math.sin(p.a) * 5);
+                c.lineTo(p.x + nx * 14 + Math.cos(p.a) * 5, p.y + ny * 14 + Math.sin(p.a) * 5);
+                c.stroke();
+              }
+            }
+          }
+          // path edges
+          [-0.55, 2.55].forEach((l) => {
+            c.strokeStyle = "rgba(90,45,20,.55)";
+            c.lineWidth = 2.5;
+            c.beginPath();
+            for (let sp = 0; sp <= path.len; sp += 4) {
+              const p = posAt(sp, l);
+              sp ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y);
+            }
+            if (!isRoute()) c.closePath();
+            c.stroke();
+          });
+
+          c.font = "700 11px Rajdhani, sans-serif";
+          c.fillStyle = "#6b3517";
+          c.textAlign = "center";
+          if (isRoute()) {
+            // terrain names beside the path
+            const labels = [
+              [300, "SMOOTH_TERRAIN"],
+              [680, "ROCKY_TERRAIN"],
+              [1350, "SLOPE_TERRAIN"],
+              [1750, "CRACK_ZONE"],
+              [2400, "SMOOTH_TERRAIN"],
+            ];
+            for (const [s, txt] of labels) {
+              const p = posAt(s * PX, 1);
+              const side = s > 1100 && s < 2100 ? -1 : 1; // outside the bends
+              c.fillText(txt, p.x + Math.sin(p.a) * 64 * side, p.y - Math.cos(p.a) * 64 * side + 4);
+            }
+            // start line
+            const s0 = posAt(4, 1);
+            c.strokeStyle = "#3a1d0e";
+            c.lineWidth = 3;
+            c.beginPath();
+            c.moveTo(s0.x, s0.y - 52);
+            c.lineTo(s0.x, s0.y + 52);
+            c.stroke();
+            c.fillText("START", s0.x + 4, s0.y - 60);
+            // rescue point
+            const r0 = posAt(RESCUE_X * PX, 1),
+              r1 = posAt((RESCUE_X + 70) * PX, 1);
+            c.fillStyle = "rgba(22,163,74,.2)";
+            c.fillRect(r0.x, r0.y - 52, r1.x - r0.x, 104);
+            c.strokeStyle = "#16a34a";
+            c.setLineDash([6, 5]);
+            c.lineWidth = 2;
+            c.strokeRect(r0.x, r0.y - 52, r1.x - r0.x, 104);
+            c.setLineDash([]);
+            c.strokeStyle = "#3a1d0e";
+            c.lineWidth = 3;
+            c.beginPath();
+            c.moveTo(r1.x + 10, r0.y + 10);
+            c.lineTo(r1.x + 10, r0.y - 70);
+            c.stroke();
+            c.fillStyle = "#16a34a";
+            c.beginPath();
+            c.moveTo(r1.x + 10, r0.y - 70);
+            c.lineTo(r1.x + 38, r0.y - 60);
+            c.lineTo(r1.x + 10, r0.y - 50);
+            c.closePath();
+            c.fill();
+            c.fillStyle = "#166534";
+            c.font = "700 12px Orbitron, sans-serif";
+            c.fillText("RESCUE POINT", (r0.x + r1.x) / 2, r0.y + 72);
+          } else {
+            c.font = "700 16px Orbitron, sans-serif";
+            c.fillStyle = "#6b3517";
+            c.fillText("TERRAIN TEST TRACK", VW / 2, VH / 2 - 10);
+            c.font = "700 14px Rajdhani, sans-serif";
+            c.fillText(TERR[testTerrain].code, VW / 2, VH / 2 + 14);
+          }
+        }
+
+        function drawRover(t) {
+          const p = trackPos(rover.x, rover.lane);
+          const ok = qmcOk();
+          const moving = running && Math.abs(rover.v) > 1;
+          // the heading disturbance shows as the rover's heading wobbling
+          const wobble = ok ? (Q.sign * Q.D * 0.6 * Math.PI) / 180 : 0;
+          const ang = p.a + rover.yaw + (moving ? wobble : wobble * 0.3);
+          const shake = moving ? Math.min(2, Q.raw * 0.06) : 0;
+          const x = p.x + Math.sin(t * 41) * shake,
+            y = p.y + Math.cos(t * 37) * shake;
+          // drawn a little larger than true scale so the rover is easy to see
+          const len = HALF * 2 * PX * 1.25,
+            wid = 26 * PX * 1.25;
+
+          // IR beams (front, left, right)
+          if (!IR.off) {
+            const nose = { x: x + Math.cos(ang) * len * 0.5, y: y + Math.sin(ang) * len * 0.5 };
+            const beam = (da, dist, det) => {
+              const L = dist * PX;
+              g.strokeStyle = det ? "rgba(220,38,38,.9)" : "rgba(239,68,68,.45)";
+              g.lineWidth = 2;
+              g.setLineDash([5, 4]);
+              g.beginPath();
+              g.moveTo(nose.x, nose.y);
+              g.lineTo(nose.x + Math.cos(ang + da) * L, nose.y + Math.sin(ang + da) * L);
+              g.stroke();
+              g.setLineDash([]);
+            };
+            beam(0, IR.front !== null ? IR.front : IR_RANGE, IR.front !== null);
+            if (IR.left !== "edge") beam(-0.32, IR_RANGE * 0.85, !!IR.left);
+            if (IR.right !== "edge") beam(0.32, IR_RANGE * 0.85, !!IR.right);
+          }
+
+          g.save();
+          g.translate(x, y);
+          g.rotate(ang);
+          g.fillStyle = "rgba(0,0,0,.18)";
+          g.beginPath();
+          g.ellipse(2, 4, len * 0.55, wid * 0.6, 0, 0, TAU);
+          g.fill();
+          // six wheels
+          g.fillStyle = "#2b1a12";
+          [-0.36, 0, 0.36].forEach((k) =>
+            [-1, 1].forEach((sd) => {
+              g.beginPath();
+              g.roundRect(k * len - 5, sd * (wid / 2) - 3.5 + sd * 1.5, 10, 7, 2);
+              g.fill();
+            })
+          );
+          const zone = classify();
+          g.fillStyle = state === "bump" ? "#fca5a5" : "#f7f1ea";
+          g.strokeStyle = "#6b3517";
+          g.lineWidth = 1.8;
+          g.beginPath();
+          g.roundRect(-len / 2, -wid / 2, len, wid, 5);
+          g.fill();
+          g.stroke();
+          g.fillStyle = "#c2410c";
+          g.fillRect(-len / 2, -2, len, 4);
+          // QMC5883L module
+          g.fillStyle = "#1e3a5f";
+          g.fillRect(-len * 0.38, -wid * 0.35, 12, 8);
+          g.fillStyle = "#fff";
+          g.font = "700 6px Rajdhani, sans-serif";
+          g.textAlign = "center";
+          g.fillText("QMC", -len * 0.38 + 6, -wid * 0.35 + 6);
+          // status light coloured by stability zone
+          g.fillStyle = !zone ? "#9ca3af" : zone === "stable" ? "#16a34a" : zone === "slight" ? "#d97706" : zone === "warn" ? "#ea580c" : "#dc2626";
+          g.beginPath();
+          g.arc(0, wid * 0.24, 3.2, 0, TAU);
+          g.fill();
+          // IR sensors on the nose
+          g.fillStyle = IR.off ? "#9ca3af" : "#ef4444";
+          [-0.3, 0, 0.3].forEach((k) => g.fillRect(len / 2 - 2, k * wid - 2, 4, 4));
+          g.restore();
+
+          g.font = '700 9px "Orbitron",sans-serif';
+          g.fillStyle = "#3a1d0e";
+          g.textAlign = "center";
+          g.fillText("STABILITY SCOUT", x, y + wid + 10);
+          if (state === "bump") {
+            g.fillStyle = "#dc2626";
+            g.font = "700 12px Orbitron, sans-serif";
+            g.fillText("✕ COLLISION", x, y - wid - 6);
+          }
+        }
+
+        function draw(t) {
+          drawBackground();
+          g.clearRect(0, 0, VW, VH);
+          g.drawImage(bg, 0, 0, VW, VH);
+          // obstacles
+          for (const o of obstacles) {
+            const p = trackPos(o.x, o.lane);
+            const r = o.r * PX;
+            g.fillStyle = "rgba(0,0,0,.2)";
+            g.beginPath();
+            g.ellipse(p.x + 3, p.y + 4, r, r * 0.85, 0, 0, TAU);
+            g.fill();
+            g.fillStyle = "#7d6f68";
+            g.beginPath();
+            g.arc(p.x, p.y, r, 0, TAU);
+            g.fill();
+            g.fillStyle = "#a0938b";
+            g.beginPath();
+            g.arc(p.x - r * 0.3, p.y - r * 0.3, r * 0.4, 0, TAU);
+            g.fill();
+            if (o === IR.frontObs && !IR.off) {
+              g.strokeStyle = "#dc2626";
+              g.lineWidth = 2;
+              g.setLineDash([4, 3]);
+              g.beginPath();
+              g.arc(p.x, p.y, r + 6, 0, TAU);
+              g.stroke();
+              g.setLineDash([]);
+            }
+            if (o === selectedObs) {
+              g.strokeStyle = "#c2410c";
+              g.lineWidth = 2.5;
+              g.beginPath();
+              g.arc(p.x, p.y, r + 10, 0, TAU);
+              g.stroke();
+            }
+          }
+          drawRover(t);
+        }
+
+        /* ================= SIDE VIEW (ground profile in the rover's lane) ================= */
+        const sideCv = $("sideView");
+        const sg = sideCv.getContext("2d");
+        let SW = 600,
+          SH = 150;
+        function layoutSide() {
+          const r = sideCv.getBoundingClientRect();
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          SW = Math.max(200, r.width);
+          SH = Math.max(80, r.height);
+          sideCv.width = Math.round(SW * dpr);
+          sideCv.height = Math.round(SH * dpr);
+          sg.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        // each surface has its own colour and its own fixed shape, so they read apart at a glance
+        const SIDE_LOOK = {
+          smooth: { top: "#f3dcb8", body: "#dcb48a", strip: "#b8895a" },
+          rocky: { top: "#a8876c", body: "#83654f", strip: "#6b4f3b" },
+          slope: { top: "#e3a64c", body: "#b47a2c", strip: "#94611e" },
+          crack: { top: "#9a6446", body: "#6b3f28", strip: "#4a2716" },
+          unsafe: { top: "#d4674a", body: "#9c3b24", strip: "#7f2412" },
+        };
+        // ground height (cm) for each surface, seen from the side (fixed to the world, so it never shifts)
+        function surfaceH(x, t) {
+          switch (t) {
+            case "rocky": // jagged, uneven
+              return 2 + 3 * Math.abs(Math.sin(x * 0.13)) + 2 * Math.abs(Math.sin(x * 0.31 + 1.3));
+            case "slope": {
+              // a real ramp, starting where the slope zone starts: 200 cm up (about 12 degrees), 100 cm across, 200 cm down
+              const start = isRoute() ? SLOPE_START : 0;
+              const p = (((x - start) % 500) + 500) % 500;
+              return p < 200 ? (p / 200) * 44 : p < 300 ? 44 : 44 * (1 - (p - 300) / 200);
+            }
+            case "unsafe": // heaving, loose ground
+              return 7 + 5 * Math.sin(x * 0.06) + 3 * Math.sin(x * 0.19 + 2) + 1.8 * Math.sin(x * 0.83);
+            default: // smooth and crack zone are level; cracks are cut into the ground
+              return 0;
+          }
+        }
+        // blended only right at a border between two surfaces, so each surface keeps its true shape
+        function groundH(x, lane) {
+          const t = terrainAt(x, lane);
+          if (terrainAt(x - 25, lane) === t && terrainAt(x + 25, lane) === t) return surfaceH(x, t);
+          let s = 0;
+          for (const d of [-25, -12.5, 0, 12.5, 25]) s += surfaceH(x + d, terrainAt(x + d, lane));
+          return s / 5;
+        }
+        const SIDE_BEHIND = 110,
+          SIDE_AHEAD = 390;
+        function drawSide(t) {
+          const W = SW,
+            Hh = SH,
+            L = laneIdx();
+          const k = W / (SIDE_BEHIND + SIDE_AHEAD); // px per cm along the ground
+          const kv = k * 0.85;
+          const STRIP = 16; // name strip along the bottom
+          const base = Hh * 0.68;
+          const sx = (x) => (x - rover.x + SIDE_BEHIND) * k;
+          const sy = (hcm) => base - hcm * kv;
+          sg.clearRect(0, 0, W, Hh);
+          const sky = sg.createLinearGradient(0, 0, 0, base);
+          sky.addColorStop(0, "#f7d9c4");
+          sky.addColorStop(1, "#fcefe4");
+          sg.fillStyle = sky;
+          sg.fillRect(0, 0, W, Hh);
+
+          const x0 = rover.x - SIDE_BEHIND;
+          const cols = [];
+          for (let px = -3; px <= W + 3; px += 3) {
+            const wx = x0 + px / k;
+            cols.push({ px, wx, h: groundH(wx, L), t: terrainAt(wx, L) });
+          }
+          // runs of one surface
+          const runs = [];
+          for (let i = 0; i < cols.length; ) {
+            let j = i;
+            while (j < cols.length - 1 && cols[j + 1].t === cols[i].t) j++;
+            runs.push({ i, j: Math.min(j + 1, cols.length - 1), t: cols[i].t });
+            i = j + 1;
+          }
+          const tracePath = (run, close) => {
+            sg.beginPath();
+            if (close) sg.moveTo(cols[run.i].px, Hh - STRIP);
+            for (let q = run.i; q <= run.j; q++) {
+              if (!close && q === run.i) sg.moveTo(cols[q].px, sy(cols[q].h));
+              else sg.lineTo(cols[q].px, sy(cols[q].h));
+            }
+            if (close) {
+              sg.lineTo(cols[run.j].px, Hh - STRIP);
+              sg.closePath();
+            }
+          };
+          const cellsOf = (run, size) => [Math.floor(cols[run.i].wx / size), Math.ceil(cols[run.j].wx / size)];
+          const inRun = (run, wx) => wx >= cols[run.i].wx && wx <= cols[run.j].wx;
+
+          for (const run of runs) {
+            const lk = SIDE_LOOK[run.t];
+            const xa = cols[run.i].px,
+              xb = cols[run.j].px;
+            // body of the ground
+            tracePath(run, true);
+            const gr = sg.createLinearGradient(0, base - 40, 0, Hh - STRIP);
+            gr.addColorStop(0, lk.top);
+            gr.addColorStop(1, lk.body);
+            sg.fillStyle = gr;
+            sg.fill();
+            sg.save();
+            tracePath(run, true);
+            sg.clip();
+            if (run.t === "slope") {
+              // bands parallel to the ramp
+              for (const off of [7, 16, 26]) {
+                sg.strokeStyle = "rgba(120,70,20,.3)";
+                sg.lineWidth = 1.5;
+                sg.beginPath();
+                for (let q = run.i; q <= run.j; q++) {
+                  const y = sy(cols[q].h) + off * kv;
+                  q === run.i ? sg.moveTo(cols[q].px, y) : sg.lineTo(cols[q].px, y);
+                }
+                sg.stroke();
+              }
+            } else if (run.t === "unsafe") {
+              sg.strokeStyle = "rgba(220,38,38,.35)";
+              sg.lineWidth = 3;
+              for (let hx = xa - 50; hx < xb + 50; hx += 11) {
+                sg.beginPath();
+                sg.moveTo(hx, Hh);
+                sg.lineTo(hx + 50, base - 50);
+                sg.stroke();
+              }
+            } else if (run.t === "rocky") {
+              // stones buried in the soil
+              const [c0, c1] = cellsOf(run, 9);
+              for (let c = c0; c <= c1; c++) {
+                if (hash(c, 11) > 0.55) continue;
+                const wx = c * 9 + hash(c, 12) * 9;
+                sg.fillStyle = "rgba(60,40,28,.35)";
+                sg.beginPath();
+                sg.ellipse(sx(wx), sy(groundH(wx, L)) + (6 + hash(c, 13) * 16) * kv, (1.5 + hash(c, 14) * 2.5) * k, (1 + hash(c, 15) * 1.5) * k, 0, 0, TAU);
+                sg.fill();
+              }
+            }
+            sg.restore();
+            // surface outline
+            sg.strokeStyle = run.t === "unsafe" ? "#7f2412" : "rgba(70,35,15,.75)";
+            sg.lineWidth = 2;
+            tracePath(run, false);
+            sg.stroke();
+
+            // things on or cut into the surface
+            if (run.t === "rocky") {
+              const [c0, c1] = cellsOf(run, 11);
+              for (let c = c0; c <= c1; c++) {
+                if (hash(c, 3) > 0.8) continue;
+                const wx = c * 11 + hash(c, 7) * 11;
+                if (!inRun(run, wx)) continue;
+                const r = (2 + hash(c, 5) * 3.5) * k;
+                const x = sx(wx),
+                  y = sy(groundH(wx, L));
+                sg.fillStyle = "#6f5647";
+                sg.beginPath();
+                sg.ellipse(x, y - r * 0.45, r * 1.15, r * 0.8, hash(c, 8) - 0.5, 0, TAU);
+                sg.fill();
+                sg.fillStyle = "rgba(255,255,255,.25)";
+                sg.beginPath();
+                sg.ellipse(x - r * 0.3, y - r * 0.75, r * 0.4, r * 0.25, 0, 0, TAU);
+                sg.fill();
+              }
+            } else if (run.t === "crack") {
+              // deep fissures cut into level ground
+              const [c0, c1] = cellsOf(run, 34);
+              for (let c = c0; c <= c1; c++) {
+                const wx = c * 34 + hash(c, 2) * 12;
+                if (wx < cols[run.i].wx + 4 || wx > cols[run.j].wx - 4) continue;
+                const w = (5 + hash(c, 4) * 4) * k,
+                  d = (22 + hash(c, 6) * 14) * kv;
+                const x = sx(wx),
+                  y = sy(groundH(wx, L));
+                sg.fillStyle = "#1f0d05";
+                sg.beginPath();
+                sg.moveTo(x - w, y);
+                sg.lineTo(x - w * 0.35, y + d * 0.4);
+                sg.lineTo(x - w * 0.1, y + d);
+                sg.lineTo(x + w * 0.2, y + d * 0.55);
+                sg.lineTo(x + w * 0.45, y + d * 0.3);
+                sg.lineTo(x + w, y);
+                sg.closePath();
+                sg.fill();
+              }
+            } else if (run.t === "unsafe") {
+              // loose boulders and drifting dust
+              const [c0, c1] = cellsOf(run, 14);
+              for (let c = c0; c <= c1; c++) {
+                const wx = c * 14 + hash(c, 9) * 14;
+                if (!inRun(run, wx)) continue;
+                const r = (1.8 + hash(c, 10) * 3.5) * k;
+                const x = sx(wx),
+                  y = sy(groundH(wx, L));
+                sg.fillStyle = hash(c, 16) < 0.5 ? "#7a2e18" : "#b44e30";
+                sg.beginPath();
+                sg.arc(x, y - r * 0.6, r, 0, TAU);
+                sg.fill();
+                sg.fillStyle = "rgba(160,70,40,.25)";
+                sg.beginPath();
+                sg.arc(x + Math.sin(t * 2 + c) * 6, y - 10 - ((t * 12 + c * 7) % 18), 1.6, 0, TAU);
+                sg.fill();
+              }
+            } else if (run.t === "smooth") {
+              const [c0, c1] = cellsOf(run, 18);
+              for (let c = c0; c <= c1; c++) {
+                if (hash(c, 17) > 0.25) continue;
+                const wx = c * 18 + hash(c, 18) * 18;
+                if (!inRun(run, wx)) continue;
+                sg.fillStyle = "rgba(150,110,70,.45)";
+                sg.beginPath();
+                sg.arc(sx(wx), sy(0) - 1, 1.2, 0, TAU);
+                sg.fill();
+              }
+            }
+
+            // name strip along the bottom, in the surface's own colour
+            sg.fillStyle = lk.strip;
+            sg.fillRect(xa, Hh - STRIP, xb - xa, STRIP);
+            const wRun = Math.min(xb, W) - Math.max(xa, 0);
+            if (wRun > 70) {
+              sg.fillStyle = "#fff";
+              sg.font = "700 10px Rajdhani, sans-serif";
+              sg.textAlign = "center";
+              sg.fillText(TERR[run.t].code, (Math.max(xa, 0) + Math.min(xb, W)) / 2, Hh - 4);
+            }
+            // marker where one surface changes to the next
+            if (run.i > 0) {
+              sg.strokeStyle = "rgba(58,29,14,.55)";
+              sg.lineWidth = 1.5;
+              sg.setLineDash([4, 3]);
+              sg.beginPath();
+              sg.moveTo(xa, 30);
+              sg.lineTo(xa, Hh - STRIP);
+              sg.stroke();
+              sg.setLineDash([]);
+            }
+          }
+
+          // distance marks ahead of the rover
+          sg.font = "600 9.5px Rajdhani, sans-serif";
+          sg.textAlign = "center";
+          for (let d = 100; d <= SIDE_AHEAD - 20; d += 100) {
+            const x = sx(rover.x + d);
+            sg.strokeStyle = "rgba(107,53,23,.18)";
+            sg.setLineDash([2, 4]);
+            sg.beginPath();
+            sg.moveTo(x, 26);
+            sg.lineTo(x, base + 10);
+            sg.stroke();
+            sg.setLineDash([]);
+            sg.fillStyle = "rgba(107,53,23,.6)";
+            sg.fillText("+" + d + " cm", x, 22);
+          }
+
+          // rescue point
+          if (isRoute()) {
+            const x = sx(RESCUE_X);
+            if (x > -20 && x < W + 20) {
+              const y = sy(groundH(RESCUE_X, L));
+              sg.strokeStyle = "#3a1d0e";
+              sg.lineWidth = 2.5;
+              sg.beginPath();
+              sg.moveTo(x, y);
+              sg.lineTo(x, y - 60);
+              sg.stroke();
+              sg.fillStyle = "#16a34a";
+              sg.beginPath();
+              sg.moveTo(x, y - 60);
+              sg.lineTo(x + 22, y - 52);
+              sg.lineTo(x, y - 44);
+              sg.closePath();
+              sg.fill();
+            }
+          }
+
+          // rocks: solid in the rover's lane, faint in the other lanes
+          for (const o of obstacles) {
+            const wx = rover.x + relS(o);
+            const x = sx(wx);
+            if (x < -40 || x > W + 40) continue;
+            const inLane = Math.abs(o.lane - rover.lane) < 0.5;
+            const y = sy(groundH(wx, L));
+            const r = o.r * k;
+            sg.save();
+            sg.globalAlpha = inLane ? 1 : 0.25;
+            sg.fillStyle = "#7d6f68";
+            sg.beginPath();
+            sg.moveTo(x - r, y);
+            sg.quadraticCurveTo(x - r, y - r * 1.7, x, y - r * 1.8);
+            sg.quadraticCurveTo(x + r, y - r * 1.7, x + r, y);
+            sg.closePath();
+            sg.fill();
+            sg.fillStyle = "#a0938b";
+            sg.beginPath();
+            sg.ellipse(x - r * 0.3, y - r * 1.2, r * 0.35, r * 0.22, -0.4, 0, TAU);
+            sg.fill();
+            if (o === selectedObs) {
+              sg.strokeStyle = "#c2410c";
+              sg.lineWidth = 2;
+              sg.stroke();
+            }
+            sg.restore();
+          }
+
+          // rover side-on: pitch follows the ground, shake follows the heading disturbance
+          const hb = groundH(rover.x - 18, L),
+            hf = groundH(rover.x + 18, L);
+          const pitch = Math.atan2((hf - hb) * kv, 36 * k);
+          const moving = running && Math.abs(rover.v) > 1;
+          const shake = moving ? Math.sin(t * 38) * Math.min(3, Q.raw * 0.08) : 0;
+          const x = sx(rover.x),
+            y = sy((hb + hf) / 2) - 6 * k + shake;
+          sg.save();
+          sg.translate(x, y);
+          sg.rotate(-pitch);
+          const s = k;
+          sg.strokeStyle = "#5b3a26";
+          sg.lineWidth = 2 * s;
+          sg.beginPath();
+          sg.moveTo(-18 * s, 0);
+          sg.lineTo(-6 * s, -9 * s);
+          sg.lineTo(18 * s, 0);
+          sg.stroke();
+          [-18, 0, 18].forEach((wx) => {
+            sg.fillStyle = "#2b1a12";
+            sg.beginPath();
+            sg.arc(wx * s, 0, 6 * s, 0, TAU);
+            sg.fill();
+          });
+          sg.fillStyle = state === "bump" ? "#fca5a5" : "#f7f1ea";
+          sg.strokeStyle = "#6b3517";
+          sg.lineWidth = 1.5;
+          sg.beginPath();
+          sg.roundRect(-22 * s, -21 * s, 44 * s, 11 * s, 3 * s);
+          sg.fill();
+          sg.stroke();
+          sg.fillStyle = "#c2410c";
+          sg.fillRect(-22 * s, -14 * s, 44 * s, 2.5 * s);
+          sg.strokeStyle = "#6b3517";
+          sg.beginPath();
+          sg.moveTo(-10 * s, -21 * s);
+          sg.lineTo(-10 * s, -32 * s);
+          sg.stroke();
+          sg.fillStyle = "#1e3a5f";
+          sg.fillRect(-15 * s, -38 * s, 10 * s, 6 * s);
+          // IR beam along the ground ahead
+          sg.fillStyle = IR.off ? "#9ca3af" : "#ef4444";
+          sg.fillRect(20 * s, -19 * s, 3 * s, 5 * s);
+          if (!IR.off) {
+            const len = (IR.front !== null ? IR.front : IR_RANGE) * s;
+            sg.strokeStyle = IR.front !== null ? "rgba(220,38,38,.9)" : "rgba(239,68,68,.45)";
+            sg.setLineDash([4, 4]);
+            sg.lineWidth = 1.5;
+            sg.beginPath();
+            sg.moveTo(23 * s, -16 * s);
+            sg.lineTo(23 * s + len, -16 * s);
+            sg.stroke();
+            sg.setLineDash([]);
+          }
+          sg.restore();
+
+          $("sideTag").textContent =
+            "SIDE VIEW · " + TERR[terrainAt(rover.x, L)].code + " · tilt " + Math.round((Math.atan2(hf - hb, 36) * 180) / Math.PI) + "°";
+        }
+
+        /* ---- QMC compass + disturbance graph ---- */
+        const compass = $("compass").getContext("2d");
+        function drawCompass() {
+          const c = compass,
+            S = 192,
+            m = S / 2,
+            R = 80;
+          c.clearRect(0, 0, S, S);
+          c.fillStyle = "#fffaf6";
+          c.beginPath();
+          c.arc(m, m, R + 10, 0, TAU);
+          c.fill();
+          c.strokeStyle = "#f0dfd3";
+          c.lineWidth = 4;
+          c.stroke();
+          for (let a = 0; a < 360; a += 15) {
+            const r = (a * Math.PI) / 180;
+            const big = a % 90 === 0;
+            c.strokeStyle = "#d9c3b5";
+            c.lineWidth = big ? 3 : 1.5;
+            c.beginPath();
+            c.moveTo(m + Math.sin(r) * (R + 2), m - Math.cos(r) * (R + 2));
+            c.lineTo(m + Math.sin(r) * (R - (big ? 9 : 4)), m - Math.cos(r) * (R - (big ? 9 : 4)));
+            c.stroke();
+          }
+          c.fillStyle = "#7a5e50";
+          c.font = "700 15px Orbitron, sans-serif";
+          c.textAlign = "center";
+          c.textBaseline = "middle";
+          [
+            ["N", 0, -1],
+            ["E", 1, 0],
+            ["S", 0, 1],
+            ["W", -1, 0],
+          ].forEach(([l, dx, dy]) => c.fillText(l, m + dx * (R - 26), m + dy * (R - 26)));
+          const ok = qmcOk();
+          const head = ((90 + (rover.yaw * 180) / Math.PI + (ok ? Q.sign * Q.D * 0.6 : 0)) * Math.PI) / 180;
+          c.save();
+          c.translate(m, m);
+          c.rotate(head);
+          c.fillStyle = ok ? "#c2410c" : "#9ca3af";
+          c.beginPath();
+          c.moveTo(0, -R + 12);
+          c.lineTo(7, 0);
+          c.lineTo(-7, 0);
+          c.closePath();
+          c.fill();
+          c.fillStyle = "#d9c3b5";
+          c.beginPath();
+          c.moveTo(0, R - 22);
+          c.lineTo(6, 0);
+          c.lineTo(-6, 0);
+          c.closePath();
+          c.fill();
+          c.restore();
+          c.fillStyle = "#3a1d0e";
+          c.beginPath();
+          c.arc(m, m, 6, 0, TAU);
+          c.fill();
+          c.textBaseline = "alphabetic";
+        }
+
+        const graphCv = $("graph");
+        const graph = graphCv.getContext("2d");
+        function layoutGraph() {
+          const w = Math.max(160, graphCv.clientWidth || 280);
+          const h = Math.max(60, graphCv.clientHeight || 90);
+          const dpr = window.devicePixelRatio || 1;
+          graphCv.width = Math.round(w * dpr);
+          graphCv.height = Math.round(h * dpr);
+          graph.setTransform(dpr, 0, 0, dpr, 0, 0);
+          graphCv._w = w;
+          graphCv._h = h;
+        }
+        function drawGraph() {
+          const c = graph,
+            w = graphCv._w,
+            h = graphCv._h;
+          c.clearRect(0, 0, w, h);
+          const y = (d) => h - 4 - (clamp(d, 0, D_MAX) / D_MAX) * (h - 10);
+          if (!faults.thrMissing) {
+            [
+              [P.safe, "#16a34a"],
+              [warnLine(), "#d97706"],
+              [P.unsafe, "#dc2626"],
+            ].forEach(([d, col]) => {
+              c.strokeStyle = col;
+              c.lineWidth = 1.5;
+              c.setLineDash([5, 4]);
+              c.beginPath();
+              c.moveTo(0, y(d));
+              c.lineTo(w, y(d));
+              c.stroke();
+            });
+            c.setLineDash([]);
+          }
+          const arr = Q.hist;
+          if (arr.length > 1) {
+            c.strokeStyle = "#c2410c";
+            c.lineWidth = 2;
+            c.beginPath();
+            arr.forEach((d, i) => {
+              const x = w - (arr.length - 1 - i) * (w / 239);
+              i ? c.lineTo(x, y(d)) : c.moveTo(x, y(d));
+            });
+            c.stroke();
+          }
+          if (!qmcOk()) {
+            c.fillStyle = "rgba(255,255,255,.8)";
+            c.fillRect(0, 0, w, h);
+            c.fillStyle = "#dc2626";
+            c.font = "700 12px Rajdhani, sans-serif";
+            c.textAlign = "center";
+            c.fillText(Q.restarting > 0 ? "Restarting…" : WARN.qmcOff, w / 2, h / 2 + 4);
+          }
+        }
+
+        /* ================= CONTROLS ================= */
+        function setTerrain(t) {
+          testTerrain = t;
+          document.querySelectorAll("#terrToggle button").forEach((b) => b.classList.toggle("on", b.dataset.v === t));
+          tried.clear();
+        }
+        document.querySelectorAll("#terrToggle button").forEach((b) =>
+          b.addEventListener("click", () => {
+            if (isRoute()) return;
+            setTerrain(b.dataset.v);
+            if (mode === "speed") {
+              cycleIdx = Math.max(0, CYCLE.findIndex((c) => c[0] === b.dataset.v));
+              cycleT = 0;
+            }
+          })
+        );
+
+        // section 5, step 5
+        const SLIDERS = [
+          ["sens", "QMC Sensitivity", "ADJUST_QMC_SENSITIVITY", 0.5, 2, 0.1, (v) => v.toFixed(1) + "×", "Higher sensitivity makes the rover react earlier. Lower sensitivity makes it react later."],
+          ["safe", "Safe Threshold", "SET_SAFE_THRESHOLD", 3, 16, 1, (v) => v + "°", "Stable zone limit."],
+          ["unsafe", "Unsafe Threshold", "SET_UNSAFE_THRESHOLD", 12, 38, 1, (v) => v + "°", "Unsafe zone warning point."],
+        ];
+        const sliderEls = {};
+        function setSlider(key, v) {
+          const s = sliderEls[key];
+          P[key] = clamp(v, +s.inp.min, +s.inp.max);
+          s.inp.value = P[key];
+          $("v_" + key).textContent = s.fmt(P[key]);
+          s.fill();
+        }
+        SLIDERS.forEach(([key, label, code, min, max, step, fmt, hint]) => {
+          const w = document.createElement("div");
+          w.className = "ctrl";
+          w.innerHTML = `<div class="row"><label>${label}</label><span class="val" id="v_${key}">${fmt(P[key])}</span></div>
+            <input type="range" min="${min}" max="${max}" step="${step}" value="${P[key]}" id="r_${key}">
+            <div class="hint">${code} · ${hint}</div>`;
+          $("sliders").appendChild(w);
+          const inp = w.querySelector("input");
+          const fill = () => inp.style.setProperty("--fill", ((inp.value - min) / (max - min)) * 100 + "%");
+          sliderEls[key] = { inp, fill, fmt };
+          fill();
+          inp.addEventListener("input", () => {
+            const old = P[key];
+            P[key] = parseFloat(inp.value);
+            // the unsafe limit always stays above the safe limit
+            if (key === "safe" && P.unsafe < P.safe + 4) setSlider("unsafe", P.safe + 4);
+            if (key === "unsafe" && P.safe > P.unsafe - 4) setSlider("safe", P.unsafe - 4);
+            if (key === "sens" && P.sens > old) exp.sensUp = true;
+            if (key === "sens" && P.sens < old) exp.sensDown = true;
+            if (key === "safe") exp.safeT = true;
+            if (key === "unsafe") exp.unsafeT = true;
+            $("v_" + key).textContent = fmt(P[key]);
+            fill();
+          });
+        });
+
+        // section 5, step 6
+        const MAX_OBS = 7;
+        let obsSize = 15; // radius (cm) for new rocks
+        let selectedObs = null;
+        function addObstacle(x, lane, user) {
+          if (obstacles.length >= MAX_OBS) return null;
+          if (obstacles.some((o) => o.lane === lane && Math.abs(relS(o) - (x - rover.x)) < 40)) return null;
+          // built-in rocks keep the standard 30 cm size; the size slider only sets rocks you place
+          const o = { id: obsId++, x, lane, r: user ? obsSize : 15, user, seen: false };
+          obstacles.push(o);
+          return o;
+        }
+        function removeObstacle(o) {
+          obstacles = obstacles.filter((x) => x !== o);
+          if (selectedObs === o) selectedObs = null;
+          if (avoiding === o) avoiding = null;
+        }
+        $("placeObs").onclick = () => {
+          // placed ahead in the rover's path (within IR range if the rover is standing still)
+          const gap = Math.abs(rover.v) > 5 ? IR_RANGE + 60 : 80;
+          // if that spot is taken, try further along the path
+          let o = null;
+          for (let step = 0; step < 8 && !o && obstacles.length < MAX_OBS; step++) o = addObstacle(rover.x + HALF + gap + step * 60, laneIdx(), true);
+          if (o) selectedObs = o;
+          $("obsHint").textContent = o
+            ? "Obstacle placed in the rover's path. Drag it to move it."
+            : obstacles.length >= MAX_OBS
+              ? "The limit is 7 obstacles. Clear one first."
+              : "There is already a rock at that spot.";
+        };
+        $("clearObs").onclick = () => {
+          const target = selectedObs || IR.frontObs || obstacles.filter((o) => relS(o) > -HALF).sort((a, b) => relS(a) - relS(b))[0];
+          if (target) {
+            removeObstacle(target);
+            $("obsHint").textContent = "Obstacle cleared.";
+          } else $("obsHint").textContent = "No obstacle to clear.";
+        };
+        const sizeIn = $("r_obsSize");
+        const sizeFill = () => sizeIn.style.setProperty("--fill", ((sizeIn.value - sizeIn.min) / (sizeIn.max - sizeIn.min)) * 100 + "%");
+        sizeFill();
+        sizeIn.addEventListener("input", () => {
+          obsSize = +sizeIn.value / 2;
+          $("v_obsSize").textContent = sizeIn.value + " cm";
+          sizeFill();
+          if (selectedObs) {
+            selectedObs.r = obsSize;
+            selectedObs.seen = false; // the IR sensor re-detects the resized rock
+          }
+        });
+        function showSize(o) {
+          sizeIn.value = o.r * 2;
+          $("v_obsSize").textContent = o.r * 2 + " cm";
+          sizeFill();
+        }
+
+        /* ---- drag rocks on the map ---- */
+        // nearest point on the path (and which third of it) under the pointer
+        function pickTrack(px, py) {
+          const path = curPath();
+          let best = null;
+          for (let sp = 0; sp <= path.len; sp += 3) {
+            const p = pathAt(path, Math.min(sp, path.len - 0.01));
+            const d = (px - p.x) ** 2 + (py - p.y) ** 2;
+            if (!best || d < best.d) best = { d, sp, p };
+          }
+          const lateral = (px - best.p.x) * Math.sin(best.p.a) - (py - best.p.y) * Math.cos(best.p.a);
+          return { s: best.sp / PX, lane: clamp(Math.round(1 - lateral / LANE_PX), 0, 2), dist: Math.sqrt(best.d) };
+        }
+        const toLogical = (e) => {
+          const r = cv.getBoundingClientRect();
+          return [((e.clientX - r.left) * VW) / r.width, ((e.clientY - r.top) * VH) / r.height];
+        };
+        function obsAt(px, py) {
+          for (let i = obstacles.length - 1; i >= 0; i--) {
+            const o = obstacles[i];
+            const p = trackPos(o.x, o.lane);
+            if (Math.hypot(px - p.x, py - p.y) < o.r * PX + 8) return o;
+          }
+          return null;
+        }
+        let dragObs = null;
+        cv.addEventListener("pointerdown", (e) => {
+          const [px, py] = toLogical(e);
+          const o = obsAt(px, py);
+          selectedObs = o;
+          if (!o) return;
+          dragObs = o;
+          showSize(o);
+          cv.setPointerCapture(e.pointerId);
+          $("obsHint").textContent = "Rock selected. Drag it along the path, resize it, or clear it.";
+        });
+        cv.addEventListener("pointermove", (e) => {
+          const [px, py] = toLogical(e);
+          if (!dragObs) {
+            cv.style.cursor = obsAt(px, py) ? "grab" : "default";
+            return;
+          }
+          cv.style.cursor = "grabbing";
+          const t = pickTrack(px, py);
+          if (t.dist > LANE_PX * 3) return; // keep rocks on the path
+          if (isRoute()) dragObs.x = clamp(t.s, 0, ROUTE_END);
+          else {
+            // closed track: keep the rock's position near the rover's current lap
+            let d = t.s - (((rover.x % LOOP_CM) + LOOP_CM) % LOOP_CM);
+            d = ((d % LOOP_CM) + LOOP_CM) % LOOP_CM;
+            if (d > LOOP_CM / 2) d -= LOOP_CM;
+            dragObs.x = rover.x + d;
+          }
+          dragObs.lane = t.lane;
+          dragObs.seen = false;
+        });
+        const endDrag = () => {
+          dragObs = null;
+          cv.style.cursor = "default";
+        };
+        cv.addEventListener("pointerup", endDrag);
+        cv.addEventListener("pointercancel", endDrag);
+
+        function setMode(m) {
+          mode = m;
+          document.querySelectorAll("#modeToggle button").forEach((b) => b.classList.toggle("on", b.dataset.v === m));
+          $("modeHint").textContent = MODES[m].hint;
+          document.querySelectorAll("#terrToggle button").forEach((b) => (b.disabled = MODES[m].route));
+          $("terrHint").textContent = MODES[m].route
+            ? "The rescue route has its own terrain sequence."
+            : MODES[m].cycle
+              ? "The terrain changes by itself. Pick one to jump to it."
+              : "The whole test track changes to the terrain you pick.";
+          missionReset(false);
+        }
+        document.querySelectorAll("#modeToggle button").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.v)));
+
+        document.querySelectorAll("#faultToggle button").forEach((b) =>
+          b.addEventListener("click", () => {
+            faults[b.dataset.f] = !faults[b.dataset.f];
+            b.classList.toggle("on", faults[b.dataset.f]);
+            if (b.dataset.f === "irOff" && faults.irOff) say(WARN.irOff);
+          })
+        );
+        const syncFaultBtns = () => document.querySelectorAll("#faultToggle button").forEach((b) => b.classList.toggle("on", faults[b.dataset.f]));
+
+        /* ---- start / pause / reset (section 5, step 9) ---- */
+        const startBtn = $("fStart"),
+          pauseBtn = $("fPause");
+        function setRunning(v) {
+          running = v;
+          startBtn.classList.toggle("on", running);
+          pauseBtn.classList.toggle("on", !running && state !== "idle");
+        }
+        function start() {
+          if (ended()) missionReset(false);
+          if (state === "idle") {
+            setState("drive");
+            say(FEEDBACK.start);
+            startMsgT = 1.4;
+            lastZone = null;
+            if (terrainAt(rover.x, laneIdx()) === "smooth") exp.start = true;
+          }
+          setRunning(true);
+        }
+        startBtn.onclick = start;
+        pauseBtn.onclick = () => setRunning(false);
+
+        // RESET_ROVER: rover returns to the start point
+        function resetRover() {
+          rover.x = 0;
+          rover.lane = 1;
+          rover.targetLane = 1;
+          rover.v = 0;
+          rover.yaw = 0;
+          rover.tip = 0;
+          missionTime = 0;
+          avoiding = null;
+          bumpObs = null;
+          tried.clear();
+          targetSpeed = 0;
+          tooFast = false;
+          setState("idle");
+          setRunning(false);
+          say(FEEDBACK.idle);
+          lastZone = null;
+          obstacles.forEach((o) => (o.seen = false));
+          $("result").classList.remove("show");
+        }
+        // Terrain Reset: terrain returns to default condition
+        function resetTerrain() {
+          if (!isRoute()) setTerrain(MODES[mode].terrain);
+          cycleIdx = 0;
+          cycleT = 0;
+        }
+        // Sensor Reset: QMC and IR status panels restart
+        function resetSensors() {
+          Q.D = 0;
+          Q.hist.length = 0;
+          Q.past.length = 0;
+          Q.sudden = 0;
+          Q.spike = 0;
+          Q.restarting = 1.0;
+          faults.qmcOff = false;
+          faults.irOff = false;
+          syncFaultBtns();
+          lastZone = null;
+        }
+        function defaultObstacles() {
+          obstacles = [];
+          selectedObs = null;
+          if (isRoute()) ROUTE_OBS.forEach((o) => addObstacle(o.x, o.lane, false));
+          if (MODES[mode].obstacle) addObstacle(rover.x + 340, 1, false);
+        }
+        // Mission Reset: full route begins again
+        function missionReset(autoStart) {
+          resetRover();
+          battery = 100;
+          stats = freshStats();
+          resetTerrain();
+          Q.D = 0;
+          Q.hist.length = 0;
+          Q.sudden = 0;
+          defaultObstacles();
+          if (autoStart) start();
+        }
+        $("rsRover").onclick = () => {
+          resetRover();
+          exp.reset = true;
+        };
+        $("rsTerrain").onclick = resetTerrain;
+        $("rsSensors").onclick = resetSensors;
+        $("rsMission").onclick = () => {
+          missionReset(true);
+          exp.reset = true;
+        };
+
+        /* ---- help tabs ---- */
+        const helpbar = $("helpbar");
+        function closeTopHelp() {
+          helpbar.classList.remove("show");
+          document.querySelectorAll(".helpbtn").forEach((b) => b.classList.remove("on"));
+          document.querySelectorAll(".tabpanel").forEach((p) => p.classList.remove("on"));
+        }
+        document.querySelectorAll(".helpbtn").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const wasOn = btn.classList.contains("on");
+            closeTopHelp();
+            if (wasOn) return;
+            btn.classList.add("on");
+            helpbar.classList.add("show");
+            document.querySelector(`.tabpanel[data-panel="${btn.dataset.tab}"]`).classList.add("on");
+          });
+        });
+        $("helpCloseTop").addEventListener("click", closeTopHelp);
+        document.addEventListener("click", (e) => {
+          if (helpbar.classList.contains("show") && !helpbar.contains(e.target) && !e.target.closest(".helpbtn")) closeTopHelp();
+        });
+
+        /* ================= LOOP ================= */
+        let last = performance.now(),
+          T = 0;
+        function frame(now) {
+          const dt = Math.min(0.05, (now - last) / 1000);
+          last = now;
+          T += dt;
+          update(dt);
+          draw(T);
+          drawSide(T);
+          drawCompass();
+          drawGraph();
+          panel();
+          requestAnimationFrame(frame);
+        }
+        layoutGraph();
+        layoutSide();
+        if (window.ResizeObserver) {
+          new ResizeObserver(layoutGraph).observe(graphCv);
+          new ResizeObserver(layoutSide).observe(sideCv.parentElement);
+        }
+        setMode("terrain");
+        requestAnimationFrame(frame);
+      })();
+    </script>
+  </body>
+</html>

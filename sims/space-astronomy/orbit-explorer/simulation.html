@@ -1,0 +1,1673 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Orbit Explorer — Altitude, Speed and Period</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Instrument-panel aesthetic: dark field, thin luminous rings, telemetry numbers */
+      :root {
+        --bg: #060b12;
+        --panel: #0b141e;
+        --panel2: #0f1b28;
+        --line: #1c2b3b;
+        --line2: #27405a;
+        --txt: #d8e6f2;
+        --mut: #8ba3b8;
+        --dim: #5b738a;
+        --glow: #7fd3ff;
+        --you: #ff8a3d;
+        --iss: #4dd6e4;
+        --gps: #ffd45c;
+        --geo: #c3a6ff;
+        --warn: #ffb347;
+        --head: "Orbitron", sans-serif;
+        --body: "Rajdhani", sans-serif;
+        --mono: "IBM Plex Mono", ui-monospace, monospace;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      body {
+        background: var(--bg);
+        color: var(--txt);
+        font-family: var(--body);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ---- header ---- */
+      header.top {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 18px;
+        background: #08111a;
+        border-bottom: 1px solid var(--line);
+        flex: 0 0 auto;
+        position: relative;
+        z-index: 50;
+      }
+      .title {
+        grid-column: 2;
+        text-align: center;
+      }
+      .title h1 {
+        font-family: var(--head);
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        color: var(--txt);
+      }
+      .helpbtns {
+        grid-column: 3;
+        justify-self: end;
+        display: flex;
+        gap: 8px;
+      }
+      .helpbtn {
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        color: #06121c;
+        background: var(--glow);
+        border: none;
+        padding: 8px 14px;
+        border-radius: 8px;
+        transition: 0.15s;
+      }
+      .helpbtn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 0 14px rgba(127, 211, 255, 0.45);
+      }
+      .helpbtn.on {
+        box-shadow: inset 0 0 0 2px #06121c, 0 0 14px rgba(127, 211, 255, 0.5);
+      }
+      .helpbar {
+        display: none;
+        position: absolute;
+        right: 18px;
+        top: 52px;
+        width: 450px;
+        max-width: min(450px, 90vw);
+        max-height: 75vh;
+        overflow-y: auto;
+        z-index: 60;
+        padding: 20px 34px 16px 18px;
+        background: #0c1824;
+        border: 1px solid var(--line2);
+        border-radius: 12px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+        font-size: 14px;
+        line-height: 1.55;
+        color: var(--mut);
+      }
+      .helpbar.show {
+        display: block;
+      }
+      .helpCloseTop {
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        cursor: pointer;
+        border: none;
+        background: var(--panel2);
+        color: var(--mut);
+        font-size: 14px;
+        font-weight: 800;
+        padding: 5px 8px;
+        border-radius: 6px;
+      }
+      .tabpanel {
+        display: none;
+      }
+      .tabpanel.on {
+        display: block;
+      }
+      .tabpanel ol,
+      .tabpanel ul {
+        padding-left: 20px;
+      }
+      .tabpanel li {
+        margin-bottom: 8px;
+        font-size: 13.5px;
+      }
+      .tabpanel b {
+        color: var(--glow);
+      }
+      @media (max-width: 760px) {
+        header.top {
+          grid-template-columns: 1fr;
+          gap: 6px;
+        }
+        .helpbtns {
+          grid-row: 1;
+          grid-column: 1;
+          justify-self: center;
+        }
+        .title {
+          grid-row: 2;
+          grid-column: 1;
+        }
+        .helpbar {
+          position: fixed;
+          top: 86px;
+          left: 12px;
+          right: 12px;
+          width: auto;
+          max-width: none;
+        }
+      }
+
+      /* ---- layout ---- */
+      #app {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        flex: 1 1 0;
+        min-height: 0;
+      }
+      #main {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        overflow-y: auto; /* with the ground track on, the map sits below a full-size orbit drawing */
+      }
+      #panel {
+        background: var(--panel);
+        border-left: 1px solid var(--line);
+        overflow-y: auto;
+      }
+      @media (max-width: 960px) {
+        html,
+        body {
+          overflow: auto;
+        }
+        #app {
+          grid-template-columns: 1fr;
+        }
+        #main {
+          height: 88vh;
+        }
+        #panel {
+          border-left: none;
+          border-top: 1px solid var(--line);
+        }
+      }
+
+      /* ---- altitude dial (sits above the plane) ---- */
+      #dialbar {
+        flex: 0 0 auto;
+        padding: 12px 20px 10px;
+        border-bottom: 1px solid var(--line);
+        background: var(--panel);
+      }
+      .dial-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .dial-name {
+        font-family: var(--head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        color: var(--mut);
+        text-transform: uppercase;
+      }
+      .dial-val {
+        font-family: var(--mono);
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--you);
+        font-variant-numeric: tabular-nums;
+      }
+      .dial-val small {
+        font-size: 12px;
+        color: var(--mut);
+        margin-left: 3px;
+      }
+      .dial-sub {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--dim);
+      }
+      #dialWrap {
+        position: relative;
+        margin-top: 8px;
+        height: 50px;
+      }
+      /* altitude track coloured by orbit type (LEO | MEO | GEO | HEO) */
+      #altDial::-webkit-slider-runnable-track {
+        height: 5px;
+        background: var(--track);
+      }
+      #altDial::-moz-range-track {
+        height: 5px;
+        background: var(--track);
+      }
+      .dial-type {
+        display: block;
+        font-family: var(--head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-align: center;
+        margin-top: 2px;
+      }
+      .types {
+        position: absolute;
+        left: 9px;
+        right: 9px;
+        top: 38px;
+        height: 12px;
+        pointer-events: none;
+      }
+      .types span {
+        position: absolute;
+        transform: translateX(-50%);
+        font-family: var(--head);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        white-space: nowrap;
+      }
+      #altDial {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 20px;
+        width: 100%;
+      }
+      .ticks {
+        position: absolute;
+        left: 9px;
+        right: 9px;
+        top: 22px;
+        height: 12px;
+        pointer-events: none;
+      }
+      .ticks span {
+        position: absolute;
+        transform: translateX(-50%);
+        font-family: var(--mono);
+        font-size: 9.5px;
+        color: var(--dim);
+        white-space: nowrap;
+      }
+      .ticks span.ref {
+        top: -28px;
+        font-weight: 600;
+      }
+
+      /* ---- stage ---- */
+      #stage {
+        position: relative;
+        flex: 1 0 auto;
+        min-height: 430px;
+        background: radial-gradient(ellipse at center, #0b1622 0%, #060b12 70%);
+      }
+      #stage canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      #stageNote {
+        position: absolute;
+        left: 16px;
+        bottom: 10px;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        color: var(--dim);
+        pointer-events: none;
+        line-height: 1.5;
+      }
+      #stageNote b {
+        color: var(--mut);
+        font-weight: 600;
+      }
+      #stageNote .legend {
+        color: var(--you);
+      }
+
+      /* ---- ground track map ---- */
+      #groundWrap {
+        display: none;
+        flex: 0 0 auto;
+        height: 200px;
+        border-top: 1px solid var(--line);
+        background: var(--panel);
+        position: relative;
+      }
+      #groundWrap.show {
+        display: block;
+      }
+      #gtcv {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      /* ---- mission clock ---- */
+      #clockbar {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 10px 20px;
+        border-top: 1px solid var(--line);
+        background: var(--panel);
+        flex-wrap: wrap;
+      }
+      #clockbar .dial-name {
+        white-space: nowrap;
+      }
+      #clock {
+        flex: 1;
+        min-width: 140px;
+      }
+      #clockVal {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--txt);
+        white-space: nowrap;
+      }
+
+      /* ---- sliders ---- */
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 20px;
+        background: transparent;
+        cursor: pointer;
+        touch-action: none;
+      }
+      input[type="range"]::-webkit-slider-runnable-track {
+        height: 3px;
+        background: var(--line2);
+        border-radius: 2px;
+      }
+      input[type="range"]::-moz-range-track {
+        height: 3px;
+        background: var(--line2);
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        margin-top: -6.5px;
+        border-radius: 50%;
+        background: var(--you);
+        box-shadow: 0 0 10px rgba(255, 138, 61, 0.7);
+        border: 2px solid #1a0d05;
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: var(--you);
+        border: 2px solid #1a0d05;
+      }
+      input[type="range"]:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+      input[type="range"]:focus-visible {
+        outline: 1px solid var(--glow);
+        outline-offset: 3px;
+      }
+      #clock::-webkit-slider-thumb {
+        background: var(--glow);
+        box-shadow: 0 0 10px rgba(127, 211, 255, 0.6);
+      }
+
+      /* ---- panel ---- */
+      .sec {
+        border-bottom: 1px solid var(--line);
+        padding: 14px 16px;
+      }
+      .sec-h {
+        font-family: var(--head);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--mut);
+        margin-bottom: 9px;
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .sec-h span {
+        color: var(--dim);
+        letter-spacing: 0.04em;
+        font-family: var(--mono);
+        text-transform: none;
+        font-weight: 500;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 10px;
+        font-family: var(--mono);
+        font-size: 12px;
+        padding: 3px 0;
+      }
+      .row dt {
+        color: var(--mut);
+      }
+      .row dd {
+        color: var(--txt);
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+      }
+      .row.big dd {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--you);
+      }
+      .row .u {
+        color: var(--dim);
+        font-size: 10px;
+        margin-left: 3px;
+      }
+      .row .alt2 {
+        display: block;
+        color: var(--dim);
+        font-size: 10.5px;
+      }
+      .formula {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--glow);
+        background: var(--panel2);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 7px 9px;
+        margin-top: 8px;
+        line-height: 1.6;
+      }
+      .formula .d {
+        color: var(--dim);
+      }
+      .note {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        line-height: 1.5;
+        color: var(--dim);
+        margin-top: 8px;
+      }
+      .note b {
+        color: var(--mut);
+        font-weight: 600;
+      }
+      body:not(.elliptical) .ell-only {
+        display: none !important;
+      }
+      body.elliptical .circ-only {
+        display: none !important;
+      }
+
+      .chips {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+      .chip {
+        font-family: var(--mono);
+        font-size: 11px;
+        background: var(--panel2);
+        color: var(--txt);
+        border: 1px solid var(--line2);
+        border-radius: 6px;
+        padding: 7px 6px;
+        cursor: pointer;
+        text-align: left;
+        line-height: 1.3;
+      }
+      .chip b {
+        display: block;
+        font-family: var(--head);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+      }
+      .chip small {
+        color: var(--dim);
+        font-size: 9.5px;
+      }
+      .chip:hover {
+        border-color: var(--mut);
+      }
+      .chip.on {
+        border-color: currentColor;
+        box-shadow: 0 0 12px -2px currentColor;
+      }
+      #compareBlock {
+        display: none;
+        margin-top: 10px;
+        padding-top: 8px;
+        border-top: 1px dashed var(--line2);
+      }
+      #compareBlock.show {
+        display: block;
+      }
+
+      .seg {
+        display: flex;
+        border: 1px solid var(--line2);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .seg button {
+        flex: 1;
+        font-family: var(--head);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        background: transparent;
+        color: var(--mut);
+        border: none;
+        padding: 8px 6px;
+        cursor: pointer;
+        text-transform: uppercase;
+      }
+      .seg button + button {
+        border-left: 1px solid var(--line2);
+      }
+      .seg button.on {
+        background: var(--glow);
+        color: #06121c;
+      }
+      .ctl-top {
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--mut);
+        margin-top: 10px;
+      }
+      .ctl-top b {
+        color: var(--txt);
+        font-weight: 600;
+      }
+      #eccDial {
+        width: 100%;
+      }
+
+      .tog {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 11.5px;
+        padding: 5px 0;
+        cursor: pointer;
+        color: var(--txt);
+      }
+      .tog input {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 32px;
+        height: 16px;
+        background: var(--line2);
+        border-radius: 9px;
+        position: relative;
+        cursor: pointer;
+        transition: 0.12s;
+      }
+      .tog input:checked {
+        background: var(--glow);
+      }
+      .tog input::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #06121c;
+        transition: 0.12s;
+      }
+      .tog input:checked::after {
+        left: 18px;
+      }
+      .tog small {
+        color: var(--dim);
+        font-size: 10px;
+        display: block;
+      }
+
+      .miniwrap {
+        position: relative;
+        height: 170px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #070f18;
+      }
+      .miniwrap canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      /* ---- pop-ups ---- */
+      #scrim {
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 10, 0.72);
+        z-index: 80;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      #scrim.show {
+        display: flex;
+      }
+      .ovl {
+        display: none;
+        background: #0c1824;
+        border: 1px solid var(--line2);
+        border-radius: 12px;
+        max-width: 470px;
+        width: 100%;
+        max-height: 86vh;
+        overflow-y: auto;
+        box-shadow: 0 0 40px rgba(127, 211, 255, 0.12);
+      }
+      .ovl.show {
+        display: block;
+      }
+      .ovl-h {
+        padding: 18px 20px 0;
+        font-family: var(--head);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--glow);
+        text-transform: uppercase;
+      }
+      .ovl-body {
+        padding: 10px 20px 20px;
+        font-size: 15px;
+        line-height: 1.55;
+        color: var(--mut);
+      }
+      .ovl-body p {
+        margin-bottom: 10px;
+      }
+      .ovl-body b {
+        color: var(--txt);
+      }
+      .ovl-body .formula {
+        font-size: 12px;
+      }
+      .ovl-btn {
+        margin-top: 6px;
+        font-family: var(--head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        border: none;
+        border-radius: 8px;
+        background: var(--glow);
+        color: #06121c;
+        padding: 10px 16px;
+        cursor: pointer;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div></div>
+      <div class="title"><h1>Orbit Explorer</h1></div>
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">What You'll Learn</button>
+      </div>
+      <div class="helpbar" id="helpbar">
+        <button type="button" class="helpCloseTop" id="helpCloseTop" aria-label="Close">✕</button>
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li>Drag or tap the <b>Altitude</b> dial. Speed and period recompute from gravity every frame; there is no separate control for either.</li>
+            <li>Pick <b>ISS</b> (LEO), <b>GPS</b> (MEO) or <b>INSAT-3DR</b> (GEO) to snap the dial to a real orbit and check the computed period against the published one. All three keep flying the whole time.</li>
+            <li>Switch <b>Orbit shape</b> to <b>Elliptical</b> and drag <b>Eccentricity</b> to stretch the orbit. Periapsis and apoapsis are shown as a(1−e) and a(1+e).</li>
+            <li>Use the <b>Mission clock</b> to choose how many real seconds one GEO orbit takes. It speeds every satellite up together.</li>
+            <li>Turn on <b>Earth rotation</b> to see a ground point turning once per sidereal day, and <b>Ground track</b> to see where each satellite passes over the Earth.</li>
+            <li>Read every result in the <b>Numeric readout</b>: altitude, semi-major axis, period and velocity in km, s and km/s.</li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <ul>
+            <li>Altitude determines speed and period — there's no independent control for either</li>
+            <li>GEO's altitude is derived, not chosen: solve T = 2π√(a³/GM) for a with T set to one sidereal day</li>
+            <li>GPS's period is a deliberate resonance with Earth's rotation, not a coincidence</li>
+            <li>Circular orbits are the zero-eccentricity case of a more general ellipse</li>
+            <li>Escape velocity is the same formula family as orbital velocity, one factor of √2 apart</li>
+            <li>A ground track's shape (racing band, daily loop, fixed point) is a direct readout of orbital period</li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <div id="app">
+      <div id="main">
+        <!-- altitude dial sits above the orbital plane -->
+        <div id="dialbar">
+          <div class="dial-top">
+            <span class="dial-name" id="dialName">Altitude</span>
+            <span class="dial-val"><span id="v_alt">400</span><small>km</small><span class="dial-type" id="orbitType">Orbit type: LEO</span></span>
+            <span class="dial-sub" id="dialSub">log scale · 160 – 60,000 km</span>
+          </div>
+          <div id="dialWrap">
+            <input type="range" id="altDial" min="0" max="1000" step="1" value="0" aria-label="Altitude" disabled />
+            <div class="ticks" id="dialTicks"></div>
+            <div class="types" id="dialTypes"></div>
+          </div>
+        </div>
+
+        <div id="stage">
+          <canvas id="cv"></canvas>
+          <div id="stageNote"><span class="legend">● Orange = your satellite (moves with the altitude slider).</span><br /><b>Top-down orbital plane</b> · Earth at centre · distances compressed radially so LEO, MEO and GEO fit on one screen — not to scale</div>
+        </div>
+
+        <div id="groundWrap"><canvas id="gtcv"></canvas></div>
+
+        <div id="clockbar">
+          <span class="dial-name">Mission clock</span>
+          <input type="range" id="clock" min="6" max="240" step="1" value="30" aria-label="Mission clock" />
+          <span id="clockVal">30 s real time = 1 GEO orbit</span>
+        </div>
+      </div>
+
+      <aside id="panel">
+        <div class="sec">
+          <div class="sec-h">Numeric readout <span>your satellite · live</span></div>
+          <dl>
+            <div class="row big"><dt>altitude</dt><dd><span id="r_alt">400</span><span class="u">km</span></dd></div>
+            <div class="row"><dt>semi-major axis a</dt><dd><span id="r_a">6,771</span><span class="u">km</span></dd></div>
+            <div class="row big"><dt>period T</dt><dd><span id="r_T">5,544</span><span class="u">s</span><span class="alt2" id="r_Tf">92 min 24 s</span></dd></div>
+            <div class="row big"><dt>velocity v</dt><dd><span id="r_v">7.673</span><span class="u">km/s</span></dd></div>
+            <div class="row ell-only"><dt>eccentricity e</dt><dd id="r_e">0.00</dd></div>
+            <div class="row ell-only"><dt>periapsis a(1−e)</dt><dd><span id="r_rp">6,771</span><span class="u">km</span><span class="alt2" id="r_hp">400 km altitude</span></dd></div>
+            <div class="row ell-only"><dt>apoapsis a(1+e)</dt><dd><span id="r_ra">6,771</span><span class="u">km</span><span class="alt2" id="r_ha">400 km altitude</span></dd></div>
+            <div class="row"><dt>escape velocity here</dt><dd><span id="r_vesc">10.851</span><span class="u">km/s</span></dd></div>
+          </dl>
+          <div class="formula circ-only" id="derivCirc"></div>
+          <div class="formula ell-only" id="derivEll"></div>
+          <div class="note" id="radiusNote">Altitude is measured from Earth's mean radius, 6,371 km.</div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h">Reference satellites <span>all three always running</span></div>
+          <div class="chips" id="refChips"></div>
+          <div id="compareBlock">
+            <dl>
+              <div class="row"><dt id="cmpName">ISS</dt><dd id="cmpAlt"></dd></div>
+              <div class="row"><dt>computed period</dt><dd id="cmpModel"></dd></div>
+              <div class="row"><dt>published period</dt><dd id="cmpPub"></dd></div>
+              <div class="row"><dt>difference</dt><dd id="cmpDiff"></dd></div>
+            </dl>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h">Orbit shape</div>
+          <div class="seg" id="shapeSeg">
+            <button class="on" data-shape="circular">Circular</button>
+            <button data-shape="elliptical">Elliptical</button>
+          </div>
+          <div class="ell-only">
+            <div class="ctl-top"><span>Eccentricity e</span><b id="v_ecc">0.00</b></div>
+            <input type="range" id="eccDial" min="0" max="0.9" step="0.005" value="0" aria-label="Eccentricity" />
+            <div class="note" id="eccNote"></div>
+            <div class="note">Stretched orbits look like teardrops here because distances are compressed on screen. Every number uses the true distances.</div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <label class="tog"><span>Earth rotation<small>India ground marker turns once per sidereal day</small></span><input type="checkbox" id="t_rot" checked /></label>
+          <label class="tog"><span>Ground track<small>sub-points on an unrolled world map</small></span><input type="checkbox" id="t_ground" /></label>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h">Period vs distance <span>log-log · T² ∝ a³</span></div>
+          <div class="miniwrap"><canvas id="pacv"></canvas></div>
+          <div class="note">x-axis: semi-major axis a (distance from Earth's centre). Kepler's third law makes this a straight line with slope 3/2. The curve is drawn from the same formula that moves the satellites.</div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h">Constants</div>
+          <dl>
+            <div class="row"><dt>GM⊕</dt><dd>398,600.4418<span class="u">km³/s²</span></dd></div>
+            <div class="row"><dt>R⊕ mean</dt><dd>6,371<span class="u">km</span></dd></div>
+            <div class="row"><dt>R⊕ equatorial (GEO)</dt><dd>6,378.137<span class="u">km</span></dd></div>
+            <div class="row"><dt>sidereal day</dt><dd>86,164.0905<span class="u">s</span></dd></div>
+          </dl>
+        </div>
+      </aside>
+    </div>
+
+    <div id="scrim">
+      <div class="ovl" id="ovlFall">
+        <div class="ovl-h">Why doesn't it fall?</div>
+        <div class="ovl-body">
+          <p>Gravity pulls a satellite toward Earth's centre all the time. It <b>is</b> falling.</p>
+          <p>Moving in a circle needs a centre-seeking force. For a satellite, gravity is that force. If the satellite moves sideways fast enough, the ground curves away beneath it as fast as it falls, so it keeps falling around the Earth instead of into it.</p>
+          <div class="formula">F = GMm / r²  =  m v² / r<br /><span class="d">→</span> v = √(GM / r)    T = 2π√(a³ / GM)</div>
+          <p style="margin-top: 10px">Gravity depends only on distance, so the altitude fixes the speed and the period.</p>
+          <button class="ovl-btn" id="fallOk">Got it · unlock the altitude dial</button>
+        </div>
+      </div>
+      <div class="ovl" id="ovlInsight">
+        <div class="ovl-h" id="insTitle"></div>
+        <div class="ovl-body">
+          <div id="insBody"></div>
+          <button class="ovl-btn" id="insOk">Got it</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (() => {
+        "use strict";
+        const $ = (id) => document.getElementById(id);
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const TAU = Math.PI * 2;
+        const RAD = Math.PI / 180;
+
+        /* ================= CONSTANTS (real values, no rounded stand-ins) ================= */
+        const MU = 398600.4418; // km³/s²
+        const RE = 6371; // km, mean radius
+        const RE_EQ = 6378.137; // km, equatorial radius, used for the GEO altitude only
+        const SIDEREAL = 86164.0905; // s
+        const ALT_MIN = 160,
+          ALT_MAX = 60000;
+
+        /* ================= PHYSICS: one derivation, computed every frame =================
+           F/m = GM/r²  ;  F/m = v²/r  →  v = √(GM/r)  ;  T = 2π√(a³/GM)  */
+        const gravity = (r) => MU / (r * r); // km/s² (force per kg)
+        const vCircFromF = (r) => Math.sqrt(gravity(r) * r); // v² / r = GM / r²
+        const visViva = (r, a) => Math.sqrt(MU * (2 / r - 1 / a));
+        const periodOf = (a) => TAU * Math.sqrt((a * a * a) / MU);
+        const aFromPeriod = (T) => Math.cbrt((MU * T * T) / (TAU * TAU));
+        const vEsc = (r) => Math.sqrt((2 * MU) / r);
+        const meanMotion = (a) => TAU / periodOf(a);
+        // Kepler's equation for elliptical orbits
+        function trueAnomaly(M, e) {
+          if (e < 1e-6) return M;
+          let E = M;
+          for (let i = 0; i < 20; i++) {
+            const d = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+            E -= d;
+            if (Math.abs(d) < 1e-10) break;
+          }
+          return 2 * Math.atan2(Math.sqrt(1 + e) * Math.sin(E / 2), Math.sqrt(1 - e) * Math.cos(E / 2));
+        }
+
+        /* ================= REFERENCE LIBRARY (baked in, computed by the same formulas) =================
+           Only altitude, inclination and the published period are stored; every period shown is computed. */
+        const GEO_A = aFromPeriod(SIDEREAL); // derived: T = one sidereal day
+        const REFS = {
+          iss: { label: "ISS", orbit: "LEO", color: "#4dd6e4", a: RE + 408, alt: 408, radius: RE, inc: 51.6, pub: 92.68 * 60, phase0: 0.0 },
+          gps: { label: "GPS", orbit: "MEO", color: "#ffd45c", a: RE + 20200, alt: 20200, radius: RE, inc: 55, pub: 11 * 3600 + 58 * 60, phase0: 2.3 },
+          // INSAT-3DR, an Indian weather satellite, parked over India at 74°E
+          geo: { label: "INSAT-3DR", orbit: "GEO", color: "#c3a6ff", a: GEO_A, alt: GEO_A - RE_EQ, radius: RE_EQ, inc: 0, pub: SIDEREAL, phase0: 74 * RAD },
+        };
+        const YOU = "#ff8a3d";
+
+        /* ================= STATE ================= */
+        const S = {
+          a: RE + 400, // your satellite's semi-major axis
+          radius: RE, // radius the altitude is measured from (equatorial only when flying GEO)
+          shape: "circular",
+          e: 0,
+          M: 0.8, // your satellite's mean anomaly (advanced smoothly, never recomputed from time)
+          t: 0, // simulation time, s
+          clockSec: 30, // real seconds per one GEO orbit
+          selected: null,
+          showRot: true,
+          showGround: false,
+          unlocked: false,
+          seenForGround: new Set(),
+          shown: new Set(),
+          trails: { you: [], iss: [], gps: [], geo: [] },
+          sampleAcc: 0,
+        };
+        const alt = () => S.a - S.radius;
+        const eMax = () => clamp(1 - (RE + ALT_MIN) / S.a, 0, 0.9); // periapsis never below 160 km
+        const eff = () => (S.shape === "elliptical" ? S.e : 0);
+        const refPhase = (k) => REFS[k].phase0 + meanMotion(REFS[k].a) * S.t;
+        const earthAngle = () => (TAU * S.t) / SIDEREAL; // Earth always spins; the toggle only shows the marker
+        const INDIA_LON = 74; // °E, ground marker (Hyderabad region) under INSAT-3DR
+        // orbit type from altitude; GEO is one exact height, so it shows only within one dial step of 35,786 km
+        const GEO_ALT = GEO_A - RE_EQ;
+        const ORBIT_TYPES = { LEO: "#4dd6e4", MEO: "#ffd45c", GEO: "#c3a6ff", HEO: "#8ba3b8" };
+        function orbitType(h) {
+          if (S.selected === "geo" || Math.abs(h - GEO_ALT) <= 120) return ["GEO", "GEO"];
+          if (h < 2000) return ["LEO", "LEO"];
+          if (h < GEO_ALT) return ["MEO", "MEO"];
+          return ["HEO", "High Earth orbit"];
+        }
+
+        function youNow() {
+          const a = S.a,
+            e = eff();
+          const nu = trueAnomaly(((S.M % TAU) + TAU) % TAU, e);
+          const r = (a * (1 - e * e)) / (1 + e * Math.cos(nu));
+          const v = e > 0 ? visViva(r, a) : vCircFromF(r);
+          return { a, e, r, nu, v, T: periodOf(a), g: gravity(r) };
+        }
+
+        /* ================= FORMATTING ================= */
+        const fmtKm = (x) => Math.round(x).toLocaleString("en-US");
+        function fmtDur(s) {
+          s = Math.round(s);
+          const d = Math.floor(s / 86400),
+            h = Math.floor((s % 86400) / 3600),
+            m = Math.floor((s % 3600) / 60),
+            sec = s % 60;
+          if (s < 7200) return `${Math.floor(s / 60)} min ${sec} s`;
+          if (s < 172800) return `${Math.floor(s / 3600)} h ${m} min ${sec} s`;
+          return `${d} d ${h} h ${m} min`;
+        }
+
+        /* ================= POP-UPS (learning outcomes) ================= */
+        const INSIGHTS = {
+          altitude: [
+            "Altitude determines speed and period",
+            () =>
+              `<p>There's no independent control for speed or period. Gravity fixes both the moment the altitude is fixed.</p><div class="formula">altitude ${fmtKm(alt())} km → r = ${fmtKm(youNow().r)} km<br/>v = √(GM/r) = ${youNow().v.toFixed(3)} km/s<br/>T = 2π√(a³/GM) = ${fmtKm(youNow().T)} s</div><p style="margin-top:10px">Engineers pick the altitude; the physics decides the speed.</p>`,
+          ],
+          geo: [
+            "GEO's altitude is derived, not chosen",
+            () =>
+              `<p>Solve T = 2π√(a³/GM) for a with T set to one sidereal day:</p><div class="formula">T = 86,164.0905 s<br/>a = ∛(GM T² / 4π²) = ${fmtKm(GEO_A)} km<br/>altitude = a − R⊕(equator) = ${fmtKm(GEO_A)} − 6,378 = ${fmtKm(GEO_A - RE_EQ)} km</div><p style="margin-top:10px">Its period matches Earth's rotation exactly, so INSAT-3DR always sits over India: with Earth rotation on, the satellite and the India ground marker never separate.</p>`,
+          ],
+          gps: [
+            "GPS's period is a deliberate resonance",
+            () =>
+              `<p>GPS's period is a deliberate resonance with Earth's rotation, not a coincidence.</p><div class="formula">T(GPS) = ${fmtKm(periodOf(REFS.gps.a))} s<br/>½ sidereal day = ${fmtKm(SIDEREAL / 2)} s</div><p style="margin-top:10px">Two orbits per Earth rotation make its ground track trace the same daily loop again and again.</p>`,
+          ],
+          shape: [
+            "Circles are ellipses with e = 0",
+            () =>
+              `<p>Circular orbits are the zero-eccentricity case of a more general ellipse.</p><div class="formula">v² = GM(2/r − 1/a)<br/>e = 0 → r = a → v = √(GM/a)</div><p style="margin-top:10px">A circle is the orbit with nowhere left to stretch. The period still depends only on a.</p>`,
+          ],
+          escape: [
+            "Escape velocity is one factor away",
+            () => {
+              const r = youNow().r;
+              return `<p>Escape velocity is the same formula family as orbital velocity, one factor of √2 apart.</p><div class="formula">v_circ = √(GM/r) = ${vCircFromF(r).toFixed(3)} km/s<br/>v_esc = √(2GM/r) = ${vEsc(r).toFixed(3)} km/s<br/>ratio = ${(vEsc(r) / vCircFromF(r)).toFixed(4)} = √2</div>`;
+            },
+          ],
+          ground: [
+            "Ground track shape reads out the period",
+            () =>
+              `<p>A ground track's shape is a direct readout of orbital period.</p><div class="formula">ISS  ${fmtDur(periodOf(REFS.iss.a))} → racing band<br/>GPS  ${fmtDur(periodOf(REFS.gps.a))} → daily loop<br/>INSAT-3DR  ${fmtDur(periodOf(REFS.geo.a))} → fixed point</div>`,
+          ],
+        };
+        const queue = [];
+        function fireInsight(key) {
+          if (S.shown.has(key)) return;
+          S.shown.add(key);
+          queue.push(key);
+          if (!$("ovlInsight").classList.contains("show") && !$("ovlFall").classList.contains("show")) showNext();
+        }
+        // queued so one pop-up never replaces another
+        function showNext() {
+          const key = queue.shift();
+          if (!key) {
+            $("scrim").classList.remove("show");
+            $("ovlInsight").classList.remove("show");
+            return;
+          }
+          const [title, body] = INSIGHTS[key];
+          $("insTitle").textContent = title;
+          $("insBody").innerHTML = body();
+          $("ovlInsight").classList.add("show");
+          $("scrim").classList.add("show");
+        }
+        $("insOk").onclick = showNext;
+
+        // "Why doesn't it fall?" comes first; the dial is locked until it's dismissed
+        $("scrim").classList.add("show");
+        $("ovlFall").classList.add("show");
+        $("fallOk").onclick = () => {
+          $("ovlFall").classList.remove("show");
+          S.unlocked = true;
+          $("altDial").disabled = false;
+          showNext();
+        };
+
+        /* ================= ALTITUDE DIAL (log-scaled) ================= */
+        const LMIN = Math.log10(ALT_MIN),
+          LMAX = Math.log10(ALT_MAX);
+        const altToDial = (h) => ((Math.log10(clamp(h, ALT_MIN, ALT_MAX)) - LMIN) / (LMAX - LMIN)) * 1000;
+        const dialToAlt = (v) => Math.pow(10, LMIN + (v / 1000) * (LMAX - LMIN));
+        const dial = $("altDial");
+        (function buildTicks() {
+          const T = $("dialTicks");
+          [160, 1000, 10000, 60000].forEach((h) => {
+            const s = document.createElement("span");
+            s.style.left = altToDial(h) / 10 + "%";
+            s.textContent = fmtKm(h) + " km";
+            T.appendChild(s);
+          });
+          // track colours and LEO | MEO | GEO | HEO labels
+          const p2 = altToDial(2000) / 10,
+            pg = altToDial(GEO_ALT) / 10;
+          dial.style.setProperty(
+            "--track",
+            `linear-gradient(90deg, ${ORBIT_TYPES.LEO}66 0%, ${ORBIT_TYPES.LEO}66 ${p2}%, ${ORBIT_TYPES.MEO}66 ${p2}%, ${ORBIT_TYPES.MEO}66 ${pg - 0.6}%, ${ORBIT_TYPES.GEO} ${pg - 0.6}%, ${ORBIT_TYPES.GEO} ${pg + 0.6}%, ${ORBIT_TYPES.HEO}55 ${pg + 0.6}%, ${ORBIT_TYPES.HEO}55 100%)`
+          );
+          [
+            ["LEO", p2 / 2],
+            ["MEO", (p2 + pg) / 2],
+            ["GEO", pg],
+            ["HEO", (pg + 100) / 2 + 1],
+          ].forEach(([t, pos]) => {
+            const s = document.createElement("span");
+            s.style.left = pos + "%";
+            s.style.color = ORBIT_TYPES[t];
+            s.textContent = t;
+            $("dialTypes").appendChild(s);
+          });
+          for (const k in REFS) {
+            const s = document.createElement("span");
+            s.className = "ref";
+            s.style.left = altToDial(REFS[k].alt) / 10 + "%";
+            s.style.color = REFS[k].color;
+            s.textContent = "▼ " + REFS[k].label;
+            T.appendChild(s);
+          }
+        })();
+
+        function clampEcc() {
+          const m = eMax();
+          $("eccDial").max = m.toFixed(3);
+          if (S.e > m) S.e = m;
+          $("eccDial").value = S.e;
+        }
+        function clearSelection() {
+          S.selected = null;
+          document.querySelectorAll("#refChips .chip").forEach((c) => c.classList.remove("on"));
+          $("compareBlock").classList.remove("show");
+        }
+        // tapping the dial while a reference is highlighted → "altitude determines speed and period"
+        dial.addEventListener("pointerdown", () => {
+          if (S.unlocked && S.selected) fireInsight("altitude");
+        });
+        dial.addEventListener("input", () => {
+          // the main lesson: shown on the first drag of every session, reference selected or not
+          fireInsight("altitude");
+          const h = dialToAlt(+dial.value);
+          S.radius = RE;
+          S.a = RE + h;
+          clearSelection();
+          clampEcc();
+          S.trails.you = [];
+          if (+dial.value >= 995) fireInsight("escape");
+        });
+
+        /* ================= REFERENCE PICKER ================= */
+        for (const k in REFS) {
+          const r = REFS[k];
+          const b = document.createElement("button");
+          b.className = "chip";
+          b.dataset.r = k;
+          b.style.color = r.color;
+          b.innerHTML = `<b>${r.label}</b><small>${r.orbit} · ${fmtKm(r.alt)} km</small>`;
+          b.onclick = () => selectRef(k);
+          $("refChips").appendChild(b);
+        }
+        function selectRef(k) {
+          const r = REFS[k];
+          S.selected = k;
+          S.a = r.a;
+          S.radius = r.radius;
+          S.M = refPhase(k); // fly exactly on top of the reference satellite
+          dial.value = altToDial(r.alt);
+          clampEcc();
+          S.trails.you = [];
+          document.querySelectorAll("#refChips .chip").forEach((c) => c.classList.toggle("on", c.dataset.r === k));
+          $("compareBlock").classList.add("show");
+          S.seenForGround.add(k);
+          if (k === "geo") fireInsight("geo");
+          if (k === "gps" && S.showGround) fireInsight("gps");
+          if (S.showGround && S.seenForGround.size === 3) fireInsight("ground");
+        }
+
+        /* ================= ORBIT SHAPE ================= */
+        document.querySelectorAll("#shapeSeg button").forEach((b) =>
+          b.addEventListener("click", () => {
+            S.shape = b.dataset.shape;
+            document.querySelectorAll("#shapeSeg button").forEach((x) => x.classList.toggle("on", x === b));
+            document.body.classList.toggle("elliptical", S.shape === "elliptical");
+            $("dialName").textContent = S.shape === "elliptical" ? "Average altitude" : "Altitude";
+            clampEcc();
+            S.trails.you = [];
+            fireInsight("shape");
+          })
+        );
+        $("eccDial").addEventListener("input", (e) => {
+          S.e = clamp(+e.target.value, 0, eMax());
+          S.trails.you = [];
+        });
+
+        /* ================= CLOCK + TOGGLES ================= */
+        $("clock").addEventListener("input", (e) => {
+          S.clockSec = +e.target.value;
+          $("clockVal").textContent = `${S.clockSec} s real time = 1 GEO orbit`;
+        });
+        $("t_rot").addEventListener("change", (e) => (S.showRot = e.target.checked));
+        $("t_ground").addEventListener("change", (e) => {
+          S.showGround = e.target.checked;
+          $("groundWrap").classList.toggle("show", S.showGround);
+          for (const k in S.trails) S.trails[k] = [];
+          if (S.showGround) {
+            requestAnimationFrame(sizeAll); // size the map once it is visible
+            if (S.selected === "gps") fireInsight("gps");
+            if (S.seenForGround.size === 3) fireInsight("ground");
+          }
+        });
+
+        /* ================= CANVASES ================= */
+        const cv = $("cv"),
+          g = cv.getContext("2d");
+        const pacv = $("pacv"),
+          pg = pacv.getContext("2d");
+        const gtcv = $("gtcv"),
+          gg = gtcv.getContext("2d");
+        const dims = new Map();
+        function sizeCanvas(c, ctx) {
+          const r = c.getBoundingClientRect();
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          c.width = Math.max(1, Math.round(r.width * dpr));
+          c.height = Math.max(1, Math.round(r.height * dpr));
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          dims.set(c, { w: r.width, h: r.height });
+        }
+        function sizeAll() {
+          sizeCanvas(cv, g);
+          sizeCanvas(pacv, pg);
+          if (S.showGround) sizeCanvas(gtcv, gg);
+          pacCache = null;
+          mapCache = null;
+        }
+        if (window.ResizeObserver) {
+          const ro = new ResizeObserver(sizeAll);
+          [cv, pacv, gtcv].forEach((c) => ro.observe(c.parentElement));
+        }
+        window.addEventListener("resize", sizeAll);
+
+        /* ---- orbital plane (compressed radially, log scale) ---- */
+        let EARTH = 30,
+          MAXR = 200,
+          CX = 0,
+          CY = 0;
+        const LOG_LO = Math.log10(100),
+          LOG_HI = Math.log10(64000);
+        function dispR(r) {
+          const h = Math.max(100, r - RE);
+          const t = (Math.log10(h) - LOG_LO) / (LOG_HI - LOG_LO);
+          return EARTH * 1.3 + clamp(t, 0, 1.05) * (MAXR - EARTH * 1.3);
+        }
+        const P = (ang, rr) => [CX + rr * Math.cos(ang), CY - rr * Math.sin(ang)];
+
+        function glowStroke(color, width, blur) {
+          g.strokeStyle = color;
+          g.lineWidth = width;
+          g.shadowColor = color;
+          g.shadowBlur = blur;
+        }
+        function drawPlane() {
+          const d = dims.get(cv);
+          if (!d) return;
+          const { w, h } = d;
+          g.clearRect(0, 0, w, h);
+          CX = w / 2;
+          CY = h / 2 - 12;
+          EARTH = clamp(Math.min(w, h) * 0.055, 14, 32);
+          MAXR = Math.min(w / 2 - 70, (h - 70) / 2) - 8;
+
+          // orbit-type regions: LEO band, MEO band, GEO ring, High Earth orbit above
+          const band = (h0, h1, col) => {
+            g.fillStyle = col;
+            g.beginPath();
+            g.arc(CX, CY, dispR(RE + h1), 0, TAU);
+            g.arc(CX, CY, dispR(RE + h0), 0, TAU, true);
+            g.fill();
+          };
+          band(ALT_MIN, 2000, "rgba(77,214,228,0.06)");
+          band(2000, GEO_ALT, "rgba(255,212,92,0.045)");
+          const rGeo = dispR(GEO_A);
+          g.strokeStyle = "rgba(195,166,255,0.35)";
+          g.lineWidth = 1;
+          g.setLineDash([4, 4]);
+          g.beginPath();
+          g.arc(CX, CY, rGeo, 0, TAU);
+          g.stroke();
+          g.setLineDash([]);
+          g.font = "600 10px 'IBM Plex Mono', monospace";
+          g.textAlign = "center";
+          const lbl = (txt, rr, col) => {
+            g.fillStyle = col;
+            g.fillText(txt, CX, CY + rr);
+          };
+          lbl("LEO", (dispR(RE + ALT_MIN) + dispR(RE + 2000)) / 2 + 4, "rgba(77,214,228,0.55)");
+          lbl("MEO", (dispR(RE + 2000) + rGeo) / 2 + 4, "rgba(255,212,92,0.5)");
+          lbl("GEO · 35,786 km", rGeo + 14, "rgba(195,166,255,0.65)");
+          lbl("High Earth orbit", rGeo + 30, "rgba(139,163,184,0.55)");
+          g.textAlign = "left";
+
+          // Earth + rotating ground marker
+          const eg = g.createRadialGradient(CX - EARTH * 0.3, CY - EARTH * 0.3, 2, CX, CY, EARTH);
+          eg.addColorStop(0, "#2f6d8f");
+          eg.addColorStop(1, "#123246");
+          g.fillStyle = eg;
+          g.beginPath();
+          g.arc(CX, CY, EARTH, 0, TAU);
+          g.fill();
+          g.strokeStyle = "rgba(127,211,255,0.5)";
+          g.lineWidth = 1;
+          g.stroke();
+          if (S.showRot) {
+            const [mx, my] = P(earthAngle() + INDIA_LON * RAD, EARTH);
+            g.fillStyle = "#ffffff";
+            g.beginPath();
+            g.arc(mx, my, 3, 0, TAU);
+            g.fill();
+            g.strokeStyle = "rgba(255,255,255,0.35)";
+            g.beginPath();
+            g.moveTo(CX, CY);
+            g.lineTo(mx, my);
+            g.stroke();
+            g.fillStyle = "rgba(255,255,255,0.8)";
+            g.font = "600 9px 'IBM Plex Mono', monospace";
+            g.fillText("INDIA", mx + 5, my - 4);
+          }
+
+          // reference satellites (always running)
+          for (const k in REFS) {
+            const r = REFS[k];
+            const rr = dispR(r.a);
+            const sel = S.selected === k;
+            glowStroke(r.color, sel ? 1.8 : 1, sel ? 12 : 5);
+            g.globalAlpha = sel ? 1 : 0.6;
+            g.beginPath();
+            g.arc(CX, CY, rr, 0, TAU);
+            g.stroke();
+            g.shadowBlur = 0;
+            g.globalAlpha = 1;
+            const [x, y] = P(refPhase(k), rr);
+            g.fillStyle = r.color;
+            g.shadowColor = r.color;
+            g.shadowBlur = 10;
+            g.beginPath();
+            g.arc(x, y, sel ? 5 : 4, 0, TAU);
+            g.fill();
+            g.shadowBlur = 0;
+            g.fillStyle = r.color;
+            g.font = (sel ? "600 " : "") + "11px 'IBM Plex Mono', monospace";
+            g.fillText(`${r.label} · ${r.orbit}`, x + 8, y - 6);
+          }
+
+          // your satellite's orbit + dot
+          const y0 = youNow();
+          glowStroke(YOU, 1.6, 10);
+          g.beginPath();
+          for (let i = 0; i <= 240; i++) {
+            const nu = (i / 240) * TAU;
+            const r = (y0.a * (1 - y0.e * y0.e)) / (1 + y0.e * Math.cos(nu));
+            const [x, y] = P(nu, dispR(r));
+            i ? g.lineTo(x, y) : g.moveTo(x, y);
+          }
+          g.closePath();
+          g.stroke();
+          g.shadowBlur = 0;
+          const [sx, sy] = P(y0.nu, dispR(y0.r));
+          g.fillStyle = YOU;
+          g.shadowColor = YOU;
+          g.shadowBlur = 14;
+          g.beginPath();
+          g.arc(sx, sy, 6, 0, TAU);
+          g.fill();
+          g.shadowBlur = 0;
+          g.fillStyle = YOU;
+          g.font = "600 11px 'IBM Plex Mono', monospace";
+          g.fillText("YOUR SAT", sx + 9, sy + 14);
+        }
+
+        /* ---- period vs distance curve (drawn once, marker every frame) ---- */
+        let pacCache = null;
+        const A_LO = RE + ALT_MIN,
+          A_HI = RE + ALT_MAX;
+        const PAD = { l: 62, r: 10, t: 10, b: 26 };
+        function pacXY(a, w, h) {
+          const x = PAD.l + ((Math.log10(a) - Math.log10(A_LO)) / (Math.log10(A_HI) - Math.log10(A_LO))) * (w - PAD.l - PAD.r);
+          const TL = Math.log10(periodOf(A_LO)),
+            TH = Math.log10(periodOf(A_HI));
+          const y = h - PAD.b - ((Math.log10(periodOf(a)) - TL) / (TH - TL)) * (h - PAD.t - PAD.b);
+          return [x, y];
+        }
+        function drawPAC() {
+          const d = dims.get(pacv);
+          if (!d || d.w < 10) return;
+          const { w, h } = d;
+          if (!pacCache) {
+            pacCache = document.createElement("canvas");
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            pacCache.width = w * dpr;
+            pacCache.height = h * dpr;
+            const c = pacCache.getContext("2d");
+            c.setTransform(dpr, 0, 0, dpr, 0, 0);
+            c.font = "9.5px 'IBM Plex Mono', monospace";
+            c.fillStyle = "#5b738a";
+            c.strokeStyle = "rgba(127,211,255,0.07)";
+            [1e4, 3e4, 6e4].forEach((a) => {
+              const [x] = pacXY(a, w, h);
+              c.beginPath();
+              c.moveTo(x, PAD.t);
+              c.lineTo(x, h - PAD.b);
+              c.stroke();
+              c.textAlign = "center";
+              c.fillText(fmtKm(a), x, h - PAD.b + 12);
+            });
+            [10000, 30000, 100000, 300000].forEach((T) => {
+              const a = aFromPeriod(T);
+              if (a < A_LO || a > A_HI) return;
+              const [, y] = pacXY(a, w, h);
+              c.beginPath();
+              c.moveTo(PAD.l, y);
+              c.lineTo(w - PAD.r, y);
+              c.stroke();
+              c.textAlign = "right";
+              c.fillText(fmtKm(T) + " s", PAD.l - 4, y + 3);
+            });
+            c.textAlign = "center";
+            c.fillText("a, km (log)", (w + PAD.l) / 2, h - 3);
+            c.strokeStyle = "#7fd3ff";
+            c.lineWidth = 1.6;
+            c.shadowColor = "#7fd3ff";
+            c.shadowBlur = 6;
+            c.beginPath();
+            for (let i = 0; i <= 80; i++) {
+              const a = A_LO * Math.pow(A_HI / A_LO, i / 80);
+              const [x, y] = pacXY(a, w, h);
+              i ? c.lineTo(x, y) : c.moveTo(x, y);
+            }
+            c.stroke();
+            c.shadowBlur = 0;
+            for (const k in REFS) {
+              const [x, y] = pacXY(REFS[k].a, w, h);
+              c.fillStyle = REFS[k].color;
+              c.beginPath();
+              c.arc(x, y, 3, 0, TAU);
+              c.fill();
+              c.textAlign = "left";
+              c.fillText(REFS[k].label, x + 5, y + 10);
+            }
+          }
+          pg.clearRect(0, 0, w, h);
+          pg.drawImage(pacCache, 0, 0, w, h);
+          const [x, y] = pacXY(clamp(S.a, A_LO, A_HI), w, h);
+          pg.fillStyle = YOU;
+          pg.shadowColor = YOU;
+          pg.shadowBlur = 10;
+          pg.beginPath();
+          pg.arc(x, y, 5, 0, TAU);
+          pg.fill();
+          pg.shadowBlur = 0;
+        }
+
+        /* ---- ground track: unrolled world map ---- */
+        // simplified coastlines (lon, lat), baked in — nothing is fetched
+        const LAND = [
+          [[-168,65],[-140,70],[-95,72],[-80,63],[-60,55],[-65,45],[-75,35],[-81,25],[-97,26],[-105,20],[-95,16],[-83,9],[-78,8],[-92,15],[-105,22],[-115,30],[-124,40],[-125,49],[-135,58],[-150,60],[-165,60]],
+          [[-50,60],[-42,60],[-20,70],[-20,80],[-60,82],[-70,76],[-55,68]],
+          [[-80,10],[-72,12],[-60,10],[-50,0],[-35,-6],[-40,-22],[-48,-28],[-58,-38],[-65,-55],[-72,-50],[-72,-30],[-70,-18],[-81,-5]],
+          [[-10,36],[-9,43],[-2,48],[-5,58],[5,62],[20,70],[40,68],[60,70],[80,73],[110,77],[140,72],[180,68],[180,65],[160,60],[140,52],[130,42],[122,30],[120,22],[108,20],[105,10],[100,14],[98,8],[92,22],[80,15],[77,8],[72,20],[60,25],[50,30],[48,28],[55,22],[43,13],[35,28],[33,31],[28,36],[20,40],[12,44],[10,38],[0,40]],
+          [[-17,21],[-10,30],[-5,36],[10,37],[20,32],[32,31],[35,28],[43,12],[51,11],[40,-3],[40,-15],[35,-25],[20,-35],[15,-28],[12,-15],[9,-1],[5,5],[-8,5],[-16,12]],
+          [[114,-22],[122,-18],[130,-12],[137,-12],[142,-11],[146,-19],[153,-26],[150,-37],[140,-38],[131,-32],[115,-34]],
+          [[-180,-72],[-90,-73],[0,-70],[90,-67],[180,-72],[180,-90],[-180,-90]],
+        ];
+        let mapCache = null;
+        const GP = { l: 34, r: 10, t: 10, b: 18 };
+        const mapXY = (lon, lat, w, h) => [GP.l + ((lon + 180) / 360) * (w - GP.l - GP.r), GP.t + ((90 - lat) / 180) * (h - GP.t - GP.b)];
+        function subpoint(u, inc) {
+          // u = angle along the orbit from the ascending node; Earth always spins under the orbit
+          const lat = Math.asin(Math.sin(inc * RAD) * Math.sin(u)) / RAD;
+          let lon = (Math.atan2(Math.cos(inc * RAD) * Math.sin(u), Math.cos(u)) - earthAngle()) / RAD;
+          lon = ((((lon + 180) % 360) + 360) % 360) - 180;
+          return [lon, lat];
+        }
+        const youInc = () => (S.selected ? REFS[S.selected].inc : 0);
+        const SAMPLE = SIDEREAL / 1440; // one sample per simulated minute
+        const KEEP = 1560; // a little over one sidereal day of trail
+        function sampleTracks(dtSim) {
+          S.sampleAcc += dtSim;
+          while (S.sampleAcc >= SAMPLE) {
+            S.sampleAcc -= SAMPLE;
+            for (const k in REFS) S.trails[k].push(subpoint(refPhase(k), REFS[k].inc));
+            S.trails.you.push(subpoint(youNow().nu, youInc()));
+            for (const k in S.trails) if (S.trails[k].length > KEEP) S.trails[k].shift();
+          }
+        }
+        function drawGround() {
+          const d = dims.get(gtcv);
+          if (!d || d.w < 10) return;
+          const { w, h } = d;
+          if (!mapCache) {
+            mapCache = document.createElement("canvas");
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            mapCache.width = w * dpr;
+            mapCache.height = h * dpr;
+            const c = mapCache.getContext("2d");
+            c.setTransform(dpr, 0, 0, dpr, 0, 0);
+            const [x0, y0] = mapXY(-180, 90, w, h),
+              [x1, y1] = mapXY(180, -90, w, h);
+            c.fillStyle = "#081420";
+            c.fillRect(x0, y0, x1 - x0, y1 - y0);
+            c.fillStyle = "#16293a";
+            c.strokeStyle = "#23405a";
+            for (const poly of LAND) {
+              c.beginPath();
+              poly.forEach(([lo, la], i) => {
+                const [x, y] = mapXY(lo, la, w, h);
+                i ? c.lineTo(x, y) : c.moveTo(x, y);
+              });
+              c.closePath();
+              c.fill();
+              c.stroke();
+            }
+            c.font = "9px 'IBM Plex Mono', monospace";
+            c.fillStyle = "#5b738a";
+            c.textAlign = "right";
+            for (let la = -60; la <= 60; la += 30) {
+              const [, y] = mapXY(0, la, w, h);
+              c.strokeStyle = la === 0 ? "rgba(127,211,255,0.25)" : "rgba(127,211,255,0.07)";
+              c.beginPath();
+              c.moveTo(x0, y);
+              c.lineTo(x1, y);
+              c.stroke();
+              c.fillText((la > 0 ? la + "°N" : la < 0 ? -la + "°S" : "0°"), GP.l - 4, y + 3);
+            }
+            c.textAlign = "center";
+            for (let lo = -120; lo <= 120; lo += 60) {
+              const [x] = mapXY(lo, 0, w, h);
+              c.strokeStyle = "rgba(127,211,255,0.07)";
+              c.beginPath();
+              c.moveTo(x, y0);
+              c.lineTo(x, y1);
+              c.stroke();
+              c.fillText((lo > 0 ? lo + "°E" : lo < 0 ? -lo + "°W" : "0°"), x, h - 5);
+            }
+            c.strokeStyle = "#27405a";
+            c.strokeRect(x0, y0, x1 - x0, y1 - y0);
+          }
+          gg.clearRect(0, 0, w, h);
+          gg.drawImage(mapCache, 0, 0, w, h);
+          const tracks = [
+            ["iss", REFS.iss.color],
+            ["gps", REFS.gps.color],
+            ["geo", REFS.geo.color],
+            ["you", YOU],
+          ];
+          for (const [k, col] of tracks) {
+            const pts = S.trails[k];
+            if (!pts.length) continue;
+            gg.strokeStyle = col;
+            gg.globalAlpha = k === "you" ? 0.95 : 0.7;
+            gg.lineWidth = k === "you" ? 1.8 : 1.3;
+            gg.beginPath();
+            pts.forEach(([lo, la], i) => {
+              const [x, y] = mapXY(lo, la, w, h);
+              if (i && Math.abs(lo - pts[i - 1][0]) > 180) gg.moveTo(x, y);
+              else i ? gg.lineTo(x, y) : gg.moveTo(x, y);
+            });
+            gg.stroke();
+            gg.globalAlpha = 1;
+            const [lo, la] = pts[pts.length - 1];
+            const [x, y] = mapXY(lo, la, w, h);
+            gg.fillStyle = col;
+            gg.beginPath();
+            gg.arc(x, y, k === "you" ? 4.5 : 3.5, 0, TAU);
+            gg.fill();
+            gg.font = "600 10px 'IBM Plex Mono', monospace";
+            gg.textAlign = "left";
+            // your satellite's label sits below its dot so it never covers a reference it is flying with
+            gg.fillText(k === "you" ? "YOUR SAT" : REFS[k].label, x + 6, k === "you" ? y + 14 : y - 5);
+          }
+          gg.font = "9.5px 'IBM Plex Mono', monospace";
+          gg.fillStyle = "#8ba3b8";
+          gg.textAlign = "right";
+          gg.fillText(`Ground track · last ${fmtDur(Math.min(S.trails.iss.length, KEEP) * SAMPLE)} · tilt: ISS 51.6°, GPS 55°, INSAT-3DR 0°, your satellite ${youInc()}°`, w - GP.r - 4, GP.t + 12);
+        }
+
+        /* ================= READOUT ================= */
+        function readout() {
+          const y = youNow();
+          const h = alt();
+          $("v_alt").textContent = fmtKm(h);
+          const [tk, tname] = orbitType(h);
+          $("orbitType").textContent = "Orbit type: " + tname;
+          $("orbitType").style.color = ORBIT_TYPES[tk];
+          $("dialSub").textContent = S.shape === "elliptical" ? "semi-major axis a = R⊕ + average altitude" : "log scale · 160 – 60,000 km";
+          $("r_alt").textContent = fmtKm(y.r - S.radius);
+          $("r_a").textContent = fmtKm(y.a);
+          $("r_T").textContent = fmtKm(y.T);
+          $("r_Tf").textContent = fmtDur(y.T);
+          $("r_v").textContent = y.v.toFixed(3);
+          $("r_vesc").textContent = vEsc(y.r).toFixed(3);
+          $("r_e").textContent = y.e.toFixed(3);
+          const rp = y.a * (1 - y.e),
+            ra = y.a * (1 + y.e);
+          $("r_rp").textContent = fmtKm(rp);
+          $("r_ra").textContent = fmtKm(ra);
+          $("r_hp").textContent = fmtKm(rp - S.radius) + " km altitude";
+          $("r_ha").textContent = fmtKm(ra - S.radius) + " km altitude";
+          $("derivCirc").innerHTML =
+            `F/m = GM/r² = ${(y.g * 1000).toFixed(3)} m/s²<br><span class="d">= v²/r →</span> v = √(GM/r) = ${y.v.toFixed(3)} km/s<br>T = 2π√(a³/GM) = ${fmtKm(y.T)} s`;
+          $("derivEll").innerHTML =
+            `F/m = GM/r² = ${(y.g * 1000).toFixed(3)} m/s²<br>v² = GM(2/r − 1/a) → v = ${y.v.toFixed(3)} km/s<br>T = 2π√(a³/GM) = ${fmtKm(y.T)} s`;
+          $("radiusNote").textContent =
+            S.radius === RE_EQ
+              ? "GEO altitude is measured from Earth's equatorial radius, 6,378.137 km, as in the textbook value."
+              : "Altitude is measured from Earth's mean radius, 6,371 km.";
+          $("v_ecc").textContent = S.e.toFixed(3);
+          $("eccNote").textContent = `Largest e at this altitude: ${eMax().toFixed(3)}, so the lowest point stays at least 160 km up.`;
+
+          if (S.selected) {
+            const r = REFS[S.selected];
+            const T = periodOf(r.a);
+            $("cmpName").innerHTML = `<b style="color:${r.color}">${r.label}</b> · ${r.orbit}`;
+            $("cmpAlt").textContent = fmtKm(r.alt) + " km";
+            $("cmpModel").textContent = `${fmtKm(T)} s · ${fmtDur(T)}`;
+            $("cmpPub").textContent = `${fmtKm(r.pub)} s · ${fmtDur(r.pub)}`;
+            $("cmpDiff").textContent = ((Math.abs(T - r.pub) / r.pub) * 100).toFixed(2) + "%";
+          }
+        }
+
+        /* ================= HELP TABS ================= */
+        const helpbar = $("helpbar");
+        function closeHelp() {
+          helpbar.classList.remove("show");
+          document.querySelectorAll(".helpbtn").forEach((b) => b.classList.remove("on"));
+          document.querySelectorAll(".tabpanel").forEach((p) => p.classList.remove("on"));
+        }
+        document.querySelectorAll(".helpbtn").forEach((btn) =>
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const was = btn.classList.contains("on");
+            closeHelp();
+            if (was) return;
+            btn.classList.add("on");
+            helpbar.classList.add("show");
+            document.querySelector(`.tabpanel[data-panel="${btn.dataset.tab}"]`).classList.add("on");
+          })
+        );
+        $("helpCloseTop").addEventListener("click", closeHelp);
+        document.addEventListener("click", (e) => {
+          if (helpbar.classList.contains("show") && !helpbar.contains(e.target) && !e.target.closest(".helpbtn")) closeHelp();
+        });
+
+        /* ================= LOOP ================= */
+        let last = performance.now();
+        function frame(now) {
+          const dt = Math.min(0.05, (now - last) / 1000);
+          last = now;
+          // one GEO orbit (one sidereal day) takes clockSec real seconds; every satellite shares this clock
+          const dtSim = dt * (SIDEREAL / S.clockSec);
+          S.t += dtSim;
+          S.M += meanMotion(S.a) * dtSim; // phase advances smoothly, so changing altitude never jumps the dot
+          if (S.showGround) sampleTracks(dtSim);
+          drawPlane();
+          drawPAC();
+          if (S.showGround) drawGround();
+          readout();
+          requestAnimationFrame(frame);
+        }
+        sizeAll();
+        dial.value = altToDial(alt());
+        clampEcc();
+        requestAnimationFrame(frame);
+      })();
+    </script>
+  </body>
+</html>
