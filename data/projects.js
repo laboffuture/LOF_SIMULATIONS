@@ -15,9 +15,12 @@ const PROJECTS = [
   { id: "dj-bot", title: "Heartbeat DJ Bot — Crew Calmness Music", category: "robotics", status: "live", url: "../sims/robotics/DJ_Bot/index.html", description: "Read a crew member's pulse and the cabin noise, then watch two thresholds pick the music the DFPlayer sends to the speaker." },
   { id: "lost-bot-thermal-shield", title: "Lost Bot Cooling System", category: "robotics", status: "live", url: "../sims/robotics/lost-bot-thermal-shield/index.html", description: "Watch a temperature sensor and MQ-2 gas sensor drive automatic fan-speed and emergency-ventilation decisions inside a lost bot." },
   { id: "starlight-decoder-lab", title: "StarLight Decoder Lab", category: "robotics", status: "live", url: "../sims/robotics/starlight-decoder-lab/index.html", description: "Swish a colour wand at an AS7341 spectral sensor and watch it decode the light into a star identity, channel by spectral channel." },
-  ...Array.from({ length: 20 }, (_, i) => ({
-    id: `robotics-coming-soon-${i + 7}`,
-    title: `Robotics Project ${String(i + 7).padStart(2, "0")}`,
+  { id: "bluetooth-navigator", title: "Bluetooth Navigator", category: "robotics", status: "live", url: "../sims/robotics/bluetooth-navigator/simulation.html", description: "Pair a master controller with a rover receiver wirelessly and steer through commands." },
+  { id: "lost-bot-navigator-rover", title: "Lost Bot Navigator Rover — Obstacle Escape", category: "robotics", status: "live", url: "../sims/robotics/lost-bot-navigator-rover/simulation.html", description: "Navigate obstacles using distance sensor feedback with adaptive speed and emergency stops." },
+  { id: "stability-scout-rover", title: "Stability Scout Rover — Terrain Balance Lab", category: "robotics", status: "live", url: "../sims/robotics/StabilityScoutRover/simulation.html", description: "Analyze terrain stability with compass heading disturbances and manage rover balance and speed." },
+  ...Array.from({ length: 17 }, (_, i) => ({
+    id: `robotics-coming-soon-${i + 14}`,
+    title: `Robotics Project ${String(i + 14).padStart(2, "0")}`,
     category: "robotics",
     status: "coming-soon",
     description: "Coming soon.",
@@ -30,9 +33,10 @@ const PROJECTS = [
   { id: "darrieus-turbine", title: "Darrieus Turbine", category: "aerospace", status: "live", url: "../sims/aerospace/DarrieusTurbine/DarrieusTurbine.html", description: "Spin up a helical vertical-axis wind turbine and charge a device with the power it generates." },
   { id: "solar-charging-station", title: "Solar Charging Station", category: "aerospace", status: "live", url: "../sims/aerospace/SolarChargingStation/SolarChargingStation.html", description: "Angle a solar panel into the sun, charge a battery, then switch to stored power and keep a device running after dark." },
   { id: "space-capsule", title: "Space Capsule — Re-entry & Splashdown", category: "aerospace", status: "live", url: "../sims/aerospace/SpaceCapsule/SpaceCapsule.html", description: "Configure a returning crew capsule — mass, payload, parachute, deploy height, wind — and fly the re-entry to a safe water splashdown." },
-  ...Array.from({ length: 24 }, (_, i) => ({
-    id: `aerospace-coming-soon-${i + 3}`,
-    title: `Aerospace Project ${String(i + 3).padStart(2, "0")}`,
+  { id: "navigation-radar-system", title: "Navigation Radar System", category: "aerospace", status: "live", url: "../sims/aerospace/NavigationRadarSystem/NavigationRadarSystem.html", description: "Sweep radar angles to detect distance, direction, and obstacles through fog and blind zones." },
+  ...Array.from({ length: 23 }, (_, i) => ({
+    id: `aerospace-coming-soon-${i + 8}`,
+    title: `Aerospace Project ${String(i + 8).padStart(2, "0")}`,
     category: "aerospace",
     status: "coming-soon",
     description: "Coming soon.",
@@ -47,9 +51,10 @@ const PROJECTS = [
   { id: "lift-off", title: "Lift-Off", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/Lift-Off/simulation.html", description: "Build a pressure rocket — nose, body, fins, and launch pressure — then launch it and read altitude, drag, and stability from the flight." },
   { id: "aero-build", title: "Aero Build — Rocket Design & Flight Physics", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/aero-build/simulation.html", description: "Design a motor-powered rocket from a real motor designation, check its stability, then launch it into wind, staging, and recovery." },
   { id: "astro-build", title: "Astro Build — Assemble the ISS", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/astro-build/simulation.html", description: "Snap the real ISS together from modules, truss and solar wings — each tagged with the country that built it — then fly it around Earth: arrays tracking the Sun, power dipping through the shadow, and a look inside every module." },
-  ...Array.from({ length: 22 }, (_, i) => ({
-    id: `space-astronomy-coming-soon-${i + 7}`,
-    title: `Space & Astronomy Project ${String(i + 6).padStart(2, "0")}`,
+  { id: "orbit-explorer", title: "Orbit Explorer — Altitude, Speed and Period", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/orbit-explorer/simulation.html", description: "Explore orbital mechanics by adjusting satellite altitude, speed, period, and eccentricity." },
+  ...Array.from({ length: 21 }, (_, i) => ({
+    id: `space-astronomy-coming-soon-${i + 10}`,
+    title: `Space & Astronomy Project ${String(i + 10).padStart(2, "0")}`,
     category: "space-astronomy",
     status: "coming-soon",
     description: "Coming soon.",
