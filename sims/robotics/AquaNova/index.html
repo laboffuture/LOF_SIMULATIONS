@@ -847,6 +847,219 @@
           display: none;
         }
       }
+    
+      /* Floating, draggable & resizable Guide / How to Use window */
+      .helpwrap {
+        position: fixed;
+        top: 14px;
+        right: clamp(12px, 2.4vw, 30px);
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .helpbtns {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .helpbtn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head, "Orbitron", sans-serif);
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #fff;
+        background: var(--sky, #2a78d6);
+        border: 1px solid var(--sky, #2a78d6);
+        border-radius: 8px;
+        padding: 8px 14px;
+        box-shadow: 0 6px 14px rgba(42, 120, 214, 0.24);
+        transition: transform 0.15s ease, background 0.15s ease;
+      }
+      .helpbtn:hover {
+        transform: translateY(-1px);
+      }
+      .helpbtn:focus-visible {
+        outline: 2px solid var(--txt, #17293b);
+        outline-offset: 2px;
+      }
+      .helpbtn.on {
+        background: var(--accent, #e8590c) !important;
+        border-color: var(--accent, #e8590c) !important;
+        box-shadow: 0 6px 14px rgba(232, 89, 12, 0.26);
+      }
+      .helpbar.floatwin {
+        position: fixed !important;
+        z-index: 10000 !important;
+        display: none;
+        flex-direction: column !important;
+        background: var(--panel, #fcfdfe) !important;
+        border: 1px solid var(--line, #dbe2e8) !important;
+        border-radius: var(--r, 10px) !important;
+        box-shadow: 0 18px 45px rgba(23, 41, 59, 0.28) !important;
+        overflow: hidden !important;
+        min-width: 280px !important;
+        min-height: 200px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: calc(100vw - 16px) !important;
+        max-height: calc(100vh - 16px) !important;
+      }
+      .helpbar.floatwin.show {
+        display: flex !important;
+      }
+      .fw-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 12px;
+        background: var(--panel2, #f3f6f8);
+        border-bottom: 1px solid var(--line, #dbe2e8);
+        cursor: move;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+        flex: 0 0 auto;
+      }
+      .fw-title {
+        font-family: var(--head, "Orbitron", sans-serif);
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--mut, #4c5c6b);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .fw-title::before {
+        content: "⠿";
+        font-size: 13px;
+        color: var(--dim, #8a949d);
+      }
+      .fw-head-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .fw-tab-btn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head, "Orbitron", sans-serif);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 4px 8px;
+        border-radius: 5px;
+        border: 1px solid var(--line, #dbe2e8);
+        background: var(--panel, #fff);
+        color: var(--mut, #4c5c6b);
+        transition: 0.15s ease;
+      }
+      .fw-tab-btn:hover {
+        border-color: var(--dim, #8a949d);
+        color: var(--txt, #17293b);
+      }
+      .fw-tab-btn.on {
+        background: var(--accent, #e8590c) !important;
+        border-color: var(--accent, #e8590c) !important;
+        color: #fff !important;
+      }
+      .fw-close {
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        border: 1px solid var(--line, #dbe2e8);
+        background: var(--panel, #fff);
+        color: var(--mut, #4c5c6b);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.15s ease;
+      }
+      .fw-close:hover {
+        background: #fbe7e7;
+        border-color: #f0c4c4;
+        color: #8a1f1f;
+      }
+      .fw-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 14px 16px;
+        overflow-y: auto;
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--txt, #17293b);
+      }
+      .fw-body ol, .fw-body ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .fw-body li {
+        margin-bottom: 6px;
+      }
+      .fw-body li:last-child {
+        margin-bottom: 0;
+      }
+      .fw-body b {
+        color: var(--sky, #2a78d6);
+      }
+      .fw-grip {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 16px;
+        height: 16px;
+        cursor: nwse-resize;
+        touch-action: none;
+        background: linear-gradient(135deg, transparent 50%, var(--dim, #8a949d) 50%, var(--dim, #8a949d) 58%, transparent 58%, transparent 70%, var(--dim, #8a949d) 70%, var(--dim, #8a949d) 78%, transparent 78%);
+      }
+      .floatwin.dragging {
+        opacity: 0.94;
+      }
+      .tabpanel {
+        display: none;
+      }
+      .tabpanel.on {
+        display: block;
+      }
+      .tabpanel ol, .tabpanel ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .tabpanel li {
+        margin-bottom: 6px;
+      }
+      .tabpanel li:last-child {
+        margin-bottom: 0;
+      }
+      .tabpanel b {
+        color: var(--sky, #2a78d6);
+      }
+      @media (max-width: 900px) {
+        .helpwrap {
+          position: static;
+          align-items: stretch;
+          margin-bottom: 10px;
+          flex: 0 0 auto;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .helpbtn {
+          transition: none;
+        }
+      }
+
     </style>
 
   <style id="lof-bg">
@@ -2791,5 +3004,206 @@
         requestAnimationFrame(loop);
       })();
     </script>
+  
+    <script>
+      /* Universal Floating, Draggable & Resizable How-to-Use & Guide System */
+      (function initUniversalHelpFloatwin() {
+        var bar = document.getElementById("helpbar");
+        if (!bar) return;
+
+        // Ensure floatwin markup structure
+        if (!bar.classList.contains("floatwin")) {
+          bar.classList.add("floatwin");
+          bar.setAttribute("role", "dialog");
+          bar.setAttribute("aria-label", "Help Guide");
+
+          var head = document.createElement("div");
+          head.className = "fw-head";
+
+          var title = document.createElement("span");
+          title.className = "fw-title";
+          title.textContent = "How To Use";
+          head.appendChild(title);
+
+          var actions = document.createElement("div");
+          actions.className = "fw-head-actions";
+
+          var tabBtns = [];
+          var origPanels = bar.querySelectorAll(".tabpanel");
+          if (origPanels.length > 1) {
+            origPanels.forEach(function (p) {
+              var t = p.dataset.panel;
+              var b = document.createElement("button");
+              b.type = "button";
+              b.className = "fw-tab-btn";
+              b.dataset.tab = t;
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What To Learn" : t);
+              actions.appendChild(b);
+              tabBtns.push(b);
+            });
+          }
+
+          var closeBtn = document.createElement("button");
+          closeBtn.type = "button";
+          closeBtn.className = "fw-close";
+          closeBtn.title = "Close Guide";
+          closeBtn.setAttribute("aria-label", "Close");
+          closeBtn.textContent = "✕";
+          actions.appendChild(closeBtn);
+          head.appendChild(actions);
+
+          var body = document.createElement("div");
+          body.className = "fw-body";
+          while (bar.firstChild) {
+            body.appendChild(bar.firstChild);
+          }
+
+          var grip = document.createElement("div");
+          grip.className = "fw-grip";
+          grip.title = "Drag to resize";
+
+          bar.appendChild(head);
+          bar.appendChild(body);
+          bar.appendChild(grip);
+
+          document.body.appendChild(bar);
+        }
+
+        var btns = document.querySelectorAll(".helpbtn");
+        var tabBtns = bar.querySelectorAll(".fw-tab-btn");
+        var titleEl = bar.querySelector(".fw-title");
+        var closeBtn = bar.querySelector(".fw-close");
+        var headEl = bar.querySelector(".fw-head");
+        var gripEl = bar.querySelector(".fw-grip");
+        var topZ = 10000;
+        var posInit = false;
+
+        function toFront() {
+          bar.style.zIndex = ++topZ;
+        }
+
+        function closeAll() {
+          bar.classList.remove("show");
+          btns.forEach(function (b) { b.classList.remove("on"); });
+          tabBtns.forEach(function (b) { b.classList.remove("on"); });
+        }
+
+        function openTab(tab) {
+          toFront();
+          if (!posInit) {
+            var w = Math.min(440, window.innerWidth - 32);
+            var h = Math.min(540, window.innerHeight - 80);
+            bar.style.width = w + "px";
+            bar.style.height = h + "px";
+            bar.style.top = "65px";
+            bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
+            posInit = true;
+          }
+          bar.classList.add("show");
+          btns.forEach(function (b) {
+            b.classList.toggle("on", b.dataset.tab === tab);
+          });
+          tabBtns.forEach(function (b) {
+            b.classList.toggle("on", b.dataset.tab === tab);
+          });
+          var panels = bar.querySelectorAll(".tabpanel");
+          panels.forEach(function (p) {
+            p.classList.toggle("on", p.dataset.panel === tab);
+          });
+          if (titleEl) {
+            titleEl.textContent = tab === "use" ? "How To Use" : (tab === "learn" ? "What You'll Learn" : "Guide");
+          }
+        }
+
+        btns.forEach(function (btn) {
+          var newBtn = btn.cloneNode(true);
+          btn.parentNode.replaceChild(newBtn, btn);
+          newBtn.addEventListener("click", function () {
+            var tab = newBtn.dataset.tab || "use";
+            if (bar.classList.contains("show") && newBtn.classList.contains("on")) {
+              closeAll();
+            } else {
+              openTab(tab);
+            }
+          });
+        });
+
+        // re-query cloned buttons
+        btns = document.querySelectorAll(".helpbtn");
+
+        tabBtns.forEach(function (tb) {
+          tb.addEventListener("click", function (e) {
+            e.stopPropagation();
+            openTab(tb.dataset.tab);
+          });
+        });
+
+        if (closeBtn) closeBtn.addEventListener("click", closeAll);
+        bar.addEventListener("pointerdown", toFront);
+
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && bar.classList.contains("show")) closeAll();
+        });
+
+        // Dragging by header
+        if (headEl) {
+          headEl.addEventListener("pointerdown", function (e) {
+            if (e.target.closest(".fw-head-actions")) return;
+            e.preventDefault();
+            toFront();
+            headEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var dx = e.clientX - r.left;
+            var dy = e.clientY - r.top;
+            bar.classList.add("dragging");
+            function onMove(ev) {
+              var nx = Math.max(8, Math.min(window.innerWidth - bar.offsetWidth - 8, ev.clientX - dx));
+              var ny = Math.max(8, Math.min(window.innerHeight - 40, ev.clientY - dy));
+              bar.style.left = nx + "px";
+              bar.style.top = ny + "px";
+            }
+            function onUp(ev) {
+              bar.classList.remove("dragging");
+              headEl.removeEventListener("pointermove", onMove);
+              headEl.removeEventListener("pointerup", onUp);
+              headEl.removeEventListener("pointercancel", onUp);
+            }
+            headEl.addEventListener("pointermove", onMove);
+            headEl.addEventListener("pointerup", onUp);
+            headEl.addEventListener("pointercancel", onUp);
+          });
+        }
+
+        // Resizing by grip
+        if (gripEl) {
+          gripEl.addEventListener("pointerdown", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toFront();
+            gripEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var startX = e.clientX;
+            var startY = e.clientY;
+            var startW = r.width;
+            var startH = r.height;
+            function onMove(ev) {
+              var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
+              var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
+              bar.style.width = nw + "px";
+              bar.style.height = nh + "px";
+            }
+            function onUp(ev) {
+              gripEl.removeEventListener("pointermove", onMove);
+              gripEl.removeEventListener("pointerup", onUp);
+              gripEl.removeEventListener("pointercancel", onUp);
+            }
+            gripEl.addEventListener("pointermove", onMove);
+            gripEl.addEventListener("pointerup", onUp);
+            gripEl.addEventListener("pointercancel", onUp);
+          });
+        }
+      })();
+    </script>
+
   </body>
 </html>

@@ -483,7 +483,13 @@
         z-index: 40;
         display: flex;
         flex-direction: column;
-        align-items: flex-end;
+        align-items: center;
+      }
+      .helpbtns {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
       }
       .helpbtn {
         appearance: none;
@@ -499,68 +505,182 @@
         border-radius: 8px;
         padding: 8px 14px;
         box-shadow: 0 6px 14px rgba(42, 120, 214, 0.24);
-        transition: 0.15s ease;
+        transition:
+          transform 0.15s ease,
+          background 0.15s ease;
       }
       .helpbtn:hover {
         transform: translateY(-1px);
       }
+      .helpbtn:focus-visible {
+        outline: 2px solid var(--txt);
+        outline-offset: 2px;
+      }
       .helpbtn.on {
         background: var(--accent);
         border-color: var(--accent);
+        box-shadow: 0 6px 14px rgba(232, 89, 12, 0.26);
       }
       .helpbar {
         display: none;
-        margin-top: 8px;
-        width: 360px;
-        max-width: min(360px, 86vw);
-        max-height: 74vh;
-        overflow-y: auto;
+      }
+      .helpbar.floatwin {
+        position: fixed;
+        z-index: 10000;
+        display: none;
+        flex-direction: column;
         background: var(--panel);
         border: 1px solid var(--line);
         border-radius: var(--r);
-        box-shadow: 0 14px 30px rgba(23, 41, 59, 0.16);
+        box-shadow: 0 18px 45px rgba(23, 41, 59, 0.28);
+        overflow: hidden;
+        min-width: 280px;
+        min-height: 200px;
+        margin: 0;
+        padding: 0;
+        max-width: calc(100vw - 16px);
+        max-height: calc(100vh - 16px);
+      }
+      .helpbar.floatwin.show {
+        display: flex;
+      }
+      .fw-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 12px;
+        background: var(--panel2);
+        border-bottom: 1px solid var(--line);
+        cursor: move;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+        flex: 0 0 auto;
+      }
+      .fw-title {
+        font-family: var(--head);
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--mut);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .fw-title::before {
+        content: "⠿";
+        font-size: 13px;
+        color: var(--dim);
+      }
+      .fw-head-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .fw-tab-btn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 4px 8px;
+        border-radius: 5px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--mut);
+        transition: 0.15s ease;
+      }
+      .fw-tab-btn:hover {
+        border-color: var(--dim);
+        color: var(--txt);
+      }
+      .fw-tab-btn.on {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .fw-close {
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--mut);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.15s ease;
+      }
+      .fw-close:hover {
+        background: #fbe7e7;
+        border-color: #f0c4c4;
+        color: #8a1f1f;
+      }
+      .fw-body {
+        flex: 1 1 auto;
+        min-height: 0;
         padding: 14px 16px;
-        font-size: 12.5px;
+        overflow-y: auto;
+        font-size: 13px;
         line-height: 1.5;
         color: var(--txt);
       }
-      .helpbar.show {
+      .fw-grip {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 16px;
+        height: 16px;
+        cursor: nwse-resize;
+        touch-action: none;
+        background: linear-gradient(135deg, transparent 50%, var(--dim) 50%, var(--dim) 58%, transparent 58%, transparent 70%, var(--dim) 70%, var(--dim) 78%, transparent 78%);
+      }
+      .floatwin.dragging {
+        opacity: 0.94;
+      }
+      .tabpanel {
+        display: none;
+      }
+      .tabpanel.on {
         display: block;
       }
-      .helpbar h4 {
-        font-family: var(--head);
-        font-size: 12px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        margin: 0 0 6px;
-        color: var(--accent);
+      .tabpanel ol,
+      .tabpanel ul {
+        margin: 0;
+        padding-left: 20px;
       }
-      .helpbar h4:not(:first-child) {
-        margin-top: 12px;
+      .tabpanel li {
+        margin-bottom: 6px;
       }
-      .helpbar p {
-        margin: 0 0 8px;
+      .tabpanel li:last-child {
+        margin-bottom: 0;
       }
-      .helpbar ul {
-        margin: 0 0 8px;
-        padding-left: 18px;
+      .tabpanel b {
+        color: var(--sky);
       }
-      .helpbar li {
-        margin-bottom: 4px;
-      }
-      .helpbar b {
-        color: var(--txt);
-      }
-
-      @media (max-width: 1180px) {
+      @media (max-width: 900px) {
         .helpwrap {
           position: static;
           align-items: stretch;
           margin-bottom: 10px;
+          flex: 0 0 auto;
         }
         .helpbar {
           width: 100%;
-          max-width: 100%;
+          max-width: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .helpbtn {
+          transition: none;
         }
       }
     </style>
@@ -619,44 +739,61 @@
 </head>
   <body>
     <div class="helpwrap">
-      <button class="helpbtn" id="helpBtn" aria-expanded="false">Guide</button>
-      <div class="helpbar" id="helpBar">
-        <h4>What you are testing</h4>
-        <p>
-          A crew capsule is returning from orbit. You choose its size, how much it
-          carries, its parachute, the height the parachute opens, and the wind.
-          Then you fly the return and see whether it survives the water landing.
-        </p>
-        <h4>How it works</h4>
-        <ul>
-          <li>
-            The capsule hits the air at <b>7.8 km/s</b> heat-shield-down. The heat
-            shield bleeds off almost all of that speed.
-          </li>
-          <li>
-            The parachute opens and the capsule settles almost at once to its
-            <b>terminal speed</b>, set by
-            <b>total mass &divide; parachute area</b>:
-            <br />speed = &radic;( 2 &middot; mass &middot; g / (&rho; &middot; area &middot; Cd) )
-          </li>
-          <li>
-            Deployment height and wind do <b>not</b> change that speed &mdash; they
-            set the <b>fall time</b> (height &divide; speed) and the
-            <b>drift</b> (wind &times; fall time).
-          </li>
-        </ul>
-        <h4>Reading the result</h4>
-        <ul>
-          <li><b>Safe</b> &le; 5 m/s &nbsp;&middot;&nbsp; <b>Hard</b> 5&ndash;10 m/s &nbsp;&middot;&nbsp; <b>Failed</b> &gt; 10 m/s</li>
-          <li><b>Mission Success</b> needs a Safe splashdown inside the target zone.</li>
-        </ul>
-        <h4>Try this</h4>
-        <ul>
-          <li>Only the <b>Large</b> chute on a <b>Light</b> capsule lands Safe (~4 m/s) &mdash; try every payload.</li>
-          <li>Fly the Heavy capsule on the Small chute (~29 m/s, Failed), then swap to Large (~10 m/s).</li>
-          <li>Change deploy height &mdash; the splashdown speed stays the same, only Fall Time moves.</li>
-          <li>Put the Light + Large combo in Strong wind and watch the long, slow fall drift off target.</li>
-        </ul>
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">
+          What You'll Learn
+        </button>
+      </div>
+      <div class="helpbar" id="helpbar">
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li>
+              <b>Configure Mission Parameters:</b> In the <b>Mission Setup</b> panel, select your <b>Capsule Type</b> (Light: 1,000 kg, Medium: 3,000 kg, or Heavy: 6,000 kg) and <b>Payload</b> (Empty, Equipment +500 kg, or 1&ndash;3 Astronauts at +100 kg each).
+            </li>
+            <li>
+              <b>Set Parachute &amp; Descent Conditions:</b> Choose a <b>Parachute Size</b> (Small: 10 m, Medium: 20 m, Large: 30 m), a <b>Deployment Height</b> (Low: 1,000 m, Medium: 2,000 m, High: 3,000 m), and set <b>Wind Speed</b> (No Wind: 0 m/s, Mild: 5 m/s, or Strong: 10 m/s).
+            </li>
+            <li>
+              <b>Launch Mission:</b> Click <b>Start Mission</b> to commence atmospheric entry. Watch the aerothermal plasma glow bleed off orbital velocity under the heat shield, followed by canopy deployment, deceleration, and crosswind drift.
+            </li>
+            <li>
+              <b>Track Telemetry &amp; Splashdown:</b> Observe live altitude, speed, drift displacement, and elapsed fall time. When the capsule touches water, impact rating is evaluated: <b>Safe</b> (&le; 7.0 m/s), <b>Hard</b> (7.0&ndash;13.0 m/s), or <b>Failed</b> (&gt; 13.0 m/s).
+            </li>
+            <li>
+              <b>Verify Mission Success:</b> Full mission success requires achieving a <b>Safe</b> landing velocity <b>and</b> touching down within the <b>Recovery Target Zone</b> (&plusmn;400 m).
+            </li>
+            <li>
+              <b>Analyze Observations &amp; Reset:</b> Compare recorded trials in the <b>Observation Log</b> table below the stage, then click <b>Reset</b> to adjust parameters and test new configurations.
+            </li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <ul>
+            <li>
+              <b>Atmospheric Re-entry &amp; Heat Shield:</b> The capsule enters Earth's atmosphere at orbital velocity (~<b>7.8 km/s</b>). Extreme aerothermal compression creates a fiery plasma envelope, using the blunt ablative heat shield to dissipate massive kinetic energy into heat and slow the capsule to <b>0.10&ndash;0.30 km/s</b> prior to parachute deployment.
+            </li>
+            <li>
+              <b>Aerodynamic Drag &amp; Parachute Sizing:</b> The parachute generates upward drag force: <b>F<sub>d</sub> = &frac12; &rho; v<sup>2</sup> C<sub>d</sub> A</b>. Canopy diameter (10 m, 20 m, 30 m) governs surface area (78.5 m<sup>2</sup>, 314.2 m<sup>2</sup>, 706.9 m<sup>2</sup>); larger canopies produce exponentially higher drag to brake the capsule.
+            </li>
+            <li>
+              <b>Terminal Velocity Equilibrium:</b> Downward gravitational force (<b>F<sub>g</sub> = m &middot; g</b>) balances upward aerodynamic drag (<b>F<sub>d</sub></b>) to establish terminal velocity:
+              <br /><b>v<sub>term</sub> = &radic;( 2 &middot; m &middot; g / (&rho; &middot; A &middot; C<sub>d</sub>) )</b>
+            </li>
+            <li>
+              <b>Total Mass &amp; Payload Effect:</b> Greater total mass (<b>M<sub>total</sub> = M<sub>capsule</sub> + M<sub>payload</sub></b>) produces greater gravitational pull, requiring larger parachute surface area. Adding scientific equipment (+500 kg) and astronauts (+100 kg each) raises splashdown velocity if parachute area is insufficient.
+            </li>
+            <li>
+              <b>Deployment Altitude &amp; Braking Distance:</b> Parachutes require sufficient altitude and time to decelerate the capsule to terminal speed. <b>High deployment (3,000 m)</b> allows full braking, while <b>Low deployment (1,000 m)</b> risks impacting the water before reaching terminal velocity ("late-deployment" failure).
+            </li>
+            <li>
+              <b>Crosswind Drift &amp; Recovery Zone:</b> Horizontal wind displaces the capsule downwind: <b>Drift (d) = v<sub>wind</sub> &times; t<sub>fall</sub></b>. Slower-falling capsules spend more time aloft, causing greater lateral drift under mild (5 m/s) and strong (10 m/s) winds that can blow them outside the designated <b>Recovery Target Zone</b> (&plusmn;400 m).
+            </li>
+            <li>
+              <b>Splashdown Ratings &amp; G-Forces:</b> Touchdown impact is rated for crew survivability: <b>Safe</b> (&le; 7.0 m/s, &lt; 4 g, capsule floats upright), <b>Hard</b> (7.0&ndash;13.0 m/s, 4&ndash;10 g, risk of crew injury/structural damage), and <b>Failed</b> (&gt; 13.0 m/s, &gt; 10 g, catastrophic breach or sinking).
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -762,13 +899,23 @@
           <div class="logscroll">
             <table class="log">
               <thead>
-                <tr title="Cap = capsule · Ch = chute · Dep = deploy height · Wnd = wind m/s · m/s = splashdown speed · Drift metres">
-                  <th>#</th><th>Cap</th><th>Ch</th><th>Dep</th><th>Wnd</th>
-                  <th>m/s</th><th>Drift</th><th>Res</th>
+                <tr>
+                  <th>#</th>
+                  <th>Capsule</th>
+                  <th>Payload</th>
+                  <th>Mass</th>
+                  <th>Chute</th>
+                  <th>Deploy</th>
+                  <th>Wind</th>
+                  <th>Speed</th>
+                  <th>Fall T</th>
+                  <th>Drift</th>
+                  <th>Impact</th>
+                  <th>Result</th>
                 </tr>
               </thead>
               <tbody id="logBody">
-                <tr><td colspan="8" class="logempty">No runs yet.</td></tr>
+                <tr><td colspan="12" class="logempty">No runs yet. Run a mission to record results.</td></tr>
               </tbody>
             </table>
           </div>
@@ -818,8 +965,8 @@
       const REENTRY_KMS = 7.8;     // headline atmospheric-interface speed
       const V_AFTER_SHIELD = { light: 150, medium: 210, heavy: 280 }; // m/s, heat-shield exit (display only)
       const TARGET_R = 500;        // radius of the safe splashdown zone (m)
-      const SAFE_MAX = 5;          // m/s  — Safe splashdown
-      const HARD_MAX = 10;         // m/s  — Hard splashdown; above this is Failed
+      const SAFE_MAX = 7.0;        // m/s  — Safe splashdown limit (~25 km/h, human-rated splashdown standard)
+      const HARD_MAX = 13.0;       // m/s  — Hard splashdown limit (~47 km/h); above this is Failed
 
       const FB = {
         safe:  "The parachute created enough air resistance to slow the capsule.",
@@ -859,15 +1006,26 @@
         const area = chuteArea(ch.dia);
         const v0 = V_AFTER_SHIELD[S.cap];
 
-        // Parachute terminal velocity. At these masses and canopy areas the capsule
-        // settles to this speed within metres of the canopy opening, so it IS the
-        // splashdown speed — deployment height and wind do not change it.
-        const vSplash = Math.sqrt((2 * mass * G) / (RHO * area * CD_CHUTE));
-        const vTerm = vSplash;
+        // Standard aerodynamic drag factor k = (0.5 * rho * Area * Cd) / Mass
+        const k = (0.5 * RHO * area * CD_CHUTE) / mass;
+        const vTerm = Math.sqrt(G / k);
 
-        // Deployment height and wind only drive fall time and drift.
-        const fallTime = dep.alt / vSplash;          // height / speed
-        const drift = wd.v * fallTime;               // wind * fall time
+        // Physical line stretch & canopy inflation distance during high-speed deployment:
+        // Parachutes take finite time/distance to open from v0 (150-280 m/s)
+        const inflationDist = (v0 * 2.8) * Math.pow(ch.dia / 30.0, 0.4);
+        const effectiveH = Math.max(30.0, dep.alt - inflationDist);
+
+        // Analytical solution to aerodynamic deceleration over effective altitude drop:
+        // v^2 = v_term^2 + (v0^2 - v_term^2) * exp(-2 * k * effectiveH)
+        const decay = Math.exp(-2 * k * effectiveH);
+        const vSplash = Math.sqrt(vTerm * vTerm + (v0 * v0 - vTerm * vTerm) * decay);
+
+        // Deployment height directly affects fall time and available braking distance
+        const vAvg = (v0 + vSplash) * 0.5;
+        const fallTime = decay > 0.05
+          ? (inflationDist / v0) + (effectiveH / vAvg)
+          : (dep.alt / vSplash);
+        const drift = wd.v * fallTime;
         const drifted = drift > TARGET_R;
 
         let impact;
@@ -876,25 +1034,28 @@
         else impact = "fail";
 
         const success = impact === "safe" && !drifted;
-        // "opened too late" — advisory only: a Low deployment that still failed had
-        // no altitude left to recover in. It does not change the impact tier.
-        const lateDeploy = S.dep === "low" && impact === "fail";
+
+        // Late deployment warning: triggered when low deployment (1,000 m) prevented full deceleration
+        const lateDeploy = (S.dep === "low") && (vSplash > vTerm * 1.10 || vSplash > SAFE_MAX);
 
         return {
           mass, area, drag: ch.drag, v0,
           vTerm, vSplash, fallTime, drift,
           impact, success, lateDeploy, drifted,
           depAlt: dep.alt, windV: wd.v, payMass: pay.mass,
+          chuteName: ch.name, capName: cap.name, payName: pay.name,
         };
       }
 
-      // Descent state at elapsed time tt (seconds) — constant terminal-velocity fall.
+      // Descent state at elapsed time tt (seconds) — follows realistic deceleration curve
       function trajAt(c, tt) {
         const t = Math.max(0, Math.min(tt, c.fallTime));
+        const progress = c.fallTime > 0 ? t / c.fallTime : 1;
+        const currentV = c.v0 + (c.vSplash - c.v0) * Math.min(1, Math.pow(progress, 0.7));
         return {
           t,
-          h: Math.max(0, c.depAlt - c.vSplash * t),
-          v: c.vSplash,
+          h: Math.max(0, c.depAlt * (1 - progress)),
+          v: currentV,
           x: c.windV * t,
         };
       }
@@ -904,11 +1065,13 @@
         if (c.impact === "safe") out.push({ cls: "ok", ic: "✔", t: FB.safe });
         else if (c.impact === "hard") out.push({ cls: "warn", ic: "⚠", t: FB.hard });
         else out.push({ cls: "bad", ic: "✖", t: FB.fail });
+
         if (c.lateDeploy) out.push({ cls: "warn", ic: "⏱", t: FB.late });
         if (c.drifted) out.push({ cls: "warn", ic: "→", t: FB.drift });
-        if (c.payMass >= 160 && c.impact !== "safe")
+        if (c.payMass >= 150 && c.impact !== "safe")
           out.push({ cls: "warn", ic: "⚖", t: FB.heavy });
-        return out.slice(0, 3);
+
+        return out;
       }
 
       /* ---------------- outputs panel ---------------- */
@@ -973,37 +1136,55 @@
       }
 
       /* ---------------- observation log ---------------- */
-      function shortCap(v) { return { light: "L", medium: "M", heavy: "H" }[v]; }
-      function shortChute(v) { return { small: "S", medium: "M", large: "L" }[v]; }
-      function shortDep(v) { return { low: "1k", medium: "2k", high: "3k" }[v]; }
-
       function addLogRow(c) {
         S.runN++;
         S.log.push({
           n: S.runN,
-          cap: shortCap(S.cap), chute: shortChute(S.chute),
-          dep: shortDep(S.dep), wind: WIND[S.wind].v,
-          splash: Math.round(c.vSplash), drift: Math.round(c.drift),
-          impact: c.impact, success: c.success, drifted: c.drifted,
+          cap: CAPSULE[S.cap].name,
+          pay: PAYLOAD[S.pay].name,
+          mass: c.mass,
+          chute: CHUTE[S.chute].name,
+          chuteDia: CHUTE[S.chute].dia,
+          chuteArea: Math.round(c.area),
+          dep: DEPLOY[S.dep].alt,
+          wind: WIND[S.wind].v,
+          splashKms: (c.vSplash / 1000).toFixed(3),
+          splashMs: c.vSplash.toFixed(1),
+          fallTime: c.fallTime.toFixed(1),
+          drift: Math.round(c.drift),
+          impact: c.impact,
+          success: c.success,
+          drifted: c.drifted,
         });
         renderLog();
       }
+
       function renderLog() {
         const b = document.getElementById("logBody");
         if (!S.log.length) {
-          b.innerHTML = '<tr><td colspan="8" class="logempty">No runs yet.</td></tr>';
+          b.innerHTML = '<tr><td colspan="12" class="logempty">No runs yet. Run a mission to record results.</td></tr>';
           return;
         }
         b.innerHTML = S.log
           .map((r) => {
-            let res, cls;
-            if (r.success) { res = "OK"; cls = "safe"; }
-            else if (r.drifted && r.impact === "safe") { res = "DRIFT"; cls = "hard"; }
-            else { res = r.impact.toUpperCase(); cls = r.impact; }
+            const impCls = r.impact;
+            const resCls = r.success ? "safe" : (r.drifted && r.impact === "safe" ? "hard" : "fail");
+            const resText = r.success ? "SUCCESS" : (r.drifted && r.impact === "safe" ? "DRIFTED" : "RETRY");
             return (
-              "<tr><td>" + r.n + "</td><td>" + r.cap + "</td><td>" + r.chute + "</td><td>" +
-              r.dep + "</td><td>" + r.wind + "</td><td>" + r.splash + "</td><td>" + r.drift +
-              '</td><td class="res ' + cls + '">' + res + "</td></tr>"
+              "<tr>" +
+              "<td>" + r.n + "</td>" +
+              "<td>" + r.cap + "</td>" +
+              "<td>" + r.pay + "</td>" +
+              "<td>" + r.mass.toLocaleString() + "</td>" +
+              "<td>" + r.chute + "</td>" +
+              "<td>" + r.dep.toLocaleString() + "m</td>" +
+              "<td>" + r.wind + "</td>" +
+              "<td>" + r.splashMs + "</td>" +
+              "<td>" + r.fallTime + "s</td>" +
+              "<td>" + r.drift + "m</td>" +
+              '<td><span class="pill ' + impCls + '">' + r.impact.toUpperCase() + '</span></td>' +
+              '<td><span class="pill ' + resCls + '">' + resText + '</span></td>' +
+              "</tr>"
             );
           })
           .join("");
@@ -1792,12 +1973,197 @@
       document.getElementById("btnReset").addEventListener("click", () => resetScene(false));
       document.getElementById("btnClear").addEventListener("click", () => { S.log = []; S.runN = 0; renderLog(); });
 
-      const hb = document.getElementById("helpBar"), hbtn = document.getElementById("helpBtn");
-      hbtn.addEventListener("click", () => {
-        const open = hb.classList.toggle("show");
-        hbtn.classList.toggle("on", open);
-        hbtn.setAttribute("aria-expanded", open ? "true" : "false");
-      });
+      (function () {
+        var bar = document.getElementById("helpbar");
+        if (!bar) return;
+
+        // Ensure floatwin structure
+        if (!bar.classList.contains("floatwin")) {
+          bar.classList.add("floatwin");
+          bar.setAttribute("role", "dialog");
+          bar.setAttribute("aria-label", "Help Guide");
+
+          var head = document.createElement("div");
+          head.className = "fw-head";
+
+          var title = document.createElement("span");
+          title.className = "fw-title";
+          title.textContent = "How To Use";
+          head.appendChild(title);
+
+          var actions = document.createElement("div");
+          actions.className = "fw-head-actions";
+
+          var tabBtns = [];
+          var origPanels = bar.querySelectorAll(".tabpanel");
+          if (origPanels.length > 1) {
+            origPanels.forEach(function (p) {
+              var t = p.dataset.panel;
+              var b = document.createElement("button");
+              b.type = "button";
+              b.className = "fw-tab-btn";
+              b.dataset.tab = t;
+              b.textContent = t === "use" ? "How To Use" : "What To Learn";
+              actions.appendChild(b);
+              tabBtns.push(b);
+            });
+          }
+
+          var closeBtn = document.createElement("button");
+          closeBtn.type = "button";
+          closeBtn.className = "fw-close";
+          closeBtn.title = "Close Guide";
+          closeBtn.setAttribute("aria-label", "Close");
+          closeBtn.textContent = "✕";
+          actions.appendChild(closeBtn);
+          head.appendChild(actions);
+
+          var body = document.createElement("div");
+          body.className = "fw-body";
+          while (bar.firstChild) {
+            body.appendChild(bar.firstChild);
+          }
+
+          var grip = document.createElement("div");
+          grip.className = "fw-grip";
+          grip.title = "Drag to resize";
+
+          bar.appendChild(head);
+          bar.appendChild(body);
+          bar.appendChild(grip);
+
+          document.body.appendChild(bar);
+        }
+
+        var btns = document.querySelectorAll(".helpbtn");
+        var tabBtns = bar.querySelectorAll(".fw-tab-btn");
+        var titleEl = bar.querySelector(".fw-title");
+        var closeBtn = bar.querySelector(".fw-close");
+        var headEl = bar.querySelector(".fw-head");
+        var gripEl = bar.querySelector(".fw-grip");
+        var topZ = 10000;
+        var posInit = false;
+
+        function toFront() {
+          bar.style.zIndex = ++topZ;
+        }
+
+        function closeAll() {
+          bar.classList.remove("show");
+          btns.forEach(function (b) { b.classList.remove("on"); });
+          tabBtns.forEach(function (b) { b.classList.remove("on"); });
+        }
+
+        function openTab(tab) {
+          toFront();
+          if (!posInit) {
+            var w = Math.min(420, window.innerWidth - 32);
+            var h = Math.min(520, window.innerHeight - 80);
+            bar.style.width = w + "px";
+            bar.style.height = h + "px";
+            bar.style.top = "65px";
+            bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
+            posInit = true;
+          }
+          bar.classList.add("show");
+          btns.forEach(function (b) {
+            b.classList.toggle("on", b.dataset.tab === tab);
+          });
+          tabBtns.forEach(function (b) {
+            b.classList.toggle("on", b.dataset.tab === tab);
+          });
+          var panels = bar.querySelectorAll(".tabpanel");
+          panels.forEach(function (p) {
+            p.classList.toggle("on", p.dataset.panel === tab);
+          });
+          if (titleEl) {
+            titleEl.textContent = tab === "use" ? "How To Use" : "What You'll Learn";
+          }
+        }
+
+        btns.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var tab = btn.dataset.tab;
+            if (bar.classList.contains("show") && btn.classList.contains("on")) {
+              closeAll();
+            } else {
+              openTab(tab);
+            }
+          });
+        });
+
+        tabBtns.forEach(function (tb) {
+          tb.addEventListener("click", function (e) {
+            e.stopPropagation();
+            openTab(tb.dataset.tab);
+          });
+        });
+
+        if (closeBtn) closeBtn.addEventListener("click", closeAll);
+        bar.addEventListener("pointerdown", toFront);
+
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && bar.classList.contains("show")) closeAll();
+        });
+
+        // Dragging by header
+        if (headEl) {
+          headEl.addEventListener("pointerdown", function (e) {
+            if (e.target.closest(".fw-head-actions")) return;
+            e.preventDefault();
+            toFront();
+            headEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var dx = e.clientX - r.left;
+            var dy = e.clientY - r.top;
+            bar.classList.add("dragging");
+            function onMove(ev) {
+              var nx = Math.max(8, Math.min(window.innerWidth - bar.offsetWidth - 8, ev.clientX - dx));
+              var ny = Math.max(8, Math.min(window.innerHeight - 40, ev.clientY - dy));
+              bar.style.left = nx + "px";
+              bar.style.top = ny + "px";
+            }
+            function onUp(ev) {
+              bar.classList.remove("dragging");
+              headEl.removeEventListener("pointermove", onMove);
+              headEl.removeEventListener("pointerup", onUp);
+              headEl.removeEventListener("pointercancel", onUp);
+            }
+            headEl.addEventListener("pointermove", onMove);
+            headEl.addEventListener("pointerup", onUp);
+            headEl.addEventListener("pointercancel", onUp);
+          });
+        }
+
+        // Resizing by grip
+        if (gripEl) {
+          gripEl.addEventListener("pointerdown", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toFront();
+            gripEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var startX = e.clientX;
+            var startY = e.clientY;
+            var startW = r.width;
+            var startH = r.height;
+            function onMove(ev) {
+              var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
+              var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
+              bar.style.width = nw + "px";
+              bar.style.height = nh + "px";
+            }
+            function onUp(ev) {
+              gripEl.removeEventListener("pointermove", onMove);
+              gripEl.removeEventListener("pointerup", onUp);
+              gripEl.removeEventListener("pointercancel", onUp);
+            }
+            gripEl.addEventListener("pointermove", onMove);
+            gripEl.addEventListener("pointerup", onUp);
+            gripEl.addEventListener("pointercancel", onUp);
+          });
+        }
+      })();
 
       /* ---------------- boot ---------------- */
       fit();
@@ -1806,5 +2172,206 @@
       renderLog();
       requestAnimationFrame(frame);
     </script>
+  
+    <script>
+      /* Universal Floating, Draggable & Resizable How-to-Use & Guide System */
+      (function initUniversalHelpFloatwin() {
+        var bar = document.getElementById("helpbar");
+        if (!bar) return;
+
+        // Ensure floatwin markup structure
+        if (!bar.classList.contains("floatwin")) {
+          bar.classList.add("floatwin");
+          bar.setAttribute("role", "dialog");
+          bar.setAttribute("aria-label", "Help Guide");
+
+          var head = document.createElement("div");
+          head.className = "fw-head";
+
+          var title = document.createElement("span");
+          title.className = "fw-title";
+          title.textContent = "How To Use";
+          head.appendChild(title);
+
+          var actions = document.createElement("div");
+          actions.className = "fw-head-actions";
+
+          var tabBtns = [];
+          var origPanels = bar.querySelectorAll(".tabpanel");
+          if (origPanels.length > 1) {
+            origPanels.forEach(function (p) {
+              var t = p.dataset.panel;
+              var b = document.createElement("button");
+              b.type = "button";
+              b.className = "fw-tab-btn";
+              b.dataset.tab = t;
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What To Learn" : t);
+              actions.appendChild(b);
+              tabBtns.push(b);
+            });
+          }
+
+          var closeBtn = document.createElement("button");
+          closeBtn.type = "button";
+          closeBtn.className = "fw-close";
+          closeBtn.title = "Close Guide";
+          closeBtn.setAttribute("aria-label", "Close");
+          closeBtn.textContent = "✕";
+          actions.appendChild(closeBtn);
+          head.appendChild(actions);
+
+          var body = document.createElement("div");
+          body.className = "fw-body";
+          while (bar.firstChild) {
+            body.appendChild(bar.firstChild);
+          }
+
+          var grip = document.createElement("div");
+          grip.className = "fw-grip";
+          grip.title = "Drag to resize";
+
+          bar.appendChild(head);
+          bar.appendChild(body);
+          bar.appendChild(grip);
+
+          document.body.appendChild(bar);
+        }
+
+        var btns = document.querySelectorAll(".helpbtn");
+        var tabBtns = bar.querySelectorAll(".fw-tab-btn");
+        var titleEl = bar.querySelector(".fw-title");
+        var closeBtn = bar.querySelector(".fw-close");
+        var headEl = bar.querySelector(".fw-head");
+        var gripEl = bar.querySelector(".fw-grip");
+        var topZ = 10000;
+        var posInit = false;
+
+        function toFront() {
+          bar.style.zIndex = ++topZ;
+        }
+
+        function closeAll() {
+          bar.classList.remove("show");
+          btns.forEach(function (b) { b.classList.remove("on"); });
+          tabBtns.forEach(function (b) { b.classList.remove("on"); });
+        }
+
+        function openTab(tab) {
+          toFront();
+          if (!posInit) {
+            var w = Math.min(440, window.innerWidth - 32);
+            var h = Math.min(540, window.innerHeight - 80);
+            bar.style.width = w + "px";
+            bar.style.height = h + "px";
+            bar.style.top = "65px";
+            bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
+            posInit = true;
+          }
+          bar.classList.add("show");
+          btns.forEach(function (b) {
+            b.classList.toggle("on", b.dataset.tab === tab);
+          });
+          tabBtns.forEach(function (b) {
+            b.classList.toggle("on", b.dataset.tab === tab);
+          });
+          var panels = bar.querySelectorAll(".tabpanel");
+          panels.forEach(function (p) {
+            p.classList.toggle("on", p.dataset.panel === tab);
+          });
+          if (titleEl) {
+            titleEl.textContent = tab === "use" ? "How To Use" : (tab === "learn" ? "What You'll Learn" : "Guide");
+          }
+        }
+
+        btns.forEach(function (btn) {
+          var newBtn = btn.cloneNode(true);
+          btn.parentNode.replaceChild(newBtn, btn);
+          newBtn.addEventListener("click", function () {
+            var tab = newBtn.dataset.tab || "use";
+            if (bar.classList.contains("show") && newBtn.classList.contains("on")) {
+              closeAll();
+            } else {
+              openTab(tab);
+            }
+          });
+        });
+
+        // re-query cloned buttons
+        btns = document.querySelectorAll(".helpbtn");
+
+        tabBtns.forEach(function (tb) {
+          tb.addEventListener("click", function (e) {
+            e.stopPropagation();
+            openTab(tb.dataset.tab);
+          });
+        });
+
+        if (closeBtn) closeBtn.addEventListener("click", closeAll);
+        bar.addEventListener("pointerdown", toFront);
+
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && bar.classList.contains("show")) closeAll();
+        });
+
+        // Dragging by header
+        if (headEl) {
+          headEl.addEventListener("pointerdown", function (e) {
+            if (e.target.closest(".fw-head-actions")) return;
+            e.preventDefault();
+            toFront();
+            headEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var dx = e.clientX - r.left;
+            var dy = e.clientY - r.top;
+            bar.classList.add("dragging");
+            function onMove(ev) {
+              var nx = Math.max(8, Math.min(window.innerWidth - bar.offsetWidth - 8, ev.clientX - dx));
+              var ny = Math.max(8, Math.min(window.innerHeight - 40, ev.clientY - dy));
+              bar.style.left = nx + "px";
+              bar.style.top = ny + "px";
+            }
+            function onUp(ev) {
+              bar.classList.remove("dragging");
+              headEl.removeEventListener("pointermove", onMove);
+              headEl.removeEventListener("pointerup", onUp);
+              headEl.removeEventListener("pointercancel", onUp);
+            }
+            headEl.addEventListener("pointermove", onMove);
+            headEl.addEventListener("pointerup", onUp);
+            headEl.addEventListener("pointercancel", onUp);
+          });
+        }
+
+        // Resizing by grip
+        if (gripEl) {
+          gripEl.addEventListener("pointerdown", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toFront();
+            gripEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var startX = e.clientX;
+            var startY = e.clientY;
+            var startW = r.width;
+            var startH = r.height;
+            function onMove(ev) {
+              var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
+              var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
+              bar.style.width = nw + "px";
+              bar.style.height = nh + "px";
+            }
+            function onUp(ev) {
+              gripEl.removeEventListener("pointermove", onMove);
+              gripEl.removeEventListener("pointerup", onUp);
+              gripEl.removeEventListener("pointercancel", onUp);
+            }
+            gripEl.addEventListener("pointermove", onMove);
+            gripEl.addEventListener("pointerup", onUp);
+            gripEl.addEventListener("pointercancel", onUp);
+          });
+        }
+      })();
+    </script>
+
   </body>
 </html>
