@@ -1,0 +1,2169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Stargazer's Portal — Constellation Exploration</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #060b12;
+        --panel: #0b141e;
+        --panel2: #0f1b28;
+        --line: #1c2b3b;
+        --line2: #27405a;
+        --txt: #d8e6f2;
+        --mut: #8ba3b8;
+        --dim: #5b738a;
+        --glow: #7fd3ff;
+        --glow-gold: #ffd45c;
+        --accent: #ff8a3d;
+        --head: "Orbitron", sans-serif;
+        --body: "Rajdhani", sans-serif;
+        --mono: "IBM Plex Mono", ui-monospace, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+      }
+
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--txt);
+        font-family: var(--body);
+        -webkit-font-smoothing: antialiased;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ---- TOP HEADER (matches space-astronomy simulations) ---- */
+      header.top {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 18px;
+        background: #08111a;
+        border-bottom: 1px solid var(--line);
+        flex: 0 0 auto;
+        position: relative;
+        z-index: 50;
+      }
+      .nav-back {
+        grid-column: 1;
+        justify-self: start;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--mut);
+        text-decoration: none;
+        transition: 0.15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .nav-back:hover {
+        color: var(--glow);
+      }
+      .title {
+        grid-column: 2;
+        text-align: center;
+      }
+      .title h1 {
+        font-family: var(--head);
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        color: var(--txt);
+      }
+      .helpbtns {
+        grid-column: 3;
+        justify-self: end;
+        display: flex;
+        gap: 8px;
+      }
+      .helpbtn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        color: #06121c;
+        background: var(--glow);
+        border: 1px solid var(--glow);
+        padding: 8px 14px;
+        border-radius: 8px;
+        transition: transform 0.15s ease, background 0.15s ease;
+        box-shadow: 0 4px 12px rgba(127, 211, 255, 0.25);
+      }
+      .helpbtn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 0 14px rgba(127, 211, 255, 0.45);
+      }
+      .helpbtn.on {
+        background: var(--accent) !important;
+        border-color: var(--accent) !important;
+        color: #fff !important;
+        box-shadow: 0 6px 14px rgba(255, 138, 61, 0.35);
+      }
+
+      /* ---- FLOATING, DRAGGABLE & RESIZABLE GUIDE WINDOW ---- */
+      .helpbar.floatwin {
+        position: fixed !important;
+        z-index: 10000 !important;
+        display: none;
+        flex-direction: column !important;
+        background: var(--panel) !important;
+        border: 1px solid var(--line2) !important;
+        border-radius: 10px !important;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7) !important;
+        overflow: hidden !important;
+        min-width: 280px !important;
+        min-height: 200px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: calc(100vw - 16px) !important;
+        max-height: calc(100vh - 16px) !important;
+      }
+      .helpbar.floatwin.show {
+        display: flex !important;
+      }
+      .fw-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 12px;
+        background: var(--panel2);
+        border-bottom: 1px solid var(--line);
+        cursor: move;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+        flex: 0 0 auto;
+      }
+      .fw-title {
+        font-family: var(--head);
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--txt);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .fw-title::before {
+        content: "⠿";
+        font-size: 13px;
+        color: var(--dim);
+      }
+      .fw-head-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .fw-tab-btn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 4px 8px;
+        border-radius: 5px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--mut);
+        transition: 0.15s ease;
+      }
+      .fw-tab-btn:hover {
+        border-color: var(--line2);
+        color: var(--txt);
+      }
+      .fw-tab-btn.on {
+        background: var(--accent) !important;
+        border-color: var(--accent) !important;
+        color: #fff !important;
+      }
+      .fw-close {
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--mut);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.15s ease;
+      }
+      .fw-close:hover {
+        background: #8a1f1f;
+        border-color: #c44040;
+        color: #fff;
+      }
+      .fw-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 14px 18px;
+        overflow-y: auto;
+        font-size: 13.5px;
+        line-height: 1.55;
+        color: var(--mut);
+      }
+      .fw-body ol,
+      .fw-body ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .fw-body li {
+        margin-bottom: 8px;
+      }
+      .fw-body b {
+        color: var(--glow);
+      }
+      .fw-grip {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 16px;
+        height: 16px;
+        cursor: nwse-resize;
+        touch-action: none;
+        background: linear-gradient(
+          135deg,
+          transparent 50%,
+          var(--dim) 50%,
+          var(--dim) 58%,
+          transparent 58%,
+          transparent 70%,
+          var(--dim) 70%,
+          var(--dim) 78%,
+          transparent 78%
+        );
+      }
+      .floatwin.dragging {
+        opacity: 0.94;
+      }
+
+      .tabpanel {
+        display: none;
+      }
+      .tabpanel.on {
+        display: block;
+      }
+
+      @media (max-width: 760px) {
+        header.top {
+          grid-template-columns: 1fr;
+          gap: 6px;
+        }
+        .nav-back {
+          display: none;
+        }
+        .helpbtns {
+          grid-row: 1;
+          grid-column: 1;
+          justify-self: center;
+        }
+        .title {
+          grid-row: 2;
+          grid-column: 1;
+        }
+      }
+
+      /* ---- MAIN VIEWPORT ---- */
+      #app {
+        flex: 1 1 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* ---- MAIN VIEW: DARK NIGHT SKY DOME ---- */
+      #stage {
+        flex: 1 1 0;
+        position: relative;
+        overflow: hidden;
+        cursor: grab;
+        background: #03060c;
+      }
+      #stage.panning {
+        cursor: grabbing;
+      }
+      #skyCanvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* ---- TOP STRIP: TARGET SHAPE CARD ---- */
+      #topStrip {
+        position: absolute;
+        top: 14px;
+        left: 18px;
+        z-index: 20;
+        pointer-events: none;
+      }
+      .target-card {
+        pointer-events: auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(11, 20, 30, 0.92);
+        border: 1px solid var(--line2);
+        border-radius: 10px;
+        padding: 10px 14px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+      }
+      .target-preview-wrap {
+        width: 60px;
+        height: 60px;
+        background: #070d16;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      #targetPreviewCanvas {
+        width: 60px;
+        height: 60px;
+      }
+      .target-meta {
+        display: flex;
+        flex-direction: column;
+      }
+      .target-tag {
+        font-family: var(--head);
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--glow-gold);
+        margin-bottom: 2px;
+      }
+      .target-name {
+        font-family: var(--head);
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: var(--txt);
+      }
+      .target-desc {
+        font-family: var(--body);
+        font-size: 13px;
+        color: var(--mut);
+      }
+
+      /* ---- CORNER BUTTON: HINT OUTLINE TOGGLE ---- */
+      #cornerControl {
+        position: absolute;
+        top: 14px;
+        right: 18px;
+        z-index: 20;
+      }
+      .corner-btn {
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        color: var(--txt);
+        background: #0c1824;
+        border: 1px solid var(--line2);
+        padding: 8px 14px;
+        border-radius: 8px;
+        transition: 0.15s;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      }
+      .corner-btn:hover {
+        border-color: var(--glow);
+        box-shadow: 0 0 14px rgba(127, 211, 255, 0.35);
+      }
+      .corner-btn.on {
+        background: var(--glow);
+        color: #06121c;
+        border-color: var(--glow);
+        box-shadow: inset 0 0 0 2px #06121c, 0 0 14px rgba(127, 211, 255, 0.5);
+      }
+
+      /* ---- BOTTOM STRIP: SCROLLABLE STAR-MAP SCRAPBOOK ---- */
+      #bottomStrip {
+        flex: 0 0 auto;
+        height: 96px;
+        background: #09131d;
+        border-top: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        z-index: 30;
+      }
+      .scrapbook-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 18px 2px;
+      }
+      .scrapbook-title {
+        font-family: var(--head);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--mut);
+      }
+      .scrapbook-count {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        color: var(--dim);
+      }
+      .scrapbook-count b {
+        color: var(--glow);
+      }
+
+      .scrapbook-track {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px 18px 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+      .scrapbook-track::-webkit-scrollbar {
+        height: 5px;
+      }
+      .scrapbook-track::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .scrapbook-track::-webkit-scrollbar-thumb {
+        background: var(--line2);
+        border-radius: 3px;
+      }
+
+      .scrapbook-empty {
+        font-family: var(--body);
+        font-size: 14px;
+        color: var(--dim);
+        font-style: italic;
+        padding: 8px 4px;
+      }
+
+      .scrap-icon {
+        flex: 0 0 auto;
+        height: 54px;
+        padding: 6px 12px 6px 8px;
+        background: #0c1824;
+        border: 1px solid var(--line2);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        transition: 0.15s;
+      }
+      .scrap-icon:hover {
+        border-color: var(--glow);
+        transform: translateY(-2px);
+        box-shadow: 0 0 12px rgba(127, 211, 255, 0.25);
+      }
+      .scrap-icon-thumb {
+        width: 40px;
+        height: 40px;
+        background: #060b12;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .scrap-icon-thumb canvas {
+        width: 40px;
+        height: 40px;
+      }
+      .scrap-icon-name {
+        font-family: var(--head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: var(--txt);
+        white-space: nowrap;
+      }
+
+      /* ---- COMPLETION REVEAL OVERLAY ---- */
+      #completionOverlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(4, 8, 14, 0.7);
+        backdrop-filter: blur(6px);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      #completionOverlay.show {
+        display: flex;
+      }
+      .reveal-box {
+        background: #0c1824;
+        border: 1px solid var(--line2);
+        box-shadow: 0 0 40px rgba(127, 211, 255, 0.2), 0 20px 50px rgba(0, 0, 0, 0.7);
+        border-radius: 12px;
+        max-width: 460px;
+        width: 100%;
+        padding: 24px 26px;
+        text-align: center;
+        position: relative;
+      }
+      .reveal-title {
+        font-family: var(--head);
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--glow);
+        margin-bottom: 4px;
+      }
+      .reveal-sub {
+        font-family: var(--body);
+        font-size: 15px;
+        color: var(--mut);
+        margin-bottom: 14px;
+      }
+      .reveal-preview {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 16px;
+        background: #070e17;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #revealCanvas {
+        width: 120px;
+        height: 120px;
+      }
+      .reveal-fact {
+        font-size: 14.5px;
+        line-height: 1.5;
+        color: var(--txt);
+        background: #08111b;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 18px;
+      }
+      .reveal-fact b {
+        color: var(--glow-gold);
+      }
+      .ovl-btn {
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border: none;
+        border-radius: 8px;
+        background: var(--glow);
+        color: #06121c;
+        padding: 10px 20px;
+        transition: 0.15s;
+      }
+      .ovl-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 0 14px rgba(127, 211, 255, 0.45);
+      }
+
+      /* Scrapbook Recall Popup */
+      #recallOverlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(4, 8, 14, 0.7);
+        backdrop-filter: blur(6px);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      #recallOverlay.show {
+        display: flex;
+      }
+      .recall-box {
+        background: #0c1824;
+        border: 1px solid var(--line2);
+        box-shadow: 0 0 40px rgba(127, 211, 255, 0.15);
+        border-radius: 12px;
+        max-width: 440px;
+        width: 100%;
+        padding: 22px 24px;
+        position: relative;
+        text-align: center;
+      }
+      .recall-close {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        color: var(--mut);
+        font-size: 16px;
+        font-weight: 700;
+        padding: 4px 8px;
+      }
+      .recall-close:hover {
+        color: #fff;
+      }
+      .recall-title {
+        font-family: var(--head);
+        font-size: 18px;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--glow);
+        margin-bottom: 2px;
+      }
+      .recall-sub {
+        font-family: var(--body);
+        font-size: 14px;
+        color: var(--mut);
+        margin-bottom: 12px;
+      }
+      .recall-preview {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 14px;
+        background: #070e17;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #recallCanvas {
+        width: 100px;
+        height: 100px;
+      }
+      .recall-fact {
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--txt);
+        margin-bottom: 16px;
+      }
+      .recall-fact b {
+        color: var(--glow-gold);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ---- TOP HEADER ---- -->
+    <header class="top">
+      <a href="../../categories/space-astronomy.html" class="nav-back">
+        &larr; Space &amp; Astronomy
+      </a>
+
+      <div class="title">
+        <h1>Stargazer's Portal</h1>
+      </div>
+
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">What You'll Learn</button>
+      </div>
+
+      <!-- Floating, Draggable & Resizable Guide System Container -->
+      <div class="helpbar" id="helpbar">
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li>Look at the <b>target shape card</b> at the top left to see the constellation outline you are hunting for.</li>
+            <li><b>Pan the sky</b> by dragging in any direction across the main view to locate the matching group of real stars.</li>
+            <li><b>Tap the stars</b> that form the pattern in any reasonable order. Correct taps light up and connect automatically with lines following the real constellation's line data.</li>
+            <li>A wrong tap just doesn't connect — there is <b>no timer and no penalty</b> for wrong taps, keeping the experience low-pressure for pattern-recognition and collection.</li>
+            <li>Tap the <b>HINT</b> button in the top corner to toggle an optional faint guide outline over the correct stars in the current view.</li>
+            <li>Once all the right stars are connected, the full constellation glows, its name appears, and a short <b>one-line fact</b> plays.</li>
+            <li>Completed shapes are collected in your <b>star-map scrapbook</b> at the bottom. Tap any collected constellation in the scrapbook to revisit its shape, name, and see it highlighted again in the sky!</li>
+          </ol>
+        </div>
+
+        <div class="tabpanel" data-panel="learn">
+          <p style="margin-bottom: 12px; font-size: 13.5px; color: var(--txt);">
+            <b>Learning Objective:</b> The learner should come away able to recognize that constellations are patterns made from real, specific stars in the actual sky, and be able to pick out a familiar shape (like the Big Dipper or Orion) from a busy field of stars on sight.
+          </p>
+          <ul>
+            <li><b>Real Star Data:</b> The star field is a simplified but real rendering using genuine star positions:
+              <ul>
+                <li><b>Right Ascension (RA):</b> The star's position measured like longitude on the sky (0–360°).</li>
+                <li><b>Declination (Dec):</b> The star's position measured like latitude on the sky (−90° to +90°).</li>
+                <li><b>Apparent Magnitude:</b> How bright the star looks on a reversed, logarithmic scale (lower numbers are brighter; e.g. Sirius is about −1.46, naked-eye faint stars are around +5).</li>
+              </ul>
+            </li>
+            <li><b>Flat, Pannable Sky Projection:</b> Treating the entire sky as one large, fixed, pannable flat map using equirectangular projection where RA wraps around seamlessly at the edges (panning past 360° loops back to 0°).</li>
+            <li><b>Real Brightness Rendering:</b> Display sizes follow the formula <code>displaySize = baseSize × 10^(-0.2 × magnitude)</code>, making bright stars noticeably larger and faint stars subtle.</li>
+            <li><b>Difficulty Progression:</b> As rounds advance, magnitude cutoffs progressively lower (allowing fainter stars up to magnitude 4–5 into the sky) and the pannable area widens, making the correct pattern genuinely harder to pick out from background clutter.</li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <!-- ---- MAIN APPLICATION VIEWPORT ---- -->
+    <div id="app">
+      <!-- MAIN VIEW: NIGHT SKY DOME -->
+      <div id="stage">
+        <canvas id="skyCanvas"></canvas>
+
+        <!-- TOP STRIP: TARGET SHAPE CARD -->
+        <div id="topStrip">
+          <div class="target-card">
+            <div class="target-preview-wrap">
+              <canvas id="targetPreviewCanvas" width="120" height="120"></canvas>
+            </div>
+            <div class="target-meta">
+              <span class="target-tag" id="targetTierLabel">Target Shape</span>
+              <span class="target-name" id="targetName">Ursa Major</span>
+              <span class="target-desc" id="targetDesc">The Big Dipper</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CORNER BUTTON: HINT OUTLINE TOGGLE -->
+        <div id="cornerControl">
+          <button type="button" class="corner-btn" id="hintBtn">Hint</button>
+        </div>
+      </div>
+
+      <!-- BOTTOM STRIP: SCROLLABLE STAR-MAP SCRAPBOOK -->
+      <div id="bottomStrip">
+        <div class="scrapbook-header">
+          <span class="scrapbook-title">Star-Map Scrapbook</span>
+          <span class="scrapbook-count"><b id="collectedCount">0</b> / 18 Found</span>
+        </div>
+        <div class="scrapbook-track" id="scrapbookTrack">
+          <span class="scrapbook-empty" id="emptyScrapbookMsg">
+            Found constellations will appear here. Pan the sky and connect stars to add them to your scrapbook!
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPLETION REVEAL OVERLAY -->
+    <div id="completionOverlay">
+      <div class="reveal-box">
+        <div class="reveal-title" id="revealTitle">Ursa Major</div>
+        <div class="reveal-sub" id="revealSub">The Big Dipper</div>
+        <div class="reveal-preview">
+          <canvas id="revealCanvas" width="240" height="240"></canvas>
+        </div>
+        <div class="reveal-fact" id="revealFact"></div>
+        <button type="button" class="ovl-btn" id="nextTargetBtn">Next Target &rarr;</button>
+      </div>
+    </div>
+
+    <!-- SCRAPBOOK REVISIT OVERLAY -->
+    <div id="recallOverlay">
+      <div class="recall-box">
+        <button type="button" class="recall-close" id="recallClose">✕</button>
+        <div class="recall-title" id="recallTitle">Orion</div>
+        <div class="recall-sub" id="recallSub">The Hunter</div>
+        <div class="recall-preview">
+          <canvas id="recallCanvas" width="200" height="200"></canvas>
+        </div>
+        <div class="recall-fact" id="recallFact"></div>
+        <button type="button" class="ovl-btn" id="recallHighlightBtn">Highlight in Sky</button>
+      </div>
+    </div>
+
+    <!-- JAVASCRIPT SIMULATION SCRIPT -->
+    <script>
+      (function () {
+        "use strict";
+
+        /* ================= 18 TARGET CONSTELLATIONS (FROM DESIGN DOCUMENT) ================= */
+        const CONSTELLATIONS = [
+          // Batch 1 (Tier 1: Early - Brightest stars only <= 2.5, localized pannable area)
+          {
+            id: "ursa-major",
+            tier: 1,
+            name: "Ursa Major",
+            desc: "The Big Dipper",
+            fact: "Ursa Major contains the Big Dipper; its two pointer stars line up directly with the North Star.",
+            centerRA: 184,
+            centerDec: 56,
+            stars: [
+              { id: "uma_dubhe", name: "Dubhe", ra: 165.93, dec: 61.75, mag: 1.79 },
+              { id: "uma_merak", name: "Merak", ra: 165.46, dec: 56.38, mag: 2.37 },
+              { id: "uma_phecda", name: "Phecda", ra: 178.46, dec: 53.69, mag: 2.44 },
+              { id: "uma_megrez", name: "Megrez", ra: 183.86, dec: 57.03, mag: 3.31 },
+              { id: "uma_alioth", name: "Alioth", ra: 193.51, dec: 55.96, mag: 1.77 },
+              { id: "uma_mizar", name: "Mizar", ra: 200.98, dec: 54.92, mag: 2.23 },
+              { id: "uma_alkaid", name: "Alkaid", ra: 206.88, dec: 49.31, mag: 1.86 }
+            ],
+            lines: [
+              ["uma_dubhe", "uma_merak"],
+              ["uma_merak", "uma_phecda"],
+              ["uma_phecda", "uma_megrez"],
+              ["uma_megrez", "uma_dubhe"],
+              ["uma_megrez", "uma_alioth"],
+              ["uma_alioth", "uma_mizar"],
+              ["uma_mizar", "uma_alkaid"]
+            ]
+          },
+          {
+            id: "cassiopeia",
+            tier: 1,
+            name: "Cassiopeia",
+            desc: "The Queen ('W' Pattern)",
+            fact: "Cassiopeia forms an unmistakable bright 'W' shape high across from the Big Dipper.",
+            centerRA: 15,
+            centerDec: 60,
+            stars: [
+              { id: "cas_caph", name: "Caph", ra: 2.29, dec: 59.15, mag: 2.28 },
+              { id: "cas_schedar", name: "Schedar", ra: 10.13, dec: 56.54, mag: 2.24 },
+              { id: "cas_gamma", name: "Navi", ra: 14.18, dec: 60.72, mag: 2.15 },
+              { id: "cas_ruchbah", name: "Ruchbah", ra: 21.45, dec: 60.23, mag: 2.68 },
+              { id: "cas_segin", name: "Segin", ra: 26.17, dec: 63.67, mag: 3.35 }
+            ],
+            lines: [
+              ["cas_caph", "cas_schedar"],
+              ["cas_schedar", "cas_gamma"],
+              ["cas_gamma", "cas_ruchbah"],
+              ["cas_ruchbah", "cas_segin"]
+            ]
+          },
+          {
+            id: "orion",
+            tier: 1,
+            name: "Orion",
+            desc: "The Hunter",
+            fact: "Orion is framed by orange supergiant Betelgeuse, blue Rigel, and an unmistakable three-star Belt.",
+            centerRA: 84,
+            centerDec: 1,
+            stars: [
+              { id: "ori_betelgeuse", name: "Betelgeuse", ra: 88.79, dec: 7.41, mag: 0.5 },
+              { id: "ori_bellatrix", name: "Bellatrix", ra: 81.28, dec: 6.35, mag: 1.64 },
+              { id: "ori_mintaka", name: "Mintaka", ra: 83.0, dec: -0.3, mag: 2.23 },
+              { id: "ori_alnilam", name: "Alnilam", ra: 84.05, dec: -1.2, mag: 1.69 },
+              { id: "ori_alnitak", name: "Alnitak", ra: 85.19, dec: -1.94, mag: 1.77 },
+              { id: "ori_saiph", name: "Saiph", ra: 86.94, dec: -9.67, mag: 2.07 },
+              { id: "ori_rigel", name: "Rigel", ra: 78.63, dec: -8.2, mag: 0.13 }
+            ],
+            lines: [
+              ["ori_betelgeuse", "ori_bellatrix"],
+              ["ori_bellatrix", "ori_mintaka"],
+              ["ori_mintaka", "ori_alnilam"],
+              ["ori_alnilam", "ori_alnitak"],
+              ["ori_alnitak", "ori_saiph"],
+              ["ori_mintaka", "ori_rigel"],
+              ["ori_saiph", "ori_rigel"],
+              ["ori_betelgeuse", "ori_alnitak"]
+            ]
+          },
+          {
+            id: "cygnus",
+            tier: 1,
+            name: "Cygnus",
+            desc: "The Swan (Northern Cross)",
+            fact: "Cygnus flies along the Milky Way; its tail star Deneb forms a corner of the Summer Triangle.",
+            centerRA: 305,
+            centerDec: 42,
+            stars: [
+              { id: "cyg_deneb", name: "Deneb", ra: 310.36, dec: 45.28, mag: 1.25 },
+              { id: "cyg_sadr", name: "Sadr", ra: 305.56, dec: 40.26, mag: 2.23 },
+              { id: "cyg_albireo", name: "Albireo", ra: 292.68, dec: 27.96, mag: 3.05 },
+              { id: "cyg_fawaris", name: "Fawaris", ra: 296.24, dec: 45.13, mag: 2.86 },
+              { id: "cyg_gienah", name: "Gienah", ra: 311.55, dec: 33.97, mag: 2.48 }
+            ],
+            lines: [
+              ["cyg_deneb", "cyg_sadr"],
+              ["cyg_sadr", "cyg_albireo"],
+              ["cyg_fawaris", "cyg_sadr"],
+              ["cyg_sadr", "cyg_gienah"]
+            ]
+          },
+
+          // Batch 2 (Tier 2: Middle rounds - Magnitude cutoff <= 3.5, medium region)
+          {
+            id: "leo",
+            tier: 2,
+            name: "Leo",
+            desc: "The Lion",
+            fact: "Leo's head resembles a backwards sickle or question mark, anchored by blue-white Regulus.",
+            centerRA: 160,
+            centerDec: 18,
+            stars: [
+              { id: "leo_regulus", name: "Regulus", ra: 152.09, dec: 11.97, mag: 1.36 },
+              { id: "leo_algieba", name: "Algieba", ra: 154.99, dec: 19.84, mag: 2.01 },
+              { id: "leo_denebola", name: "Denebola", ra: 177.26, dec: 14.57, mag: 2.14 },
+              { id: "leo_zosma", name: "Zosma", ra: 168.53, dec: 20.52, mag: 2.56 },
+              { id: "leo_chertan", name: "Chertan", ra: 168.52, dec: 15.43, mag: 3.33 },
+              { id: "leo_adhafera", name: "Adhafera", ra: 154.17, dec: 23.42, mag: 3.44 }
+            ],
+            lines: [
+              ["leo_regulus", "leo_algieba"],
+              ["leo_algieba", "leo_adhafera"],
+              ["leo_algieba", "leo_zosma"],
+              ["leo_zosma", "leo_denebola"],
+              ["leo_denebola", "leo_chertan"],
+              ["leo_chertan", "leo_regulus"],
+              ["leo_zosma", "leo_chertan"]
+            ]
+          },
+          {
+            id: "gemini",
+            tier: 2,
+            name: "Gemini",
+            desc: "The Twins",
+            fact: "Castor and Pollux mark the twin heads, standing side-by-side in the winter sky.",
+            centerRA: 105,
+            centerDec: 24,
+            stars: [
+              { id: "gem_pollux", name: "Pollux", ra: 116.33, dec: 28.03, mag: 1.16 },
+              { id: "gem_castor", name: "Castor", ra: 113.65, dec: 31.89, mag: 1.58 },
+              { id: "gem_alhena", name: "Alhena", ra: 99.43, dec: 16.4, mag: 1.93 },
+              { id: "gem_wasat", name: "Wasat", ra: 108.03, dec: 21.98, mag: 3.52 },
+              { id: "gem_mebsuta", name: "Mebsuta", ra: 100.98, dec: 25.13, mag: 3.06 }
+            ],
+            lines: [
+              ["gem_castor", "gem_pollux"],
+              ["gem_castor", "gem_mebsuta"],
+              ["gem_pollux", "gem_wasat"],
+              ["gem_wasat", "gem_alhena"]
+            ]
+          },
+          {
+            id: "taurus",
+            tier: 2,
+            name: "Taurus",
+            desc: "The Bull",
+            fact: "Red giant Aldebaran serves as the fiery eye of Taurus, pointing toward the Pleiades cluster.",
+            centerRA: 70,
+            centerDec: 20,
+            stars: [
+              { id: "tau_aldebaran", name: "Aldebaran", ra: 68.98, dec: 16.51, mag: 0.85 },
+              { id: "tau_elnath", name: "Elnath", ra: 81.57, dec: 28.61, mag: 1.65 },
+              { id: "tau_tianguan", name: "Tianguan", ra: 84.41, dec: 21.14, mag: 2.97 },
+              { id: "tau_ain", name: "Ain", ra: 67.15, dec: 19.18, mag: 3.53 },
+              { id: "tau_hyadum", name: "Hyadum I", ra: 64.95, dec: 15.63, mag: 3.65 }
+            ],
+            lines: [
+              ["tau_aldebaran", "tau_ain"],
+              ["tau_ain", "tau_hyadum"],
+              ["tau_hyadum", "tau_aldebaran"],
+              ["tau_aldebaran", "tau_tianguan"],
+              ["tau_ain", "tau_elnath"]
+            ]
+          },
+          {
+            id: "canis-major",
+            tier: 2,
+            name: "Canis Major",
+            desc: "The Greater Dog",
+            fact: "Home to Sirius, the brightest star in Earth's entire night sky at magnitude -1.46.",
+            centerRA: 102,
+            centerDec: -24,
+            stars: [
+              { id: "cma_sirius", name: "Sirius", ra: 101.29, dec: -16.72, mag: -1.46 },
+              { id: "cma_mirzam", name: "Mirzam", ra: 95.68, dec: -17.96, mag: 1.98 },
+              { id: "cma_wezen", name: "Wezen", ra: 107.1, dec: -26.39, mag: 1.83 },
+              { id: "cma_adhara", name: "Adhara", ra: 104.66, dec: -28.97, mag: 1.5 },
+              { id: "cma_aludra", name: "Aludra", ra: 111.02, dec: -29.3, mag: 2.45 }
+            ],
+            lines: [
+              ["cma_sirius", "cma_mirzam"],
+              ["cma_sirius", "cma_wezen"],
+              ["cma_wezen", "cma_adhara"],
+              ["cma_wezen", "cma_aludra"]
+            ]
+          },
+          {
+            id: "bootes",
+            tier: 2,
+            name: "Boötes",
+            desc: "The Herdsman",
+            fact: "Follow the arc of the Big Dipper's handle to 'arc to Arcturus', a brilliant golden giant.",
+            centerRA: 220,
+            centerDec: 30,
+            stars: [
+              { id: "boo_arcturus", name: "Arcturus", ra: 213.91, dec: 19.18, mag: -0.05 },
+              { id: "boo_muphrid", name: "Muphrid", ra: 208.68, dec: 18.4, mag: 2.68 },
+              { id: "boo_izar", name: "Izar", ra: 221.25, dec: 27.07, mag: 2.35 },
+              { id: "boo_princeps", name: "Princeps", ra: 228.91, dec: 33.31, mag: 3.47 },
+              { id: "boo_nekkar", name: "Nekkar", ra: 225.48, dec: 40.39, mag: 3.49 },
+              { id: "boo_seginus", name: "Seginus", ra: 218.0, dec: 38.31, mag: 3.04 }
+            ],
+            lines: [
+              ["boo_arcturus", "boo_muphrid"],
+              ["boo_arcturus", "boo_izar"],
+              ["boo_izar", "boo_princeps"],
+              ["boo_princeps", "boo_nekkar"],
+              ["boo_nekkar", "boo_seginus"],
+              ["boo_seginus", "boo_izar"]
+            ]
+          },
+          {
+            id: "lyra",
+            tier: 2,
+            name: "Lyra",
+            desc: "The Harp",
+            fact: "Crowned by blue-white Vega, one of the most luminous stars in the solar neighborhood.",
+            centerRA: 283,
+            centerDec: 36,
+            stars: [
+              { id: "lyr_vega", name: "Vega", ra: 279.23, dec: 38.78, mag: 0.03 },
+              { id: "lyr_delta", name: "Delta2 Lyr", ra: 283.65, dec: 36.9, mag: 4.22 },
+              { id: "lyr_sulafat", name: "Sulafat", ra: 284.74, dec: 32.69, mag: 3.25 },
+              { id: "lyr_sheliak", name: "Sheliak", ra: 282.52, dec: 33.36, mag: 3.52 }
+            ],
+            lines: [
+              ["lyr_vega", "lyr_delta"],
+              ["lyr_delta", "lyr_sulafat"],
+              ["lyr_sulafat", "lyr_sheliak"],
+              ["lyr_sheliak", "lyr_delta"],
+              ["lyr_sheliak", "lyr_vega"]
+            ]
+          },
+
+          // Batch 3 (Tier 3: Late rounds - Magnitude cutoff <= 5.0, full star map)
+          {
+            id: "scorpius",
+            tier: 3,
+            name: "Scorpius",
+            desc: "The Scorpion",
+            fact: "Features beating ruby heart star Antares and an elegant hook of stars curling toward Sagittarius.",
+            centerRA: 250,
+            centerDec: -30,
+            stars: [
+              { id: "sco_antares", name: "Antares", ra: 247.35, dec: -26.43, mag: 1.06 },
+              { id: "sco_dschubba", name: "Dschubba", ra: 240.08, dec: -22.62, mag: 2.29 },
+              { id: "sco_graffias", name: "Graffias", ra: 241.36, dec: -19.81, mag: 2.56 },
+              { id: "sco_wei", name: "Wei", ra: 252.54, dec: -34.29, mag: 2.29 },
+              { id: "sco_sargas", name: "Sargas", ra: 264.33, dec: -42.99, mag: 1.86 },
+              { id: "sco_shaula", name: "Shaula", ra: 263.4, dec: -37.1, mag: 1.62 }
+            ],
+            lines: [
+              ["sco_graffias", "sco_dschubba"],
+              ["sco_dschubba", "sco_antares"],
+              ["sco_antares", "sco_wei"],
+              ["sco_wei", "sco_sargas"],
+              ["sco_sargas", "sco_shaula"]
+            ]
+          },
+          {
+            id: "draco",
+            tier: 3,
+            name: "Draco",
+            desc: "The Dragon",
+            fact: "A dragon that coils between Ursa Major and Ursa Minor; Thuban was the pole star in ancient times.",
+            centerRA: 260,
+            centerDec: 62,
+            stars: [
+              { id: "dra_eltanin", name: "Eltanin", ra: 269.15, dec: 51.49, mag: 2.24 },
+              { id: "dra_rastaban", name: "Rastaban", ra: 262.61, dec: 52.3, mag: 2.79 },
+              { id: "dra_grumium", name: "Grumium", ra: 268.37, dec: 56.87, mag: 3.73 },
+              { id: "dra_altais", name: "Altais", ra: 288.08, dec: 67.66, mag: 3.07 },
+              { id: "dra_aldhibah", name: "Aldhibah", ra: 257.21, dec: 65.71, mag: 3.17 }
+            ],
+            lines: [
+              ["dra_eltanin", "dra_rastaban"],
+              ["dra_rastaban", "dra_grumium"],
+              ["dra_grumium", "dra_eltanin"],
+              ["dra_grumium", "dra_altais"],
+              ["dra_altais", "dra_aldhibah"]
+            ]
+          },
+          {
+            id: "perseus",
+            tier: 3,
+            name: "Perseus",
+            desc: "The Hero",
+            fact: "Perseus holds Algol, the famous eclipsing binary 'Demon Star' that periodically dims.",
+            centerRA: 52,
+            centerDec: 42,
+            stars: [
+              { id: "per_mirfak", name: "Mirfak", ra: 51.08, dec: 49.86, mag: 1.79 },
+              { id: "per_algol", name: "Algol", ra: 47.04, dec: 40.96, mag: 2.09 },
+              { id: "per_gamma", name: "Gamma Per", ra: 46.12, dec: 53.51, mag: 2.91 },
+              { id: "per_delta", name: "Delta Per", ra: 55.73, dec: 47.79, mag: 3.01 },
+              { id: "per_epsilon", name: "Epsilon Per", ra: 59.46, dec: 40.01, mag: 2.9 }
+            ],
+            lines: [
+              ["per_mirfak", "per_gamma"],
+              ["per_mirfak", "per_delta"],
+              ["per_delta", "per_epsilon"],
+              ["per_mirfak", "per_algol"]
+            ]
+          },
+          {
+            id: "andromeda",
+            tier: 3,
+            name: "Andromeda",
+            desc: "The Princess",
+            fact: "Points toward the Andromeda Galaxy (M31), the closest major spiral galaxy to our own.",
+            centerRA: 16,
+            centerDec: 36,
+            stars: [
+              { id: "and_alpheratz", name: "Alpheratz", ra: 2.1, dec: 29.09, mag: 2.07 },
+              { id: "and_delta", name: "Delta And", ra: 9.83, dec: 30.86, mag: 3.27 },
+              { id: "and_mirach", name: "Mirach", ra: 17.43, dec: 35.62, mag: 2.07 },
+              { id: "and_almach", name: "Almach", ra: 30.97, dec: 42.33, mag: 2.1 }
+            ],
+            lines: [
+              ["and_alpheratz", "and_delta"],
+              ["and_delta", "and_mirach"],
+              ["and_mirach", "and_almach"]
+            ]
+          },
+          {
+            id: "auriga",
+            tier: 3,
+            name: "Auriga",
+            desc: "The Charioteer",
+            fact: "A celestial pentagon marked by brilliant golden-yellow Capella, a quadruple star system.",
+            centerRA: 82,
+            centerDec: 42,
+            stars: [
+              { id: "aur_capella", name: "Capella", ra: 79.17, dec: 45.99, mag: 0.08 },
+              { id: "aur_menkalinan", name: "Menkalinan", ra: 89.88, dec: 44.95, mag: 1.9 },
+              { id: "aur_mahasim", name: "Mahasim", ra: 89.92, dec: 37.21, mag: 2.65 },
+              { id: "aur_hassaleh", name: "Hassaleh", ra: 74.12, dec: 33.17, mag: 2.69 },
+              { id: "aur_elnath_j", name: "Elnath", ra: 81.57, dec: 28.61, mag: 1.65 }
+            ],
+            lines: [
+              ["aur_capella", "aur_menkalinan"],
+              ["aur_menkalinan", "aur_mahasim"],
+              ["aur_mahasim", "aur_elnath_j"],
+              ["aur_elnath_j", "aur_hassaleh"],
+              ["aur_hassaleh", "aur_capella"]
+            ]
+          },
+          {
+            id: "aquila",
+            tier: 3,
+            name: "Aquila",
+            desc: "The Eagle",
+            fact: "Depicts an eagle carrying Zeus's thunderbolts; its bright star Altair spins once every 9 hours.",
+            centerRA: 297,
+            centerDec: 6,
+            stars: [
+              { id: "aql_altair", name: "Altair", ra: 297.7, dec: 8.87, mag: 0.77 },
+              { id: "aql_tarazed", name: "Tarazed", ra: 296.57, dec: 10.61, mag: 2.72 },
+              { id: "aql_alshain", name: "Alshain", ra: 298.83, dec: 6.41, mag: 3.71 },
+              { id: "aql_delta", name: "Delta Aql", ra: 291.36, dec: 3.11, mag: 3.36 },
+              { id: "aql_zeta", name: "Zeta Aql", ra: 286.35, dec: 13.86, mag: 2.99 }
+            ],
+            lines: [
+              ["aql_tarazed", "aql_altair"],
+              ["aql_altair", "aql_alshain"],
+              ["aql_altair", "aql_delta"],
+              ["aql_delta", "aql_zeta"]
+            ]
+          },
+          {
+            id: "sagittarius",
+            tier: 3,
+            name: "Sagittarius",
+            desc: "The Archer (The Teapot)",
+            fact: "Recognized as a teapot pouring steam towards the supermassive black hole at the galactic center.",
+            centerRA: 280,
+            centerDec: -28,
+            stars: [
+              { id: "sgr_kaus_aus", name: "Kaus Australis", ra: 276.04, dec: -34.38, mag: 1.79 },
+              { id: "sgr_nunki", name: "Nunki", ra: 283.82, dec: -26.3, mag: 2.05 },
+              { id: "sgr_ascella", name: "Ascella", ra: 285.59, dec: -29.88, mag: 2.6 },
+              { id: "sgr_kaus_med", name: "Kaus Media", ra: 275.24, dec: -29.83, mag: 2.72 },
+              { id: "sgr_kaus_bor", name: "Kaus Borealis", ra: 276.99, dec: -25.42, mag: 2.82 },
+              { id: "sgr_alnasl", name: "Alnasl", ra: 271.45, dec: -30.42, mag: 2.98 }
+            ],
+            lines: [
+              ["sgr_alnasl", "sgr_kaus_med"],
+              ["sgr_kaus_med", "sgr_kaus_bor"],
+              ["sgr_kaus_med", "sgr_kaus_aus"],
+              ["sgr_kaus_aus", "sgr_ascella"],
+              ["sgr_ascella", "sgr_nunki"]
+            ]
+          },
+          {
+            id: "ursa-minor",
+            tier: 3,
+            name: "Ursa Minor",
+            desc: "The Little Dipper",
+            fact: "Holds Polaris (the North Star) at the very tip of its handle, remaining steadfast as Earth rotates.",
+            centerRA: 240,
+            centerDec: 78,
+            stars: [
+              { id: "umi_polaris", name: "Polaris", ra: 37.95, dec: 89.26, mag: 1.98 },
+              { id: "umi_yildun", name: "Yildun", ra: 262.7, dec: 86.58, mag: 4.36 },
+              { id: "umi_epsilon", name: "Epsilon UMi", ra: 251.27, dec: 82.03, mag: 4.21 },
+              { id: "umi_zeta", name: "Zeta UMi", ra: 236.0, dec: 77.79, mag: 4.27 },
+              { id: "umi_kochab", name: "Kochab", ra: 222.68, dec: 74.16, mag: 2.08 },
+              { id: "umi_pherkad", name: "Pherkad", ra: 230.18, dec: 71.83, mag: 3.05 }
+            ],
+            lines: [
+              ["umi_polaris", "umi_yildun"],
+              ["umi_yildun", "umi_epsilon"],
+              ["umi_epsilon", "umi_zeta"],
+              ["umi_zeta", "umi_kochab"],
+              ["umi_kochab", "umi_pherkad"]
+            ]
+          }
+        ];
+
+        /* ================= BACKGROUND STARS CATALOG ================= */
+        const BACKGROUND_STARS = [];
+        function seededRandom(seed) {
+          const s = Math.sin(seed) * 10000;
+          return s - Math.floor(s);
+        }
+
+        const BRIGHT_SKY_STARS = [
+          { name: "Procyon", ra: 114.83, dec: 5.22, mag: 0.38 },
+          { name: "Spica", ra: 201.3, dec: -11.16, mag: 0.98 },
+          { name: "Fomalhaut", ra: 344.41, dec: -29.62, mag: 1.17 },
+          { name: "Achernar", ra: 24.43, dec: -57.24, mag: 0.45 },
+          { name: "Canopus", ra: 95.99, dec: -52.7, mag: -0.74 },
+          { name: "Rigil Kentaurus", ra: 219.9, dec: -60.83, mag: -0.27 },
+          { name: "Hadar", ra: 210.96, dec: -60.37, mag: 0.61 },
+          { name: "Acrux", ra: 186.65, dec: -63.1, mag: 0.77 },
+          { name: "Hamal", ra: 31.79, dec: 23.46, mag: 2.01 },
+          { name: "Alphecca", ra: 233.67, dec: 26.71, mag: 2.22 },
+          { name: "Diphda", ra: 10.9, dec: -17.99, mag: 2.04 },
+          { name: "Enif", ra: 326.05, dec: 9.87, mag: 2.38 },
+          { name: "Markab", ra: 346.19, dec: 15.21, mag: 2.49 }
+        ];
+
+        BRIGHT_SKY_STARS.forEach((s, idx) => {
+          BACKGROUND_STARS.push({
+            id: `bstar_${idx}`,
+            name: s.name,
+            ra: s.ra,
+            dec: s.dec,
+            mag: s.mag,
+            twinkle: idx * 0.9
+          });
+        });
+
+        for (let i = 0; i < 280; i++) {
+          const u = seededRandom(i * 3 + 1);
+          const v = seededRandom(i * 3 + 2);
+          const w = seededRandom(i * 3 + 3);
+          const ra = u * 360;
+          const dec = (Math.asin(v * 1.9 - 0.95) * 180) / Math.PI;
+          const mag = 2.4 + w * 2.6;
+          BACKGROUND_STARS.push({
+            id: `bg_${i}`,
+            ra: ra,
+            dec: dec,
+            mag: mag,
+            twinkle: i * 0.7
+          });
+        }
+
+        /* ================= GAME STATE ================= */
+        const state = {
+          currentTargetIndex: 0,
+          completedConstellations: [],
+          selectedStarIds: new Set(),
+          connectedLines: new Set(),
+          lastSelectedStarId: null,
+          hintActive: false,
+
+          camera: {
+            ra: 184,
+            dec: 56,
+            targetRA: 184,
+            targetDec: 56,
+            isGliding: false
+          },
+
+          isDragging: false,
+          dragStartMouseX: 0,
+          dragStartMouseY: 0,
+          dragStartRA: 0,
+          dragStartDec: 0,
+          draggedDistance: 0,
+
+          highlightReplayId: null,
+          time: 0
+        };
+
+        /* ================= DOM ELEMENTS ================= */
+        const skyCanvas = document.getElementById("skyCanvas");
+        const ctx = skyCanvas.getContext("2d");
+        const stage = document.getElementById("stage");
+
+        const targetPreviewCanvas = document.getElementById("targetPreviewCanvas");
+        const targetPreviewCtx = targetPreviewCanvas.getContext("2d");
+        const targetTierLabel = document.getElementById("targetTierLabel");
+        const targetName = document.getElementById("targetName");
+        const targetDesc = document.getElementById("targetDesc");
+
+        const hintBtn = document.getElementById("hintBtn");
+        const scrapbookTrack = document.getElementById("scrapbookTrack");
+        const collectedCount = document.getElementById("collectedCount");
+        const emptyScrapbookMsg = document.getElementById("emptyScrapbookMsg");
+
+        const completionOverlay = document.getElementById("completionOverlay");
+        const revealTitle = document.getElementById("revealTitle");
+        const revealSub = document.getElementById("revealSub");
+        const revealFact = document.getElementById("revealFact");
+        const revealCanvas = document.getElementById("revealCanvas");
+        const revealCtx = revealCanvas.getContext("2d");
+        const nextTargetBtn = document.getElementById("nextTargetBtn");
+
+        const recallOverlay = document.getElementById("recallOverlay");
+        const recallClose = document.getElementById("recallClose");
+        const recallTitle = document.getElementById("recallTitle");
+        const recallSub = document.getElementById("recallSub");
+        const recallFact = document.getElementById("recallFact");
+        const recallCanvas = document.getElementById("recallCanvas");
+        const recallCtx = recallCanvas.getContext("2d");
+        const recallHighlightBtn = document.getElementById("recallHighlightBtn");
+
+        let activeRecallConstellation = null;
+
+        /* ================= AUDIO SYNTHESIZER ================= */
+        let audioCtx = null;
+        function getAudioContext() {
+          if (!audioCtx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) audioCtx = new AudioCtx();
+          }
+          if (audioCtx && audioCtx.state === "suspended") {
+            audioCtx.resume();
+          }
+          return audioCtx;
+        }
+
+        function playTone(freq, type = "sine", duration = 0.25, gainVal = 0.15) {
+          try {
+            const ac = getAudioContext();
+            if (!ac) return;
+            const osc = ac.createOscillator();
+            const gain = ac.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, ac.currentTime);
+            gain.gain.setValueAtTime(gainVal, ac.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(ac.destination);
+            osc.start();
+            osc.stop(ac.currentTime + duration);
+          } catch (e) {}
+        }
+
+        function playChime(noteIndex) {
+          const notes = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5];
+          const f = notes[noteIndex % notes.length];
+          playTone(f, "sine", 0.3, 0.18);
+        }
+
+        function playFanfare() {
+          const melody = [
+            { f: 523.25, d: 0.2, t: 0 },
+            { f: 659.25, d: 0.2, t: 120 },
+            { f: 783.99, d: 0.3, t: 240 },
+            { f: 1046.5, d: 0.5, t: 380 }
+          ];
+          melody.forEach((m) => {
+            setTimeout(() => playTone(m.f, "triangle", m.d, 0.22), m.t);
+          });
+        }
+
+        /* ================= TARGET CARD & PROGRESSION HELPERS ================= */
+        function getPairKey(a, b) {
+          return a < b ? `${a}--${b}` : `${b}--${a}`;
+        }
+
+        function getCurrentTarget() {
+          return CONSTELLATIONS[state.currentTargetIndex];
+        }
+
+        function setTargetIndex(idx, panToCenter = true) {
+          state.currentTargetIndex = Math.max(0, Math.min(CONSTELLATIONS.length - 1, idx));
+          const target = getCurrentTarget();
+
+          state.selectedStarIds.clear();
+          state.connectedLines.clear();
+          state.lastSelectedStarId = null;
+          state.highlightReplayId = null;
+
+          targetTierLabel.textContent = `Round ${state.currentTargetIndex + 1} • Tier ${target.tier}`;
+          targetName.textContent = target.name;
+          targetDesc.textContent = target.desc;
+
+          drawShapePreview(targetPreviewCtx, targetPreviewCanvas.width, targetPreviewCanvas.height, target);
+
+          if (panToCenter) {
+            glideCameraTo(target.centerRA, target.centerDec);
+          }
+        }
+
+        function drawShapePreview(pCtx, w, h, constell) {
+          pCtx.clearRect(0, 0, w, h);
+
+          let minRA = 999,
+            maxRA = -999,
+            minDec = 999,
+            maxDec = -999;
+          constell.stars.forEach((s) => {
+            if (s.ra < minRA) minRA = s.ra;
+            if (s.ra > maxRA) maxRA = s.ra;
+            if (s.dec < minDec) minDec = s.dec;
+            if (s.dec > maxDec) maxDec = s.dec;
+          });
+
+          const spanRA = Math.max(maxRA - minRA, 8);
+          const spanDec = Math.max(maxDec - minDec, 8);
+          const pad = 14;
+
+          function project(ra, dec) {
+            const x = pad + ((ra - minRA) / spanRA) * (w - pad * 2);
+            const y = h - (pad + ((dec - minDec) / spanDec) * (h - pad * 2));
+            return { x, y };
+          }
+
+          pCtx.strokeStyle = "rgba(127, 211, 255, 0.85)";
+          pCtx.lineWidth = 1.8;
+          pCtx.beginPath();
+          constell.lines.forEach(([idA, idB]) => {
+            const sA = constell.stars.find((s) => s.id === idA);
+            const sB = constell.stars.find((s) => s.id === idB);
+            if (sA && sB) {
+              const pA = project(sA.ra, sA.dec);
+              const pB = project(sB.ra, sB.dec);
+              pCtx.moveTo(pA.x, pA.y);
+              pCtx.lineTo(pB.x, pB.y);
+            }
+          });
+          pCtx.stroke();
+
+          constell.stars.forEach((s) => {
+            const pt = project(s.ra, s.dec);
+            pCtx.fillStyle = "#ffffff";
+            pCtx.beginPath();
+            pCtx.arc(pt.x, pt.y, 2.8, 0, Math.PI * 2);
+            pCtx.fill();
+          });
+        }
+
+        /* ================= TIER PARAMETERS (SECTION 6 OF SPEC) ================= */
+        function getTierCutoff() {
+          const target = getCurrentTarget();
+          if (target.tier === 1) return 2.5;
+          if (target.tier === 2) return 3.5;
+          return 5.0;
+        }
+
+        /* ================= CANVAS & EQUIRECTANGULAR PROJECTION ================= */
+        let width = 0;
+        let height = 0;
+
+        function resizeCanvas() {
+          const rect = stage.getBoundingClientRect();
+          width = rect.width;
+          height = rect.height;
+          const dpr = window.devicePixelRatio || 1;
+          skyCanvas.width = width * dpr;
+          skyCanvas.height = height * dpr;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        window.addEventListener("resize", resizeCanvas);
+
+        function celestialToScreen(ra, dec) {
+          const baseSpan = Math.max(width * 1.5, 1200);
+
+          let diffRA = ra - state.camera.ra;
+          while (diffRA > 180) diffRA -= 360;
+          while (diffRA < -180) diffRA += 360;
+
+          const screenX = width / 2 + (diffRA / 360) * baseSpan;
+          const decSpan = baseSpan / 2;
+          const diffDec = dec - state.camera.dec;
+          const screenY = height / 2 - (diffDec / 180) * decSpan;
+
+          return { x: screenX, y: screenY };
+        }
+
+        function glideCameraTo(targetRA, targetDec) {
+          state.camera.targetRA = targetRA;
+          state.camera.targetDec = Math.max(-70, Math.min(70, targetDec));
+          state.camera.isGliding = true;
+        }
+
+        /* ================= INTERACTION: LOOK AROUND BY PANNING ================= */
+        stage.addEventListener("mousedown", (e) => {
+          if (e.button !== 0) return;
+          getAudioContext();
+          state.isDragging = true;
+          state.draggedDistance = 0;
+          state.dragStartMouseX = e.clientX;
+          state.dragStartMouseY = e.clientY;
+          state.dragStartRA = state.camera.ra;
+          state.dragStartDec = state.camera.dec;
+          stage.classList.add("panning");
+        });
+
+        window.addEventListener("mousemove", (e) => {
+          if (!state.isDragging) return;
+
+          const dx = e.clientX - state.dragStartMouseX;
+          const dy = e.clientY - state.dragStartMouseY;
+          state.draggedDistance += Math.abs(dx) + Math.abs(dy);
+
+          const baseSpan = Math.max(width * 1.5, 1200);
+          const decSpan = baseSpan / 2;
+
+          let newRA = state.dragStartRA - (dx / baseSpan) * 360;
+          while (newRA >= 360) newRA -= 360;
+          while (newRA < 0) newRA += 360;
+
+          let newDec = state.dragStartDec + (dy / decSpan) * 180;
+
+          const target = getCurrentTarget();
+          if (target.tier === 1) {
+            newDec = Math.max(target.centerDec - 30, Math.min(target.centerDec + 30, newDec));
+          } else if (target.tier === 2) {
+            newDec = Math.max(target.centerDec - 50, Math.min(target.centerDec + 50, newDec));
+          } else {
+            newDec = Math.max(-80, Math.min(80, newDec));
+          }
+
+          state.camera.ra = newRA;
+          state.camera.dec = newDec;
+          state.camera.targetRA = newRA;
+          state.camera.targetDec = newDec;
+          state.camera.isGliding = false;
+        });
+
+        window.addEventListener("mouseup", (e) => {
+          if (!state.isDragging) return;
+          state.isDragging = false;
+          stage.classList.remove("panning");
+
+          if (state.draggedDistance < 5) {
+            const rect = stage.getBoundingClientRect();
+            handleStarTap(e.clientX - rect.left, e.clientY - rect.top);
+          }
+        });
+
+        stage.addEventListener("touchstart", (e) => {
+          getAudioContext();
+          if (e.touches.length === 1) {
+            state.isDragging = true;
+            state.draggedDistance = 0;
+            state.dragStartMouseX = e.touches[0].clientX;
+            state.dragStartMouseY = e.touches[0].clientY;
+            state.dragStartRA = state.camera.ra;
+            state.dragStartDec = state.camera.dec;
+          }
+        });
+
+        stage.addEventListener("touchmove", (e) => {
+          if (!state.isDragging || e.touches.length !== 1) return;
+          const dx = e.touches[0].clientX - state.dragStartMouseX;
+          const dy = e.touches[0].clientY - state.dragStartMouseY;
+          state.draggedDistance += Math.abs(dx) + Math.abs(dy);
+
+          const baseSpan = Math.max(width * 1.5, 1200);
+          const decSpan = baseSpan / 2;
+
+          let newRA = state.dragStartRA - (dx / baseSpan) * 360;
+          while (newRA >= 360) newRA -= 360;
+          while (newRA < 0) newRA += 360;
+
+          let newDec = state.dragStartDec + (dy / decSpan) * 180;
+          newDec = Math.max(-80, Math.min(80, newDec));
+
+          state.camera.ra = newRA;
+          state.camera.dec = newDec;
+          state.camera.targetRA = newRA;
+          state.camera.targetDec = newDec;
+        });
+
+        stage.addEventListener("touchend", () => {
+          if (state.isDragging && state.draggedDistance < 6) {
+            const rect = stage.getBoundingClientRect();
+            handleStarTap(state.dragStartMouseX - rect.left, state.dragStartMouseY - rect.top);
+          }
+          state.isDragging = false;
+        });
+
+        hintBtn.addEventListener("click", () => {
+          state.hintActive = !state.hintActive;
+          hintBtn.classList.toggle("on", state.hintActive);
+          playTone(state.hintActive ? 783.99 : 440, "sine", 0.15, 0.12);
+        });
+
+        /* ================= GAMEPLAY: STAR SELECTION & CONNECTING LINES ================= */
+        function handleStarTap(x, y) {
+          const target = getCurrentTarget();
+          let hitStar = null;
+
+          for (let s of target.stars) {
+            const pt = celestialToScreen(s.ra, s.dec);
+            if (Math.hypot(pt.x - x, pt.y - y) < 30) {
+              hitStar = s;
+              break;
+            }
+          }
+
+          if (hitStar) {
+            const idx = target.stars.indexOf(hitStar);
+            playChime(idx);
+            state.selectedStarIds.add(hitStar.id);
+
+            if (state.lastSelectedStarId && state.lastSelectedStarId !== hitStar.id) {
+              const pairKey = getPairKey(state.lastSelectedStarId, hitStar.id);
+              const isValidLine = target.lines.some(([a, b]) => getPairKey(a, b) === pairKey);
+              if (isValidLine) {
+                state.connectedLines.add(pairKey);
+              }
+            }
+
+            target.lines.forEach(([a, b]) => {
+              if (state.selectedStarIds.has(a) && state.selectedStarIds.has(b)) {
+                state.connectedLines.add(getPairKey(a, b));
+              }
+            });
+
+            state.lastSelectedStarId = hitStar.id;
+
+            const allDone = target.lines.every(([a, b]) => state.connectedLines.has(getPairKey(a, b)));
+
+            if (allDone) {
+              completeShape(target);
+            }
+          } else {
+            playTone(180, "sine", 0.15, 0.05);
+          }
+        }
+
+        function completeShape(target) {
+          playFanfare();
+
+          if (!state.completedConstellations.includes(target.id)) {
+            state.completedConstellations.push(target.id);
+            addConstellationToScrapbook(target);
+          }
+
+          revealTitle.textContent = target.name;
+          revealSub.textContent = target.desc;
+          revealFact.innerHTML = `<b>Astronomical Lore:</b> ${target.fact}`;
+          drawShapePreview(revealCtx, revealCanvas.width, revealCanvas.height, target);
+
+          completionOverlay.classList.add("show");
+        }
+
+        nextTargetBtn.addEventListener("click", () => {
+          completionOverlay.classList.remove("show");
+          if (state.currentTargetIndex < CONSTELLATIONS.length - 1) {
+            setTargetIndex(state.currentTargetIndex + 1, true);
+          } else {
+            setTargetIndex(0, true);
+          }
+        });
+
+        /* ================= STAR-MAP SCRAPBOOK ================= */
+        function addConstellationToScrapbook(constell) {
+          if (emptyScrapbookMsg) {
+            emptyScrapbookMsg.style.display = "none";
+          }
+
+          collectedCount.textContent = state.completedConstellations.length;
+
+          const item = document.createElement("div");
+          item.className = "scrap-icon";
+          item.title = `Revisit ${constell.name}`;
+
+          const thumb = document.createElement("div");
+          thumb.className = "scrap-icon-thumb";
+          const thumbCanvas = document.createElement("canvas");
+          thumbCanvas.width = 80;
+          thumbCanvas.height = 80;
+          drawShapePreview(thumbCanvas.getContext("2d"), 80, 80, constell);
+          thumb.appendChild(thumbCanvas);
+
+          const nameSpan = document.createElement("span");
+          nameSpan.className = "scrap-icon-name";
+          nameSpan.textContent = constell.name;
+
+          item.appendChild(thumb);
+          item.appendChild(nameSpan);
+
+          item.addEventListener("click", () => {
+            openRecallModal(constell);
+          });
+
+          scrapbookTrack.appendChild(item);
+        }
+
+        function openRecallModal(constell) {
+          activeRecallConstellation = constell;
+          recallTitle.textContent = constell.name;
+          recallSub.textContent = constell.desc;
+          recallFact.innerHTML = `<b>Astronomical Fact:</b> ${constell.fact}`;
+          drawShapePreview(recallCtx, recallCanvas.width, recallCanvas.height, constell);
+          recallOverlay.classList.add("show");
+        }
+
+        recallClose.addEventListener("click", () => {
+          recallOverlay.classList.remove("show");
+        });
+
+        recallHighlightBtn.addEventListener("click", () => {
+          recallOverlay.classList.remove("show");
+          if (activeRecallConstellation) {
+            state.highlightReplayId = activeRecallConstellation.id;
+            glideCameraTo(activeRecallConstellation.centerRA, activeRecallConstellation.centerDec);
+          }
+        });
+
+        /* ================= RENDERING LOOP ================= */
+        function render() {
+          state.time += 0.016;
+
+          if (state.camera.isGliding) {
+            let dRA = state.camera.targetRA - state.camera.ra;
+            while (dRA > 180) dRA -= 360;
+            while (dRA < -180) dRA += 360;
+
+            state.camera.ra += dRA * 0.08;
+            state.camera.dec += (state.camera.targetDec - state.camera.dec) * 0.08;
+
+            while (state.camera.ra >= 360) state.camera.ra -= 360;
+            while (state.camera.ra < 0) state.camera.ra += 360;
+
+            if (Math.abs(dRA) < 0.1 && Math.abs(state.camera.targetDec - state.camera.dec) < 0.1) {
+              state.camera.ra = state.camera.targetRA;
+              state.camera.dec = state.camera.targetDec;
+              state.camera.isGliding = false;
+            }
+          }
+
+          ctx.fillStyle = "#03060c";
+          ctx.fillRect(0, 0, width, height);
+
+          const grad = ctx.createRadialGradient(width / 2, height / 2, 20, width / 2, height / 2, width);
+          grad.addColorStop(0, "rgba(11, 22, 38, 0.4)");
+          grad.addColorStop(1, "rgba(2, 4, 8, 0.8)");
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, width, height);
+
+          drawCollectedConstellations();
+          drawHintOutline();
+          drawConnectedTargetLines();
+          drawStars();
+
+          requestAnimationFrame(render);
+        }
+
+        function drawCollectedConstellations() {
+          ctx.save();
+          state.completedConstellations.forEach((cId) => {
+            const constell = CONSTELLATIONS.find((c) => c.id === cId);
+            if (!constell) return;
+
+            const isReplay = state.highlightReplayId === cId;
+            ctx.strokeStyle = isReplay ? "rgba(255, 212, 92, 0.9)" : "rgba(77, 214, 228, 0.45)";
+            ctx.lineWidth = isReplay ? 2.5 : 1.5;
+
+            ctx.beginPath();
+            constell.lines.forEach(([idA, idB]) => {
+              const sA = constell.stars.find((s) => s.id === idA);
+              const sB = constell.stars.find((s) => s.id === idB);
+              if (sA && sB) {
+                const ptA = celestialToScreen(sA.ra, sA.dec);
+                const ptB = celestialToScreen(sB.ra, sB.dec);
+                if (Math.abs(ptA.x - ptB.x) < width * 0.7) {
+                  ctx.moveTo(ptA.x, ptA.y);
+                  ctx.lineTo(ptB.x, ptB.y);
+                }
+              }
+            });
+            ctx.stroke();
+
+            const centerPt = celestialToScreen(constell.centerRA, constell.centerDec);
+            if (centerPt.x > 20 && centerPt.x < width - 20 && centerPt.y > 20 && centerPt.y < height - 20) {
+              ctx.font = "bold 11px Orbitron";
+              ctx.fillStyle = isReplay ? "var(--glow-gold)" : "rgba(77, 214, 228, 0.75)";
+              ctx.textAlign = "center";
+              ctx.fillText(constell.name, centerPt.x, centerPt.y - 12);
+            }
+          });
+          ctx.restore();
+        }
+
+        function drawHintOutline() {
+          if (!state.hintActive) return;
+          const target = getCurrentTarget();
+          if (!target) return;
+
+          ctx.save();
+          ctx.strokeStyle = "rgba(127, 211, 255, 0.35)";
+          ctx.lineWidth = 1.6;
+          ctx.setLineDash([5, 5]);
+
+          ctx.beginPath();
+          target.lines.forEach(([idA, idB]) => {
+            const sA = target.stars.find((s) => s.id === idA);
+            const sB = target.stars.find((s) => s.id === idB);
+            if (sA && sB) {
+              const ptA = celestialToScreen(sA.ra, sA.dec);
+              const ptB = celestialToScreen(sB.ra, sB.dec);
+              if (Math.abs(ptA.x - ptB.x) < width * 0.7) {
+                ctx.moveTo(ptA.x, ptA.y);
+                ctx.lineTo(ptB.x, ptB.y);
+              }
+            }
+          });
+          ctx.stroke();
+
+          target.stars.forEach((s) => {
+            const pt = celestialToScreen(s.ra, s.dec);
+            ctx.strokeStyle = "rgba(127, 211, 255, 0.4)";
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 8, 0, Math.PI * 2);
+            ctx.stroke();
+          });
+          ctx.restore();
+        }
+
+        function drawConnectedTargetLines() {
+          const target = getCurrentTarget();
+          if (!target) return;
+
+          ctx.save();
+          ctx.strokeStyle = "rgba(127, 211, 255, 0.95)";
+          ctx.lineWidth = 2.2;
+          ctx.shadowColor = "rgba(127, 211, 255, 0.6)";
+          ctx.shadowBlur = 8;
+
+          ctx.beginPath();
+          target.lines.forEach(([idA, idB]) => {
+            if (state.connectedLines.has(getPairKey(idA, idB))) {
+              const sA = target.stars.find((s) => s.id === idA);
+              const sB = target.stars.find((s) => s.id === idB);
+              if (sA && sB) {
+                const ptA = celestialToScreen(sA.ra, sA.dec);
+                const ptB = celestialToScreen(sB.ra, sB.dec);
+                if (Math.abs(ptA.x - ptB.x) < width * 0.7) {
+                  ctx.moveTo(ptA.x, ptA.y);
+                  ctx.lineTo(ptB.x, ptB.y);
+                }
+              }
+            }
+          });
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        function drawStars() {
+          const target = getCurrentTarget();
+          const cutoff = getTierCutoff();
+          const baseSize = 4.2;
+
+          BACKGROUND_STARS.forEach((s) => {
+            if (s.mag > cutoff) return;
+            const pt = celestialToScreen(s.ra, s.dec);
+            if (pt.x < -20 || pt.x > width + 20 || pt.y < -20 || pt.y > height + 20) return;
+
+            const twinkle = 1.0 + 0.15 * Math.sin(state.time * 2.5 + s.twinkle);
+            const size = Math.max(0.7, baseSize * Math.pow(10, -0.2 * s.mag) * twinkle);
+            const opacity = Math.min(1.0, Math.max(0.2, (5.2 - s.mag) / 4.5));
+
+            drawStarDot(pt.x, pt.y, size, "#e8f2ff", opacity);
+          });
+
+          CONSTELLATIONS.forEach((c) => {
+            if (c.id === target.id) return;
+            c.stars.forEach((s) => {
+              if (s.mag > cutoff) return;
+              const pt = celestialToScreen(s.ra, s.dec);
+              if (pt.x < -20 || pt.x > width + 20 || pt.y < -20 || pt.y > height + 20) return;
+
+              const size = Math.max(1.0, baseSize * Math.pow(10, -0.2 * s.mag));
+              drawStarDot(pt.x, pt.y, size, "#ffffff", 0.9);
+            });
+          });
+
+          target.stars.forEach((s) => {
+            const pt = celestialToScreen(s.ra, s.dec);
+            const isTapped = state.selectedStarIds.has(s.id);
+            const twinkle = 1.0 + 0.12 * Math.sin(state.time * 3);
+            const size = Math.max(1.8, baseSize * Math.pow(10, -0.2 * s.mag) * twinkle);
+
+            drawStarDot(pt.x, pt.y, size, isTapped ? "var(--glow)" : "#ffffff", 1.0);
+
+            if (isTapped) {
+              ctx.save();
+              ctx.strokeStyle = "rgba(127, 211, 255, 0.8)";
+              ctx.lineWidth = 1.5;
+              ctx.beginPath();
+              ctx.arc(pt.x, pt.y, size + 4, 0, Math.PI * 2);
+              ctx.stroke();
+              ctx.restore();
+            }
+          });
+        }
+
+        function drawStarDot(x, y, radius, color, opacity) {
+          ctx.save();
+          ctx.globalAlpha = opacity;
+
+          if (radius > 2.0) {
+            ctx.fillStyle = "rgba(127, 211, 255, 0.15)";
+            ctx.beginPath();
+            ctx.arc(x, y, radius * 2.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(x, y, Math.max(0.6, radius), 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+        }
+
+        /* ================= INITIALIZATION ================= */
+        function init() {
+          resizeCanvas();
+          setTargetIndex(0, true);
+          requestAnimationFrame(render);
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", init);
+        } else {
+          init();
+        }
+      })();
+    </script>
+
+    <!-- UNIVERSAL FLOATING, DRAGGABLE & RESIZABLE GUIDE WINDOW SYSTEM -->
+    <script>
+      (function initUniversalHelpFloatwin() {
+        var bar = document.getElementById("helpbar");
+        if (!bar) return;
+
+        if (!bar.classList.contains("floatwin")) {
+          bar.classList.add("floatwin");
+          bar.setAttribute("role", "dialog");
+          bar.setAttribute("aria-label", "Help Guide");
+
+          var head = document.createElement("div");
+          head.className = "fw-head";
+
+          var title = document.createElement("span");
+          title.className = "fw-title";
+          title.textContent = "How To Use";
+          head.appendChild(title);
+
+          var actions = document.createElement("div");
+          actions.className = "fw-head-actions";
+
+          var tabBtns = [];
+          var origPanels = bar.querySelectorAll(".tabpanel");
+          if (origPanels.length > 1) {
+            origPanels.forEach(function (p) {
+              var t = p.dataset.panel;
+              var b = document.createElement("button");
+              b.type = "button";
+              b.className = "fw-tab-btn";
+              b.dataset.tab = t;
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What You'll Learn" : t);
+              actions.appendChild(b);
+              tabBtns.push(b);
+            });
+          }
+
+          var closeBtn = document.createElement("button");
+          closeBtn.type = "button";
+          closeBtn.className = "fw-close";
+          closeBtn.title = "Close Guide";
+          closeBtn.setAttribute("aria-label", "Close");
+          closeBtn.textContent = "✕";
+          actions.appendChild(closeBtn);
+          head.appendChild(actions);
+
+          var body = document.createElement("div");
+          body.className = "fw-body";
+          while (bar.firstChild) {
+            body.appendChild(bar.firstChild);
+          }
+
+          var grip = document.createElement("div");
+          grip.className = "fw-grip";
+          grip.title = "Drag to resize";
+
+          bar.appendChild(head);
+          bar.appendChild(body);
+          bar.appendChild(grip);
+
+          document.body.appendChild(bar);
+        }
+
+        var btns = document.querySelectorAll(".helpbtn");
+        var tabBtns = bar.querySelectorAll(".fw-tab-btn");
+        var titleEl = bar.querySelector(".fw-title");
+        var closeBtn = bar.querySelector(".fw-close");
+        var headEl = bar.querySelector(".fw-head");
+        var gripEl = bar.querySelector(".fw-grip");
+        var topZ = 10000;
+        var posInit = false;
+
+        function toFront() {
+          bar.style.zIndex = ++topZ;
+        }
+
+        function closeAll() {
+          bar.classList.remove("show");
+          btns.forEach(function (b) { b.classList.remove("on"); });
+          tabBtns.forEach(function (b) { b.classList.remove("on"); });
+        }
+
+        function openTab(tab) {
+          toFront();
+          if (!posInit) {
+            var w = Math.min(460, window.innerWidth - 32);
+            var h = Math.min(540, window.innerHeight - 80);
+            bar.style.width = w + "px";
+            bar.style.height = h + "px";
+            bar.style.top = "65px";
+            bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
+            posInit = true;
+          }
+          bar.classList.add("show");
+          btns.forEach(function (b) {
+            b.classList.toggle("on", b.dataset.tab === tab);
+          });
+          tabBtns.forEach(function (b) {
+            b.classList.toggle("on", b.dataset.tab === tab);
+          });
+          var panels = bar.querySelectorAll(".tabpanel");
+          panels.forEach(function (p) {
+            p.classList.toggle("on", p.dataset.panel === tab);
+          });
+          if (titleEl) {
+            titleEl.textContent = tab === "use" ? "How To Use" : (tab === "learn" ? "What You'll Learn" : "Guide");
+          }
+        }
+
+        btns.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var tab = btn.dataset.tab || "use";
+            if (bar.classList.contains("show") && btn.classList.contains("on")) {
+              closeAll();
+            } else {
+              openTab(tab);
+            }
+          });
+        });
+
+        tabBtns.forEach(function (tb) {
+          tb.addEventListener("click", function (e) {
+            e.stopPropagation();
+            openTab(tb.dataset.tab);
+          });
+        });
+
+        if (closeBtn) closeBtn.addEventListener("click", closeAll);
+        bar.addEventListener("pointerdown", toFront);
+
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && bar.classList.contains("show")) closeAll();
+        });
+
+        // Dragging by header
+        if (headEl) {
+          headEl.addEventListener("pointerdown", function (e) {
+            if (e.target.closest(".fw-head-actions")) return;
+            e.preventDefault();
+            toFront();
+            headEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var dx = e.clientX - r.left;
+            var dy = e.clientY - r.top;
+            bar.classList.add("dragging");
+            function onMove(ev) {
+              var nx = Math.max(8, Math.min(window.innerWidth - bar.offsetWidth - 8, ev.clientX - dx));
+              var ny = Math.max(8, Math.min(window.innerHeight - 40, ev.clientY - dy));
+              bar.style.left = nx + "px";
+              bar.style.top = ny + "px";
+            }
+            function onUp(ev) {
+              bar.classList.remove("dragging");
+              headEl.removeEventListener("pointermove", onMove);
+              headEl.removeEventListener("pointerup", onUp);
+              headEl.removeEventListener("pointercancel", onUp);
+            }
+            headEl.addEventListener("pointermove", onMove);
+            headEl.addEventListener("pointerup", onUp);
+            headEl.addEventListener("pointercancel", onUp);
+          });
+        }
+
+        // Resizing by grip
+        if (gripEl) {
+          gripEl.addEventListener("pointerdown", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toFront();
+            gripEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var startX = e.clientX;
+            var startY = e.clientY;
+            var startW = r.width;
+            var startH = r.height;
+            function onMove(ev) {
+              var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
+              var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
+              bar.style.width = nw + "px";
+              bar.style.height = nh + "px";
+            }
+            function onUp(ev) {
+              gripEl.removeEventListener("pointermove", onMove);
+              gripEl.removeEventListener("pointerup", onUp);
+              gripEl.removeEventListener("pointercancel", onUp);
+            }
+            gripEl.addEventListener("pointermove", onMove);
+            gripEl.addEventListener("pointerup", onUp);
+            gripEl.addEventListener("pointercancel", onUp);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

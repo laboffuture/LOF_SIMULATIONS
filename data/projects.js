@@ -52,9 +52,10 @@ const PROJECTS = [
   { id: "aero-build", title: "Aero Build — Rocket Design & Flight Physics", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/aero-build/simulation.html", description: "Design a motor-powered rocket from a real motor designation, check its stability, then launch it into wind, staging, and recovery." },
   { id: "astro-build", title: "Astro Build — Assemble the ISS", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/astro-build/simulation.html", description: "Snap the real ISS together from modules, truss and solar wings — each tagged with the country that built it — then fly it around Earth: arrays tracking the Sun, power dipping through the shadow, and a look inside every module." },
   { id: "orbit-explorer", title: "Orbit Explorer — Altitude, Speed and Period", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/orbit-explorer/simulation.html", description: "Explore orbital mechanics by adjusting satellite altitude, speed, period, and eccentricity." },
-  ...Array.from({ length: 21 }, (_, i) => ({
-    id: `space-astronomy-coming-soon-${i + 10}`,
-    title: `Space & Astronomy Project ${String(i + 10).padStart(2, "0")}`,
+  { id: "stargazers-portal", title: "Stargazer's Portal — Constellation Exploration", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/Stargazer's Portal/simulation.html", description: "Pan a real night sky map, identify authentic constellation patterns, and collect them in your Star-Map Scrapbook." },
+  ...Array.from({ length: 20 }, (_, i) => ({
+    id: `space-astronomy-coming-soon-${i + 11}`,
+    title: `Space & Astronomy Project ${String(i + 11).padStart(2, "0")}`,
     category: "space-astronomy",
     status: "coming-soon",
     description: "Coming soon.",
