@@ -1247,9 +1247,6 @@
         <div class="titleblock">
           <h1>Universal Thrust Testing Machine <span>UTTM</span></h1>
         </div>
-        <div class="lamp" id="lamp" role="status" aria-live="polite">
-          <span class="dot"></span><span class="txt" id="lampTxt">STANDBY</span>
-        </div>
       </header>
 
       <div class="grid">
@@ -1763,6 +1760,7 @@
       function setLamp(s) {
         if (s === lampState) return;
         lampState = s;
+        if (!$("lamp")) return;
         $("lamp").className = "lamp " + LAMP_STYLE[s][0];
         $("lampTxt").textContent = LAMP_STYLE[s][1];
       }
