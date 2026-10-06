@@ -35,9 +35,10 @@ const PROJECTS = [
   { id: "space-capsule", title: "Space Capsule — Re-entry & Splashdown", category: "aerospace", status: "live", url: "../sims/aerospace/SpaceCapsule/SpaceCapsule.html", description: "Configure a returning crew capsule — mass, payload, parachute, deploy height, wind — and fly the re-entry to a safe water splashdown." },
   { id: "navigation-radar-system", title: "Navigation Radar System", category: "aerospace", status: "live", url: "../sims/aerospace/NavigationRadarSystem/NavigationRadarSystem.html", description: "Sweep radar angles to detect distance, direction, and obstacles through fog and blind zones." },
   { id: "anemometer", title: "Anemometer", category: "aerospace", status: "live", url: "../sims/aerospace/Anemometer/Anemometer.html", description: "Change the wind's speed, direction and gusts, watch the cups spin, and see how rotor RPM becomes a measured wind speed." },
-  ...Array.from({ length: 22 }, (_, i) => ({
-    id: `aerospace-coming-soon-${i + 9}`,
-    title: `Aerospace Project ${String(i + 9).padStart(2, "0")}`,
+  { id: "hydraulic-landing-gear", title: "Hydraulic Landing Gear", category: "aerospace", status: "live", url: "../sims/aerospace/HydraulicLandingGear/HydraulicLandingGear.html", description: "Use hydraulic pressure to extend and retract an aircraft's landing gear, watch the fluid push the piston, and lock it safely for landing." },
+  ...Array.from({ length: 21 }, (_, i) => ({
+    id: `aerospace-coming-soon-${i + 10}`,
+    title: `Aerospace Project ${String(i + 10).padStart(2, "0")}`,
     category: "aerospace",
     status: "coming-soon",
     description: "Coming soon.",
