@@ -34,9 +34,10 @@ const PROJECTS = [
   { id: "solar-charging-station", title: "Solar Charging Station", category: "aerospace", status: "live", url: "../sims/aerospace/SolarChargingStation/SolarChargingStation.html", description: "Angle a solar panel into the sun, charge a battery, then switch to stored power and keep a device running after dark." },
   { id: "space-capsule", title: "Space Capsule — Re-entry & Splashdown", category: "aerospace", status: "live", url: "../sims/aerospace/SpaceCapsule/SpaceCapsule.html", description: "Configure a returning crew capsule — mass, payload, parachute, deploy height, wind — and fly the re-entry to a safe water splashdown." },
   { id: "navigation-radar-system", title: "Navigation Radar System", category: "aerospace", status: "live", url: "../sims/aerospace/NavigationRadarSystem/NavigationRadarSystem.html", description: "Sweep radar angles to detect distance, direction, and obstacles through fog and blind zones." },
-  ...Array.from({ length: 23 }, (_, i) => ({
-    id: `aerospace-coming-soon-${i + 8}`,
-    title: `Aerospace Project ${String(i + 8).padStart(2, "0")}`,
+  { id: "anemometer", title: "Anemometer", category: "aerospace", status: "live", url: "../sims/aerospace/Anemometer/Anemometer.html", description: "Change the wind's speed, direction and gusts, watch the cups spin, and see how rotor RPM becomes a measured wind speed." },
+  ...Array.from({ length: 22 }, (_, i) => ({
+    id: `aerospace-coming-soon-${i + 9}`,
+    title: `Aerospace Project ${String(i + 9).padStart(2, "0")}`,
     category: "aerospace",
     status: "coming-soon",
     description: "Coming soon.",
