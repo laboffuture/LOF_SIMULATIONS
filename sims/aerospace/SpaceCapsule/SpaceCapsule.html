@@ -216,6 +216,21 @@
       .seg.wide button {
         min-width: 44px;
       }
+      #segPay {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 4px;
+        width: 100%;
+      }
+      #segPay button {
+        flex: 1 1 0;
+        min-width: 0 !important;
+        padding: 7px 2px;
+        font-size: 11px;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+        text-align: center;
+      }
       .hint {
         font-size: 11px;
         color: var(--dim);
@@ -330,7 +345,7 @@
       }
       .pill {
         display: inline-block;
-        padding: 2px 9px;
+        padding: 3px 9px;
         border-radius: 999px;
         font-size: 11px;
         font-weight: 700;
@@ -340,19 +355,72 @@
         color: var(--mut);
       }
       .pill.safe {
-        background: var(--ok-soft);
-        color: var(--ok-ink);
-        border-color: #bfe3bb;
+        background: rgba(95, 217, 122, 0.22);
+        color: #5fd97a;
+        border-color: rgba(95, 217, 122, 0.6);
       }
       .pill.hard {
-        background: #fdf1e3;
-        color: #9a5a06;
-        border-color: #f0d5b0;
+        background: rgba(250, 178, 25, 0.22);
+        color: #fab219;
+        border-color: rgba(250, 178, 25, 0.6);
       }
       .pill.fail {
-        background: var(--danger-soft);
-        color: #a02525;
-        border-color: #eab6b6;
+        background: rgba(255, 85, 85, 0.22);
+        color: #ff6b6b;
+        border-color: rgba(255, 85, 85, 0.6);
+      }
+
+      .reading.result-row {
+        margin-top: 10px;
+        padding: 8px 12px;
+        background: var(--panel2);
+        border: 1.5px solid var(--line);
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .reading.result-row .k {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--txt);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .pill-result {
+        display: inline-block;
+        padding: 5px 13px;
+        border-radius: 6px;
+        font-family: var(--head);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border: 1px solid transparent;
+        text-align: center;
+      }
+      .pill-result.safe {
+        background: rgba(95, 217, 122, 0.25);
+        color: #5fd97a;
+        border-color: #5fd97a;
+        box-shadow: 0 0 10px rgba(95, 217, 122, 0.2);
+      }
+      .pill-result.hard {
+        background: rgba(250, 178, 25, 0.25);
+        color: #fab219;
+        border-color: #fab219;
+        box-shadow: 0 0 10px rgba(250, 178, 25, 0.2);
+      }
+      .pill-result.fail {
+        background: rgba(255, 85, 85, 0.25);
+        color: #ff6b6b;
+        border-color: #ff6b6b;
+        box-shadow: 0 0 10px rgba(255, 85, 85, 0.2);
+      }
+      .pill-result.predict {
+        background: rgba(143, 194, 255, 0.18);
+        color: #8fc2ff;
+        border-color: rgba(143, 194, 255, 0.6);
       }
 
       .fbwrap {
@@ -758,10 +826,10 @@
               <b>Launch Mission:</b> Click <b>Start Mission</b> to commence atmospheric entry. Watch the aerothermal plasma glow bleed off orbital velocity under the heat shield, followed by canopy deployment, deceleration, and crosswind drift.
             </li>
             <li>
-              <b>Track Telemetry &amp; Splashdown:</b> Observe live altitude, speed, drift displacement, and elapsed fall time. When the capsule touches water, impact rating is evaluated: <b>Safe</b> (&le; 7.0 m/s), <b>Hard</b> (7.0&ndash;13.0 m/s), or <b>Failed</b> (&gt; 13.0 m/s).
+              <b>Track Telemetry &amp; Splashdown:</b> Observe live altitude, speed, drift displacement, and elapsed fall time. When the capsule touches water, impact rating is evaluated: <b>Safe</b> (&le; 8.5 m/s), <b>Hard</b> (8.5&ndash;14.0 m/s), or <b>Failed</b> (&gt; 14.0 m/s).
             </li>
             <li>
-              <b>Verify Mission Success:</b> Full mission success requires achieving a <b>Safe</b> landing velocity <b>and</b> touching down within the <b>Recovery Target Zone</b> (&plusmn;400 m).
+              <b>Verify Mission Success:</b> Full mission success requires achieving a <b>Safe</b> landing velocity <b>and</b> touching down within the <b>Recovery Target Zone</b> (&plusmn;700 m).
             </li>
             <li>
               <b>Analyze Observations &amp; Reset:</b> Compare recorded trials in the <b>Observation Log</b> table below the stage, then click <b>Reset</b> to adjust parameters and test new configurations.
@@ -787,10 +855,10 @@
               <b>Deployment Altitude &amp; Braking Distance:</b> Parachutes require sufficient altitude and time to decelerate the capsule to terminal speed. <b>High deployment (3,000 m)</b> allows full braking, while <b>Low deployment (1,000 m)</b> risks impacting the water before reaching terminal velocity ("late-deployment" failure).
             </li>
             <li>
-              <b>Crosswind Drift &amp; Recovery Zone:</b> Horizontal wind displaces the capsule downwind: <b>Drift (d) = v<sub>wind</sub> &times; t<sub>fall</sub></b>. Slower-falling capsules spend more time aloft, causing greater lateral drift under mild (5 m/s) and strong (10 m/s) winds that can blow them outside the designated <b>Recovery Target Zone</b> (&plusmn;400 m).
+              <b>Crosswind Drift &amp; Recovery Zone:</b> Horizontal wind displaces the capsule downwind: <b>Drift (d) = v<sub>wind</sub> &times; t<sub>fall</sub></b>. Slower-falling capsules spend more time aloft, causing greater lateral drift under mild (2 m/s) and strong (5 m/s) winds that can blow them outside the designated <b>Recovery Target Zone</b> (&plusmn;700 m).
             </li>
             <li>
-              <b>Splashdown Ratings &amp; G-Forces:</b> Touchdown impact is rated for crew survivability: <b>Safe</b> (&le; 7.0 m/s, &lt; 4 g, capsule floats upright), <b>Hard</b> (7.0&ndash;13.0 m/s, 4&ndash;10 g, risk of crew injury/structural damage), and <b>Failed</b> (&gt; 13.0 m/s, &gt; 10 g, catastrophic breach or sinking).
+              <b>Splashdown Ratings &amp; G-Forces:</b> Touchdown impact is rated for crew survivability: <b>Safe</b> (&le; 8.5 m/s, &lt; 4 g, capsule floats upright), <b>Hard</b> (8.5&ndash;14.0 m/s, 4&ndash;10 g, risk of crew injury/structural damage), and <b>Failed</b> (&gt; 14.0 m/s, &gt; 10 g, catastrophic breach or sinking).
             </li>
           </ul>
         </div>
@@ -887,7 +955,7 @@
         <div class="reading"><span class="k">Fall Time</span><span class="v" id="oFall">&mdash;</span></div>
         <div class="reading"><span class="k">Drift Distance</span><span class="v" id="oDrift">&mdash;</span></div>
         <div class="reading"><span class="k">Landing Impact</span><span class="v" id="oImpact">&mdash;</span></div>
-        <div class="reading"><span class="k">Mission Result</span><span class="v" id="oResult">&mdash;</span></div>
+        <div class="reading result-row"><span class="k">Mission Result</span><span class="v" id="oResult">&mdash;</span></div>
 
         <div class="fbwrap" id="fbWrap"></div>
 
@@ -957,16 +1025,15 @@
 
       // Splashdown speed = parachute terminal velocity:
       //   v = sqrt( 2 * TotalMass * g / (rho * ParachuteArea * Cd) )
-      // Cd is calibrated so Light capsule + Small chute = 12.00 m/s, which anchors
-      // the whole outcome table (Heavy + Small ~= 29.4 m/s, Light + Large ~= 4.0 m/s).
+      // Cd is calibrated for high-drag multi-canopy clusters (Apollo/Orion/Dragon human-rated standard).
       const G = 9.8;               // m/s^2
       const RHO = 1.225;           // air density near sea level (kg/m^3)
-      const CD_CHUTE = 1.4147;     // calibrated round-canopy drag coefficient
+      const CD_CHUTE = 2.85;       // calibrated multi-canopy cluster drag coefficient
       const REENTRY_KMS = 7.8;     // headline atmospheric-interface speed
       const V_AFTER_SHIELD = { light: 150, medium: 210, heavy: 280 }; // m/s, heat-shield exit (display only)
-      const TARGET_R = 500;        // radius of the safe splashdown zone (m)
-      const SAFE_MAX = 7.0;        // m/s  — Safe splashdown limit (~25 km/h, human-rated splashdown standard)
-      const HARD_MAX = 13.0;       // m/s  — Hard splashdown limit (~47 km/h); above this is Failed
+      const TARGET_R = 700;        // radius of the safe splashdown recovery zone (m)
+      const SAFE_MAX = 8.5;        // m/s  — Safe water splashdown limit (~30 km/h, human-rated standard)
+      const HARD_MAX = 14.0;       // m/s  — Hard splashdown limit (~50 km/h); above this is Failed
 
       const FB = {
         safe:  "The parachute created enough air resistance to slow the capsule.",
@@ -1012,7 +1079,7 @@
 
         // Physical line stretch & canopy inflation distance during high-speed deployment:
         // Parachutes take finite time/distance to open from v0 (150-280 m/s)
-        const inflationDist = (v0 * 2.8) * Math.pow(ch.dia / 30.0, 0.4);
+        const inflationDist = (v0 * 1.5) * Math.pow(ch.dia / 30.0, 0.35);
         const effectiveH = Math.max(30.0, dep.alt - inflationDist);
 
         // Analytical solution to aerodynamic deceleration over effective altitude drop:
@@ -1102,8 +1169,23 @@
                           : '<small style="color:var(--ok-ink)">in zone</small>');
           document.getElementById("oImpact").innerHTML =
             pill(view.impact.toUpperCase(), view.impact);
-          document.getElementById("oResult").innerHTML = view.success
-            ? pill("SUCCESS", "safe") : pill("RETRY", "fail");
+          let resClass = "fail";
+          let resText = "MISSION FAILED";
+          if (view.success) {
+            resClass = "safe";
+            resText = "✔ SUCCESS";
+          } else if (view.drifted && view.impact === "safe") {
+            resClass = "hard";
+            resText = "⚠ DRIFTED OFF-TARGET";
+          } else if (view.impact === "hard") {
+            resClass = "hard";
+            resText = "⚠ HARD SPLASHDOWN";
+          } else {
+            resClass = "fail";
+            resText = "✖ FAILED / RETRY";
+          }
+          document.getElementById("oResult").innerHTML =
+            '<span class="pill-result ' + resClass + '">' + resText + '</span>';
           document.getElementById("outNote").textContent =
             "Actual splashdown result for this configuration.";
           renderFeedback(buildFeedback(view));
@@ -1116,8 +1198,9 @@
             '<small style="color:var(--dim)">predicted ' + Math.round(c.drift) + " m</small>";
           document.getElementById("oImpact").innerHTML =
             '<small style="color:var(--dim)">predicted ' + pill(c.impact.toUpperCase(), c.impact) + "</small>";
+          const predText = c.success ? "PREDICTED: SUCCESS" : (c.drifted && c.impact === "safe" ? "PREDICTED: DRIFT" : (c.impact === "hard" ? "PREDICTED: HARD" : "PREDICTED: RETRY"));
           document.getElementById("oResult").innerHTML =
-            '<small style="color:var(--dim)">' + (c.success ? "predicted success" : "predicted retry") + "</small>";
+            '<span class="pill-result predict">' + predText + '</span>';
           document.getElementById("outNote").textContent =
             "Predicted values — run the mission to confirm.";
           renderFeedback([]);
@@ -1425,34 +1508,57 @@
         ctx.restore();
       }
 
-      // sev 0..1 scales the whole splash — a gentle plop vs. a violent crater
-      function spawnSplash(x, sev) {
+      // sev 0..1 scales the splash; impact ('safe'|'hard'|'fail') ensures safe splashdowns are smooth and small
+      function spawnSplash(x, sev, impact) {
         const wy = waterY();
-        const n = Math.round(12 + sev * 48);
+        const isSafe = impact === "safe";
+
+        if (isSafe) {
+          // Safe splashdown: small, delicate, gentle spray and subtle ripples
+          const n = 6 + Math.round(sev * 6);
+          for (let i = 0; i < n; i++) {
+            const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.2;
+            const sp = 0.8 + Math.random() * 1.5;
+            S.particles.push({
+              x: x + (Math.random() - 0.5) * 14,
+              y: wy - Math.random() * 2,
+              vx: Math.cos(a) * sp,
+              vy: Math.sin(a) * sp - 0.8,
+              sz: 1.0 + Math.random() * 1.2,
+              life: 0.65,
+            });
+          }
+          for (let i = 0; i < 2; i++) {
+            S.ripples.push({ x: x, r: 3 + i * 4, life: 0.85 + i * 0.2, grow: 16 + i * 6 });
+          }
+          return;
+        }
+
+        const n = Math.round(14 + sev * 40);
         for (let i = 0; i < n; i++) {
           const a = -Math.PI / 2 + (Math.random() - 0.5) * (1.3 + sev * 1.1);
-          const sp = (1.8 + Math.random() * 4) * (1 + sev * 2.4);
+          const sp = (1.8 + Math.random() * 3.5) * (1 + sev * 2.0);
           S.particles.push({
-            x: x + (Math.random() - 0.5) * (16 + sev * 40), y: wy - Math.random() * 4,
+            x: x + (Math.random() - 0.5) * (16 + sev * 36), y: wy - Math.random() * 4,
             vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1 - sev * 2,
-            sz: 1.8 + Math.random() * (1.4 + sev * 2.6),
+            sz: 1.6 + Math.random() * (1.2 + sev * 2.2),
             life: 1,
           });
         }
-        // central geyser column for a hard hit
+        // central geyser column only for hard/failed hits
         if (sev > 0.35) {
-          const gc = Math.round(sev * 22);
+          const gc = Math.round(sev * 18);
           for (let i = 0; i < gc; i++) {
             S.particles.push({
-              x: x + (Math.random() - 0.5) * 14, y: wy,
-              vx: (Math.random() - 0.5) * 2.2, vy: -(5 + Math.random() * 7) * (0.6 + sev),
-              sz: 2 + Math.random() * 3.5, life: 1.1,
+              x: x + (Math.random() - 0.5) * 12, y: wy,
+              vx: (Math.random() - 0.5) * 2.0, vy: -(4 + Math.random() * 6) * (0.6 + sev),
+              sz: 2 + Math.random() * 3, life: 1.0,
             });
           }
         }
         const rc = 1 + Math.round(sev * 3);
         for (let i = 0; i < rc; i++)
-          S.ripples.push({ x: x, r: 4 + i * 6, life: 1 + i * 0.25, grow: 34 + sev * 60 });
+          S.ripples.push({ x: x, r: 4 + i * 6, life: 1 + i * 0.25, grow: 28 + sev * 50 });
       }
       function spawnBubbles(x, y, n) {
         for (let i = 0; i < n; i++) {
@@ -1515,25 +1621,27 @@
       // where the capsule sits (or sinks) after it hits the water
       function capsulePose(tSince, impact, w, windTilt, dir) {
         if (impact === "safe") {
-          const damp = Math.exp(-tSince * 0.5);
+          // Smooth continuous landing cushion: starts at dy=0 at touchdown, gently dips into water cushion and smoothly settles
+          const dip = Math.sin(tSince * 2.5) * (w * 0.08) * Math.exp(-tSince * 1.5);
+          const rotBob = Math.sin(tSince * 1.8) * 0.03 * Math.exp(-tSince * 1.2);
           return {
-            dy: -w * 0.16 + Math.sin(tSince * 3) * 3 * damp,
-            rot: windTilt * 0.4 + Math.sin(tSince * 2.2) * 0.05 * damp,
+            dy: dip,
+            rot: windTilt * 0.3 + rotBob,
             alpha: 1, under: false,
           };
         }
         if (impact === "hard") {
-          // brief plunge, then a heavy damped bob that settles low in the water
+          // brief plunge, then a damped bob settling in water
           let dy;
-          if (tSince < 0.32) dy = (tSince / 0.32) * (w * 0.5);
+          if (tSince < 0.25) dy = (tSince / 0.25) * (w * 0.38);
           else {
-            const tt = tSince - 0.32;
-            dy = w * 0.5 * Math.cos(tt * 6) * Math.exp(-tt * 1.6) - w * 0.02;
+            const tt = tSince - 0.25;
+            dy = w * 0.38 * Math.cos(tt * 6) * Math.exp(-tt * 1.8);
           }
           return {
             dy: dy,
-            rot: windTilt * 0.4 + 0.5 * Math.sin(tSince * 7) * Math.exp(-tSince * 1.1),
-            alpha: 1, under: tSince > 0.05 && tSince < 0.9,
+            rot: windTilt * 0.4 + 0.35 * Math.sin(tSince * 7) * Math.exp(-tSince * 1.2),
+            alpha: 1, under: tSince > 0.05 && tSince < 0.7,
           };
         }
         // failed: the capsule drives under and sinks, tipping as it goes
@@ -1596,10 +1704,10 @@
           let px = cx + c.drift * driftPxPerM;
           px = Math.max(cx - CW * 0.44, Math.min(cx + CW * 0.44, px));
           const sev = impactSeverity(c.vSplash);
-          spawnSplash(px, sev);
-          S.shake = 3 + sev * 13;
-          S.flash = c.impact === "safe" ? 0.12 : c.impact === "hard" ? 0.32 : 0.5;
-          S.flashCol = c.impact === "fail" ? "#d03b3b" : c.impact === "hard" ? "#ffd9a8" : "#dff1f7";
+          spawnSplash(px, sev, c.impact);
+          S.shake = c.impact === "safe" ? 0 : (c.impact === "hard" ? 2 + sev * 4 : 4 + sev * 10);
+          S.flash = c.impact === "safe" ? 0 : (c.impact === "hard" ? 0.15 : 0.45);
+          S.flashCol = c.impact === "fail" ? "#d03b3b" : "#ffd9a8";
         }
         // keep venting bubbles while a failed capsule is going under
         if (S.splashDone && S.calc.impact === "fail") {
@@ -1680,7 +1788,7 @@
           const dt2 = S.animT - REENTRY_DUR;
           const realT = (dt2 / PB) * c.fallTime;
           const s = trajAt(c, realT);
-          capY = yOf(s.h);
+          capY = yOf(s.h) - w * 0.16;
           let px = cx + s.x * driftPxPerM;
           S.driftedVisual = px > cx + CW * 0.44;
           capX = Math.max(cx - CW * 0.44, Math.min(cx + CW * 0.44, px));
@@ -1722,11 +1830,11 @@
         drawDitchedChute(capX, waterY(), w, tS, S.sinkDir, impact); // fabric floating on top
         drawParticles();                     // spray + ripples in front of the water
 
-        if (tS < 0.5) {
-          ctx.globalAlpha = (1 - tS / 0.5) * 0.7;
+        if (tS < 0.5 && impact !== "safe") {
+          ctx.globalAlpha = (1 - tS / 0.5) * (impact === "hard" ? 0.35 : 0.7);
           ctx.strokeStyle = "#f2fbff";
-          ctx.lineWidth = 3;
-          const rr = 10 + tS * 130;
+          ctx.lineWidth = impact === "hard" ? 1.5 : 3;
+          const rr = 8 + tS * (impact === "hard" ? 60 : 120);
           ctx.beginPath();
           ctx.ellipse(capX, waterY(), rr, rr * 0.3, 0, 0, Math.PI * 2);
           ctx.stroke();
@@ -1834,34 +1942,63 @@
       }
 
       function drawResultCard(r) {
-        const bw = Math.min(300, CW * 0.78), bh = 132;
-        const bx = (CW - bw) / 2, by = CH * 0.3;
-        ctx.fillStyle = "rgba(252,253,254,0.96)";
-        ctx.strokeStyle = "#cdd8e2";
-        ctx.lineWidth = 1.5;
-        roundRect(bx, by, bw, bh, 12);
+        const bw = Math.min(320, CW * 0.84), bh = 144;
+        const bx = (CW - bw) / 2, by = CH * 0.26;
+
+        ctx.save();
+        ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetY = 6;
+
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = r.success ? "#27ae60" : (r.impact === "hard" ? "#e67e22" : "#e74c3c");
+        ctx.lineWidth = 3;
+        roundRect(bx, by, bw, bh, 14);
         ctx.fill();
         ctx.stroke();
 
-        const col = r.impact === "safe" ? "#0ca30c" : r.impact === "hard" ? "#c97a20" : "#d03b3b";
+        ctx.shadowColor = "transparent";
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+
+        const mainCol = r.impact === "safe" ? "#0b7c0b" : (r.impact === "hard" ? "#b85c00" : "#c02020");
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillStyle = col;
-        ctx.font = "800 26px 'Orbitron', sans-serif";
+
+        ctx.fillStyle = mainCol;
+        ctx.font = "800 22px 'Orbitron', Arial, sans-serif";
         ctx.fillText(
-          r.impact === "safe" ? "SAFE" : r.impact === "hard" ? "HARD" : "FAILED",
-          CW / 2, by + 30
+          r.impact === "safe" ? "SAFE SPLASHDOWN" : (r.impact === "hard" ? "HARD IMPACT" : "FAILED / SINKING"),
+          CW / 2, by + 28
         );
-        ctx.fillStyle = "#17293b";
-        ctx.font = "700 14px 'Orbitron', sans-serif";
-        ctx.fillText(r.success ? "MISSION SUCCESS" : "MISSION — RETRY", CW / 2, by + 60);
-        ctx.fillStyle = "#4c5c6b";
-        ctx.font = "12px 'IBM Plex Mono', monospace";
-        ctx.fillText("splashdown " + Math.round(r.vSplash) + " m/s", CW / 2, by + 84);
+
+        ctx.fillStyle = r.success ? "#0b7c0b" : "#17293b";
+        ctx.font = "700 14px 'Orbitron', Arial, sans-serif";
+        const outcomeText = r.success
+          ? "✔ MISSION SUCCESS"
+          : (r.drifted && r.impact === "safe" ? "⚠ RETRY · DRIFTED OFF-TARGET" : "✖ MISSION RETRY");
+        ctx.fillText(outcomeText, CW / 2, by + 58);
+
+        ctx.strokeStyle = "#e2e8f0";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(bx + 18, by + 76);
+        ctx.lineTo(bx + bw - 18, by + 76);
+        ctx.stroke();
+
+        ctx.fillStyle = "#1e293b";
+        ctx.font = "600 12.5px 'IBM Plex Mono', Consolas, monospace";
         ctx.fillText(
-          "drift " + Math.round(r.drift) + " m " + (r.drifted ? "(off target)" : "(in zone)"),
-          CW / 2, by + 104
+          "Splashdown: " + r.vSplash.toFixed(1) + " m/s (" + (r.vSplash <= SAFE_MAX ? "Safe ≤ " + SAFE_MAX + "m/s" : "Unsafe") + ")",
+          CW / 2, by + 98
         );
+        ctx.fillStyle = r.drifted ? "#b01b1b" : "#475569";
+        ctx.fillText(
+          "Drift: " + Math.round(r.drift) + " m " + (r.drifted ? "(Off Target > " + TARGET_R + "m)" : "(In Recovery Zone)"),
+          CW / 2, by + 120
+        );
+
+        ctx.restore();
       }
       function roundRect(x, y, w, h, r) {
         ctx.beginPath();
