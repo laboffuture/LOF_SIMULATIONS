@@ -1,0 +1,1548 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Anemometer · Wind Speed Lab</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #1f2a30;
+        --panel: #26343b;
+        --panel2: #2d3d45;
+        --well: rgba(10, 16, 20, 0.45);
+        --line: rgba(232, 240, 245, 0.14);
+        --txt: #eef3f6;
+        --mut: #b3c2cb;
+        --dim: #7f929d;
+        --accent: #e8590c;
+        --accent-press: #c94a08;
+        --sky: #4da3ff;
+        --sky-soft: rgba(77, 163, 255, 0.16);
+        --meas: #38d4ff;
+        --site: rgba(238, 243, 246, 0.55);
+        --calm: #8fa3ae;
+        --breeze: #3fcf8e;
+        --strong: #fab219;
+        --gusty: #ff6b6b;
+        --shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+        --r: 10px;
+        --head: "Orbitron", sans-serif;
+        --body: "Rajdhani", sans-serif;
+        --mono: "IBM Plex Mono", Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        font-family: var(--body);
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--txt);
+        background-color: var(--bg);
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+        background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+        height: 100vh;
+        overflow: hidden;
+        padding: 0 clamp(12px, 2vw, 26px) 12px;
+        display: flex;
+        flex-direction: column;
+      }
+      h1,
+      h3,
+      .badge {
+        font-family: var(--head);
+      }
+
+      /* ---------- header: title centred, guide buttons right ---------- */
+      header.top {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0;
+        margin-bottom: 10px;
+        border-bottom: 1px solid var(--line);
+        flex: 0 0 auto;
+      }
+      header.top .title {
+        grid-column: 2;
+        text-align: center;
+      }
+      header.top h1 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      header.top .helpbtns {
+        grid-column: 3;
+        justify-self: end;
+      }
+      @media (max-width: 760px) {
+        header.top {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+        header.top .helpbtns {
+          grid-row: 1;
+          grid-column: 1;
+          justify-self: center;
+        }
+        header.top .title {
+          grid-row: 2;
+          grid-column: 1;
+        }
+      }
+
+      /* ---------- layout ---------- */
+      .grid {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr) 300px;
+        gap: 14px;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        box-shadow: var(--shadow);
+        padding: 14px 16px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
+      }
+      .card::-webkit-scrollbar {
+        width: 8px;
+      }
+      .card::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.18);
+        border-radius: 4px;
+      }
+      .card h3 {
+        margin: 0 0 3px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--mut);
+      }
+      .card .sub {
+        font-size: 13px;
+        color: var(--mut);
+        margin: 0 0 6px;
+        line-height: 1.4;
+      }
+      @media (max-width: 1180px) {
+        body {
+          overflow: auto;
+          height: auto;
+        }
+        .grid {
+          grid-template-columns: minmax(0, 1fr);
+          flex: 0 0 auto;
+        }
+        .card.stage {
+          height: 560px;
+        }
+      }
+
+      /* ---------- controls ---------- */
+      .ctrl {
+        margin: 12px 0;
+      }
+      .ctrl .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+      }
+      .ctrl label {
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .ctrl .val {
+        font-family: var(--head);
+        font-size: 11.5px;
+        color: var(--sky);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      .toggle {
+        display: flex;
+        gap: 6px;
+      }
+      .toggle button {
+        flex: 1;
+        cursor: pointer;
+        border: 1px solid #dbe2e8;
+        background: #fcfdfe;
+        color: #4c5c6b;
+        padding: 7px 4px;
+        border-radius: 8px;
+        font-family: var(--body);
+        font-size: 13.5px;
+        font-weight: 700;
+        transition: 0.12s ease;
+      }
+      .toggle button:hover {
+        border-color: var(--sky);
+      }
+      .toggle button.on {
+        background: #e3eefb;
+        border-color: #2a78d6;
+        color: #17293b;
+        box-shadow: inset 0 0 0 1px #2a78d6;
+      }
+      .toggle button:focus-visible,
+      .btn:focus-visible {
+        outline: 2px solid var(--sky);
+        outline-offset: 2px;
+      }
+      .hint {
+        font-size: 12.5px;
+        color: var(--mut);
+        line-height: 1.4;
+        margin: 5px 0 0;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+      }
+      .btn {
+        flex: 1;
+        cursor: pointer;
+        border-radius: 8px;
+        padding: 11px 8px;
+        font-family: var(--head);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border: 1px solid transparent;
+        transition: 0.12s ease;
+      }
+      .btn.start {
+        background: var(--accent);
+        color: #fff;
+        box-shadow: 0 6px 14px rgba(232, 89, 12, 0.3);
+      }
+      .btn.start:hover {
+        background: var(--accent-press);
+      }
+      .btn.start.running {
+        background: #fcfdfe;
+        color: #17293b;
+        border-color: #dbe2e8;
+        box-shadow: none;
+      }
+      .btn.reset {
+        background: transparent;
+        color: var(--txt);
+        border-color: var(--line);
+      }
+      .btn.reset:hover {
+        border-color: var(--mut);
+      }
+
+      /* ---------- stage ---------- */
+      .card.stage {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+        overflow: hidden;
+        position: relative;
+      }
+      .scene-wrap {
+        position: relative;
+        flex: 1 1 auto;
+        min-height: 0;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      /* canvases are absolutely positioned so their pixel size never feeds back into the layout */
+      #scene,
+      #graph,
+      #gauge {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .modechip {
+        position: absolute;
+        left: 50%;
+        bottom: 10px;
+        transform: translateX(-50%);
+        max-width: calc(100% - 24px);
+        background: rgba(15, 22, 27, 0.82);
+        border: 1px solid var(--line);
+        color: var(--txt);
+        font-size: 13.5px;
+        font-weight: 600;
+        padding: 6px 14px;
+        border-radius: 999px;
+        text-align: center;
+        pointer-events: none;
+      }
+      .graph-wrap {
+        flex: 0 0 160px;
+        background: var(--well);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        position: relative;
+      }
+
+      /* ---------- readings ---------- */
+      .reading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 9px 0;
+        border-bottom: 1px dashed var(--line);
+      }
+      .reading .k {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--mut);
+      }
+      .badge {
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid currentColor;
+      }
+      .gauge-wrap {
+        position: relative;
+        height: 150px;
+        margin: 6px 0 2px;
+      }
+      .bigval {
+        text-align: center;
+        padding: 6px 0 8px;
+        border-bottom: 1px dashed var(--line);
+      }
+      .bigval .lab {
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--mut);
+        font-weight: 700;
+      }
+      .bigval .num {
+        font-family: var(--mono);
+        font-size: 30px;
+        font-weight: 600;
+        color: var(--meas);
+        line-height: 1.15;
+      }
+      .bigval .num small {
+        font-size: 15px;
+        color: var(--mut);
+      }
+      .bigval .alt {
+        font-family: var(--mono);
+        font-size: 14px;
+        color: var(--mut);
+      }
+      .bigval .site {
+        font-size: 12.5px;
+        color: var(--dim);
+        margin-top: 3px;
+      }
+      .cond-note {
+        font-size: 12.5px;
+        color: var(--mut);
+        line-height: 1.4;
+        margin: 6px 0 2px;
+      }
+      .convert {
+        margin-top: 12px;
+        background: var(--well);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+      .convert h4 {
+        margin: 0 0 6px;
+        font-family: var(--head);
+        font-size: 10.5px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--mut);
+      }
+      .convert .step {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--txt);
+      }
+      .convert .step b {
+        color: var(--meas);
+        font-weight: 600;
+      }
+      .convert .why {
+        font-size: 12px;
+        color: var(--dim);
+        margin-top: 4px;
+        line-height: 1.35;
+      }
+      .mini {
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--mut);
+        margin-top: 10px;
+      }
+
+      /* ---------- guide buttons + floating guide window ---------- */
+      .helpbtns {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .helpbtn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head, "Orbitron", sans-serif);
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #fff;
+        background: #2a78d6;
+        border: 1px solid #2a78d6;
+        border-radius: 8px;
+        padding: 8px 14px;
+        box-shadow: 0 6px 14px rgba(42, 120, 214, 0.24);
+        transition: transform 0.15s ease, background 0.15s ease;
+      }
+      .helpbtn:hover {
+        transform: translateY(-1px);
+      }
+      .helpbtn:focus-visible {
+        outline: 2px solid var(--txt);
+        outline-offset: 2px;
+      }
+      .helpbtn.on {
+        background: var(--accent) !important;
+        border-color: var(--accent) !important;
+        box-shadow: 0 6px 14px rgba(232, 89, 12, 0.26);
+      }
+      .helpbar {
+        display: none;
+      }
+      .helpbar.floatwin {
+        position: fixed !important;
+        z-index: 10000 !important;
+        display: none;
+        flex-direction: column !important;
+        background: var(--panel) !important;
+        border: 1px solid var(--line) !important;
+        border-radius: var(--r) !important;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45) !important;
+        overflow: hidden !important;
+        min-width: 280px !important;
+        min-height: 200px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: calc(100vw - 16px) !important;
+        max-height: calc(100vh - 16px) !important;
+      }
+      .helpbar.floatwin.show {
+        display: flex !important;
+      }
+      .fw-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 12px;
+        background: var(--panel2);
+        border-bottom: 1px solid var(--line);
+        cursor: move;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+        flex: 0 0 auto;
+      }
+      .fw-title {
+        font-family: var(--head);
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--mut);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .fw-title::before {
+        content: "⠿";
+        font-size: 13px;
+        color: var(--dim);
+      }
+      .fw-head-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .fw-tab-btn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 4px 8px;
+        border-radius: 5px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--mut);
+        transition: 0.15s ease;
+      }
+      .fw-tab-btn:hover {
+        border-color: var(--dim);
+        color: var(--txt);
+      }
+      .fw-tab-btn.on {
+        background: var(--accent) !important;
+        border-color: var(--accent) !important;
+        color: #fff !important;
+      }
+      .fw-close {
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--mut);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.15s ease;
+      }
+      .fw-close:hover {
+        background: #fbe7e7;
+        border-color: #f0c4c4;
+        color: #8a1f1f;
+      }
+      .fw-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 14px 16px;
+        overflow-y: auto;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--txt);
+      }
+      .fw-body ol,
+      .fw-body ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .fw-body li {
+        margin-bottom: 6px;
+      }
+      .fw-body b {
+        color: var(--sky);
+      }
+      .fw-grip {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 16px;
+        height: 16px;
+        cursor: nwse-resize;
+        touch-action: none;
+        background: linear-gradient(135deg, transparent 50%, var(--dim) 50%, var(--dim) 58%, transparent 58%, transparent 70%, var(--dim) 70%, var(--dim) 78%, transparent 78%);
+      }
+      .floatwin.dragging {
+        opacity: 0.94;
+      }
+      .tabpanel {
+        display: none;
+      }
+      .tabpanel.on {
+        display: block;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .helpbtn,
+        .toggle button,
+        .btn {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div></div>
+      <div class="title">
+        <h1>Anemometer</h1>
+      </div>
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">What You'll Learn</button>
+      </div>
+      <div class="helpbar" id="helpbar">
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li>Pick a <b>Wind Speed</b> — Off, Low, Medium or High.</li>
+            <li>Choose where the wind comes from with <b>Wind Direction</b> — Front, Left or Right — and pick a <b>Rotor Size</b>.</li>
+            <li>Press <b>Start</b> to switch the wind on. Watch the cups spin up; the red cup lets you count the turns.</li>
+            <li>Read the <b>RPM meter</b>, the <b>Rotor Speed</b> and the measured <b>Wind Speed</b> in m/s and km/h.</li>
+            <li>Open the <b>Rotation → Wind Speed</b> box to see exactly how the RPM is turned into a wind speed.</li>
+            <li>Turn <b>Wind Gust</b> ON and watch the RPM jump each time a gust arrives. The <b>graph</b> shows every gust.</li>
+            <li>Change <b>one</b> setting at a time — speed, direction or rotor size — and compare the graph and readings.</li>
+            <li>Press <b>Reset</b> to stop the wind and clear the graph.</li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <ul>
+            <li>Why wind pushes the open side of a cup harder than its round back, so the rotor always spins the same way</li>
+            <li>Why faster wind makes the rotor spin faster — and why no wind means no rotation</li>
+            <li>What <b>RPM</b> (revolutions per minute) means and how to read it</li>
+            <li>How an anemometer turns rotation into wind speed: cup speed = 2π × arm × RPM ÷ 60, then wind ≈ 3 × cup speed</li>
+            <li>Why bigger cups catch more wind, start in lighter breezes and react to gusts faster</li>
+            <li>How a sudden gust makes the RPM rise quickly, then ease off</li>
+            <li>Why walls and trees near an anemometer give lower readings — and why weather stations mount them high in the open</li>
+            <li>How to describe wind as Calm, Breeze, Strong or Gusty, in m/s and km/h (1 m/s = 3.6 km/h)</li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card controls" aria-label="Wind test controls">
+        <h3>Wind Test Bench</h3>
+        <p class="sub">Set up the wind, then press Start to see how the anemometer responds.</p>
+
+        <div class="ctrl">
+          <div class="row"><label>Wind Speed</label><span class="val" id="windVal">Off</span></div>
+          <div class="toggle" id="windToggle">
+            <button type="button" data-v="off" class="on">Off</button>
+            <button type="button" data-v="low">Low</button>
+            <button type="button" data-v="medium">Medium</button>
+            <button type="button" data-v="high">High</button>
+          </div>
+          <p class="hint" id="windHint">No wind blowing — the cups will stay still.</p>
+        </div>
+
+        <div class="ctrl">
+          <div class="row"><label>Wind Direction</label><span class="val" id="dirVal">Front</span></div>
+          <div class="toggle" id="dirToggle">
+            <button type="button" data-v="front" class="on">Front</button>
+            <button type="button" data-v="left">Left</button>
+            <button type="button" data-v="right">Right</button>
+          </div>
+          <p class="hint" id="dirHint">Open ground in front — the cups get the full wind.</p>
+        </div>
+
+        <div class="ctrl">
+          <div class="row"><label>Wind Gust</label><span class="val" id="gustVal">Off</span></div>
+          <div class="toggle" id="gustToggle">
+            <button type="button" data-v="off" class="on">OFF</button>
+            <button type="button" data-v="on">ON</button>
+          </div>
+          <p class="hint" id="gustHint">Steady wind with no sudden bursts.</p>
+        </div>
+
+        <div class="ctrl">
+          <div class="row"><label>Rotor Size</label><span class="val" id="sizeVal">Medium</span></div>
+          <div class="toggle" id="sizeToggle">
+            <button type="button" data-v="small">Small</button>
+            <button type="button" data-v="medium" class="on">Medium</button>
+            <button type="button" data-v="large">Large</button>
+          </div>
+          <p class="hint" id="sizeHint">50 mm cups — a good all-round rotor.</p>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn start" id="startBtn">▶ Start</button>
+          <button type="button" class="btn reset" id="resetBtn">↺ Reset</button>
+        </div>
+      </section>
+
+      <section class="card stage" aria-label="Wind test field">
+        <div class="scene-wrap">
+          <canvas id="scene" role="img" aria-label="Anemometer on a mast with wind arrows, a wind vane and a direction indicator"></canvas>
+          <div class="modechip" id="modeChip">Press Start to switch on the wind.</div>
+        </div>
+        <div class="graph-wrap">
+          <canvas id="graph" role="img" aria-label="Graph of wind speed over the last 30 seconds"></canvas>
+        </div>
+      </section>
+
+      <section class="card readings" aria-label="Anemometer readings">
+        <h3>Anemometer Readings</h3>
+
+        <div class="reading">
+          <span class="k">Rotor Speed</span>
+          <span class="badge" id="rotorBadge" style="color: var(--calm)">Stopped</span>
+        </div>
+
+        <div class="gauge-wrap"><canvas id="gauge" role="img" aria-label="RPM meter"></canvas></div>
+
+        <div class="bigval">
+          <div class="lab">Wind Speed (measured)</div>
+          <div class="num" id="windNum">0.0 <small>m/s</small></div>
+          <div class="alt" id="windKmh">0.0 km/h</div>
+          <div class="site" id="siteLine">Wind at site 0.0 m/s · exposure 100%</div>
+        </div>
+
+        <div class="reading">
+          <span class="k">Wind Condition</span>
+          <span class="badge" id="condBadge" style="color: var(--calm)">Calm</span>
+        </div>
+        <p class="cond-note" id="condNote">Still air — nothing to turn the cups.</p>
+
+        <div class="convert" aria-live="off">
+          <h4>Rotation → Wind Speed</h4>
+          <div class="step" id="cv1">Cup speed = 2π × 0.08 m × <b>0</b> RPM ÷ 60 = <b>0.00</b> m/s</div>
+          <div class="step" id="cv2">Wind ≈ 3 × <b>0.00</b> + <b>1.0</b> = <b>0.0</b> m/s</div>
+          <div class="why">Cups move about ⅓ as fast as the wind. The small extra is the wind used up turning the bearings.</div>
+        </div>
+
+        <div class="mini">
+          <span id="revs">Turns: 0</span>
+          <span id="clock">Time: 0.0 s</span>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      (() => {
+        "use strict";
+
+        /* ---------------- model ---------------- */
+        const WIND = {
+          off: { v: 0, label: "Off", hint: "No wind blowing — the cups will stay still." },
+          low: { v: 3, label: "Low · 3 m/s", hint: "A light breeze — enough to turn the cups slowly." },
+          medium: { v: 7, label: "Medium · 7 m/s", hint: "A fresh breeze — the cups spin steadily." },
+          high: { v: 12, label: "High · 12 m/s", hint: "Strong wind — the cups spin fast." },
+        };
+        const DIRS = {
+          front: { exp: 1.0, label: "Front", hint: "Open ground in front — the cups get the full wind.", vec: [0, 1] },
+          left: { exp: 0.65, label: "Left", hint: "Wind from the left has to pass the workshop wall first — the wall blocks part of it.", vec: [-1, 0] },
+          right: { exp: 0.85, label: "Right", hint: "Wind from the right passes through the trees — they slow some of it down.", vec: [1, 0] },
+        };
+        const ROTORS = {
+          small: { cup: 0.035, vth: 1.6, tau: 1.3, label: "Small", hint: "35 mm cups catch less wind — they need a stronger breeze to start and react slowly." },
+          medium: { cup: 0.05, vth: 1.0, tau: 0.9, label: "Medium", hint: "50 mm cups — a good all-round rotor." },
+          large: { cup: 0.065, vth: 0.5, tau: 0.6, label: "Large", hint: "65 mm cups catch more wind — they start in a light breeze and react to gusts fastest." },
+        };
+        const ARM = 0.08; // metres, hub to cup centre
+        const K = 3; // cup factor: wind ≈ 3 × cup speed
+        const VIEW_SLOW = 0.25; // on-screen rotation is slowed so the cups stay readable
+        const HIST_SECONDS = 30;
+
+        const st = {
+          wind: "off",
+          dir: "front",
+          gust: false,
+          size: "medium",
+          running: false,
+          started: false,
+          t: 0,
+          cup: 0, // cup speed, m/s
+          angle: 0,
+          revs: 0,
+          site: 0, // wind at the site, m/s
+          eff: 0, // wind reaching the cups, m/s
+          meas: 0, // measured wind, m/s
+          gustEv: null,
+          nextGust: 1.2,
+          gustNow: 0,
+          phases: [Math.random() * 6, Math.random() * 6, Math.random() * 6],
+          hist: [],
+          sampleT: 0,
+          vane: Math.PI / 2,
+        };
+
+        function gustValue() {
+          const g = st.gustEv;
+          if (!g) return 0;
+          const a = st.t - g.t0;
+          if (a < 0) return 0;
+          if (a < g.rise) return g.amp * (a / g.rise);
+          const v = g.amp * Math.exp(-(a - g.rise) / g.decay);
+          if (v < 0.03 * g.amp) {
+            st.gustEv = null;
+            return 0;
+          }
+          return v;
+        }
+
+        function step(dt) {
+          st.t += dt;
+          const base = WIND[st.wind].v;
+          const rotor = ROTORS[st.size];
+
+          // gusts: sudden bursts on top of the base wind
+          if (st.gust) {
+            if (!st.gustEv && st.t >= st.nextGust) {
+              st.gustEv = { t0: st.t, amp: Math.max(3, base * (0.5 + Math.random() * 0.4)), rise: 0.45, decay: 1.5 };
+              st.nextGust = st.t + 3 + Math.random() * 3;
+            }
+          } else {
+            st.gustEv = null;
+          }
+          st.gustNow = gustValue();
+
+          // gentle turbulence whenever air is moving
+          const p = st.phases;
+          const turb = base > 0 ? 0.05 * Math.sin(1.3 * st.t + p[0]) + 0.035 * Math.sin(2.7 * st.t + p[1]) + 0.02 * Math.sin(5.1 * st.t + p[2]) : 0;
+          st.site = Math.max(0, base * (1 + turb) + st.gustNow);
+          st.eff = st.site * DIRS[st.dir].exp;
+
+          // cups: the open side catches more wind than the round back, so the rotor turns.
+          // Steady cup speed ≈ (wind − friction loss) ÷ 3; it spins up faster than it slows down.
+          const target = Math.max(0, st.eff - rotor.vth) / K;
+          const tau = rotor.tau * (target < st.cup ? 1.8 : 1);
+          st.cup += (target - st.cup) * (1 - Math.exp(-dt / tau));
+          if (target === 0 && st.cup < 0.004) st.cup = 0;
+
+          const omega = st.cup / ARM; // rad/s
+          st.revs += (omega * dt) / (2 * Math.PI);
+          st.angle += omega * dt * VIEW_SLOW;
+
+          // instrument conversion: RPM → cup speed → wind speed
+          const measNow = st.cup > 0.005 ? K * st.cup + rotor.vth : 0;
+          st.meas += (measNow - st.meas) * (1 - Math.exp(-dt / 0.25));
+
+          st.sampleT += dt;
+          if (st.sampleT >= 0.1) {
+            st.sampleT = 0;
+            st.hist.push({ t: st.t, site: st.site, meas: st.meas });
+            while (st.hist.length && st.hist[0].t < st.t - HIST_SECONDS) st.hist.shift();
+          }
+        }
+
+        const rpm = () => (st.cup / (2 * Math.PI * ARM)) * 60;
+
+        function rotorLabel(r) {
+          if (r < 1) return ["Stopped", "var(--calm)"];
+          if (r < 150) return ["Slow", "var(--breeze)"];
+          if (r < 320) return ["Medium", "var(--strong)"];
+          return ["Fast", "var(--gusty)"];
+        }
+
+        function condition() {
+          const recent = st.hist.filter((h) => h.t > st.t - 6);
+          let spread = 0;
+          if (recent.length > 5) {
+            const vals = recent.map((h) => h.site);
+            spread = Math.max(...vals) - Math.min(...vals);
+          }
+          if (st.gust && st.running && spread > 1.5) return ["Gusty", "var(--gusty)", "Sudden bursts of wind — the reading keeps jumping up and settling back."];
+          if (st.meas < 1.5) return ["Calm", "var(--calm)", st.meas < 0.1 ? "Still air — nothing to turn the cups." : "Barely any wind — the cups only just turn."];
+          if (st.meas < 6) return ["Breeze", "var(--breeze)", "A light to moderate breeze — leaves and small branches move."];
+          return ["Strong", "var(--strong)", "Strong wind — big branches sway and it's hard to walk against it."];
+        }
+
+        function narrate() {
+          const rotor = ROTORS[st.size];
+          if (!st.started) return "Press Start to switch on the wind.";
+          if (!st.running) return "Paused — press Start to carry on.";
+          if (st.gustEv && st.t - st.gustEv.t0 < 1.0) return "💨 Gust! The cups get a sudden push — the RPM rises quickly.";
+          if (st.site < 0.05) return st.gust ? "No steady wind — waiting for the next gust…" : "No wind — the rotor stays still.";
+          if (st.eff <= rotor.vth && st.cup < 0.02) return "Too little wind to beat the bearing friction — these cups can't start.";
+          if (st.dir === "left") return "The workshop wall blocks part of the wind — the anemometer reads lower than the real wind.";
+          if (st.dir === "right") return "The trees slow some of the wind — the reading is a little lower than the real wind.";
+          return "Wind pushes the open cups harder than their round backs — so the rotor spins.";
+        }
+
+        /* ---------------- canvases ---------------- */
+        const scene = document.getElementById("scene");
+        const graph = document.getElementById("graph");
+        const gauge = document.getElementById("gauge");
+        const ctx = scene.getContext("2d");
+        const gctx = graph.getContext("2d");
+        const kctx = gauge.getContext("2d");
+        const dims = new Map();
+        function fit(cv) {
+          const dpr = window.devicePixelRatio || 1;
+          const w = cv.clientWidth, h = cv.clientHeight;
+          if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+            cv.width = Math.round(w * dpr);
+            cv.height = Math.round(h * dpr);
+          }
+          cv.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+          dims.set(cv, { w, h });
+          return { w, h };
+        }
+
+        // wind particles in a simple 3D field: x −1..1 (left→right), y 0..1 (height), z 0..1 (far→near)
+        const parts = [];
+        function spawn(p, fresh) {
+          const d = st.dir;
+          p.y = Math.random() * 0.95;
+          if (d === "front") {
+            p.x = (Math.random() * 2 - 1) * 1.1;
+            p.z = fresh ? Math.random() : 1.05;
+          } else {
+            p.z = 0.15 + Math.random() * 0.8;
+            p.x = fresh ? Math.random() * 2.4 - 1.2 : d === "left" ? -1.2 : 1.2;
+          }
+          p.life = 0;
+        }
+        for (let i = 0; i < 140; i++) {
+          const p = {};
+          spawn(p, true);
+          parts.push(p);
+        }
+
+        function proj(x, y, z, L) {
+          const s = 0.5 + 0.5 * z;
+          const gy = L.hy + (L.H - L.hy) * (0.15 + 0.85 * z);
+          return { x: L.cx + x * L.W * 0.62 * s, y: gy - y * L.H * 0.78 * s, s };
+        }
+
+        // shelter: how much of the wind survives at a particle position
+        function shelter(p) {
+          if (st.dir === "left" && p.x > -0.6 && p.x < 0.3 && p.y < 0.5) return 0.45;
+          if (st.dir === "right" && p.x < 0.74 && p.x > -0.15 && p.y < 0.6) return 0.75;
+          return 1;
+        }
+
+        function moveParticles(dt) {
+          const v = st.site;
+          for (const p of parts) {
+            const k = shelter(p);
+            const sp = v * k;
+            if (st.dir === "front") p.z -= sp * 0.03 * dt;
+            else p.x += (st.dir === "left" ? 1 : -1) * sp * 0.055 * dt;
+            if (k < 1) p.y += 0.02 * dt * (1 - k) * v * 0.3; // air lifts over the obstacle
+            p.life += dt;
+            p.k = k;
+            if (p.z < -0.05 || p.x > 1.25 || p.x < -1.25 || p.y > 1.05) spawn(p, false);
+          }
+        }
+
+        function drawScene() {
+          const { w: W, h: H } = fit(scene);
+          const L = { W, H, cx: W * 0.5, hy: H * 0.42 };
+          const c = ctx;
+
+          // sky
+          const sky = c.createLinearGradient(0, 0, 0, L.hy);
+          sky.addColorStop(0, "#9fd0f5");
+          sky.addColorStop(1, "#dff0fb");
+          c.fillStyle = sky;
+          c.fillRect(0, 0, W, L.hy + 2);
+          // distant hills
+          c.fillStyle = "#9cc29a";
+          c.beginPath();
+          c.moveTo(0, L.hy);
+          for (let x = 0; x <= W; x += 20) c.lineTo(x, L.hy - 14 - 10 * Math.sin(x / 90) - 6 * Math.sin(x / 37));
+          c.lineTo(W, L.hy);
+          c.fill();
+          // ground with perspective lines
+          const gnd = c.createLinearGradient(0, L.hy, 0, H);
+          gnd.addColorStop(0, "#7fb26f");
+          gnd.addColorStop(1, "#5c934f");
+          c.fillStyle = gnd;
+          c.fillRect(0, L.hy, W, H - L.hy);
+          c.strokeStyle = "rgba(255,255,255,0.10)";
+          c.lineWidth = 1;
+          for (let i = -6; i <= 6; i++) {
+            const a = proj(i * 0.2, 0, 0, L), b = proj(i * 0.2, 0, 1.2, L);
+            c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke();
+          }
+
+          // workshop wall (left) and trees (right)
+          const wl = proj(-0.86, 0, 0.72, L), wr = proj(-0.6, 0, 0.72, L), wt = proj(-0.6, 0.42, 0.72, L);
+          c.fillStyle = "#b9a58c";
+          c.fillRect(wl.x, wt.y, wr.x - wl.x, wl.y - wt.y);
+          c.fillStyle = "#8c3b2f";
+          c.beginPath(); c.moveTo(wl.x - 8, wt.y); c.lineTo((wl.x + wr.x) / 2, wt.y - 26); c.lineTo(wr.x + 8, wt.y); c.fill();
+          c.fillStyle = "#5d4d3c";
+          c.fillRect(wl.x + (wr.x - wl.x) * 0.35, wl.y - (wl.y - wt.y) * 0.45, (wr.x - wl.x) * 0.3, (wl.y - wt.y) * 0.45);
+          label(c, "WORKSHOP", (wl.x + wr.x) / 2, wt.y + 18);
+          for (const [tx, tz] of [[0.8, 0.4], [0.92, 0.5], [0.74, 0.58]]) {
+            const b = proj(tx, 0, tz, L), t = proj(tx, 0.6, tz, L);
+            c.fillStyle = "#6b4a2b";
+            c.fillRect(b.x - 4 * b.s, t.y + (b.y - t.y) * 0.55, 8 * b.s, (b.y - t.y) * 0.45);
+            c.fillStyle = "#3f7d3a";
+            c.beginPath(); c.ellipse(b.x, t.y + (b.y - t.y) * 0.32, 34 * b.s, (b.y - t.y) * 0.36, 0, 0, 7); c.fill();
+            c.fillStyle = "rgba(255,255,255,0.08)";
+            c.beginPath(); c.ellipse(b.x - 10 * b.s, t.y + (b.y - t.y) * 0.24, 16 * b.s, (b.y - t.y) * 0.16, 0, 0, 7); c.fill();
+          }
+          const tl = proj(0.82, 0.6, 0.5, L);
+          label(c, "TREES", tl.x, tl.y - 18);
+
+          // wind streaks
+          const active = st.started && st.site > 0.05;
+          if (active) {
+            for (const p of parts) {
+              const a = proj(p.x, p.y, p.z, L);
+              let bx, by;
+              const len = Math.min(0.12, 0.012 * st.site * (p.k || 1));
+              if (st.dir === "front") {
+                const b = proj(p.x, p.y, p.z + len * 1.6, L);
+                bx = b.x; by = b.y;
+              } else {
+                const b = proj(p.x - (st.dir === "left" ? 1 : -1) * len * 1.5, p.y, p.z, L);
+                bx = b.x; by = b.y;
+              }
+              c.strokeStyle = `rgba(255,255,255,${(0.25 + 0.45 * a.s) * (p.k < 1 ? 0.55 : 1)})`;
+              c.lineWidth = 1 + 1.4 * a.s;
+              c.lineCap = "round";
+              c.beginPath(); c.moveTo(bx, by); c.lineTo(a.x, a.y); c.stroke();
+            }
+            drawBigArrows(c, L);
+          }
+
+          // mast
+          const base = proj(0, 0, 0.55, L);
+          const hubY = L.hy - L.H * 0.12;
+          const hub = { x: base.x, y: Math.max(70, hubY) };
+          c.fillStyle = "rgba(0,0,0,0.18)";
+          c.beginPath(); c.ellipse(base.x, base.y, 34, 8, 0, 0, 7); c.fill();
+          c.fillStyle = "#c7cfd6";
+          c.fillRect(base.x - 5, hub.y + 10, 10, base.y - hub.y - 10);
+          c.fillStyle = "#9aa6b0";
+          c.fillRect(base.x + 2, hub.y + 10, 3, base.y - hub.y - 10);
+
+          // wind vane on a side arm
+          drawVane(c, base.x, hub.y + (base.y - hub.y) * 0.32);
+
+          // rotor
+          drawRotor(c, hub.x, hub.y, Math.min(W, H) * 0.15);
+
+          // direction indicator (top view)
+          drawCompass(c, 78, 92, 46);
+
+          // slow-motion tag
+          if (st.cup > 0.05) {
+            c.font = "600 11px 'IBM Plex Mono', monospace";
+            c.fillStyle = "rgba(23,41,59,0.6)";
+            c.textAlign = "right";
+            c.fillText("slow-motion view ×¼", W - 12, 20);
+          }
+        }
+
+        function label(c, s, x, y) {
+          c.font = "700 10px 'Orbitron', sans-serif";
+          c.fillStyle = "rgba(23,41,59,0.55)";
+          c.textAlign = "center";
+          c.fillText(s, x, y);
+        }
+
+        function drawBigArrows(c, L) {
+          const a = Math.min(0.75, 0.15 + st.site * 0.04);
+          c.fillStyle = `rgba(255,255,255,${a})`;
+          c.strokeStyle = `rgba(42,120,214,${a})`;
+          c.lineWidth = 2;
+          const pulse = (st.t * 1.5) % 1;
+          for (let i = 0; i < 3; i++) {
+            let x, y, ang;
+            if (st.dir === "front") {
+              x = L.cx + (i - 1) * L.W * 0.26; y = L.H - 26; ang = -Math.PI / 2;
+            } else if (st.dir === "left") {
+              x = 30 + pulse * 10; y = L.hy - L.H * 0.04 + i * L.H * 0.14; ang = 0;
+            } else {
+              x = L.W - 30 - pulse * 10; y = L.hy - L.H * 0.04 + i * L.H * 0.14; ang = Math.PI;
+            }
+            c.save(); c.translate(x, y); c.rotate(ang);
+            c.beginPath();
+            c.moveTo(-18, -5); c.lineTo(6, -5); c.lineTo(6, -12); c.lineTo(22, 0); c.lineTo(6, 12); c.lineTo(6, 5); c.lineTo(-18, 5); c.closePath();
+            c.fill(); c.stroke();
+            c.restore();
+          }
+        }
+
+        function drawVane(c, x, y) {
+          // the vane's pointer swings round to face into the wind
+          const v = DIRS[st.dir].vec;
+          const target = Math.atan2(v[1], v[0]);
+          if (st.started && st.site > 0.3) {
+            let d = target - st.vane;
+            while (d > Math.PI) d -= 2 * Math.PI;
+            while (d < -Math.PI) d += 2 * Math.PI;
+            st.vane += d * 0.06;
+          }
+          const ax = x + 52;
+          c.strokeStyle = "#9aa6b0"; c.lineWidth = 3;
+          c.beginPath(); c.moveTo(x, y); c.lineTo(ax, y); c.stroke();
+          c.fillStyle = "#c7cfd6";
+          c.fillRect(ax - 2, y - 18, 4, 18);
+          const dx = Math.cos(st.vane), dz = Math.sin(st.vane);
+          const len = 30;
+          const tipX = ax + dx * len, tipY = y - 18 + dz * len * 0.35;
+          const tailX = ax - dx * len * 0.9, tailY = y - 18 - dz * len * 0.35 * 0.9;
+          c.strokeStyle = "#17293b"; c.lineWidth = 2.5;
+          c.beginPath(); c.moveTo(tailX, tailY); c.lineTo(tipX, tipY); c.stroke();
+          c.fillStyle = "#e8590c";
+          c.beginPath(); c.arc(tipX, tipY, 4.5, 0, 7); c.fill();
+          c.fillStyle = "#17293b";
+          c.beginPath(); c.moveTo(tailX, tailY - 9); c.lineTo(tailX + dx * 9, tailY + dz * 3); c.lineTo(tailX, tailY + 9); c.closePath(); c.fill();
+          c.font = "700 9px 'Orbitron', sans-serif"; c.fillStyle = "rgba(23,41,59,0.55)"; c.textAlign = "center";
+          c.fillText("VANE", ax, y + 14);
+        }
+
+        function drawRotor(c, hx, hy, R) {
+          const rotor = ROTORS[st.size];
+          const cr = R * (rotor.cup / ARM) * 0.42;
+          const ry = 0.3;
+          const items = [];
+          for (let i = 0; i < 3; i++) {
+            const th = st.angle + (i * 2 * Math.PI) / 3;
+            const px = hx + R * Math.cos(th);
+            const py = hy + R * ry * Math.sin(th);
+            items.push({ i, th, px, py, depth: Math.sin(th) });
+          }
+          // arms + cups behind the hub first
+          items.sort((a, b) => a.depth - b.depth);
+          const drawArm = (it) => {
+            c.strokeStyle = "#7d8a94"; c.lineWidth = 3;
+            c.beginPath(); c.moveTo(hx, hy); c.lineTo(it.px, it.py); c.stroke();
+          };
+          const drawCup = (it) => {
+            // the cups' open sides all face backwards against the spin, so the
+            // wind catches them and pushes the rotor round (anticlockwise from above)
+            const nx = Math.sin(it.th), nz = -Math.cos(it.th);
+            const red = it.i === 0;
+            const body = c.createRadialGradient(it.px - cr * 0.3, it.py - cr * 0.35, cr * 0.1, it.px, it.py, cr);
+            body.addColorStop(0, red ? "#ff8a7a" : "#f4f7fa");
+            body.addColorStop(1, red ? "#c0392b" : "#9aa6b0");
+            c.fillStyle = body;
+            c.beginPath(); c.arc(it.px - nx * cr * 0.25, it.py, cr, 0, 7); c.fill();
+            const ox = it.px + nx * cr * 0.45;
+            const orx = Math.max(1.5, cr * Math.abs(nz));
+            if (nz > 0) {
+              c.fillStyle = red ? "#7a1f16" : "#3c4a55";
+              c.beginPath(); c.ellipse(ox, it.py, orx, cr, 0, 0, 7); c.fill();
+              c.strokeStyle = red ? "#ffb3a8" : "#ffffff"; c.lineWidth = 1.5;
+              c.beginPath(); c.ellipse(ox, it.py, orx, cr, 0, 0, 7); c.stroke();
+            } else {
+              c.strokeStyle = "rgba(255,255,255,0.6)"; c.lineWidth = 1.2;
+              c.beginPath(); c.ellipse(ox, it.py, orx, cr, 0, 0, 7); c.stroke();
+            }
+          };
+          // motion blur ring when spinning fast
+          if (rpm() > 200) {
+            c.strokeStyle = `rgba(255,255,255,${Math.min(0.35, (rpm() - 200) / 900)})`;
+            c.lineWidth = cr * 1.2;
+            c.beginPath(); c.ellipse(hx, hy, R, R * ry, 0, 0, 7); c.stroke();
+          }
+          for (const it of items) if (it.depth < 0) { drawArm(it); drawCup(it); }
+          // hub
+          c.fillStyle = "#5b6b7a";
+          c.beginPath(); c.ellipse(hx, hy + 4, 11, 6, 0, 0, 7); c.fill();
+          c.fillStyle = "#c7cfd6";
+          c.fillRect(hx - 9, hy - 6, 18, 10);
+          c.fillStyle = "#e8edf1";
+          c.beginPath(); c.ellipse(hx, hy - 6, 9, 4, 0, 0, 7); c.fill();
+          for (const it of items) if (it.depth >= 0) { drawArm(it); drawCup(it); }
+        }
+
+        function drawCompass(c, x, y, r) {
+          c.fillStyle = "rgba(15,22,27,0.8)";
+          c.beginPath(); c.roundRect(x - r - 16, y - r - 32, 2 * r + 32, 2 * r + 66, 10); c.fill();
+          c.strokeStyle = "rgba(255,255,255,0.25)"; c.lineWidth = 1;
+          c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke();
+          // wall on the left, trees on the right, open front (bottom)
+          c.fillStyle = "#b9a58c";
+          c.fillRect(x - r * 0.78, y - r * 0.35, 7, r * 0.7);
+          c.fillStyle = "#3f7d3a";
+          for (const dy of [-0.3, 0, 0.3]) { c.beginPath(); c.arc(x + r * 0.72, y + dy * r, 5, 0, 7); c.fill(); }
+          c.fillStyle = "#fff";
+          c.beginPath(); c.arc(x, y, 4, 0, 7); c.fill();
+          // incoming wind arrow
+          const v = DIRS[st.dir].vec; // direction the wind comes FROM, in top view (x right, y = toward viewer)
+          const fx = x + v[0] * r * 0.95, fy = y + v[1] * r * 0.95;
+          const tx = x + v[0] * r * 0.25, ty = y + v[1] * r * 0.25;
+          c.strokeStyle = st.started && st.site > 0.05 ? "#38d4ff" : "rgba(56,212,255,0.45)";
+          c.lineWidth = 3;
+          c.beginPath(); c.moveTo(fx, fy); c.lineTo(tx, ty); c.stroke();
+          const ang = Math.atan2(ty - fy, tx - fx);
+          c.fillStyle = c.strokeStyle;
+          c.beginPath();
+          c.moveTo(tx + Math.cos(ang) * 6, ty + Math.sin(ang) * 6);
+          c.lineTo(tx + Math.cos(ang + 2.5) * 9, ty + Math.sin(ang + 2.5) * 9);
+          c.lineTo(tx + Math.cos(ang - 2.5) * 9, ty + Math.sin(ang - 2.5) * 9);
+          c.closePath(); c.fill();
+          c.font = "700 9px 'Orbitron', sans-serif"; c.fillStyle = "rgba(238,243,246,0.85)"; c.textAlign = "center";
+          c.fillText("WIND FROM " + DIRS[st.dir].label.toUpperCase(), x, y - r - 14);
+          c.font = "600 10px 'IBM Plex Mono', monospace"; c.fillStyle = "rgba(238,243,246,0.8)";
+          c.fillText("exposure " + Math.round(DIRS[st.dir].exp * 100) + "%", x, y + r + 26);
+          c.font = "700 8px 'Orbitron', sans-serif"; c.fillStyle = "rgba(238,243,246,0.5)";
+          c.fillText("TOP VIEW", x, y + r + 12);
+        }
+
+        function drawGraph() {
+          const { w: W, h: H } = fit(graph);
+          const c = gctx;
+          c.clearRect(0, 0, W, H);
+          const pad = { l: 40, r: 12, t: 22, b: 22 };
+          const gw = W - pad.l - pad.r, gh = H - pad.t - pad.b;
+          let ymax = 10;
+          for (const h of st.hist) ymax = Math.max(ymax, h.site, h.meas);
+          ymax = Math.ceil(ymax / 5) * 5;
+          // grid + axes
+          c.font = "500 10px 'IBM Plex Mono', monospace";
+          c.textAlign = "right";
+          for (let v = 0; v <= ymax; v += 5) {
+            const y = pad.t + gh - (v / ymax) * gh;
+            c.strokeStyle = "rgba(255,255,255,0.08)"; c.lineWidth = 1;
+            c.beginPath(); c.moveTo(pad.l, y); c.lineTo(W - pad.r, y); c.stroke();
+            c.fillStyle = "rgba(238,243,246,0.55)";
+            c.fillText(String(v), pad.l - 6, y + 3);
+          }
+          c.save(); c.translate(11, pad.t + gh / 2); c.rotate(-Math.PI / 2); c.textAlign = "center";
+          c.fillText("m/s", 0, 0); c.restore();
+          c.textAlign = "center";
+          c.fillStyle = "rgba(238,243,246,0.55)";
+          c.fillText("last 30 seconds →", pad.l + gw / 2, H - 6);
+          c.textAlign = "left";
+          c.font = "700 10px 'Orbitron', sans-serif";
+          c.fillStyle = "rgba(238,243,246,0.7)";
+          c.fillText("WIND SPEED OVER TIME", pad.l, 14);
+          // legend
+          c.font = "600 11px 'Rajdhani', sans-serif";
+          const lx = W - pad.r - 250;
+          c.strokeStyle = "#38d4ff"; c.lineWidth = 2.5;
+          c.beginPath(); c.moveTo(lx, 10); c.lineTo(lx + 18, 10); c.stroke();
+          c.fillStyle = "rgba(238,243,246,0.85)"; c.fillText("Measured by anemometer", lx + 24, 14);
+          c.setLineDash([4, 4]); c.strokeStyle = "rgba(238,243,246,0.55)"; c.lineWidth = 1.5;
+          c.beginPath(); c.moveTo(lx + 160, 10); c.lineTo(lx + 178, 10); c.stroke(); c.setLineDash([]);
+          c.fillText("Wind at site", lx + 184, 14);
+          if (st.hist.length < 2) {
+            c.textAlign = "center"; c.fillStyle = "rgba(238,243,246,0.45)"; c.font = "600 13px 'Rajdhani', sans-serif";
+            c.fillText("Press Start — the graph draws the wind speed as it changes.", pad.l + gw / 2, pad.t + gh / 2 + 4);
+            return;
+          }
+          const t1 = st.t, t0 = t1 - HIST_SECONDS;
+          const X = (t) => pad.l + ((t - t0) / HIST_SECONDS) * gw;
+          const Y = (v) => pad.t + gh - (v / ymax) * gh;
+          const line = (key, col, w, dash) => {
+            c.setLineDash(dash || []); c.strokeStyle = col; c.lineWidth = w;
+            c.beginPath();
+            st.hist.forEach((h, i) => (i ? c.lineTo(X(h.t), Y(h[key])) : c.moveTo(X(h.t), Y(h[key]))));
+            c.stroke(); c.setLineDash([]);
+          };
+          line("site", "rgba(238,243,246,0.5)", 1.5, [4, 4]);
+          line("meas", "#38d4ff", 2.5);
+        }
+
+        function drawGauge() {
+          const { w: W, h: H } = fit(gauge);
+          const c = kctx;
+          c.clearRect(0, 0, W, H);
+          const cx = W / 2, cy = H * 0.78, r = Math.min(W * 0.4, H * 0.68);
+          const MAX = 600;
+          const a0 = Math.PI * 0.85, a1 = Math.PI * 2.15;
+          const A = (v) => a0 + (Math.min(v, MAX) / MAX) * (a1 - a0);
+          const zones = [[0, 150, "#3fcf8e"], [150, 320, "#fab219"], [320, 600, "#ff6b6b"]];
+          c.lineWidth = 12;
+          for (const [s, e, col] of zones) {
+            c.strokeStyle = col; c.globalAlpha = 0.35;
+            c.beginPath(); c.arc(cx, cy, r, A(s), A(e)); c.stroke();
+          }
+          c.globalAlpha = 1;
+          const val = rpm();
+          c.strokeStyle = val < 150 ? "#3fcf8e" : val < 320 ? "#fab219" : "#ff6b6b";
+          if (val > 0.5) { c.beginPath(); c.arc(cx, cy, r, a0, A(val)); c.stroke(); }
+          c.font = "500 9.5px 'IBM Plex Mono', monospace"; c.fillStyle = "rgba(238,243,246,0.6)"; c.textAlign = "center";
+          for (let v = 0; v <= MAX; v += 100) {
+            const a = A(v);
+            c.fillText(String(v), cx + Math.cos(a) * (r - 22), cy + Math.sin(a) * (r - 22) + 3);
+          }
+          const a = A(val);
+          c.strokeStyle = "#eef3f6"; c.lineWidth = 3; c.lineCap = "round";
+          c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(a) * (r - 8), cy + Math.sin(a) * (r - 8)); c.stroke();
+          c.fillStyle = "#eef3f6"; c.beginPath(); c.arc(cx, cy, 5, 0, 7); c.fill();
+          c.fillStyle = "rgba(38,52,59,0.92)";
+          c.beginPath(); c.roundRect(cx - 34, cy - r * 0.32 - 21, 68, 42, 8); c.fill();
+          c.font = "600 22px 'IBM Plex Mono', monospace"; c.fillStyle = "#eef3f6";
+          c.fillText(String(Math.round(val)), cx, cy - r * 0.32);
+          c.font = "700 9.5px 'Orbitron', sans-serif"; c.fillStyle = "rgba(238,243,246,0.6)";
+          c.fillText("RPM", cx, cy - r * 0.32 + 15);
+        }
+
+        /* ---------------- readouts ---------------- */
+        const $ = (id) => document.getElementById(id);
+        function readouts() {
+          const r = rpm();
+          const [rl, rc] = rotorLabel(r);
+          const rb = $("rotorBadge"); rb.textContent = rl; rb.style.color = rc;
+          $("windNum").innerHTML = st.meas.toFixed(1) + " <small>m/s</small>";
+          $("windKmh").textContent = (st.meas * 3.6).toFixed(1) + " km/h";
+          $("siteLine").textContent = "Wind at site " + st.site.toFixed(1) + " m/s · exposure " + Math.round(DIRS[st.dir].exp * 100) + "%";
+          const [cl, cc, cn] = condition();
+          const cb = $("condBadge"); cb.textContent = cl; cb.style.color = cc;
+          $("condNote").textContent = cn;
+          const vth = ROTORS[st.size].vth;
+          $("cv1").innerHTML = "Cup speed = 2π × 0.08 m × <b>" + Math.round(r) + "</b> RPM ÷ 60 = <b>" + st.cup.toFixed(2) + "</b> m/s";
+          $("cv2").innerHTML = st.cup > 0.005
+            ? "Wind ≈ 3 × <b>" + st.cup.toFixed(2) + "</b> + <b>" + vth.toFixed(1) + "</b> = <b>" + (K * st.cup + vth).toFixed(1) + "</b> m/s"
+            : "Rotor stopped → wind below <b>" + vth.toFixed(1) + "</b> m/s";
+          $("revs").textContent = "Turns: " + Math.floor(st.revs);
+          $("clock").textContent = "Time: " + st.t.toFixed(1) + " s";
+          $("modeChip").textContent = narrate();
+        }
+
+        /* ---------------- controls ---------------- */
+        function bindToggle(id, key, after) {
+          const el = $(id);
+          el.addEventListener("click", (e) => {
+            const b = e.target.closest("button");
+            if (!b) return;
+            el.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+            const v = b.dataset.v;
+            st[key] = key === "gust" ? v === "on" : v;
+            after();
+          });
+        }
+        function syncHints() {
+          $("windVal").textContent = WIND[st.wind].label;
+          $("windHint").textContent = WIND[st.wind].hint;
+          $("dirVal").textContent = DIRS[st.dir].label;
+          $("dirHint").textContent = DIRS[st.dir].hint;
+          $("gustVal").textContent = st.gust ? "On" : "Off";
+          $("gustHint").textContent = st.gust ? "Every few seconds a sudden burst of wind hits the cups." : "Steady wind with no sudden bursts.";
+          $("sizeVal").textContent = ROTORS[st.size].label;
+          $("sizeHint").textContent = ROTORS[st.size].hint;
+        }
+        bindToggle("windToggle", "wind", syncHints);
+        bindToggle("dirToggle", "dir", () => { syncHints(); parts.forEach((p) => spawn(p, true)); });
+        bindToggle("gustToggle", "gust", () => { syncHints(); if (st.gust) st.nextGust = st.t + 1.2; });
+        bindToggle("sizeToggle", "size", syncHints);
+
+        const startBtn = $("startBtn");
+        function syncStart() {
+          startBtn.textContent = st.running ? "❚❚ Pause" : "▶ Start";
+          startBtn.classList.toggle("running", st.running);
+        }
+        startBtn.addEventListener("click", () => {
+          st.running = !st.running;
+          if (st.running && !st.started) {
+            st.started = true;
+            if (st.gust) st.nextGust = st.t + 1.2;
+          }
+          syncStart();
+        });
+        $("resetBtn").addEventListener("click", () => {
+          Object.assign(st, { wind: "off", dir: "front", gust: false, size: "medium", running: false, started: false, t: 0, cup: 0, angle: 0, revs: 0, site: 0, eff: 0, meas: 0, gustEv: null, nextGust: 1.2, gustNow: 0, hist: [], sampleT: 0, vane: Math.PI / 2 });
+          const defaults = { windToggle: "off", dirToggle: "front", gustToggle: "off", sizeToggle: "medium" };
+          for (const [id, v] of Object.entries(defaults)) $(id).querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
+          parts.forEach((p) => spawn(p, true));
+          syncHints();
+          syncStart();
+        });
+
+        /* ---------------- loop ---------------- */
+        let last = performance.now();
+        function frame(now) {
+          const dt = Math.min(0.05, (now - last) / 1000);
+          last = now;
+          if (st.running) {
+            step(dt);
+            moveParticles(dt);
+          }
+          drawScene();
+          drawGraph();
+          drawGauge();
+          readouts();
+          requestAnimationFrame(frame);
+        }
+        syncHints();
+        requestAnimationFrame(frame);
+      })();
+    </script>
+
+    <script>
+      /* Universal Floating, Draggable & Resizable How-to-Use & Guide System */
+      (function initUniversalHelpFloatwin() {
+        var bar = document.getElementById("helpbar");
+        if (!bar) return;
+
+        if (!bar.classList.contains("floatwin")) {
+          bar.classList.add("floatwin");
+          bar.setAttribute("role", "dialog");
+          bar.setAttribute("aria-label", "Help Guide");
+
+          var head = document.createElement("div");
+          head.className = "fw-head";
+
+          var title = document.createElement("span");
+          title.className = "fw-title";
+          title.textContent = "How To Use";
+          head.appendChild(title);
+
+          var actions = document.createElement("div");
+          actions.className = "fw-head-actions";
+
+          var origPanels = bar.querySelectorAll(".tabpanel");
+          if (origPanels.length > 1) {
+            origPanels.forEach(function (p) {
+              var t = p.dataset.panel;
+              var b = document.createElement("button");
+              b.type = "button";
+              b.className = "fw-tab-btn";
+              b.dataset.tab = t;
+              b.textContent = t === "use" ? "How To Use" : t === "learn" ? "What To Learn" : t;
+              actions.appendChild(b);
+            });
+          }
+
+          var closeBtn = document.createElement("button");
+          closeBtn.type = "button";
+          closeBtn.className = "fw-close";
+          closeBtn.title = "Close Guide";
+          closeBtn.setAttribute("aria-label", "Close");
+          closeBtn.textContent = "✕";
+          actions.appendChild(closeBtn);
+          head.appendChild(actions);
+
+          var body = document.createElement("div");
+          body.className = "fw-body";
+          while (bar.firstChild) body.appendChild(bar.firstChild);
+
+          var grip = document.createElement("div");
+          grip.className = "fw-grip";
+          grip.title = "Drag to resize";
+
+          bar.appendChild(head);
+          bar.appendChild(body);
+          bar.appendChild(grip);
+          document.body.appendChild(bar);
+        }
+
+        var btns = document.querySelectorAll(".helpbtn");
+        var tabBtns = bar.querySelectorAll(".fw-tab-btn");
+        var titleEl = bar.querySelector(".fw-title");
+        var closeBtnEl = bar.querySelector(".fw-close");
+        var headEl = bar.querySelector(".fw-head");
+        var gripEl = bar.querySelector(".fw-grip");
+        var topZ = 10000;
+        var posInit = false;
+
+        function toFront() {
+          bar.style.zIndex = ++topZ;
+        }
+        function closeAll() {
+          bar.classList.remove("show");
+          btns.forEach(function (b) { b.classList.remove("on"); });
+          tabBtns.forEach(function (b) { b.classList.remove("on"); });
+        }
+        function openTab(tab) {
+          toFront();
+          if (!posInit) {
+            var w = Math.min(440, window.innerWidth - 32);
+            var h = Math.min(540, window.innerHeight - 80);
+            bar.style.width = w + "px";
+            bar.style.height = h + "px";
+            bar.style.top = "65px";
+            bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
+            posInit = true;
+          }
+          bar.classList.add("show");
+          btns.forEach(function (b) { b.classList.toggle("on", b.dataset.tab === tab); });
+          tabBtns.forEach(function (b) { b.classList.toggle("on", b.dataset.tab === tab); });
+          bar.querySelectorAll(".tabpanel").forEach(function (p) { p.classList.toggle("on", p.dataset.panel === tab); });
+          if (titleEl) titleEl.textContent = tab === "use" ? "How To Use" : tab === "learn" ? "What You'll Learn" : "Guide";
+        }
+
+        btns.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var tab = btn.dataset.tab || "use";
+            if (bar.classList.contains("show") && btn.classList.contains("on")) closeAll();
+            else openTab(tab);
+          });
+        });
+        tabBtns.forEach(function (tb) {
+          tb.addEventListener("click", function (e) {
+            e.stopPropagation();
+            openTab(tb.dataset.tab);
+          });
+        });
+        if (closeBtnEl) closeBtnEl.addEventListener("click", closeAll);
+        bar.addEventListener("pointerdown", toFront);
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && bar.classList.contains("show")) closeAll();
+        });
+
+        if (headEl) {
+          headEl.addEventListener("pointerdown", function (e) {
+            if (e.target.closest(".fw-head-actions")) return;
+            e.preventDefault();
+            toFront();
+            headEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var dx = e.clientX - r.left, dy = e.clientY - r.top;
+            bar.classList.add("dragging");
+            function onMove(ev) {
+              bar.style.left = Math.max(8, Math.min(window.innerWidth - bar.offsetWidth - 8, ev.clientX - dx)) + "px";
+              bar.style.top = Math.max(8, Math.min(window.innerHeight - 40, ev.clientY - dy)) + "px";
+            }
+            function onUp() {
+              bar.classList.remove("dragging");
+              headEl.removeEventListener("pointermove", onMove);
+              headEl.removeEventListener("pointerup", onUp);
+              headEl.removeEventListener("pointercancel", onUp);
+            }
+            headEl.addEventListener("pointermove", onMove);
+            headEl.addEventListener("pointerup", onUp);
+            headEl.addEventListener("pointercancel", onUp);
+          });
+        }
+
+        if (gripEl) {
+          gripEl.addEventListener("pointerdown", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toFront();
+            gripEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var sx = e.clientX, sy = e.clientY, sw = r.width, sh = r.height;
+            function onMove(ev) {
+              bar.style.width = Math.max(280, Math.min(window.innerWidth - r.left - 8, sw + (ev.clientX - sx))) + "px";
+              bar.style.height = Math.max(200, Math.min(window.innerHeight - r.top - 8, sh + (ev.clientY - sy))) + "px";
+            }
+            function onUp() {
+              gripEl.removeEventListener("pointermove", onMove);
+              gripEl.removeEventListener("pointerup", onUp);
+              gripEl.removeEventListener("pointercancel", onUp);
+            }
+            gripEl.addEventListener("pointermove", onMove);
+            gripEl.addEventListener("pointerup", onUp);
+            gripEl.addEventListener("pointercancel", onUp);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
