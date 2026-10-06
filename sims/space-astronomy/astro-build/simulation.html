@@ -2184,6 +2184,8 @@
         });
 
         if (closeBtn) closeBtn.addEventListener("click", closeAll);
+        var closeTop = bar.querySelector(".helpCloseTop");
+        if (closeTop) closeTop.addEventListener("click", closeAll);
         bar.addEventListener("pointerdown", toFront);
 
         document.addEventListener("keydown", function (e) {

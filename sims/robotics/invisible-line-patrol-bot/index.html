@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Invisible UV Path Tracking Simulation</title>
+    <title>Invisible Line Patrol</title>
     <link rel="icon" type="image/png" href="../../../assets/logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -69,8 +69,25 @@
         gap: 12px;
         flex-wrap: wrap;
         margin-bottom: 6px;
+        min-height: 42px;
         flex: 0 0 auto;
         position: relative;
+      }
+      .title {
+        position: absolute;
+        left: 50%;
+        top: 21px;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        white-space: nowrap;
+      }
+      @media (max-width: 1180px) {
+        .title {
+          position: static;
+          transform: none;
+          text-align: left;
+          white-space: normal;
+        }
       }
       .logo {
         width: 42px;
@@ -815,9 +832,8 @@
 </head>
   <body>
     <header class="top">
-      <div class="logo">🔦</div>
       <div class="title">
-        <h1>INVISIBLE UV PATH TRACKING</h1>
+        <h1>INVISIBLE LINE PATROL</h1>
         <p>UV SENSOR COMPARISON · GEAR-DRIVEN WALKING · LOF ROBOTICS</p>
       </div>
       <div class="helpbtns">

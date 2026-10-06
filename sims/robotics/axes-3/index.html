@@ -69,7 +69,25 @@
         gap: 12px;
         flex-wrap: wrap;
         margin-bottom: 6px;
+        min-height: 42px;
         flex: 0 0 auto;
+        position: relative;
+      }
+      .title {
+        position: absolute;
+        left: 50%;
+        top: 21px;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        white-space: nowrap;
+      }
+      @media (max-width: 1280px) {
+        .title {
+          position: static;
+          transform: none;
+          text-align: left;
+          white-space: normal;
+        }
       }
       .logo {
         width: 42px;
@@ -1015,7 +1033,6 @@
     </div>
 
     <header class="top">
-      <div class="logo">🦾</div>
       <div class="title">
         <h1>AXES 3 · COMMAND DECK</h1>
         <p>

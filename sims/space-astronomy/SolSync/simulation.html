@@ -57,6 +57,10 @@
         padding-bottom: 14px;
         margin-bottom: 16px;
       }
+      .masthead {
+        flex: 1 1 100%;
+        text-align: center;
+      }
       .masthead h1 {
         font-family: var(--serif);
         font-weight: 400;
@@ -842,6 +846,13 @@
       }
       .tabpanel b {
         color: var(--sky, #2a78d6);
+      }
+      /* guide pop-up sits on the dark panel: white text, blue labels */
+      .helpbar.floatwin {
+        --txt: #ffffff;
+        --mut: #d6e2f5;
+        --panel2: #13213a;
+        --sky: #4da3ff;
       }
       @media (max-width: 900px) {
         .helpwrap {

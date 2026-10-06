@@ -41,8 +41,10 @@
         font-family: var(--sans);
         overflow: hidden;
         -webkit-font-smoothing: antialiased;
+        display: flex;
+        flex-direction: column;
       }
-      #app { display: grid; grid-template-columns: 1fr 400px; height: 100vh; }
+      #app { display: grid; grid-template-columns: 1fr 400px; flex: 1 1 0; min-height: 0; height: auto; }
 
       /* ---- STAGE ---- */
       #stage { position: relative; overflow: hidden; background: var(--bg-stage); }
@@ -373,7 +375,7 @@
 
       @media (max-width: 1000px) {
         html, body { height: auto; overflow: auto; }
-        #app { grid-template-columns: 1fr; height: auto; }
+        #app { grid-template-columns: 1fr; height: auto; flex: none; }
         #stage { height: clamp(320px, 90vw, 500px); }
         #panel { overflow-y: visible; }
       }
@@ -590,11 +592,64 @@
         }
       }
 
+      /* Top header: title centred, guide buttons on the right */
+      header.top {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 18px;
+        background: rgba(10, 14, 26, 0.94);
+        border-bottom: 1px solid var(--border-color);
+        flex: 0 0 auto;
+        position: relative;
+        z-index: 50;
+      }
+      header.top .title {
+        grid-column: 2;
+        text-align: center;
+        min-width: 0;
+      }
+      header.top .title h1 {
+        margin: 0;
+        font-family: var(--head);
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        color: #e2e8f0;
+        text-transform: uppercase;
+      }
+      header.top .helpbtns {
+        grid-column: 3;
+        justify-self: end;
+        flex-wrap: nowrap;
+      }
+      @media (max-width: 760px) {
+        header.top {
+          grid-template-columns: 1fr;
+          padding: 8px 12px;
+          gap: 6px;
+        }
+        header.top .helpbtns {
+          grid-row: 1;
+          grid-column: 1;
+          justify-self: center;
+        }
+        header.top .title {
+          grid-row: 2;
+          grid-column: 1;
+        }
+      }
+
     </style>
   </head>
   <body>
-    <!-- How To Use & Guide Buttons -->
-    <div class="helpwrap">
+    <!-- Top header: title centred, How To Use & Guide buttons on the right -->
+    <header class="top">
+      <div></div>
+      <div class="title">
+        <h1>Aero Build</h1>
+      </div>
       <div class="helpbtns">
         <button type="button" class="helpbtn" data-tab="use">How To Use</button>
         <button type="button" class="helpbtn" data-tab="learn">What You'll Learn</button>
@@ -616,7 +671,7 @@
           </ul>
         </div>
       </div>
-    </div>
+    </header>
 
     <div id="app">
       <div id="stage">

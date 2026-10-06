@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Catapult Glider Flight Lab</title>
+    <title>Catapult Glider</title>
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 20 L30 6 L18 20 L22 26 L14 22 L6 26 Z' fill='%232a78d6'/%3E%3C/svg%3E"
@@ -10774,7 +10774,7 @@ Error generating stack: ` +
                     "aria-hidden": "true",
                     children: "✈",
                   }),
-                  "Catapult Glider Flight Lab",
+                  "Catapult Glider",
                 ],
               }),
             }),
@@ -11290,17 +11290,21 @@ Error generating stack: ` +
         border-color: var(--ink-2);
       }
       .range-card {
+        position: relative;
         padding: 10px;
+        min-height: clamp(400px, calc(100vh - 320px), 760px);
       }
       .range-canvas {
         display: block;
-        width: 100%;
-        height: clamp(400px, calc(100vh - 320px), 760px);
+        position: absolute;
+        inset: 10px;
+        width: calc(100% - 20px);
+        height: calc(100% - 20px);
         border-radius: 6px;
       }
       @media (max-width: 920px) {
-        .range-canvas {
-          height: clamp(320px, 48vh, 480px);
+        .range-card {
+          min-height: clamp(320px, 48vh, 480px);
         }
       }
       .telemetry-grid {
