@@ -541,7 +541,9 @@
       /* Floating, draggable & resizable Guide / How to Use window */
       .helpwrap {
         position: fixed;
-        top: 14px;
+        /* vertically centred on the title row (title centre sits 27px from the top) */
+        top: 27px;
+        transform: translateY(-50%);
         right: clamp(12px, 2.4vw, 30px);
         z-index: 40;
         display: flex;
@@ -739,6 +741,7 @@
       @media (max-width: 900px) {
         .helpwrap {
           position: static;
+          transform: none;
           align-items: stretch;
           margin-bottom: 10px;
           flex: 0 0 auto;
@@ -801,6 +804,82 @@
       --accent: #e8590c;
     }
   </style>
+  <style id="lof-bench">
+    /* Charging Bench: even spacing between the control groups, everything on one left edge */
+
+    .card.controls .sub { margin-bottom: 4px; }
+    .card.controls .ctrl { margin: 0; padding: 9px 0; border-bottom: 1px dashed var(--line); }
+    .card.controls .ctrl .row { gap: 10px; margin-bottom: 6px; }
+    .card.controls .ctrl .hint { margin: 6px 0 0; }
+    /* Battery Behavior: the label and its value each on one line, lined up with the other rows */
+    .card.controls .ctrl .row:has(#battModeVal) { margin-bottom: 0; align-items: baseline; }
+    .card.controls .ctrl .row:has(#battModeVal) label { white-space: nowrap; }
+    #battModeVal { text-align: right; font-size: 11px; line-height: 1.35; }
+    /* Start / Reset fill the panel width like the other button rows */
+    .card.controls .stage-foot { margin-top: 12px; flex-wrap: nowrap; }
+    .card.controls .stage-foot .btn { flex: 1 1 0; justify-content: center; padding: 12px 10px; }
+  </style>
+  <style id="lof-guide">
+    /* guide pop-up: tabs centred in the header, grip pinned left, close button pinned right */
+    .fw-head { position: relative; }
+    .fw-head-actions { flex: 1; justify-content: center; }
+    .fw-head .fw-title { position: absolute; left: 12px; }
+    .fw-head .fw-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+    /* when the window is dragged very narrow there is no room to centre: sit the tabs beside the grip */
+    .helpbar.floatwin { container-type: inline-size; }
+    @container (max-width: 340px) {
+      .fw-head-actions { justify-content: flex-start; min-width: 0; padding: 0 32px 0 20px; }
+    }
+  </style>
+  <style id="lof-mobile">
+    /* Phones and touch screens */
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    button, input[type="range"] { touch-action: manipulation; }
+
+    /* single-column layout (tablets and phones): show the picture first,
+       then the controls, then the readings */
+    @media (max-width: 1180px) {
+      .card.stage { order: -1; }
+    }
+    /* tall enough (portrait): keep the picture in view while the controls scroll under it */
+    @media (max-width: 1180px) and (min-height: 700px) {
+      .card.stage {
+        position: sticky;
+        top: 6px;
+        z-index: 5;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+      }
+    }
+    @media (max-width: 600px) {
+      body { padding: 8px 10px 20px; }
+      .helpwrap { margin-bottom: 6px; }
+      .helpbtns { flex-wrap: nowrap; }
+      .helpbtn { flex: 1 1 0; padding: 10px 8px; font-size: 11px; }
+      /* title on one centred line with its icon beside it */
+      header.top { flex-wrap: nowrap; gap: 8px; margin-bottom: 8px; }
+      header.top .logo { font-size: 20px; }
+      header.top .title h1 { font-size: 17px; letter-spacing: 0.02em; white-space: nowrap; }
+      .grid { gap: 10px; }
+      .card { padding: 12px; }
+      /* the picture is about 5:4 — size the card so it fills the width with no side bars */
+      .card.stage { height: clamp(280px, 88vw, 520px); padding: 8px; }
+    }
+    /* short landscape phones: keep the whole picture inside the screen */
+    @media (max-width: 1180px) and (max-height: 520px) {
+      .card.stage { height: max(220px, 84vh); }
+    }
+    /* finger-sized controls on touch devices */
+    @media (pointer: coarse) {
+      .toggle button { padding: 11px 6px; }
+      input[type="range"] { height: 32px; }
+      .btn { padding: 13px 10px; }
+      .fw-tab-btn { padding: 8px 10px; }
+      .fw-head .fw-close, .fw-close { width: 34px; height: 34px; font-size: 14px; }
+      .fw-head { padding: 10px 12px; }
+      .fw-grip { width: 26px; height: 26px; }
+      .fw-body { font-size: 14px; }
+    }
+  </style>
 </head>
   <body>
     <div class="helpwrap">
@@ -813,36 +892,98 @@
       <div class="helpbar" id="helpbar">
         <div class="tabpanel" data-panel="use">
           <ol>
-            <li>Pick <b>Day</b> or <b>Night</b> — solar power only exists by day.</li>
             <li>
-              By day, set the <b>Sunlight Intensity</b> and drag the
-              <b>Panel Angle</b> slider — try to land near the marked sweet
-              spot.
+              Pick the <b>Time Mode</b>. In <b>Day</b> the sun is out and the
+              solar panel can make power. In <b>Night</b> there is no sunlight,
+              so the panel makes nothing.
             </li>
-            <li>Choose the <b>Device Load</b> the station is powering.</li>
             <li>
-              By <b>Day</b>, the battery charges from the panel and powers the
-              device at the same time. By <b>Night</b> there's no sunlight, so
-              only the device draws from what's stored.
+              Set the <b>Sunlight Intensity</b> — <b>Low</b>, <b>Medium</b> or
+              <b>High</b>. Stronger sunlight gives the panel more power. It
+              only matters during the day.
             </li>
-            <li>Press <b>Start</b> and watch the readings and energy flow.</li>
             <li>
-              Try this: let the battery build up during the <b>Day</b>, then
-              switch to <b>Night</b> — the device keeps running on what you
-              stored, with no panel left to top it back up.
+              Drag the <b>Panel Angle</b> slider (−90° to 90°) and watch the
+              panel tilt. The <b>★ optimal</b> mark is the sweet spot where
+              the panel faces the sun most directly. The further you move from
+              it, the less sunlight the panel catches.
             </li>
-            <li>Press <b>Reset</b> to clear the battery and start over.</li>
+            <li>
+              Choose the <b>Device Load</b> the station has to power. The
+              <b>LED</b> uses very little, the <b>Phone</b> uses more, and the
+              <b>Pump</b> uses the most. The pump only pushes water once the
+              battery is above 15%.
+            </li>
+            <li>
+              Check <b>Battery Behavior</b>. By day it reads
+              <b>Charging + Powering Device</b>. By night it reads
+              <b>Powering Device Only</b>.
+            </li>
+            <li>
+              Press <b>Start</b>. Watch the dots move along the wires — from
+              the panel to the battery while it charges, and from the battery
+              to the device while it runs. Press the button again to pause.
+            </li>
+            <li>
+              Read the <b>Live Readings</b>: <b>Solar Power Generated</b>,
+              <b>Battery Level</b> (0–100%), <b>Charging Status</b> (Not
+              Charging, Charging or Fully Charged) and <b>Device Status</b>
+              (Off or On — the phone shows Charging). The note under them
+              explains what is happening.
+            </li>
+            <li>
+              Follow the <b>Energy Flow</b> strip as it lights up:
+              Sun → Panel → Battery → Device.
+            </li>
+            <li>
+              <b>Try this:</b> let the battery fill up during the <b>Day</b>,
+              then switch to <b>Night</b>. The device keeps running on stored
+              energy until the battery runs out.
+            </li>
+            <li>
+              Press <b>Reset</b> to empty the battery and start again. Change
+              <b>one</b> setting at a time and compare.
+            </li>
           </ol>
         </div>
         <div class="tabpanel" data-panel="learn">
           <ul>
-            <li>Solar power is only generated when sunlight is available</li>
-            <li>Stronger sunlight and a correctly angled panel generate more power</li>
-            <li>A wrongly angled panel captures far less usable sunlight</li>
-            <li>Stored battery energy can be used anytime, including at night</li>
-            <li>A heavier device load drains a battery faster</li>
-            <li>By day a charging station can charge its battery and power a device at the same time; by night it can only draw from what's stored</li>
-            <li>How energy changes form: sunlight → electrical energy → stored energy → device power</li>
+            <li>
+              <b>Solar power needs sunlight:</b> a solar panel only makes
+              electricity while light is falling on it, so it makes none at
+              night.
+            </li>
+            <li>
+              <b>Sunlight intensity:</b> the stronger the sunlight, the more
+              power the panel generates.
+            </li>
+            <li>
+              <b>Panel angle:</b> a panel facing the sun directly catches the
+              most light. Tilt it away and it catches far less.
+            </li>
+            <li>
+              <b>Storing energy:</b> a battery saves energy made during the
+              day so it can be used later, even at night.
+            </li>
+            <li>
+              <b>Charging and using together:</b> by day the station can
+              charge the battery and run a device at the same time. The
+              battery only fills if the panel makes more than the device
+              uses.
+            </li>
+            <li>
+              <b>Device load:</b> a bigger device drains the battery faster.
+              An LED sips power while a water pump uses much more.
+            </li>
+            <li>
+              <b>Energy changes form:</b> light energy from the sun becomes
+              electrical energy in the panel, stored energy in the battery,
+              then light, motion or charge in the device.
+            </li>
+            <li>
+              <b>Fair testing:</b> change one variable at a time and keep the
+              others the same, so you know what caused the difference.
+            </li>
           </ul>
         </div>
       </div>
@@ -913,20 +1054,12 @@
           <div class="row">
             <label>Battery Behavior</label><span class="val" id="battModeVal">Charging + Powering Device</span>
           </div>
-          <p class="hint" id="battModeHint">
-            By day the panel charges the battery while the device runs from it
-            at the same time. By night there's no sunlight, so only the device
-            draws from the battery.
-          </p>
         </div>
 
         <div class="stage-foot">
           <button class="btn start" id="startBtn">▶ Start</button>
           <button class="btn reset" id="resetBtn">↺ Reset</button>
         </div>
-        <p class="hint" id="statusHint" style="margin-top: 10px">
-          Set the conditions, then press Start.
-        </p>
       </section>
 
       <section class="card stage">
@@ -1138,9 +1271,6 @@
           S.running = !S.running;
           startBtn.classList.toggle("on", S.running);
           startBtn.textContent = S.running ? "⏸ Pause" : "▶ Start";
-          $("statusHint").textContent = S.running
-            ? "Running — change settings any time to see the effect."
-            : "Paused. Press Start to continue.";
         });
         $("resetBtn").addEventListener("click", () => {
           S.running = false;
@@ -1157,7 +1287,6 @@
           $("angleVal").textContent = RESET_ANGLE + "°";
           startBtn.classList.remove("on");
           startBtn.textContent = "▶ Start";
-          $("statusHint").textContent = "Set the conditions, then press Start.";
         });
 
         /* ---------- simulation update ---------- */
@@ -1870,8 +1999,7 @@
           head.className = "fw-head";
 
           var title = document.createElement("span");
-          title.className = "fw-title";
-          title.textContent = "How To Use";
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
           head.appendChild(title);
 
           var actions = document.createElement("div");
@@ -1886,7 +2014,7 @@
               b.type = "button";
               b.className = "fw-tab-btn";
               b.dataset.tab = t;
-              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What To Learn" : t);
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What You'll Learn" : t);
               actions.appendChild(b);
               tabBtns.push(b);
             });
@@ -1920,12 +2048,12 @@
 
         var btns = document.querySelectorAll(".helpbtn");
         var tabBtns = bar.querySelectorAll(".fw-tab-btn");
-        var titleEl = bar.querySelector(".fw-title");
         var closeBtn = bar.querySelector(".fw-close");
         var headEl = bar.querySelector(".fw-head");
         var gripEl = bar.querySelector(".fw-grip");
         var topZ = 10000;
         var posInit = false;
+        var userSized = false;
 
         function toFront() {
           bar.style.zIndex = ++topZ;
@@ -1941,9 +2069,7 @@
           toFront();
           if (!posInit) {
             var w = Math.min(440, window.innerWidth - 32);
-            var h = Math.min(540, window.innerHeight - 80);
             bar.style.width = w + "px";
-            bar.style.height = h + "px";
             bar.style.top = "65px";
             bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
             posInit = true;
@@ -1959,10 +2085,30 @@
           panels.forEach(function (p) {
             p.classList.toggle("on", p.dataset.panel === tab);
           });
-          if (titleEl) {
-            titleEl.textContent = tab === "use" ? "How To Use" : (tab === "learn" ? "What You'll Learn" : "Guide");
-          }
+          fitHeight();
         }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        // Rotating a phone or resizing the window: keep the guide on screen and re-fit it.
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
 
         btns.forEach(function (btn) {
           var newBtn = btn.cloneNode(true);
@@ -2039,6 +2185,7 @@
               var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
               var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
               bar.style.width = nw + "px";
+              userSized = true;
               bar.style.height = nh + "px";
             }
             function onUp(ev) {

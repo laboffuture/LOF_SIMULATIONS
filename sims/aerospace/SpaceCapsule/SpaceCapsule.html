@@ -603,7 +603,9 @@
       /* help panel */
       .helpwrap {
         position: fixed;
-        top: 14px;
+        /* vertically centred on the title row */
+        top: 26.5px;
+        transform: translateY(-50%);
         right: clamp(12px, 2.4vw, 30px);
         z-index: 40;
         display: flex;
@@ -794,6 +796,7 @@
       @media (max-width: 900px) {
         .helpwrap {
           position: static;
+          transform: none;
           align-items: stretch;
           margin-bottom: 10px;
           flex: 0 0 auto;
@@ -861,6 +864,47 @@
     }
     .card #btnClear { background: #f3f6f8; }
   </style>
+  <style id="lof-guide">
+    /* guide pop-up: tabs centred in the header, grip pinned left, close button pinned right */
+    .fw-head { position: relative; }
+    .fw-head-actions { flex: 1; justify-content: center; }
+    .fw-head .fw-title { position: absolute; left: 12px; }
+    .fw-head .fw-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+    /* when the window is dragged very narrow there is no room to centre: sit the tabs beside the grip */
+    .helpbar.floatwin { container-type: inline-size; }
+    @container (max-width: 340px) {
+      .fw-head-actions { justify-content: flex-start; min-width: 0; padding: 0 32px 0 20px; }
+    }
+  </style>
+  <style id="lof-setup">
+    /* Mission Setup: five evenly spaced control groups that fill the panel,
+       with equal-width buttons that line up from row to row */
+    .card.controls { display: flex; flex-direction: column; }
+    .card.controls .sub { margin-bottom: 2px; }
+    .card.controls .ctrl {
+      margin: 0;
+      padding: 12px 0;
+      border-top: 1px dashed var(--line);
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .card.controls .ctrl:first-of-type { border-top: 0; }
+    .card.controls .ctrl .row { align-items: center; margin-bottom: 7px; }
+    .card.controls .ctrl .val { font-size: 12px; white-space: nowrap; }
+    .card.controls .seg { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; }
+    .card.controls .seg button { min-width: 0; padding: 9px 4px; white-space: nowrap; }
+    .card.controls #segPay { display: grid !important; gap: 4px; }
+    .card.controls .hint { margin-top: 7px; min-height: 1.4em; }
+    /* shorter laptop screens: pack the groups tighter so the panel still fits */
+    @media (max-height: 760px) {
+      .card.controls .ctrl { padding: 6px 0; }
+      .card.controls .ctrl .row { margin-bottom: 4px; }
+      .card.controls .seg button { padding: 6px 4px; }
+      .card.controls .hint { margin-top: 4px; }
+    }
+  </style>
 </head>
   <body>
     <div class="helpwrap">
@@ -874,48 +918,113 @@
         <div class="tabpanel" data-panel="use">
           <ol>
             <li>
-              <b>Configure Mission Parameters:</b> In the <b>Mission Setup</b> panel, select your <b>Capsule Type</b> (Light: 1,000 kg, Medium: 3,000 kg, or Heavy: 6,000 kg) and <b>Payload</b> (Empty, Equipment +500 kg, or 1&ndash;3 Astronauts at +100 kg each).
+              Pick a <b>Capsule Type</b> — <b>Light</b> (1,000 kg),
+              <b>Medium</b> (3,000 kg) or <b>Heavy</b> (6,000 kg). A heavier
+              capsule is harder to slow down.
             </li>
             <li>
-              <b>Set Parachute &amp; Descent Conditions:</b> Choose a <b>Parachute Size</b> (Small: 10 m, Medium: 20 m, Large: 30 m), a <b>Deployment Height</b> (Low: 1,000 m, Medium: 2,000 m, High: 3,000 m), then set the wind with two separate controls: <b>Wind Direction</b> (the arrow pad chooses where the wind blows from &mdash; left, upper left, above, upper right, right, or No Wind) and <b>Wind Speed</b> (Very Low: 1 m/s, Low: 2 m/s, Medium: 3 m/s, High: 4 m/s, Very High: 5 m/s).
+              Choose the <b>Payload</b> it carries — <b>Empty</b>,
+              <b>Equipment</b> (+150 kg) or <b>1 to 3 Astronauts</b> (+80 kg
+              each). Watch <b>Total Mass</b> change in the outputs.
             </li>
             <li>
-              <b>Launch Mission:</b> Click <b>Start Mission</b> to commence atmospheric entry. Watch the aerothermal plasma glow bleed off orbital velocity under the heat shield, followed by canopy deployment, deceleration, and crosswind drift.
+              Set the <b>Parachute Size</b> — <b>Small</b> (10 m),
+              <b>Medium</b> (20 m) or <b>Large</b> (30 m). A bigger canopy
+              makes more air resistance.
             </li>
             <li>
-              <b>Track Telemetry &amp; Splashdown:</b> Observe live altitude, speed, drift displacement, and elapsed fall time. When the capsule touches water, impact rating is evaluated: <b>Safe</b> (&le; 8.5 m/s), <b>Hard</b> (8.5&ndash;14.0 m/s), or <b>Failed</b> (&gt; 14.0 m/s).
+              Set the <b>Deployment Height</b> — <b>Low</b> (1,000 m),
+              <b>Med</b> (2,000 m) or <b>High</b> (3,000 m). The orange dashed
+              line shows where the parachute opens. Opening higher gives more
+              time to slow down.
             </li>
             <li>
-              <b>Verify Mission Success:</b> Full mission success requires achieving a <b>Safe</b> landing velocity <b>and</b> touching down within the <b>Recovery Target Zone</b> (&plusmn;700 m) marked on the water. The zone can sit anywhere to the left or right; steer the drift toward it with the wind direction and speed.
+              Choose the <b>Wind Direction</b> with the arrow pad — from the
+              left, the right, the upper left, the upper right, straight
+              above, or <b>No Wind</b>. The arrow shows which way the wind
+              blows. Wind from above pushes the capsule down faster.
             </li>
             <li>
-              <b>Analyze Observations &amp; Reset:</b> Compare recorded trials in the <b>Observation Log</b> table below the stage, then click <b>Reset</b> to test new configurations. Each <b>Reset</b> moves the target zone to a new random position on the left or right.
+              Set the <b>Wind Speed</b> — five levels from <b>V.Low</b>
+              (1 m/s) to <b>V.High</b> (5 m/s). Stronger wind carries the
+              capsule further sideways.
+            </li>
+            <li>
+              Find the <b>target zone</b> on the water. It moves to a new spot,
+              left or right, every time you press <b>Reset</b>.
+            </li>
+            <li>
+              Before you launch, read the <b>predicted</b> values in
+              <b>Simulation Outputs</b>. They show what should happen with
+              your setup, including where the target zone is.
+            </li>
+            <li>
+              Press <b>Start Mission</b>. Watch the capsule glow as it
+              re-enters, the parachute open at the deploy line, and the wind
+              push it sideways as it falls. The box in the corner shows the
+              <b>State</b>, <b>Speed</b> and <b>Fall time</b>.
+            </li>
+            <li>
+              At splashdown, read the result. <b>Landing Impact</b> is
+              <b>Safe</b> (8.5 m/s or less), <b>Hard</b> (up to 14 m/s) or
+              <b>Failed</b> (faster than 14 m/s). <b>Drift Distance</b> shows
+              how far the wind carried the capsule.
+            </li>
+            <li>
+              The mission is a <b>Success</b> only when the landing is
+              <b>Safe</b> and the capsule comes down inside the
+              <b>target zone</b>. Read the coloured messages to see what went
+              wrong.
+            </li>
+            <li>
+              Every run is saved in the <b>Observation Log</b>. Press
+              <b>Reset</b> for a new target zone, change <b>one</b> setting,
+              and fly again to compare. <b>Clear</b> empties the log.
             </li>
           </ol>
         </div>
         <div class="tabpanel" data-panel="learn">
           <ul>
             <li>
-              <b>Atmospheric Re-entry &amp; Heat Shield:</b> The capsule enters Earth's atmosphere at orbital velocity (~<b>7.8 km/s</b>). Extreme aerothermal compression creates a fiery plasma envelope, using the blunt ablative heat shield to dissipate massive kinetic energy into heat and slow the capsule to <b>0.10&ndash;0.30 km/s</b> prior to parachute deployment.
+              <b>Re-entry:</b> a capsule comes back from orbit at about
+              7.8 km/s. Its heat shield and the air slow it down a lot before
+              the parachute can open.
             </li>
             <li>
-              <b>Aerodynamic Drag &amp; Parachute Sizing:</b> The parachute generates upward drag force: <b>F<sub>d</sub> = &frac12; &rho; v<sup>2</sup> C<sub>d</sub> A</b>. Canopy diameter (10 m, 20 m, 30 m) governs surface area (78.5 m<sup>2</sup>, 314.2 m<sup>2</sup>, 706.9 m<sup>2</sup>); larger canopies produce exponentially higher drag to brake the capsule.
+              <b>Air resistance (drag):</b> a parachute catches air and
+              pushes back against the fall. A bigger canopy has more area, so
+              it makes more drag.
             </li>
             <li>
-              <b>Terminal Velocity Equilibrium:</b> Downward gravitational force (<b>F<sub>g</sub> = m &middot; g</b>) balances upward aerodynamic drag (<b>F<sub>d</sub></b>) to establish terminal velocity:
-              <br /><b>v<sub>term</sub> = &radic;( 2 &middot; m &middot; g / (&rho; &middot; A &middot; C<sub>d</sub>) )</b>
+              <b>Terminal velocity:</b> the capsule stops speeding up when
+              drag equals its weight. That steady speed is its splashdown
+              speed.
             </li>
             <li>
-              <b>Total Mass &amp; Payload Effect:</b> Greater total mass (<b>M<sub>total</sub> = M<sub>capsule</sub> + M<sub>payload</sub></b>) produces greater gravitational pull, requiring larger parachute surface area. Adding scientific equipment (+500 kg) and astronauts (+100 kg each) raises splashdown velocity if parachute area is insufficient.
+              <b>Mass:</b> a heavier capsule or payload needs more drag to
+              reach a safe speed, so it needs a bigger parachute.
             </li>
             <li>
-              <b>Deployment Altitude &amp; Braking Distance:</b> Parachutes require sufficient altitude and time to decelerate the capsule to terminal speed. <b>High deployment (3,000 m)</b> allows full braking, while <b>Low deployment (1,000 m)</b> risks impacting the water before reaching terminal velocity ("late-deployment" failure).
+              <b>Deployment height:</b> opening the parachute higher gives
+              more time and distance to slow down. Opening too low can mean
+              hitting the water too fast.
             </li>
             <li>
-              <b>Crosswind Drift &amp; Recovery Zone:</b> Sideways wind carries the capsule along with it: <b>Drift (d) = v<sub>wind</sub> &times; t<sub>fall</sub></b>. Slower-falling capsules spend more time aloft, so the same wind carries them further. Wind from above pushes the capsule down faster, raising splashdown speed and shortening the fall; wind from an upper corner does a bit of both. Direction and speed together decide whether the capsule lands inside the <b>Recovery Target Zone</b> (&plusmn;700 m).
+              <b>Wind drift:</b> drift = wind speed × fall time. A slower
+              fall is gentler, but the wind has longer to carry the capsule.
+              The wind direction decides which way it drifts.
             </li>
             <li>
-              <b>Splashdown Ratings &amp; G-Forces:</b> Touchdown impact is rated for crew survivability: <b>Safe</b> (&le; 8.5 m/s, &lt; 4 g, capsule floats upright), <b>Hard</b> (8.5&ndash;14.0 m/s, 4&ndash;10 g, risk of crew injury/structural damage), and <b>Failed</b> (&gt; 14.0 m/s, &gt; 10 g, catastrophic breach or sinking).
+              <b>Hitting the target:</b> recovery ships wait in a set zone,
+              so a safe landing also has to come down in the right place.
+            </li>
+            <li>
+              <b>Trade-offs:</b> the safest parachute drifts the most.
+              Engineers balance landing speed against landing accuracy.
+            </li>
+            <li>
+              <b>Fair testing:</b> change one variable at a time and use the
+              log to compare your runs.
             </li>
           </ul>
         </div>
@@ -926,7 +1035,6 @@
       <span class="logo">&#128760;</span>
       <div class="title">
         <h1>Space Capsule</h1>
-        <p>Configure the return vehicle, then bring the crew home safely.</p>
       </div>
     </header>
 
@@ -2287,198 +2395,6 @@
       });
       document.getElementById("btnClear").addEventListener("click", () => { S.log = []; S.runN = 0; renderLog(); });
 
-      (function () {
-        var bar = document.getElementById("helpbar");
-        if (!bar) return;
-
-        // Ensure floatwin structure
-        if (!bar.classList.contains("floatwin")) {
-          bar.classList.add("floatwin");
-          bar.setAttribute("role", "dialog");
-          bar.setAttribute("aria-label", "Help Guide");
-
-          var head = document.createElement("div");
-          head.className = "fw-head";
-
-          var title = document.createElement("span");
-          title.className = "fw-title";
-          title.textContent = "How To Use";
-          head.appendChild(title);
-
-          var actions = document.createElement("div");
-          actions.className = "fw-head-actions";
-
-          var tabBtns = [];
-          var origPanels = bar.querySelectorAll(".tabpanel");
-          if (origPanels.length > 1) {
-            origPanels.forEach(function (p) {
-              var t = p.dataset.panel;
-              var b = document.createElement("button");
-              b.type = "button";
-              b.className = "fw-tab-btn";
-              b.dataset.tab = t;
-              b.textContent = t === "use" ? "How To Use" : "What To Learn";
-              actions.appendChild(b);
-              tabBtns.push(b);
-            });
-          }
-
-          var closeBtn = document.createElement("button");
-          closeBtn.type = "button";
-          closeBtn.className = "fw-close";
-          closeBtn.title = "Close Guide";
-          closeBtn.setAttribute("aria-label", "Close");
-          closeBtn.textContent = "✕";
-          actions.appendChild(closeBtn);
-          head.appendChild(actions);
-
-          var body = document.createElement("div");
-          body.className = "fw-body";
-          while (bar.firstChild) {
-            body.appendChild(bar.firstChild);
-          }
-
-          var grip = document.createElement("div");
-          grip.className = "fw-grip";
-          grip.title = "Drag to resize";
-
-          bar.appendChild(head);
-          bar.appendChild(body);
-          bar.appendChild(grip);
-
-          document.body.appendChild(bar);
-        }
-
-        var btns = document.querySelectorAll(".helpbtn");
-        var tabBtns = bar.querySelectorAll(".fw-tab-btn");
-        var titleEl = bar.querySelector(".fw-title");
-        var closeBtn = bar.querySelector(".fw-close");
-        var headEl = bar.querySelector(".fw-head");
-        var gripEl = bar.querySelector(".fw-grip");
-        var topZ = 10000;
-        var posInit = false;
-
-        function toFront() {
-          bar.style.zIndex = ++topZ;
-        }
-
-        function closeAll() {
-          bar.classList.remove("show");
-          btns.forEach(function (b) { b.classList.remove("on"); });
-          tabBtns.forEach(function (b) { b.classList.remove("on"); });
-        }
-
-        function openTab(tab) {
-          toFront();
-          if (!posInit) {
-            var w = Math.min(420, window.innerWidth - 32);
-            var h = Math.min(520, window.innerHeight - 80);
-            bar.style.width = w + "px";
-            bar.style.height = h + "px";
-            bar.style.top = "65px";
-            bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
-            posInit = true;
-          }
-          bar.classList.add("show");
-          btns.forEach(function (b) {
-            b.classList.toggle("on", b.dataset.tab === tab);
-          });
-          tabBtns.forEach(function (b) {
-            b.classList.toggle("on", b.dataset.tab === tab);
-          });
-          var panels = bar.querySelectorAll(".tabpanel");
-          panels.forEach(function (p) {
-            p.classList.toggle("on", p.dataset.panel === tab);
-          });
-          if (titleEl) {
-            titleEl.textContent = tab === "use" ? "How To Use" : "What You'll Learn";
-          }
-        }
-
-        btns.forEach(function (btn) {
-          btn.addEventListener("click", function () {
-            var tab = btn.dataset.tab;
-            if (bar.classList.contains("show") && btn.classList.contains("on")) {
-              closeAll();
-            } else {
-              openTab(tab);
-            }
-          });
-        });
-
-        tabBtns.forEach(function (tb) {
-          tb.addEventListener("click", function (e) {
-            e.stopPropagation();
-            openTab(tb.dataset.tab);
-          });
-        });
-
-        if (closeBtn) closeBtn.addEventListener("click", closeAll);
-        bar.addEventListener("pointerdown", toFront);
-
-        document.addEventListener("keydown", function (e) {
-          if (e.key === "Escape" && bar.classList.contains("show")) closeAll();
-        });
-
-        // Dragging by header
-        if (headEl) {
-          headEl.addEventListener("pointerdown", function (e) {
-            if (e.target.closest(".fw-head-actions")) return;
-            e.preventDefault();
-            toFront();
-            headEl.setPointerCapture(e.pointerId);
-            var r = bar.getBoundingClientRect();
-            var dx = e.clientX - r.left;
-            var dy = e.clientY - r.top;
-            bar.classList.add("dragging");
-            function onMove(ev) {
-              var nx = Math.max(8, Math.min(window.innerWidth - bar.offsetWidth - 8, ev.clientX - dx));
-              var ny = Math.max(8, Math.min(window.innerHeight - 40, ev.clientY - dy));
-              bar.style.left = nx + "px";
-              bar.style.top = ny + "px";
-            }
-            function onUp(ev) {
-              bar.classList.remove("dragging");
-              headEl.removeEventListener("pointermove", onMove);
-              headEl.removeEventListener("pointerup", onUp);
-              headEl.removeEventListener("pointercancel", onUp);
-            }
-            headEl.addEventListener("pointermove", onMove);
-            headEl.addEventListener("pointerup", onUp);
-            headEl.addEventListener("pointercancel", onUp);
-          });
-        }
-
-        // Resizing by grip
-        if (gripEl) {
-          gripEl.addEventListener("pointerdown", function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            toFront();
-            gripEl.setPointerCapture(e.pointerId);
-            var r = bar.getBoundingClientRect();
-            var startX = e.clientX;
-            var startY = e.clientY;
-            var startW = r.width;
-            var startH = r.height;
-            function onMove(ev) {
-              var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
-              var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
-              bar.style.width = nw + "px";
-              bar.style.height = nh + "px";
-            }
-            function onUp(ev) {
-              gripEl.removeEventListener("pointermove", onMove);
-              gripEl.removeEventListener("pointerup", onUp);
-              gripEl.removeEventListener("pointercancel", onUp);
-            }
-            gripEl.addEventListener("pointermove", onMove);
-            gripEl.addEventListener("pointerup", onUp);
-            gripEl.addEventListener("pointercancel", onUp);
-          });
-        }
-      })();
-
       /* ---------------- boot ---------------- */
       fit();
       randomizeZone();
@@ -2504,8 +2420,7 @@
           head.className = "fw-head";
 
           var title = document.createElement("span");
-          title.className = "fw-title";
-          title.textContent = "How To Use";
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
           head.appendChild(title);
 
           var actions = document.createElement("div");
@@ -2520,7 +2435,7 @@
               b.type = "button";
               b.className = "fw-tab-btn";
               b.dataset.tab = t;
-              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What To Learn" : t);
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What You'll Learn" : t);
               actions.appendChild(b);
               tabBtns.push(b);
             });
@@ -2554,12 +2469,12 @@
 
         var btns = document.querySelectorAll(".helpbtn");
         var tabBtns = bar.querySelectorAll(".fw-tab-btn");
-        var titleEl = bar.querySelector(".fw-title");
         var closeBtn = bar.querySelector(".fw-close");
         var headEl = bar.querySelector(".fw-head");
         var gripEl = bar.querySelector(".fw-grip");
         var topZ = 10000;
         var posInit = false;
+        var userSized = false;
 
         function toFront() {
           bar.style.zIndex = ++topZ;
@@ -2575,9 +2490,7 @@
           toFront();
           if (!posInit) {
             var w = Math.min(440, window.innerWidth - 32);
-            var h = Math.min(540, window.innerHeight - 80);
             bar.style.width = w + "px";
-            bar.style.height = h + "px";
             bar.style.top = "65px";
             bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
             posInit = true;
@@ -2593,10 +2506,30 @@
           panels.forEach(function (p) {
             p.classList.toggle("on", p.dataset.panel === tab);
           });
-          if (titleEl) {
-            titleEl.textContent = tab === "use" ? "How To Use" : (tab === "learn" ? "What You'll Learn" : "Guide");
-          }
+          fitHeight();
         }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        // Rotating a phone or resizing the window: keep the guide on screen and re-fit it.
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
 
         btns.forEach(function (btn) {
           var newBtn = btn.cloneNode(true);
@@ -2673,6 +2606,7 @@
               var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
               var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
               bar.style.width = nw + "px";
+              userSized = true;
               bar.style.height = nh + "px";
             }
             function onUp(ev) {

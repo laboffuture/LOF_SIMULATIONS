@@ -10208,6 +10208,12 @@ Error generating stack: ` +
           D = 12,
           H = T + 172 / 2,
           O = D + 118 / 2 + 8;
+        // on a narrow (phone) range, shrink the wing cam about its top-right corner
+        const camScale = Math.max(0.72, Math.min(1, _ / 480));
+        (o.save(),
+          o.translate(_ - 12, D),
+          o.scale(camScale, camScale),
+          o.translate(12 - _, -D));
         (o.save(),
           o.beginPath(),
           o.roundRect(T, D, 172, 118, 8),
@@ -10279,6 +10285,7 @@ Error generating stack: ` +
           o.beginPath(),
           o.roundRect(T, D, 172, 118, 8),
           o.stroke());
+        o.restore();
       }
       function dd(o, _, p, $) {
         const { settings: E, result: N, phase: P, frameIdx: T } = $,
@@ -11544,7 +11551,9 @@ Error generating stack: ` +
       /* Floating, draggable & resizable Guide / How to Use window */
       .helpwrap {
         position: fixed;
-        top: 14px;
+        /* vertically centred on the title row (title centre sits 41px from the top) */
+        top: 41px;
+        transform: translateY(-50%);
         right: clamp(12px, 2.4vw, 30px);
         z-index: 40;
         display: flex;
@@ -11639,6 +11648,33 @@ Error generating stack: ` +
         display: flex;
         align-items: center;
         gap: 6px;
+        flex: 1;
+        justify-content: center;
+      }
+      /* tabs centred in the header: grip pinned left, close button pinned right */
+      .fw-head {
+        position: relative;
+      }
+      .fw-head .fw-title {
+        position: absolute;
+        left: 12px;
+      }
+      .fw-head .fw-close {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+      /* when the window is dragged very narrow there is no room to centre: sit the tabs beside the grip */
+      .helpbar.floatwin {
+        container-type: inline-size;
+      }
+      @container (max-width: 340px) {
+        .fw-head-actions {
+          justify-content: flex-start;
+          min-width: 0;
+          padding: 0 32px 0 20px;
+        }
       }
       .fw-tab-btn {
         appearance: none;
@@ -11742,6 +11778,7 @@ Error generating stack: ` +
       @media (max-width: 900px) {
         .helpwrap {
           position: static;
+          transform: none;
           align-items: stretch;
           margin-bottom: 10px;
           flex: 0 0 auto;
@@ -11808,6 +11845,37 @@ Error generating stack: ` +
       --accent: #e8590c;
     }
   </style>
+  <style id="lof-mobile">
+    /* Phones and touch screens */
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    button, input[type="range"] { touch-action: manipulation; }
+    @media (max-width: 600px) {
+      #root { padding: 10px 12px 24px; }
+      .masthead { padding: 4px 2px 12px; }
+      .masthead h1 { font-size: 22px; }
+      .helpwrap { padding: 10px 12px 0 !important; }
+      .helpbtns { flex-wrap: nowrap; }
+      .helpbtn { flex: 1 1 0; padding: 10px 8px; font-size: 11px; }
+      .card { padding: 12px; }
+      .range-card { padding: 8px; }
+      .range-canvas { inset: 8px; width: calc(100% - 16px); height: calc(100% - 16px); }
+    }
+    /* finger-sized controls on touch devices */
+    @media (pointer: coarse) {
+      .seg button { padding: 10px 4px 9px; font-size: 13px; }
+      input[type="range"] { height: 32px; margin: 0; }
+      .btn { padding: 14px 16px; }
+      .fw-tab-btn { padding: 8px 10px; }
+      .fw-head .fw-close, .fw-close { width: 34px; height: 34px; font-size: 14px; }
+      .fw-head { padding: 10px 12px; }
+      .fw-grip { width: 26px; height: 26px; }
+      .fw-body { font-size: 14px; }
+    }
+    /* short landscape phones: keep the flight view inside the screen */
+    @media (max-width: 920px) and (max-height: 480px) {
+      .range-card { min-height: max(240px, 78vh); }
+    }
+  </style>
 </head>
   <body>
     <div class="helpwrap">
@@ -11820,36 +11888,103 @@ Error generating stack: ` +
       <div class="helpbar" id="helpbar">
         <div class="tabpanel" data-panel="use">
           <ol>
-            <li>Pick a <b>Wing type</b> — dihedral, flat or anhedral.</li>
             <li>
-              Set the <b>Centre of gravity</b> — nose-heavy, balanced or
-              tail-heavy.
+              Pick a <b>Wing type</b>. <b>Dihedral</b> wing tips angle upward
+              and help the glider level itself. <b>Flat</b> is a straight wing
+              with little self-correction. <b>Anhedral</b> tips angle downward,
+              so it banks quickly and is the least stable.
             </li>
             <li>
-              Drag <b>Launch force</b> and <b>Launch angle</b> to set how hard
-              and how steep the catapult throws.
-            </li>
-            <li>Choose <b>Wind</b> — none, mild or strong.</li>
-            <li>Hit <b>Launch</b> and watch the glider fly down the range.</li>
-            <li>
-              Read <b>Telemetry</b> — distance, flight time, stability and
-              landing.
+              Set the <b>Centre of gravity</b> — where the glider's weight
+              sits. <b>Nose</b> puts the weight forward, so the nose drops.
+              <b>Balanced</b> gives the steadiest, longest glide. <b>Tail</b>
+              puts the weight back, so the nose rises and the glider may stall.
             </li>
             <li>
-              Press <b>Reset</b>, change <b>one</b> setting, and launch again to
-              compare.
+              Drag <b>Launch force</b> (0–100%) to set how hard the catapult
+              throws the glider.
+            </li>
+            <li>
+              Drag <b>Launch angle</b> (0–30°) to set how steeply it leaves the
+              rail. Watch the rail tilt as you move the slider.
+            </li>
+            <li>
+              Choose the <b>Wind</b>. <b>None</b> is still air — use it for a
+              fair test. <b>Mild</b> is a light headwind (1.5 m/s) with gentle
+              gusts. <b>Strong</b> is a 3.5 m/s headwind with rough gusts.
+            </li>
+            <li>
+              Press <b>Launch</b> and watch the glider fly along the range. The
+              arrows on the glider show the forces acting on it —
+              <b>Launch</b>, <b>Lift</b>, <b>Drag</b> and <b>Gravity</b>. A
+              longer arrow means a bigger force.
+            </li>
+            <li>
+              Watch for warnings while it flies. A red <b>STALL</b> tag means
+              the wings have lost lift. The <b>Wing cam</b> in the corner shows
+              the glider from behind, with its <b>Roll</b> angle, so you can
+              see it tipping from side to side.
+            </li>
+            <li>
+              When it lands, read the <b>Telemetry</b> panel:
+              <b>Distance</b> (how far it flew), <b>Max height</b>,
+              <b>Flight time</b>, <b>Stability</b> (stable, wobbly or
+              unstable) and <b>Landing</b> (safe landing, hard landing or
+              crash). A flag on the range marks where it touched down.
+            </li>
+            <li>
+              Press <b>Reset</b>, change <b>one</b> setting only, and launch
+              again. Compare the two flights to see what that one change did.
+            </li>
+            <li>
+              <b>Challenge:</b> find the setup that flies the farthest and
+              still makes a safe landing.
             </li>
           </ol>
         </div>
         <div class="tabpanel" data-panel="learn">
           <ul>
-            <li>How dihedral wings self-right a glider after a roll</li>
-            <li>Why a nose-heavy glider dives and a tail-heavy one stalls</li>
-            <li>How launch angle trades height against distance</li>
-            <li>Why more launch force alone doesn't mean a longer flight</li>
-            <li>How headwind and gusts bend the glide path</li>
-            <li>Why stability decides a safe landing or a crash</li>
-            <li>How to test a design by changing one variable at a time</li>
+            <li>
+              <b>The four forces of flight:</b> the catapult's launch force
+              gets the glider moving, lift holds it up, drag slows it down and
+              gravity pulls it back to the ground.
+            </li>
+            <li>
+              <b>Wing shape and stability:</b> dihedral wings (tips up) roll
+              the glider back to level after it tips, while anhedral wings
+              (tips down) make it roll further.
+            </li>
+            <li>
+              <b>Centre of gravity:</b> a nose-heavy glider dives and lands
+              short, a tail-heavy glider pitches up and stalls, and a balanced
+              one glides the farthest.
+            </li>
+            <li>
+              <b>Stall:</b> when the nose points too high and the glider
+              slows down, the wings stop making enough lift and it drops.
+            </li>
+            <li>
+              <b>Launch angle:</b> a low angle gives speed but little height,
+              and a steep angle gives height but can cause a stall. The best
+              distance comes from an angle in between.
+            </li>
+            <li>
+              <b>Launch force:</b> a harder throw gives more speed and energy,
+              but more force alone doesn't mean a longer flight — a badly
+              balanced glider wastes that energy.
+            </li>
+            <li>
+              <b>Wind:</b> a headwind shortens the flight, and gusts push the
+              glider around and test how stable it is.
+            </li>
+            <li>
+              <b>Stability and landing:</b> a stable glider comes down gently,
+              while an unstable one is more likely to land hard or crash.
+            </li>
+            <li>
+              <b>Fair testing:</b> change one variable at a time and keep the
+              others the same, so you know exactly what caused the difference.
+            </li>
           </ul>
         </div>
       </div>
@@ -11909,8 +12044,7 @@ Error generating stack: ` +
           head.className = "fw-head";
 
           var title = document.createElement("span");
-          title.className = "fw-title";
-          title.textContent = "How To Use";
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
           head.appendChild(title);
 
           var actions = document.createElement("div");
@@ -11925,7 +12059,7 @@ Error generating stack: ` +
               b.type = "button";
               b.className = "fw-tab-btn";
               b.dataset.tab = t;
-              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What To Learn" : t);
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What You'll Learn" : t);
               actions.appendChild(b);
               tabBtns.push(b);
             });
@@ -11959,12 +12093,12 @@ Error generating stack: ` +
 
         var btns = document.querySelectorAll(".helpbtn");
         var tabBtns = bar.querySelectorAll(".fw-tab-btn");
-        var titleEl = bar.querySelector(".fw-title");
         var closeBtn = bar.querySelector(".fw-close");
         var headEl = bar.querySelector(".fw-head");
         var gripEl = bar.querySelector(".fw-grip");
         var topZ = 10000;
         var posInit = false;
+        var userSized = false;
 
         function toFront() {
           bar.style.zIndex = ++topZ;
@@ -11980,9 +12114,7 @@ Error generating stack: ` +
           toFront();
           if (!posInit) {
             var w = Math.min(440, window.innerWidth - 32);
-            var h = Math.min(540, window.innerHeight - 80);
             bar.style.width = w + "px";
-            bar.style.height = h + "px";
             bar.style.top = "65px";
             bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
             posInit = true;
@@ -11998,10 +12130,30 @@ Error generating stack: ` +
           panels.forEach(function (p) {
             p.classList.toggle("on", p.dataset.panel === tab);
           });
-          if (titleEl) {
-            titleEl.textContent = tab === "use" ? "How To Use" : (tab === "learn" ? "What You'll Learn" : "Guide");
-          }
+          fitHeight();
         }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        // Rotating a phone or resizing the window: keep the guide on screen and re-fit it.
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
 
         btns.forEach(function (btn) {
           var newBtn = btn.cloneNode(true);
@@ -12077,6 +12229,7 @@ Error generating stack: ` +
             function onMove(ev) {
               var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
               var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
+              userSized = true;
               bar.style.width = nw + "px";
               bar.style.height = nh + "px";
             }

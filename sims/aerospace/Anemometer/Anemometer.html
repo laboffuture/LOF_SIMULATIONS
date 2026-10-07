@@ -620,7 +620,7 @@
           <ol>
             <li>Pick a <b>Wind Speed</b> — Off, Low, Medium or High.</li>
             <li>Choose where the wind comes from with <b>Wind Direction</b> — Front, Left or Right — and pick a <b>Rotor Size</b>.</li>
-            <li>Press <b>Start</b> to switch the wind on. Watch the cups spin up; the red cup lets you count the turns.</li>
+            <li>Press <b>Start</b> to switch the wind on. Watch the cups spin up; the <b>Turns</b> counter under the readings counts every full turn.</li>
             <li>Read the <b>RPM meter</b>, the <b>Rotor Speed</b> and the measured <b>Wind Speed</b> in m/s and km/h.</li>
             <li>Open the <b>Rotation → Wind Speed</b> box to see exactly how the RPM is turned into a wind speed.</li>
             <li>Turn <b>Wind Gust</b> ON and watch the RPM jump each time a gust arrives. The <b>graph</b> shows every gust.</li>
@@ -1133,22 +1133,27 @@
             // the cups' open sides all face backwards against the spin, so the
             // wind catches them and pushes the rotor round (anticlockwise from above)
             const nx = Math.sin(it.th), nz = -Math.cos(it.th);
-            const red = it.i === 0;
-            const body = c.createRadialGradient(it.px - cr * 0.3, it.py - cr * 0.35, cr * 0.1, it.px, it.py, cr);
-            body.addColorStop(0, red ? "#ff8a7a" : "#f4f7fa");
-            body.addColorStop(1, red ? "#c0392b" : "#9aa6b0");
+            // oval cups: longer along their own axis (a) than across the mouth (b), all white
+            const a = cr * 1.45, b = cr * 0.85;
+            const brx = Math.max(b, a * Math.abs(nx) * 0.8 + b * Math.abs(nz) * 0.6);
+            const bx = it.px - nx * a * 0.3;
+            const body = c.createRadialGradient(bx - brx * 0.3, it.py - b * 0.4, b * 0.1, bx, it.py, Math.max(brx, b));
+            body.addColorStop(0, "#ffffff");
+            body.addColorStop(1, "#cdd5dc");
             c.fillStyle = body;
-            c.beginPath(); c.arc(it.px - nx * cr * 0.25, it.py, cr, 0, 7); c.fill();
-            const ox = it.px + nx * cr * 0.45;
-            const orx = Math.max(1.5, cr * Math.abs(nz));
+            c.beginPath(); c.ellipse(bx, it.py, brx, b, 0, 0, 7); c.fill();
+            c.strokeStyle = "rgba(91,107,122,0.55)"; c.lineWidth = 1.2;
+            c.beginPath(); c.ellipse(bx, it.py, brx, b, 0, 0, 7); c.stroke();
+            const ox = it.px + nx * a * 0.38;
+            const orx = Math.max(1.5, b * Math.abs(nz));
             if (nz > 0) {
-              c.fillStyle = red ? "#7a1f16" : "#3c4a55";
-              c.beginPath(); c.ellipse(ox, it.py, orx, cr, 0, 0, 7); c.fill();
-              c.strokeStyle = red ? "#ffb3a8" : "#ffffff"; c.lineWidth = 1.5;
-              c.beginPath(); c.ellipse(ox, it.py, orx, cr, 0, 0, 7); c.stroke();
+              c.fillStyle = "#56636e";
+              c.beginPath(); c.ellipse(ox, it.py, orx, b, 0, 0, 7); c.fill();
+              c.strokeStyle = "#ffffff"; c.lineWidth = 1.8;
+              c.beginPath(); c.ellipse(ox, it.py, orx, b, 0, 0, 7); c.stroke();
             } else {
-              c.strokeStyle = "rgba(255,255,255,0.6)"; c.lineWidth = 1.2;
-              c.beginPath(); c.ellipse(ox, it.py, orx, cr, 0, 0, 7); c.stroke();
+              c.strokeStyle = "rgba(255,255,255,0.75)"; c.lineWidth = 1.2;
+              c.beginPath(); c.ellipse(ox, it.py, orx, b, 0, 0, 7); c.stroke();
             }
           };
           // motion blur ring when spinning fast

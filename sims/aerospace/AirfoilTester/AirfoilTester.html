@@ -11188,7 +11188,9 @@ Error generating stack: ` +
       /* Floating, draggable & resizable Guide / How to Use window */
       .helpwrap {
         position: fixed;
-        top: 14px;
+        /* vertically centred on the title row (title centre sits 24.5px from the top) */
+        top: 24.5px;
+        transform: translateY(-50%);
         right: clamp(12px, 2.4vw, 30px);
         z-index: 40;
         display: flex;
@@ -11386,6 +11388,7 @@ Error generating stack: ` +
       @media (max-width: 900px) {
         .helpwrap {
           position: static;
+          transform: none;
           align-items: stretch;
           margin-bottom: 10px;
           flex: 0 0 auto;
@@ -11455,6 +11458,128 @@ Error generating stack: ` +
     .card .level-chip { color: #4c5c6b; }
     .card .tunnel-canvas { background: transparent; }
   </style>
+  <style id="lof-readings">
+    /* Bench panel: controls keep their natural height (no squeezing under the
+       readings); if the screen is too short the panel scrolls instead of overlapping. */
+    .bench-card { overflow-y: auto; overflow-x: hidden; }
+    .bench-card .controls { flex: 1 0 auto; justify-content: space-between; gap: 8px; }
+    .bench-card::-webkit-scrollbar { width: 8px; }
+    .bench-card::-webkit-scrollbar-thumb { background: rgba(232, 220, 192, .25); border-radius: 4px; }
+
+    /* Readings: label/value rows on the left, lift meter on the right, lift force under the rows */
+    .bench-readings { margin-top: 10px; padding-top: 8px; gap: 6px; }
+    .readings-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas: "rows meter" "force meter";
+      column-gap: 16px;
+      row-gap: 6px;
+      align-items: start;
+    }
+    .readouts { grid-area: rows; gap: 0; align-content: start; }
+    .readouts .readout {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 25px;
+      border-bottom: 1px dashed var(--line);
+    }
+    .readouts .readout .label { font-size: 11.5px; }
+    .readouts .readout .value { font-size: 16px; white-space: nowrap; }
+    .lift-meter { display: contents; }
+    .lift-meter svg { grid-area: meter; align-self: center; overflow: visible; height: 138px; width: auto; }
+    .meter-side {
+      grid-area: force;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .meter-side .need { text-align: right; }
+    .verdict { padding-top: 6px; border-top: 1px solid var(--line); line-height: 1.3; }
+
+    /* lift meter drawing: readable scale on the dark panel, LOAD label fully on the bar */
+    .lift-meter svg text { fill: #c9d3db; }
+    .lift-meter svg text[font-weight="700"] { fill: #17293b; transform: translateX(-4.5px); }
+    .lift-meter svg line[stroke-dasharray] { stroke: #e8590c; }
+
+    /* shorter laptop screens: pack the bench tighter so it still fits without scrolling */
+    @media (max-height: 700px) and (min-width: 961px) {
+      .bench-card .controls { gap: 4px; }
+      .segmented button { padding: 3px 4px; }
+      .actions button { padding: 7px 14px; }
+      .bench-readings { margin-top: 6px; padding-top: 6px; gap: 4px; }
+      .readings-row { row-gap: 4px; }
+      .readouts .readout { min-height: 20px; }
+      .readouts .readout .value { line-height: 1.15; }
+      .readouts .readout .label { line-height: 1.15; }
+      .lift-meter svg { height: 112px; }
+      .verdict { padding-top: 4px; font-size: 14px; }
+    }
+  </style>
+  <style id="lof-guide">
+    /* guide pop-up: tabs centred in the header, grip pinned left, close button pinned right */
+    .fw-head { position: relative; }
+    .fw-head-actions { flex: 1; justify-content: center; }
+    .fw-head .fw-title { position: absolute; left: 12px; }
+    .fw-head .fw-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+    /* when the window is dragged very narrow there is no room to centre: sit the tabs beside the grip */
+    .helpbar.floatwin { container-type: inline-size; }
+    @container (max-width: 340px) {
+      .fw-head-actions { justify-content: flex-start; min-width: 0; padding: 0 32px 0 20px; }
+    }
+  </style>
+  <style id="lof-mobile">
+    /* Phones and touch screens */
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    button, input[type="range"] { touch-action: manipulation; }
+
+    /* single-column layout (tablets and phones) */
+    @media (max-width: 960px) {
+      /* the page itself scrolls, so the sticky test section below has something to stick to */
+      body { overflow: visible; }
+      /* the test section had no height of its own here and collapsed to nothing */
+      .tunnel-wrap { flex: none; height: clamp(230px, 58vw, 440px); }
+      /* show the wind tunnel first, with the controls and readings underneath */
+      .tunnel-card { order: -1; flex: none; }
+      .bench-card { overflow: visible; }
+    }
+    /* tall enough (portrait): keep the wind tunnel in view while the controls scroll under it */
+    @media (max-width: 960px) and (min-height: 620px) {
+      .tunnel-card {
+        position: sticky;
+        top: 6px;
+        z-index: 5;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+      }
+    }
+    /* short landscape phones: keep the whole wind tunnel inside the screen */
+    @media (max-width: 960px) and (max-height: 520px) {
+      .tunnel-wrap { height: max(190px, 68vh); }
+    }
+    @media (max-width: 600px) {
+      #root { padding: 8px 10px 20px; }
+      .masthead { padding: 0 2px 8px; }
+      .masthead h1 { font-size: 20px; }
+      .helpwrap { padding: 8px 10px 0; margin-bottom: 6px; }
+      .helpbtns { flex-wrap: nowrap; }
+      .helpbtn { flex: 1 1 0; padding: 10px 8px; font-size: 11px; }
+      .card { padding: 10px 12px; }
+      .lab { gap: 10px; }
+    }
+    /* finger-sized controls on touch devices */
+    @media (pointer: coarse) {
+      .segmented button { padding: 10px 4px; }
+      input[type="range"] { height: 32px; }
+      .actions button { padding: 13px 14px; }
+      .fw-tab-btn { padding: 8px 10px; }
+      .fw-head .fw-close, .fw-close { width: 34px; height: 34px; font-size: 14px; }
+      .fw-head { padding: 10px 12px; }
+      .fw-grip { width: 26px; height: 26px; }
+      .fw-body { font-size: 14px; }
+    }
+  </style>
 </head>
   <body>
     <!-- How To Use & Guide Buttons -->
@@ -11466,18 +11591,97 @@ Error generating stack: ` +
       <div class="helpbar" id="helpbar">
         <div class="tabpanel" data-panel="use">
           <ol>
-            <li><b>Select Airfoil Profile:</b> Choose from standard NACA 4-digit profiles (symmetric, cambered, or high-lift).</li>
-            <li><b>Adjust Angle of Attack (AoA):</b> Slide the AoA control from negative angles to +25°.</li>
-            <li><b>Set Wind Speed:</b> Regulate the virtual wind tunnel airspeed and air density.</li>
-            <li><b>Inspect Flow Streamlines:</b> Observe streamline curvature, velocity gradients, and upper surface low-pressure suction.</li>
-            <li><b>Detect Stall:</b> Observe where boundary layer separation occurs and review the Lift vs. Drag polar curve.</li>
+            <li>
+              Pick an <b>Airfoil type</b> — the shape of the wing.
+              <b>Symmetrical</b> is the same curve on top and bottom.
+              <b>Cambered</b> is more curved on top, so it makes lift even when
+              it is level. <b>Flat plate</b> is a simple flat wing.
+            </li>
+            <li>
+              Choose the <b>Blower speed</b> — how fast the air blows over the
+              wing: <b>Low</b> (4 m/s), <b>Medium</b> (7 m/s) or <b>High</b>
+              (10 m/s).
+            </li>
+            <li>
+              Drag the <b>Angle of attack</b> slider (0°–20°) to tilt the wing
+              into the wind. Watch the wing tilt in the test section as you
+              move it.
+            </li>
+            <li>
+              Check the <b>Load on the rig</b>. The wing has to make more than
+              <b>20 gr</b> of lift to rise off the stand.
+            </li>
+            <li>
+              Press <b>Run Test</b> to switch the blower on. The badge at the
+              top of the bench changes from <b>Wind off</b> to <b>Wind on</b>.
+            </li>
+            <li>
+              Watch the <b>Test section</b>. The moving dashes show the air
+              flowing around the wing. The green arrow is <b>lift</b> (up) and
+              the red arrow is <b>drag</b> (backwards). The labels show
+              <b>low pressure, faster air</b> above the wing and
+              <b>high pressure, slower air</b> below it.
+            </li>
+            <li>
+              Read the <b>Readings</b>: <b>Airflow speed</b>,
+              <b>Angle of attack</b>, <b>Drag force</b> and <b>Lift level</b>
+              (low, medium or high). The <b>Lift meter</b> bar shows the
+              <b>Lift force</b> in grams against the dashed <b>LOAD</b> line.
+            </li>
+            <li>
+              Check the result line. <b>Lift beats the load</b> means the wing
+              rises. <b>Not enough lift</b> means the load holds it down.
+            </li>
+            <li>
+              Keep raising the angle of attack and look for
+              <b>STALL — FLOW SEPARATED</b>. The air breaks away from the top
+              of the wing and the lift drops. Find the angle where each
+              airfoil stalls.
+            </li>
+            <li>
+              Press <b>Reset</b>, change <b>one</b> setting only, and run the
+              test again to compare.
+            </li>
           </ol>
         </div>
         <div class="tabpanel" data-panel="learn">
           <ul>
-            <li><b>Bernoulli's Principle & Circulation:</b> Accelerated flow over the upper surface produces low pressure, generating aerodynamic lift.</li>
-            <li><b>Lift & Drag Coefficients:</b> $C_L$ and $C_D$ curves quantify how profile camber and angle of attack dictate flight performance.</li>
-            <li><b>Aerodynamic Stall:</b> Exceeding the critical angle of attack causes boundary layer separation, resulting in sudden loss of lift and high pressure drag.</li>
+            <li>
+              <b>How a wing makes lift:</b> air moves faster over the curved
+              top of the wing, so the pressure there is lower than below it.
+              The higher pressure underneath pushes the wing up.
+            </li>
+            <li>
+              <b>Lift and drag:</b> lift pushes the wing up and drag pulls it
+              back. A good wing makes a lot of lift for only a little drag.
+            </li>
+            <li>
+              <b>Airfoil shape:</b> a cambered wing makes lift even at 0°,
+              while a symmetrical wing and a flat plate need to be tilted
+              before they lift.
+            </li>
+            <li>
+              <b>Airflow speed:</b> faster air makes much more lift — and more
+              drag too.
+            </li>
+            <li>
+              <b>Angle of attack:</b> tilting the wing into the wind increases
+              lift, but only up to a point.
+            </li>
+            <li>
+              <b>Stall:</b> past the critical angle the air can no longer
+              follow the top of the wing. It separates, the lift falls and the
+              drag rises. In this lab the flat plate stalls at about 8°, and
+              the symmetrical and cambered wings at about 15°.
+            </li>
+            <li>
+              <b>Lift against load:</b> a wing only rises when its lift is
+              bigger than the weight it has to carry.
+            </li>
+            <li>
+              <b>Fair testing:</b> change one variable at a time and keep the
+              others the same, so you know what caused the difference.
+            </li>
           </ul>
         </div>
       </div>
@@ -11501,8 +11705,7 @@ Error generating stack: ` +
           head.className = "fw-head";
 
           var title = document.createElement("span");
-          title.className = "fw-title";
-          title.textContent = "How To Use";
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
           head.appendChild(title);
 
           var actions = document.createElement("div");
@@ -11517,7 +11720,7 @@ Error generating stack: ` +
               b.type = "button";
               b.className = "fw-tab-btn";
               b.dataset.tab = t;
-              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What To Learn" : t);
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What You'll Learn" : t);
               actions.appendChild(b);
               tabBtns.push(b);
             });
@@ -11551,12 +11754,12 @@ Error generating stack: ` +
 
         var btns = document.querySelectorAll(".helpbtn");
         var tabBtns = bar.querySelectorAll(".fw-tab-btn");
-        var titleEl = bar.querySelector(".fw-title");
         var closeBtn = bar.querySelector(".fw-close");
         var headEl = bar.querySelector(".fw-head");
         var gripEl = bar.querySelector(".fw-grip");
         var topZ = 10000;
         var posInit = false;
+        var userSized = false;
 
         function toFront() {
           bar.style.zIndex = ++topZ;
@@ -11572,9 +11775,7 @@ Error generating stack: ` +
           toFront();
           if (!posInit) {
             var w = Math.min(440, window.innerWidth - 32);
-            var h = Math.min(540, window.innerHeight - 80);
             bar.style.width = w + "px";
-            bar.style.height = h + "px";
             bar.style.top = "65px";
             bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
             posInit = true;
@@ -11590,10 +11791,30 @@ Error generating stack: ` +
           panels.forEach(function (p) {
             p.classList.toggle("on", p.dataset.panel === tab);
           });
-          if (titleEl) {
-            titleEl.textContent = tab === "use" ? "How To Use" : (tab === "learn" ? "What You'll Learn" : "Guide");
-          }
+          fitHeight();
         }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        // Rotating a phone or resizing the window: keep the guide on screen and re-fit it.
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
 
         btns.forEach(function (btn) {
           var newBtn = btn.cloneNode(true);
@@ -11670,6 +11891,7 @@ Error generating stack: ` +
               var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
               var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
               bar.style.width = nw + "px";
+              userSized = true;
               bar.style.height = nh + "px";
             }
             function onUp(ev) {
