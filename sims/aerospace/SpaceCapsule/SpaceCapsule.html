@@ -231,6 +231,51 @@
         white-space: nowrap;
         text-align: center;
       }
+      .windarch {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-auto-rows: 38px;
+        gap: 5px;
+      }
+      .windarch button {
+        cursor: pointer;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--mut);
+        border-radius: 8px;
+        font-family: var(--body);
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1;
+        padding: 0;
+        transition: 0.15s;
+      }
+      .windarch button.none {
+        font-size: 12px;
+        border-style: dashed;
+      }
+      .windarch button:hover {
+        border-color: var(--dim);
+        color: var(--txt);
+      }
+      .windarch button.on {
+        color: var(--txt);
+        border-color: var(--sky);
+        border-style: solid;
+        background: var(--sky-soft);
+      }
+      #segWindLvl {
+        flex-wrap: nowrap;
+        gap: 4px;
+      }
+      #segWindLvl button {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 7px 2px;
+        font-size: 11px;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+      }
       .hint {
         font-size: 11px;
         color: var(--dim);
@@ -301,20 +346,21 @@
         color: var(--sky);
         border-color: #bcd9f5;
       }
+      .modechip.safe,
+      .modechip.hard,
+      .modechip.fail {
+        color: #000;
+        border: 1.5px solid #000;
+        font-weight: 600;
+      }
       .modechip.safe {
         background: var(--ok-soft);
-        color: var(--ok-ink);
-        border-color: #bfe3bb;
       }
       .modechip.hard {
-        background: #fdf1e3;
-        color: #9a5a06;
-        border-color: #f0d5b0;
+        background: #f3e6da;
       }
       .modechip.fail {
         background: var(--danger-soft);
-        color: #a02525;
-        border-color: #eab6b6;
       }
 
       .reading {
@@ -355,26 +401,26 @@
         color: var(--mut);
       }
       .pill.safe {
-        background: rgba(95, 217, 122, 0.22);
-        color: #5fd97a;
-        border-color: rgba(95, 217, 122, 0.6);
+        background: var(--ok-soft);
+        color: #0b4f0b;
+        border-color: #7fbf7f;
       }
       .pill.hard {
-        background: rgba(250, 178, 25, 0.22);
-        color: #fab219;
-        border-color: rgba(250, 178, 25, 0.6);
+        background: #f3e6da;
+        color: #6b3200;
+        border-color: #c08a5c;
       }
       .pill.fail {
-        background: rgba(255, 85, 85, 0.22);
-        color: #ff6b6b;
-        border-color: rgba(255, 85, 85, 0.6);
+        background: var(--danger-soft);
+        color: #7a1212;
+        border-color: #d58a8a;
       }
 
       .reading.result-row {
         margin-top: 10px;
         padding: 8px 12px;
-        background: var(--panel2);
-        border: 1.5px solid var(--line);
+        background: #fff;
+        border: 1.5px solid var(--txt);
         border-radius: 8px;
         display: flex;
         justify-content: space-between;
@@ -383,7 +429,7 @@
       .reading.result-row .k {
         font-size: 13px;
         font-weight: 700;
-        color: var(--txt);
+        color: #000;
         letter-spacing: 0.04em;
         text-transform: uppercase;
       }
@@ -400,27 +446,24 @@
         text-align: center;
       }
       .pill-result.safe {
-        background: rgba(95, 217, 122, 0.25);
-        color: #5fd97a;
-        border-color: #5fd97a;
-        box-shadow: 0 0 10px rgba(95, 217, 122, 0.2);
+        background: #fff;
+        color: #0b4f0b;
+        border-color: #0b4f0b;
       }
       .pill-result.hard {
-        background: rgba(250, 178, 25, 0.25);
-        color: #fab219;
-        border-color: #fab219;
-        box-shadow: 0 0 10px rgba(250, 178, 25, 0.2);
+        background: #fff;
+        color: #000;
+        border-color: #000;
       }
       .pill-result.fail {
-        background: rgba(255, 85, 85, 0.25);
-        color: #ff6b6b;
-        border-color: #ff6b6b;
-        box-shadow: 0 0 10px rgba(255, 85, 85, 0.2);
+        background: #fff;
+        color: #7a1212;
+        border-color: #7a1212;
       }
       .pill-result.predict {
-        background: rgba(143, 194, 255, 0.18);
-        color: #8fc2ff;
-        border-color: rgba(143, 194, 255, 0.6);
+        background: #fff;
+        color: #0f3a6e;
+        border-color: #0f3a6e;
       }
 
       .fbwrap {
@@ -436,7 +479,8 @@
         align-items: flex-start;
         font-size: 12px;
         line-height: 1.4;
-        color: var(--txt);
+        font-weight: 600;
+        color: #0b0f14;
         background: var(--panel2);
         border: 1px solid var(--line);
         border-left: 3px solid var(--dim);
@@ -448,8 +492,8 @@
         background: var(--ok-soft);
       }
       .fb.warn {
-        border-left-color: var(--warn);
-        background: #fdf7e8;
+        border-left-color: #8a4a12;
+        background: #f1e9e1;
       }
       .fb.bad {
         border-left-color: var(--danger);
@@ -457,8 +501,21 @@
       }
       .fb .ic {
         font-size: 13px;
+        font-weight: 700;
         flex: 0 0 auto;
         line-height: 1.3;
+        color: #0b0f14;
+        min-width: 12px;
+        text-align: center;
+      }
+      .fb.ok .ic {
+        color: #0b4f0b;
+      }
+      .fb.warn .ic {
+        color: #6b3200;
+      }
+      .fb.bad .ic {
+        color: #7a1212;
       }
 
       .logsect {
@@ -820,7 +877,7 @@
               <b>Configure Mission Parameters:</b> In the <b>Mission Setup</b> panel, select your <b>Capsule Type</b> (Light: 1,000 kg, Medium: 3,000 kg, or Heavy: 6,000 kg) and <b>Payload</b> (Empty, Equipment +500 kg, or 1&ndash;3 Astronauts at +100 kg each).
             </li>
             <li>
-              <b>Set Parachute &amp; Descent Conditions:</b> Choose a <b>Parachute Size</b> (Small: 10 m, Medium: 20 m, Large: 30 m), a <b>Deployment Height</b> (Low: 1,000 m, Medium: 2,000 m, High: 3,000 m), and set <b>Wind Speed</b> (No Wind: 0 m/s, Mild: 5 m/s, or Strong: 10 m/s).
+              <b>Set Parachute &amp; Descent Conditions:</b> Choose a <b>Parachute Size</b> (Small: 10 m, Medium: 20 m, Large: 30 m), a <b>Deployment Height</b> (Low: 1,000 m, Medium: 2,000 m, High: 3,000 m), then set the wind with two separate controls: <b>Wind Direction</b> (the arrow pad chooses where the wind blows from &mdash; left, upper left, above, upper right, right, or No Wind) and <b>Wind Speed</b> (Very Low: 1 m/s, Low: 2 m/s, Medium: 3 m/s, High: 4 m/s, Very High: 5 m/s).
             </li>
             <li>
               <b>Launch Mission:</b> Click <b>Start Mission</b> to commence atmospheric entry. Watch the aerothermal plasma glow bleed off orbital velocity under the heat shield, followed by canopy deployment, deceleration, and crosswind drift.
@@ -829,10 +886,10 @@
               <b>Track Telemetry &amp; Splashdown:</b> Observe live altitude, speed, drift displacement, and elapsed fall time. When the capsule touches water, impact rating is evaluated: <b>Safe</b> (&le; 8.5 m/s), <b>Hard</b> (8.5&ndash;14.0 m/s), or <b>Failed</b> (&gt; 14.0 m/s).
             </li>
             <li>
-              <b>Verify Mission Success:</b> Full mission success requires achieving a <b>Safe</b> landing velocity <b>and</b> touching down within the <b>Recovery Target Zone</b> (&plusmn;700 m).
+              <b>Verify Mission Success:</b> Full mission success requires achieving a <b>Safe</b> landing velocity <b>and</b> touching down within the <b>Recovery Target Zone</b> (&plusmn;700 m) marked on the water. The zone can sit anywhere to the left or right; steer the drift toward it with the wind direction and speed.
             </li>
             <li>
-              <b>Analyze Observations &amp; Reset:</b> Compare recorded trials in the <b>Observation Log</b> table below the stage, then click <b>Reset</b> to adjust parameters and test new configurations.
+              <b>Analyze Observations &amp; Reset:</b> Compare recorded trials in the <b>Observation Log</b> table below the stage, then click <b>Reset</b> to test new configurations. Each <b>Reset</b> moves the target zone to a new random position on the left or right.
             </li>
           </ol>
         </div>
@@ -855,7 +912,7 @@
               <b>Deployment Altitude &amp; Braking Distance:</b> Parachutes require sufficient altitude and time to decelerate the capsule to terminal speed. <b>High deployment (3,000 m)</b> allows full braking, while <b>Low deployment (1,000 m)</b> risks impacting the water before reaching terminal velocity ("late-deployment" failure).
             </li>
             <li>
-              <b>Crosswind Drift &amp; Recovery Zone:</b> Horizontal wind displaces the capsule downwind: <b>Drift (d) = v<sub>wind</sub> &times; t<sub>fall</sub></b>. Slower-falling capsules spend more time aloft, causing greater lateral drift under mild (2 m/s) and strong (5 m/s) winds that can blow them outside the designated <b>Recovery Target Zone</b> (&plusmn;700 m).
+              <b>Crosswind Drift &amp; Recovery Zone:</b> Sideways wind carries the capsule along with it: <b>Drift (d) = v<sub>wind</sub> &times; t<sub>fall</sub></b>. Slower-falling capsules spend more time aloft, so the same wind carries them further. Wind from above pushes the capsule down faster, raising splashdown speed and shortening the fall; wind from an upper corner does a bit of both. Direction and speed together decide whether the capsule lands inside the <b>Recovery Target Zone</b> (&plusmn;700 m).
             </li>
             <li>
               <b>Splashdown Ratings &amp; G-Forces:</b> Touchdown impact is rated for crew survivability: <b>Safe</b> (&le; 8.5 m/s, &lt; 4 g, capsule floats upright), <b>Hard</b> (8.5&ndash;14.0 m/s, 4&ndash;10 g, risk of crew injury/structural damage), and <b>Failed</b> (&gt; 14.0 m/s, &gt; 10 g, catastrophic breach or sinking).
@@ -922,13 +979,28 @@
         </div>
 
         <div class="ctrl">
-          <div class="row"><label>Wind Speed</label><span class="val" id="vWind">&mdash;</span></div>
-          <div class="seg" id="segWind">
-            <button data-v="none">No Wind</button>
-            <button data-v="mild">Mild</button>
-            <button data-v="strong">Strong</button>
+          <div class="row"><label>Wind Direction</label><span class="val" id="vWind">&mdash;</span></div>
+          <div class="windarch" id="padWind" aria-label="Where the wind blows from">
+            <button data-f="TL" title="Wind from the upper left">&#8600;</button>
+            <button data-f="T" title="Wind from above">&#8595;</button>
+            <button data-f="TR" title="Wind from the upper right">&#8601;</button>
+            <button data-f="L" title="Wind from the left">&#8594;</button>
+            <button data-f="none" class="none" title="No wind">No Wind</button>
+            <button data-f="R" title="Wind from the right">&#8592;</button>
           </div>
           <div class="hint" id="hWind"></div>
+        </div>
+
+        <div class="ctrl">
+          <div class="row"><label>Wind Speed</label><span class="val" id="vWindSpd">&mdash;</span></div>
+          <div class="seg" id="segWindLvl">
+            <button data-l="vlow">V.Low</button>
+            <button data-l="low">Low</button>
+            <button data-l="med">Medium</button>
+            <button data-l="high">High</button>
+            <button data-l="vhigh">V.High</button>
+          </div>
+          <div class="hint" id="hWindSpd"></div>
         </div>
       </section>
 
@@ -953,6 +1025,7 @@
         <div class="reading"><span class="k">Re-entry Speed</span><span class="v" id="oReentry">&mdash;</span></div>
         <div class="reading"><span class="k">Splashdown Speed</span><span class="v" id="oSplash">&mdash;</span></div>
         <div class="reading"><span class="k">Fall Time</span><span class="v" id="oFall">&mdash;</span></div>
+        <div class="reading"><span class="k">Target Zone</span><span class="v" id="oZone">&mdash;</span></div>
         <div class="reading"><span class="k">Drift Distance</span><span class="v" id="oDrift">&mdash;</span></div>
         <div class="reading"><span class="k">Landing Impact</span><span class="v" id="oImpact">&mdash;</span></div>
         <div class="reading result-row"><span class="k">Mission Result</span><span class="v" id="oResult">&mdash;</span></div>
@@ -1017,11 +1090,23 @@
         medium: { name: "Medium", alt: 2000, note: "Opens at 2,000 m above the water" },
         high:   { name: "High",   alt: 3000, note: "Opens at 3,000 m — most time to slow down" },
       };
-      const WIND = {
-        none:   { name: "No Wind", v: 0, note: "Still air — the capsule lands where it deploys" },
-        mild:   { name: "Mild",    v: 2, note: "2 m/s crosswind — slight sideways drift" },
-        strong: { name: "Strong",  v: 5, note: "5 m/s crosswind — strong sideways drift" },
+      // Where the wind blows FROM. x = sideways push (+ right), y = downward push, as fractions of wind speed.
+      const WIND_FROM = {
+        L:  { name: "the left",        ar: "→", x: 1,       y: 0 },
+        TL: { name: "the upper left",  ar: "↘", x: 0.7071,  y: 0.7071 },
+        T:  { name: "above",           ar: "↓", x: 0,       y: 1 },
+        TR: { name: "the upper right", ar: "↙", x: -0.7071, y: 0.7071 },
+        R:  { name: "the right",       ar: "←", x: -1,      y: 0 },
       };
+      const WIND_LVL = {
+        vlow:  { name: "Very Low",  short: "V.Low",  v: 1, n: 2 },
+        low:   { name: "Low",       short: "Low",    v: 2, n: 2 },
+        med:   { name: "Medium",    short: "Med",    v: 3, n: 3 },
+        high:  { name: "High",      short: "High",   v: 4, n: 3 },
+        vhigh: { name: "Very High", short: "V.High", v: 5, n: 4 },
+      };
+      const ZONE_MIN = 250;        // target-zone centre sits this far ...
+      const ZONE_MAX = 1450;       // ... to this far left or right of the no-wind landing point (m)
 
       // Splashdown speed = parachute terminal velocity:
       //   v = sqrt( 2 * TotalMass * g / (rho * ParachuteArea * Cd) )
@@ -1040,13 +1125,17 @@
         hard:  "The capsule landed too fast. Try a larger parachute or reduce payload.",
         fail:  "The parachute was too small for the total capsule mass.",
         drift: "Wind pushed the capsule away from the target zone.",
+        miss:  "The capsule landed outside the target zone. Use the wind direction and speed to steer it in.",
+        down:  "Wind from above pushed the capsule down faster than the parachute alone would allow.",
         late:  "The parachute opened too late to slow the capsule properly.",
         heavy: "More payload increases total mass and needs more slowing support.",
       };
 
       /* ---------------- state ---------------- */
       const S = {
-        cap: "medium", pay: "a2", chute: "medium", dep: "medium", wind: "none",
+        cap: "medium", pay: "a2", chute: "medium", dep: "medium",
+        windFrom: "none", windLvl: "med",  // windFrom: "none" or a WIND_FROM key
+        zoneX: 0,                          // target-zone centre, metres right (+) / left (-) of the no-wind landing point
         phase: "ready",     // ready | reentry | descent | splash | result
         running: false,
         animT: 0, lastTs: 0,
@@ -1063,12 +1152,28 @@
         return Math.max(0, Math.min(1, (v - 3) / 22));
       }
 
+      /* ---------------- wind + target zone ---------------- */
+      // wind speed (m/s) split into a sideways part (e, + right) and a downward part (d)
+      function windVec() {
+        if (S.windFrom === "none") return { v: 0, e: 0, d: 0 };
+        const f = WIND_FROM[S.windFrom], v = WIND_LVL[S.windLvl].v;
+        return { v: v, e: v * f.x, d: v * f.y };
+      }
+      function windShort() {
+        return S.windFrom === "none" ? "None" : WIND_LVL[S.windLvl].short + " " + WIND_FROM[S.windFrom].ar;
+      }
+      function sideOf(x) { return x > 0 ? "right" : x < 0 ? "left" : ""; }
+      function randomizeZone() {
+        const d = ZONE_MIN + Math.random() * (ZONE_MAX - ZONE_MIN);
+        S.zoneX = Math.round(Math.random() < 0.5 ? -d : d);
+      }
+
       /* ---------------- physics ---------------- */
       function chuteArea(dia) { return Math.PI * (dia / 2) * (dia / 2); }
 
       function computeCalc() {
         const cap = CAPSULE[S.cap], pay = PAYLOAD[S.pay], ch = CHUTE[S.chute];
-        const dep = DEPLOY[S.dep], wd = WIND[S.wind];
+        const dep = DEPLOY[S.dep], wd = windVec();
         const mass = cap.mass + pay.mass;
         const area = chuteArea(ch.dia);
         const v0 = V_AFTER_SHIELD[S.cap];
@@ -1085,15 +1190,21 @@
         // Analytical solution to aerodynamic deceleration over effective altitude drop:
         // v^2 = v_term^2 + (v0^2 - v_term^2) * exp(-2 * k * effectiveH)
         const decay = Math.exp(-2 * k * effectiveH);
-        const vSplash = Math.sqrt(vTerm * vTerm + (v0 * v0 - vTerm * vTerm) * decay);
+        const vAir = Math.sqrt(vTerm * vTerm + (v0 * v0 - vTerm * vTerm) * decay);
 
         // Deployment height directly affects fall time and available braking distance
-        const vAvg = (v0 + vSplash) * 0.5;
-        const fallTime = decay > 0.05
+        const vAvg = (v0 + vAir) * 0.5;
+        const fallAir = decay > 0.05
           ? (inflationDist / v0) + (effectiveH / vAvg)
-          : (dep.alt / vSplash);
-        const drift = wd.v * fallTime;
-        const drifted = drift > TARGET_R;
+          : (dep.alt / vAir);
+        // wind from above is sinking air: it adds to the descent rate all the way down
+        const vSplash = vAir + wd.d;
+        const fallTime = dep.alt / (dep.alt / fallAir + wd.d);
+        const driftE = wd.e * fallTime;          // signed: + right, - left
+        const drift = Math.abs(driftE);
+        // distance from the splashdown point to the target-zone centre
+        const miss = Math.abs(driftE - S.zoneX);
+        const drifted = miss > TARGET_R;
 
         let impact;
         if (vSplash <= SAFE_MAX) impact = "safe";
@@ -1103,13 +1214,15 @@
         const success = impact === "safe" && !drifted;
 
         // Late deployment warning: triggered when low deployment (1,000 m) prevented full deceleration
-        const lateDeploy = (S.dep === "low") && (vSplash > vTerm * 1.10 || vSplash > SAFE_MAX);
+        const lateDeploy = (S.dep === "low") && (vAir > vTerm * 1.10 || vAir > SAFE_MAX);
 
         return {
           mass, area, drag: ch.drag, v0,
           vTerm, vSplash, fallTime, drift,
           impact, success, lateDeploy, drifted,
-          depAlt: dep.alt, windV: wd.v, payMass: pay.mass,
+          driftE, miss, vAir,
+          depAlt: dep.alt, windV: wd.v, windE: wd.e, downV: wd.d,
+          payMass: pay.mass,
           chuteName: ch.name, capName: cap.name, payName: pay.name,
         };
       }
@@ -1123,18 +1236,20 @@
           t,
           h: Math.max(0, c.depAlt * (1 - progress)),
           v: currentV,
-          x: c.windV * t,
+          x: c.windE * t,
         };
       }
 
       function buildFeedback(c) {
         const out = [];
         if (c.impact === "safe") out.push({ cls: "ok", ic: "✔", t: FB.safe });
-        else if (c.impact === "hard") out.push({ cls: "warn", ic: "⚠", t: FB.hard });
+        else if (c.impact === "hard") out.push({ cls: "warn", ic: "!", t: FB.hard });
         else out.push({ cls: "bad", ic: "✖", t: FB.fail });
 
         if (c.lateDeploy) out.push({ cls: "warn", ic: "⏱", t: FB.late });
-        if (c.drifted) out.push({ cls: "warn", ic: "→", t: FB.drift });
+        if (c.downV > 0 && c.impact !== "safe" && c.vAir <= SAFE_MAX)
+          out.push({ cls: "warn", ic: "↓", t: FB.down });
+        if (c.drifted) out.push({ cls: "warn", ic: "→", t: c.windE !== 0 ? FB.drift : FB.miss });
         if (c.payMass >= 150 && c.impact !== "safe")
           out.push({ cls: "warn", ic: "⚖", t: FB.heavy });
 
@@ -1160,11 +1275,15 @@
         document.getElementById("oReentry").innerHTML =
           REENTRY_KMS.toFixed(1) + " km/s <small>&rarr; " + (view.v0 / 1000).toFixed(2) + " km/s post-shield</small>";
 
+        document.getElementById("oZone").innerHTML =
+          Math.abs(S.zoneX) + " m " + sideOf(S.zoneX) + " <small>of centre</small>";
+        const dirTxt = (v) => (v.drift >= 0.5 ? " " + sideOf(v.driftE) : "");
+
         if (done) {
           document.getElementById("oSplash").innerHTML = fmtSplash(view.vSplash);
           document.getElementById("oFall").textContent = view.fallTime.toFixed(1) + " s";
           document.getElementById("oDrift").innerHTML =
-            Math.round(view.drift) + " m " +
+            Math.round(view.drift) + " m" + dirTxt(view) + " " +
             (view.drifted ? '<small style="color:var(--danger)">off target</small>'
                           : '<small style="color:var(--ok-ink)">in zone</small>');
           document.getElementById("oImpact").innerHTML =
@@ -1176,10 +1295,10 @@
             resText = "✔ SUCCESS";
           } else if (view.drifted && view.impact === "safe") {
             resClass = "hard";
-            resText = "⚠ DRIFTED OFF-TARGET";
+            resText = "! LANDED OFF-TARGET";
           } else if (view.impact === "hard") {
             resClass = "hard";
-            resText = "⚠ HARD SPLASHDOWN";
+            resText = "! HARD SPLASHDOWN";
           } else {
             resClass = "fail";
             resText = "✖ FAILED / RETRY";
@@ -1195,10 +1314,10 @@
           document.getElementById("oFall").innerHTML =
             '<small style="color:var(--dim)">predicted ' + c.fallTime.toFixed(1) + " s</small>";
           document.getElementById("oDrift").innerHTML =
-            '<small style="color:var(--dim)">predicted ' + Math.round(c.drift) + " m</small>";
+            '<small style="color:var(--dim)">predicted ' + Math.round(c.drift) + " m" + dirTxt(c) + "</small>";
           document.getElementById("oImpact").innerHTML =
             '<small style="color:var(--dim)">predicted ' + pill(c.impact.toUpperCase(), c.impact) + "</small>";
-          const predText = c.success ? "PREDICTED: SUCCESS" : (c.drifted && c.impact === "safe" ? "PREDICTED: DRIFT" : (c.impact === "hard" ? "PREDICTED: HARD" : "PREDICTED: RETRY"));
+          const predText = c.success ? "PREDICTED: SUCCESS" : (c.drifted && c.impact === "safe" ? "PREDICTED: OFF-TARGET" : (c.impact === "hard" ? "PREDICTED: HARD" : "PREDICTED: RETRY"));
           document.getElementById("oResult").innerHTML =
             '<span class="pill-result predict">' + predText + '</span>';
           document.getElementById("outNote").textContent =
@@ -1230,7 +1349,7 @@
           chuteDia: CHUTE[S.chute].dia,
           chuteArea: Math.round(c.area),
           dep: DEPLOY[S.dep].alt,
-          wind: WIND[S.wind].v,
+          wind: windShort(),
           splashKms: (c.vSplash / 1000).toFixed(3),
           splashMs: c.vSplash.toFixed(1),
           fallTime: c.fallTime.toFixed(1),
@@ -1291,9 +1410,9 @@
       }
       window.addEventListener("resize", fit);
 
-      const ALT_SPAN = 3600;          // metres shown between waterline and sky top
+      const ALT_SPAN = 4500;          // metres shown between waterline and sky top
       function skyTopY() { return CH * 0.07; }
-      function waterY() { return CH * 0.84; }
+      function waterY() { return CH * 0.86; }
       function yOf(altM) {
         const wy = waterY(), ty = skyTopY();
         return wy - (Math.max(0, altM) / ALT_SPAN) * (wy - ty);
@@ -1369,7 +1488,7 @@
 
         // target zone on the water
         driftPxPerM = (CW * 0.16) / TARGET_R;
-        const cx = CW * 0.5;
+        const cx = CW * 0.5 + S.zoneX * driftPxPerM;
         const half = TARGET_R * driftPxPerM;
         ctx.strokeStyle = "rgba(255,255,255,0.55)";
         ctx.lineWidth = 2;
@@ -1382,27 +1501,37 @@
         ctx.textAlign = "center";
         ctx.fillText("target zone", cx, wy + 20);
 
-        // wind arrows
-        const wv = WIND[S.wind].v;
-        if (wv > 0) {
-          const n = wv >= 5 ? 3 : 2;
-          ctx.strokeStyle = "rgba(255,255,255,0.5)";
-          ctx.fillStyle = "rgba(255,255,255,0.5)";
-          ctx.lineWidth = 2;
-          for (let i = 0; i < n; i++) {
-            const ax = CW * 0.62 + i * 26;
-            const ay = CH * 0.12 + i * 16;
-            ctx.beginPath();
-            ctx.moveTo(ax, ay);
-            ctx.lineTo(ax + 20, ay);
-            ctx.lineTo(ax + 14, ay - 4);
-            ctx.moveTo(ax + 20, ay);
-            ctx.lineTo(ax + 14, ay + 4);
-            ctx.stroke();
-          }
-          ctx.textAlign = "left";
-          ctx.fillText(wv + " m/s wind", CW * 0.62, CH * 0.12 - 12);
+        drawWind();
+      }
+
+      // streams of air entering the open sky above the 3 km line from the chosen side / upper corner
+      function drawWind() {
+        if (S.windFrom === "none") return;
+        const f = WIND_FROM[S.windFrom], n = WIND_LVL[S.windLvl].n;
+        const top = 84, bot = Math.max(top + 30, yOf(3000) - 16);
+        const ax = { L: 0.1, TL: 0.16, T: 0.72, TR: 0.84, R: 0.9 }[S.windFrom] * CW;
+        const ay = f.y === 0 ? (top + bot) / 2 : top + (bot - top) * 0.3;
+        const len = 26, now = performance.now() / 1000;
+        ctx.save();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        for (let i = 0; i < n; i++) {
+          const ph = (now * 0.7 + i * 0.37) % 1;          // each stream slides along the flow and fades
+          const side = (i - (n - 1) / 2) * 17;
+          const x = ax - f.y * side + f.x * (ph * 22 - 11);
+          const y = ay + f.x * side + f.y * (ph * 22 - 11);
+          const tx = x + f.x * len, ty = y + f.y * len;
+          ctx.globalAlpha = 0.25 + 0.5 * Math.sin(Math.PI * ph);
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(tx, ty);
+          ctx.lineTo(tx - f.x * 7 + f.y * 4, ty - f.y * 7 - f.x * 4);
+          ctx.moveTo(tx, ty);
+          ctx.lineTo(tx - f.x * 7 - f.y * 4, ty - f.y * 7 + f.x * 4);
+          ctx.stroke();
         }
+        ctx.restore();
       }
 
       function drawCapsule(x, y, w, rot, plasma, bloom, collapsing, alpha) {
@@ -1701,7 +1830,7 @@
           S.splashDone = true;
           S.tSplash = S.animT;
           const cx = CW * 0.5;
-          let px = cx + c.drift * driftPxPerM;
+          let px = cx + c.driftE * driftPxPerM;
           px = Math.max(cx - CW * 0.44, Math.min(cx + CW * 0.44, px));
           const sev = impactSeverity(c.vSplash);
           spawnSplash(px, sev, c.impact);
@@ -1714,7 +1843,7 @@
           const tS = S.animT - S.tSplash;
           if (tS > 0.15 && tS < 3.4 && Math.random() < 0.6) {
             const cx = CW * 0.5;
-            let px = Math.max(cx - CW * 0.44, Math.min(cx + CW * 0.44, cx + S.calc.drift * driftPxPerM));
+            let px = Math.max(cx - CW * 0.44, Math.min(cx + CW * 0.44, cx + S.calc.driftE * driftPxPerM));
             spawnBubbles(px, waterY() + 10 + tS * 22, 2);
           }
         }
@@ -1769,7 +1898,7 @@
 
         const PB = playbackDur();
         let capX = cx, capY = 0, rot = 0, plasma = 0, bloom = 0, spd = "", ftxt = "";
-        const windTilt = { none: 0, mild: 0.05, strong: 0.11 }[S.wind];
+        const windTilt = c.windE * 0.022;
 
         if (S.phase === "reentry") {
           const p = Math.min(1, S.animT / REENTRY_DUR);
@@ -1790,13 +1919,13 @@
           const s = trajAt(c, realT);
           capY = yOf(s.h) - w * 0.16;
           let px = cx + s.x * driftPxPerM;
-          S.driftedVisual = px > cx + CW * 0.44;
+          S.driftedVisual = offStage(px, cx);
           capX = Math.max(cx - CW * 0.44, Math.min(cx + CW * 0.44, px));
           bloom = Math.min(1, dt2 / BLOOM_DUR);
           plasma = Math.max(0, 0.5 - dt2 / 0.5) * 0.8;
           const sway = Math.sin(S.animT * 1.8) * 0.05;
           rot = sway + windTilt;
-          S.sinkDir = c.drift > 1 ? 1 : -1;
+          S.sinkDir = c.driftE > 1 ? 1 : -1;
           // visual "snap": the canopy grabs and speed drops from heat-shield exit
           // to terminal over the first moment of the descent
           const SNAP = 0.8;
@@ -1805,7 +1934,7 @@
           spd = (shownV / 1000).toFixed(3) + " km/s (" + Math.round(shownV) + " m/s)";
           ftxt = realT.toFixed(1) + " s";
           drawCapsule(capX, capY, w, rot, plasma, bloom, false);
-          if (S.driftedVisual) drawDriftArrow();
+          if (S.driftedVisual) drawDriftArrow(S.driftedVisual);
           const st = dt2 < 1.0
             ? "PARACHUTE DEPLOYED"
             : fast > 0.55 ? "DESCENDING · FAST" : "DESCENDING";
@@ -1816,8 +1945,8 @@
         // ---- splashdown & result: the animation matches the verdict ----
         const tS = S.animT - S.tSplash;
         const impact = c.impact;
-        let px = cx + c.drift * driftPxPerM;
-        S.driftedVisual = px > cx + CW * 0.44;
+        let px = cx + c.driftE * driftPxPerM;
+        S.driftedVisual = offStage(px, cx);
         capX = Math.max(cx - CW * 0.44, Math.min(cx + CW * 0.44, px));
 
         const pose = capsulePose(tS, impact, w, windTilt, S.sinkDir);
@@ -1840,7 +1969,7 @@
           ctx.stroke();
           ctx.globalAlpha = 1;
         }
-        if (S.driftedVisual) drawDriftArrow();
+        if (S.driftedVisual) drawDriftArrow(S.driftedVisual);
 
         const hudState =
           S.phase === "result" && S.result
@@ -1901,21 +2030,27 @@
         ctx.restore();
       }
 
-      function drawDriftArrow() {
+      // +1 / -1 when the capsule has drifted past the right / left edge of the stage, else 0
+      function offStage(px, cx) {
+        return px > cx + CW * 0.44 ? 1 : px < cx - CW * 0.44 ? -1 : 0;
+      }
+      function drawDriftArrow(dir) {
         const y = CH * 0.5;
-        ctx.fillStyle = "#ffd27a";
-        ctx.strokeStyle = "#ffd27a";
+        const tail = dir > 0 ? CW - 46 : 46;
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.moveTo(CW - 46, y);
-        ctx.lineTo(CW - 18, y);
-        ctx.lineTo(CW - 26, y - 8);
-        ctx.moveTo(CW - 18, y);
-        ctx.lineTo(CW - 26, y + 8);
+        ctx.moveTo(tail, y);
+        ctx.lineTo(tail + 28 * dir, y);
+        ctx.lineTo(tail + 20 * dir, y - 8);
+        ctx.moveTo(tail + 28 * dir, y);
+        ctx.lineTo(tail + 20 * dir, y + 8);
         ctx.stroke();
         ctx.font = "bold 10px 'IBM Plex Mono', monospace";
-        ctx.textAlign = "right";
-        ctx.fillText("DRIFTING OFF", CW - 46, y - 14);
+        ctx.textAlign = dir > 0 ? "right" : "left";
+        ctx.textBaseline = "middle";
+        ctx.fillText("DRIFTING OFF", tail, y - 14);
       }
 
       function drawHUD(state, speed, time) {
@@ -1926,6 +2061,7 @@
           ["STATE", state],
           ["SPEED", speed],
           ["FALL T", time],
+          ["WIND", windShort()],
         ];
         const bw = 186, bh = 14 + lines.length * 15;
         ctx.fillStyle = "rgba(8,14,28,0.55)";
@@ -1976,7 +2112,7 @@
         ctx.font = "700 14px 'Orbitron', Arial, sans-serif";
         const outcomeText = r.success
           ? "✔ MISSION SUCCESS"
-          : (r.drifted && r.impact === "safe" ? "⚠ RETRY · DRIFTED OFF-TARGET" : "✖ MISSION RETRY");
+          : (r.drifted && r.impact === "safe" ? "! RETRY · LANDED OFF-TARGET" : "✖ MISSION RETRY");
         ctx.fillText(outcomeText, CW / 2, by + 58);
 
         ctx.strokeStyle = "#e2e8f0";
@@ -1994,7 +2130,7 @@
         );
         ctx.fillStyle = r.drifted ? "#b01b1b" : "#475569";
         ctx.fillText(
-          "Drift: " + Math.round(r.drift) + " m " + (r.drifted ? "(Off Target > " + TARGET_R + "m)" : "(In Recovery Zone)"),
+          "Zone centre: " + Math.round(r.miss) + " m " + (r.drifted ? "(Off Target > " + TARGET_R + "m)" : "(In Recovery Zone)"),
           CW / 2, by + 120
         );
 
@@ -2051,7 +2187,45 @@
       wireSeg("segPay", "pay", "vPay", "hPay", PAYLOAD, (d) => "+" + d.mass + " kg");
       wireSeg("segChute", "chute", "vChute", "hChute", CHUTE, (d) => d.dia + " m · " + d.drag);
       wireSeg("segDep", "dep", "vDep", "hDep", DEPLOY, (d) => d.alt.toLocaleString() + " m");
-      wireSeg("segWind", "wind", "vWind", "hWind", WIND, (d) => d.v + " m/s");
+
+      function syncWind() {
+        document.getElementById("padWind").querySelectorAll("button").forEach((b) => {
+          b.classList.toggle("on", b.dataset.f === S.windFrom);
+        });
+        const lv = document.getElementById("segWindLvl");
+        lv.querySelectorAll("button").forEach((b) => {
+          b.classList.toggle("on", b.dataset.l === S.windLvl);
+        });
+        const none = S.windFrom === "none";
+        const L = WIND_LVL[S.windLvl];
+        let note = "Still air — the capsule comes straight down.";
+        if (!none) {
+          const f = WIND_FROM[S.windFrom];
+          note = "Wind from " + f.name + " — " +
+            (f.x === 0 ? "pushes the capsule down faster."
+              : "pushes the capsule to the " + sideOf(f.x) + (f.y > 0 ? " and down faster." : "."));
+        }
+        document.getElementById("vWind").innerHTML =
+          none ? "No Wind" : WIND_FROM[S.windFrom].ar + " from " + WIND_FROM[S.windFrom].name.replace("the ", "");
+        document.getElementById("hWind").innerHTML = note;
+        document.getElementById("vWindSpd").innerHTML = L.name + " &middot; " + L.v + " m/s";
+        document.getElementById("hWindSpd").innerHTML = none
+          ? L.v + " m/s — takes effect once a wind direction is chosen."
+          : L.v + " m/s — faster wind pushes the capsule harder.";
+      }
+      function wireWind(id, apply) {
+        document.getElementById(id).querySelectorAll("button").forEach((b) => {
+          b.addEventListener("click", () => {
+            if (S.running && S.phase !== "result") return;
+            apply(b);
+            if (S.phase === "result") resetScene(false);
+            syncWind();
+            refreshOutputs();
+          });
+        });
+      }
+      wireWind("padWind", (b) => { S.windFrom = b.dataset.f; });
+      wireWind("segWindLvl", (b) => { S.windLvl = b.dataset.l; });
 
       function initSegs() {
         [
@@ -2059,12 +2233,12 @@
           ["segPay", "pay", "vPay", "hPay", PAYLOAD, (d) => "+" + d.mass + " kg"],
           ["segChute", "chute", "vChute", "hChute", CHUTE, (d) => d.dia + " m · " + d.drag],
           ["segDep", "dep", "vDep", "hDep", DEPLOY, (d) => d.alt.toLocaleString() + " m"],
-          ["segWind", "wind", "vWind", "hWind", WIND, (d) => d.v + " m/s"],
         ].forEach(([id, key, valEl, hintEl, map, fn]) => {
           syncSeg(id, key);
           document.getElementById(valEl).innerHTML = fn(map[S[key]]);
           document.getElementById(hintEl).innerHTML = map[S[key]].note;
         });
+        syncWind();
       }
 
       /* ---------------- start / reset ---------------- */
@@ -2107,7 +2281,10 @@
       }
 
       document.getElementById("btnStart").addEventListener("click", startMission);
-      document.getElementById("btnReset").addEventListener("click", () => resetScene(false));
+      document.getElementById("btnReset").addEventListener("click", () => {
+        randomizeZone();          // every reset moves the target zone somewhere new
+        resetScene(false);
+      });
       document.getElementById("btnClear").addEventListener("click", () => { S.log = []; S.runN = 0; renderLog(); });
 
       (function () {
@@ -2304,6 +2481,7 @@
 
       /* ---------------- boot ---------------- */
       fit();
+      randomizeZone();
       initSegs();
       refreshOutputs();
       renderLog();
