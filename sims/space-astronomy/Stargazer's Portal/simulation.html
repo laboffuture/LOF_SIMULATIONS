@@ -807,7 +807,7 @@
             </li>
             <li><b>Flat, Pannable Sky Projection:</b> Treating the entire sky as one large, fixed, pannable flat map using equirectangular projection where RA wraps around seamlessly at the edges (panning past 360° loops back to 0°).</li>
             <li><b>Real Brightness Rendering:</b> Display sizes follow the formula <code>displaySize = baseSize × 10^(-0.2 × magnitude)</code>, making bright stars noticeably larger and faint stars subtle.</li>
-            <li><b>Difficulty Progression:</b> As rounds advance, magnitude cutoffs progressively lower (allowing fainter stars up to magnitude 4–5 into the sky) and the pannable area widens, making the correct pattern genuinely harder to pick out from background clutter.</li>
+            <li><b>Difficulty Progression:</b> As rounds advance, magnitude cutoffs progressively lower (allowing fainter stars up to magnitude 4–5 into the sky), making the correct pattern genuinely harder to pick out from background clutter.</li>
           </ul>
         </div>
       </div>
@@ -1604,15 +1604,9 @@
           return Math.max(width * 1.5, 1200) * state.camera.zoom;
         }
 
+        // The whole sky is reachable in every round, from pole to pole.
         function clampDec(dec) {
-          const target = getCurrentTarget();
-          if (target.tier === 1) {
-            return Math.max(target.centerDec - 30, Math.min(target.centerDec + 30, dec));
-          }
-          if (target.tier === 2) {
-            return Math.max(target.centerDec - 50, Math.min(target.centerDec + 50, dec));
-          }
-          return Math.max(-80, Math.min(80, dec));
+          return Math.max(-85, Math.min(85, dec));
         }
 
         function celestialToScreen(ra, dec) {
