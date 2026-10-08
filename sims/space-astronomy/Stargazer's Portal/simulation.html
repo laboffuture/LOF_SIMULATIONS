@@ -311,6 +311,7 @@
         overflow: hidden;
         cursor: grab;
         background: #03060c;
+        touch-action: none;
       }
       #stage.panning {
         cursor: grabbing;
@@ -416,6 +417,30 @@
         box-shadow: inset 0 0 0 2px #06121c, 0 0 14px rgba(127, 211, 255, 0.5);
       }
 
+      /* ---- CORNER BUTTONS: ZOOM IN / OUT ---- */
+      #zoomControl {
+        position: absolute;
+        right: 18px;
+        bottom: 14px;
+        z-index: 20;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .zoom-btn {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        font-size: 18px;
+        line-height: 1;
+      }
+      .zoom-btn:disabled {
+        opacity: 0.4;
+        cursor: default;
+        border-color: var(--line2);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      }
+
       /* ---- BOTTOM STRIP: SCROLLABLE STAR-MAP SCRAPBOOK ---- */
       #bottomStrip {
         flex: 0 0 auto;
@@ -518,20 +543,36 @@
         white-space: nowrap;
       }
 
-      /* ---- COMPLETION REVEAL OVERLAY ---- */
+      /* ---- DISCOVERY CELEBRATION: INFO CARD (LEFT) + TWIRLING CONSTELLATION (RIGHT) ---- */
       #completionOverlay {
         display: none;
         position: fixed;
         inset: 0;
-        background: rgba(4, 8, 14, 0.7);
+        background: rgba(3, 6, 12, 0.9);
         backdrop-filter: blur(6px);
         z-index: 100;
         align-items: center;
-        justify-content: center;
-        padding: 20px;
+        justify-content: flex-start;
       }
       #completionOverlay.show {
         display: flex;
+        animation: revealFade 0.6s ease both;
+      }
+      #revealCanvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+      .reveal-info {
+        position: relative;
+        width: 50%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
       }
       .reveal-box {
         background: #0c1824;
@@ -540,13 +581,42 @@
         border-radius: 12px;
         max-width: 460px;
         width: 100%;
-        padding: 24px 26px;
+        padding: 26px 28px;
         text-align: center;
-        position: relative;
+      }
+      #completionOverlay.show .reveal-box {
+        animation: revealSlideIn 0.7s 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+      }
+      @keyframes revealFade {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes revealSlideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-60px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      .reveal-tag {
+        font-family: var(--head);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--glow-gold);
+        margin-bottom: 8px;
       }
       .reveal-title {
         font-family: var(--head);
-        font-size: 20px;
+        font-size: 26px;
         font-weight: 800;
         letter-spacing: 1px;
         text-transform: uppercase;
@@ -555,34 +625,19 @@
       }
       .reveal-sub {
         font-family: var(--body);
-        font-size: 15px;
+        font-size: 17px;
         color: var(--mut);
-        margin-bottom: 14px;
-      }
-      .reveal-preview {
-        width: 120px;
-        height: 120px;
-        margin: 0 auto 16px;
-        background: #070e17;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      #revealCanvas {
-        width: 120px;
-        height: 120px;
+        margin-bottom: 16px;
       }
       .reveal-fact {
-        font-size: 14.5px;
+        font-size: 15.5px;
         line-height: 1.5;
         color: var(--txt);
         background: #08111b;
         border: 1px solid var(--line);
         border-radius: 8px;
-        padding: 12px 16px;
-        margin-bottom: 18px;
+        padding: 14px 16px;
+        margin-bottom: 20px;
       }
       .reveal-fact b {
         color: var(--glow-gold);
@@ -605,85 +660,105 @@
         transform: translateY(-1px);
         box-shadow: 0 0 14px rgba(127, 211, 255, 0.45);
       }
+      @media (max-width: 760px) {
+        #completionOverlay {
+          align-items: flex-end;
+        }
+        .reveal-info {
+          width: 100%;
+          height: 54%;
+          align-items: flex-start;
+        }
+      }
 
-      /* Scrapbook Recall Popup */
-      #recallOverlay {
+      /* ---- SCRAPBOOK CARD: SMALL, NON-BLOCKING, BOTTOM-LEFT OF THE SKY ---- */
+      #recallCard {
         display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(4, 8, 14, 0.7);
-        backdrop-filter: blur(6px);
-        z-index: 100;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-      }
-      #recallOverlay.show {
-        display: flex;
-      }
-      .recall-box {
-        background: #0c1824;
+        position: absolute;
+        left: 18px;
+        bottom: 14px;
+        z-index: 20;
+        width: 280px;
+        max-width: calc(100% - 90px);
+        background: rgba(11, 20, 30, 0.94);
         border: 1px solid var(--line2);
-        box-shadow: 0 0 40px rgba(127, 211, 255, 0.15);
-        border-radius: 12px;
-        max-width: 440px;
-        width: 100%;
-        padding: 22px 24px;
-        position: relative;
-        text-align: center;
+        border-radius: 10px;
+        padding: 12px 14px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        cursor: default;
+      }
+      #recallCard.show {
+        display: block;
+        animation: recallPop 0.22s ease-out both;
+      }
+      @keyframes recallPop {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.96);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
       }
       .recall-close {
         position: absolute;
-        top: 10px;
-        right: 12px;
+        top: 6px;
+        right: 8px;
         cursor: pointer;
         border: none;
         background: transparent;
         color: var(--mut);
-        font-size: 16px;
+        font-size: 13px;
         font-weight: 700;
-        padding: 4px 8px;
+        padding: 4px 6px;
       }
       .recall-close:hover {
         color: #fff;
       }
-      .recall-title {
-        font-family: var(--head);
-        font-size: 18px;
-        font-weight: 800;
-        text-transform: uppercase;
-        color: var(--glow);
-        margin-bottom: 2px;
-      }
-      .recall-sub {
-        font-family: var(--body);
-        font-size: 14px;
-        color: var(--mut);
-        margin-bottom: 12px;
+      .recall-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+        padding-right: 18px;
       }
       .recall-preview {
-        width: 100px;
-        height: 100px;
-        margin: 0 auto 14px;
+        width: 52px;
+        height: 52px;
+        flex-shrink: 0;
         background: #070e17;
         border: 1px solid var(--line);
         border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        overflow: hidden;
       }
       #recallCanvas {
-        width: 100px;
-        height: 100px;
+        display: block;
+        width: 52px;
+        height: 52px;
+      }
+      .recall-title {
+        font-family: var(--head);
+        font-size: 14px;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--glow);
+      }
+      .recall-sub {
+        font-family: var(--body);
+        font-size: 13px;
+        color: var(--mut);
       }
       .recall-fact {
-        font-size: 14px;
-        line-height: 1.5;
+        font-size: 13px;
+        line-height: 1.4;
         color: var(--txt);
-        margin-bottom: 16px;
+        margin-bottom: 10px;
       }
-      .recall-fact b {
-        color: var(--glow-gold);
+      .recall-btn {
+        font-size: 10px;
+        padding: 7px 12px;
       }
     </style>
   </head>
@@ -709,11 +784,12 @@
           <ol>
             <li>Look at the <b>target shape card</b> at the top left to see the constellation outline you are hunting for.</li>
             <li><b>Pan the sky</b> by dragging in any direction across the main view to locate the matching group of real stars.</li>
+            <li><b>Zoom</b> in or out with the mouse scroll wheel (or pinch on a touch screen), or use the <b>+ / &minus;</b> buttons in the bottom corner. Zoom in to separate stars that sit close together.</li>
             <li><b>Tap the stars</b> that form the pattern in any reasonable order. Correct taps light up and connect automatically with lines following the real constellation's line data.</li>
             <li>A wrong tap just doesn't connect — there is <b>no timer and no penalty</b> for wrong taps, keeping the experience low-pressure for pattern-recognition and collection.</li>
             <li>Tap the <b>HINT</b> button in the top corner to toggle an optional faint guide outline over the correct stars in the current view.</li>
-            <li>Once all the right stars are connected, the full constellation glows, its name appears, and a short <b>one-line fact</b> plays.</li>
-            <li>Completed shapes are collected in your <b>star-map scrapbook</b> at the bottom. Tap any collected constellation in the scrapbook to revisit its shape, name, and see it highlighted again in the sky!</li>
+            <li>Once all the right stars are connected, its name appears, then the constellation lifts out of the sky and twirls while a short <b>one-line fact</b> appears beside it.</li>
+            <li>Completed shapes are collected in your <b>star-map scrapbook</b> at the bottom. Tap any collected constellation in the scrapbook to pop up a small card with its shape, name, and fact, and to highlight it again in the sky.</li>
           </ol>
         </div>
 
@@ -751,8 +827,8 @@
             </div>
             <div class="target-meta">
               <span class="target-tag" id="targetTierLabel">Target Shape</span>
-              <span class="target-name" id="targetName">Ursa Major</span>
-              <span class="target-desc" id="targetDesc">The Big Dipper</span>
+              <span class="target-name" id="targetName">? ? ?</span>
+              <span class="target-desc" id="targetDesc">Connect the stars to reveal its name</span>
             </div>
           </div>
         </div>
@@ -760,6 +836,28 @@
         <!-- CORNER BUTTON: HINT OUTLINE TOGGLE -->
         <div id="cornerControl">
           <button type="button" class="corner-btn" id="hintBtn">Hint</button>
+        </div>
+
+        <!-- CORNER BUTTONS: ZOOM IN / OUT -->
+        <div id="zoomControl">
+          <button type="button" class="corner-btn zoom-btn" id="zoomInBtn" title="Zoom in" aria-label="Zoom in">+</button>
+          <button type="button" class="corner-btn zoom-btn" id="zoomOutBtn" title="Zoom out" aria-label="Zoom out">&minus;</button>
+        </div>
+
+        <!-- SCRAPBOOK CARD: SMALL POP-UP FOR A COLLECTED CONSTELLATION -->
+        <div id="recallCard">
+          <button type="button" class="recall-close" id="recallClose" aria-label="Close">✕</button>
+          <div class="recall-head">
+            <div class="recall-preview">
+              <canvas id="recallCanvas" width="104" height="104"></canvas>
+            </div>
+            <div>
+              <div class="recall-title" id="recallTitle"></div>
+              <div class="recall-sub" id="recallSub"></div>
+            </div>
+          </div>
+          <div class="recall-fact" id="recallFact"></div>
+          <button type="button" class="ovl-btn recall-btn" id="recallHighlightBtn">Highlight in Sky</button>
         </div>
       </div>
 
@@ -777,30 +875,17 @@
       </div>
     </div>
 
-    <!-- COMPLETION REVEAL OVERLAY -->
+    <!-- DISCOVERY CELEBRATION: INFO CARD ON THE LEFT, TWIRLING CONSTELLATION ON THE RIGHT -->
     <div id="completionOverlay">
-      <div class="reveal-box">
-        <div class="reveal-title" id="revealTitle">Ursa Major</div>
-        <div class="reveal-sub" id="revealSub">The Big Dipper</div>
-        <div class="reveal-preview">
-          <canvas id="revealCanvas" width="240" height="240"></canvas>
+      <canvas id="revealCanvas"></canvas>
+      <div class="reveal-info">
+        <div class="reveal-box">
+          <div class="reveal-tag">Constellation Discovered</div>
+          <div class="reveal-title" id="revealTitle"></div>
+          <div class="reveal-sub" id="revealSub"></div>
+          <div class="reveal-fact" id="revealFact"></div>
+          <button type="button" class="ovl-btn" id="nextTargetBtn">Next Target &rarr;</button>
         </div>
-        <div class="reveal-fact" id="revealFact"></div>
-        <button type="button" class="ovl-btn" id="nextTargetBtn">Next Target &rarr;</button>
-      </div>
-    </div>
-
-    <!-- SCRAPBOOK REVISIT OVERLAY -->
-    <div id="recallOverlay">
-      <div class="recall-box">
-        <button type="button" class="recall-close" id="recallClose">✕</button>
-        <div class="recall-title" id="recallTitle">Orion</div>
-        <div class="recall-sub" id="recallSub">The Hunter</div>
-        <div class="recall-preview">
-          <canvas id="recallCanvas" width="200" height="200"></canvas>
-        </div>
-        <div class="recall-fact" id="recallFact"></div>
-        <button type="button" class="ovl-btn" id="recallHighlightBtn">Highlight in Sky</button>
       </div>
     </div>
 
@@ -1303,7 +1388,8 @@
             dec: 56,
             targetRA: 184,
             targetDec: 56,
-            isGliding: false
+            isGliding: false,
+            zoom: 1
           },
 
           isDragging: false,
@@ -1314,6 +1400,7 @@
           draggedDistance: 0,
 
           highlightReplayId: null,
+          revealPending: false,
           time: 0
         };
 
@@ -1329,6 +1416,8 @@
         const targetDesc = document.getElementById("targetDesc");
 
         const hintBtn = document.getElementById("hintBtn");
+        const zoomInBtn = document.getElementById("zoomInBtn");
+        const zoomOutBtn = document.getElementById("zoomOutBtn");
         const scrapbookTrack = document.getElementById("scrapbookTrack");
         const collectedCount = document.getElementById("collectedCount");
         const emptyScrapbookMsg = document.getElementById("emptyScrapbookMsg");
@@ -1341,7 +1430,7 @@
         const revealCtx = revealCanvas.getContext("2d");
         const nextTargetBtn = document.getElementById("nextTargetBtn");
 
-        const recallOverlay = document.getElementById("recallOverlay");
+        const recallCard = document.getElementById("recallCard");
         const recallClose = document.getElementById("recallClose");
         const recallTitle = document.getElementById("recallTitle");
         const recallSub = document.getElementById("recallSub");
@@ -1419,14 +1508,21 @@
           state.highlightReplayId = null;
 
           targetTierLabel.textContent = `Round ${state.currentTargetIndex + 1} • Tier ${target.tier}`;
-          targetName.textContent = target.name;
-          targetDesc.textContent = target.desc;
+          updateTargetCardName();
 
           drawShapePreview(targetPreviewCtx, targetPreviewCanvas.width, targetPreviewCanvas.height, target);
 
           if (panToCenter) {
-            glideCameraTo(target.centerRA, target.centerDec);
+            glideCameraNear(target);
           }
+        }
+
+        // The name stays hidden until the learner has connected the shape in the sky.
+        function updateTargetCardName() {
+          const target = getCurrentTarget();
+          const revealed = state.completedConstellations.includes(target.id);
+          targetName.textContent = revealed ? target.name : "? ? ?";
+          targetDesc.textContent = revealed ? target.desc : "Connect the stars to reveal its name";
         }
 
         function drawShapePreview(pCtx, w, h, constell) {
@@ -1501,8 +1597,26 @@
 
         window.addEventListener("resize", resizeCanvas);
 
+        const MIN_ZOOM = 0.7;
+        const MAX_ZOOM = 6;
+
+        function getBaseSpan() {
+          return Math.max(width * 1.5, 1200) * state.camera.zoom;
+        }
+
+        function clampDec(dec) {
+          const target = getCurrentTarget();
+          if (target.tier === 1) {
+            return Math.max(target.centerDec - 30, Math.min(target.centerDec + 30, dec));
+          }
+          if (target.tier === 2) {
+            return Math.max(target.centerDec - 50, Math.min(target.centerDec + 50, dec));
+          }
+          return Math.max(-80, Math.min(80, dec));
+        }
+
         function celestialToScreen(ra, dec) {
-          const baseSpan = Math.max(width * 1.5, 1200);
+          const baseSpan = getBaseSpan();
 
           let diffRA = ra - state.camera.ra;
           while (diffRA > 180) diffRA -= 360;
@@ -1517,14 +1631,75 @@
         }
 
         function glideCameraTo(targetRA, targetDec) {
-          state.camera.targetRA = targetRA;
+          state.camera.targetRA = ((targetRA % 360) + 360) % 360;
           state.camera.targetDec = Math.max(-70, Math.min(70, targetDec));
           state.camera.isGliding = true;
         }
 
+        // Glide to the general area of a constellation rather than dead-centre on it,
+        // so the learner still has to pick the pattern out of the surrounding sky.
+        function glideCameraNear(constell) {
+          const degPerPx = 360 / getBaseSpan();
+          let offX, offY;
+          do {
+            const ang = Math.random() * Math.PI * 2;
+            const frac = 0.12 + Math.random() * 0.12;
+            offX = Math.cos(ang) * frac * width;
+            offY = Math.sin(ang) * frac * height;
+            // offX > 0 && offY < 0 would park the pattern under the target card
+          } while (offX > 0 && offY < 0);
+          glideCameraTo(constell.centerRA + offX * degPerPx, clampDec(constell.centerDec + offY * degPerPx));
+        }
+
+        /* ================= ZOOM ================= */
+        // Zooms about the screen point (ax, ay) so the sky under the cursor stays put.
+        function setZoom(newZoom, ax, ay) {
+          const z = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
+          if (z === state.camera.zoom) return;
+
+          const oldSpan = getBaseSpan();
+          const anchorRA = state.camera.ra + ((ax - width / 2) / oldSpan) * 360;
+          const anchorDec = state.camera.dec - ((ay - height / 2) / oldSpan) * 360;
+
+          state.camera.zoom = z;
+          const newSpan = getBaseSpan();
+
+          let newRA = anchorRA - ((ax - width / 2) / newSpan) * 360;
+          newRA = ((newRA % 360) + 360) % 360;
+          const newDec = clampDec(anchorDec + ((ay - height / 2) / newSpan) * 360);
+
+          state.camera.ra = newRA;
+          state.camera.dec = newDec;
+          state.camera.targetRA = newRA;
+          state.camera.targetDec = newDec;
+          state.camera.isGliding = false;
+
+          zoomInBtn.disabled = z >= MAX_ZOOM;
+          zoomOutBtn.disabled = z <= MIN_ZOOM;
+        }
+
+        stage.addEventListener(
+          "wheel",
+          (e) => {
+            e.preventDefault();
+            const rect = stage.getBoundingClientRect();
+            const delta = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
+            setZoom(state.camera.zoom * Math.exp(-delta * 0.0015), e.clientX - rect.left, e.clientY - rect.top);
+          },
+          { passive: false }
+        );
+
+        zoomInBtn.addEventListener("click", () => {
+          setZoom(state.camera.zoom * 1.4, width / 2, height / 2);
+        });
+
+        zoomOutBtn.addEventListener("click", () => {
+          setZoom(state.camera.zoom / 1.4, width / 2, height / 2);
+        });
+
         /* ================= INTERACTION: LOOK AROUND BY PANNING ================= */
         stage.addEventListener("mousedown", (e) => {
-          if (e.button !== 0) return;
+          if (e.button !== 0 || e.target !== skyCanvas) return;
           getAudioContext();
           state.isDragging = true;
           state.draggedDistance = 0;
@@ -1542,23 +1717,14 @@
           const dy = e.clientY - state.dragStartMouseY;
           state.draggedDistance += Math.abs(dx) + Math.abs(dy);
 
-          const baseSpan = Math.max(width * 1.5, 1200);
+          const baseSpan = getBaseSpan();
           const decSpan = baseSpan / 2;
 
           let newRA = state.dragStartRA - (dx / baseSpan) * 360;
           while (newRA >= 360) newRA -= 360;
           while (newRA < 0) newRA += 360;
 
-          let newDec = state.dragStartDec + (dy / decSpan) * 180;
-
-          const target = getCurrentTarget();
-          if (target.tier === 1) {
-            newDec = Math.max(target.centerDec - 30, Math.min(target.centerDec + 30, newDec));
-          } else if (target.tier === 2) {
-            newDec = Math.max(target.centerDec - 50, Math.min(target.centerDec + 50, newDec));
-          } else {
-            newDec = Math.max(-80, Math.min(80, newDec));
-          }
+          const newDec = clampDec(state.dragStartDec + (dy / decSpan) * 180);
 
           state.camera.ra = newRA;
           state.camera.dec = newDec;
@@ -1578,9 +1744,21 @@
           }
         });
 
+        let pinch = null;
+        function touchDistance(e) {
+          return Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+        }
+
         stage.addEventListener("touchstart", (e) => {
+          if (e.target !== skyCanvas) return;
           getAudioContext();
-          if (e.touches.length === 1) {
+          if (e.touches.length === 2) {
+            state.isDragging = false;
+            pinch = { dist: touchDistance(e), zoom: state.camera.zoom };
+          } else if (e.touches.length === 1) {
             state.isDragging = true;
             state.draggedDistance = 0;
             state.dragStartMouseX = e.touches[0].clientX;
@@ -1591,28 +1769,42 @@
         });
 
         stage.addEventListener("touchmove", (e) => {
+          if (pinch && e.touches.length === 2) {
+            const rect = stage.getBoundingClientRect();
+            setZoom(
+              (pinch.zoom * touchDistance(e)) / Math.max(1, pinch.dist),
+              (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left,
+              (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top
+            );
+            return;
+          }
           if (!state.isDragging || e.touches.length !== 1) return;
           const dx = e.touches[0].clientX - state.dragStartMouseX;
           const dy = e.touches[0].clientY - state.dragStartMouseY;
           state.draggedDistance += Math.abs(dx) + Math.abs(dy);
 
-          const baseSpan = Math.max(width * 1.5, 1200);
+          const baseSpan = getBaseSpan();
           const decSpan = baseSpan / 2;
 
           let newRA = state.dragStartRA - (dx / baseSpan) * 360;
           while (newRA >= 360) newRA -= 360;
           while (newRA < 0) newRA += 360;
 
-          let newDec = state.dragStartDec + (dy / decSpan) * 180;
-          newDec = Math.max(-80, Math.min(80, newDec));
+          const newDec = clampDec(state.dragStartDec + (dy / decSpan) * 180);
 
           state.camera.ra = newRA;
           state.camera.dec = newDec;
           state.camera.targetRA = newRA;
           state.camera.targetDec = newDec;
+          state.camera.isGliding = false;
         });
 
-        stage.addEventListener("touchend", () => {
+        stage.addEventListener("touchend", (e) => {
+          if (pinch) {
+            if (e.touches.length < 2) pinch = null;
+            state.isDragging = false;
+            return;
+          }
           if (state.isDragging && state.draggedDistance < 6) {
             const rect = stage.getBoundingClientRect();
             handleStarTap(state.dragStartMouseX - rect.left, state.dragStartMouseY - rect.top);
@@ -1628,14 +1820,18 @@
 
         /* ================= GAMEPLAY: STAR SELECTION & CONNECTING LINES ================= */
         function handleStarTap(x, y) {
+          if (state.revealPending) return;
           const target = getCurrentTarget();
           let hitStar = null;
+          let hitDist = 30;
 
+          // Nearest star within reach wins, so close neighbours stay individually tappable.
           for (let s of target.stars) {
             const pt = celestialToScreen(s.ra, s.dec);
-            if (Math.hypot(pt.x - x, pt.y - y) < 30) {
+            const d = Math.hypot(pt.x - x, pt.y - y);
+            if (d < hitDist) {
+              hitDist = d;
               hitStar = s;
-              break;
             }
           }
 
@@ -1681,13 +1877,217 @@
           revealTitle.textContent = target.name;
           revealSub.textContent = target.desc;
           revealFact.innerHTML = `<b>Astronomical Lore:</b> ${target.fact}`;
-          drawShapePreview(revealCtx, revealCanvas.width, revealCanvas.height, target);
 
-          completionOverlay.classList.add("show");
+          // Name the constellation on the card and in the sky first, then celebrate.
+          updateTargetCardName();
+          state.revealPending = true;
+          setTimeout(() => {
+            state.revealPending = false;
+            recallCard.classList.remove("show");
+            completionOverlay.classList.add("show");
+            startRevealAnimation(target);
+          }, REVEAL_DELAY_MS);
+        }
+
+        /* ================= DISCOVERY CELEBRATION ================= */
+        // The finished constellation lifts out of the sky, twirls while sparkling and
+        // settles on the right half of the screen, beside the info card on the left.
+        const REVEAL_DELAY_MS = 1400;
+        const TWIRL_SECONDS = 1.6;
+        let revealAnim = null;
+
+        function startRevealAnimation(constell) {
+          // Figure coordinates in degrees, laid out the same way round as in the sky.
+          const pts = constell.stars.map((s) => {
+            let dRA = s.ra - constell.centerRA;
+            while (dRA > 180) dRA -= 360;
+            while (dRA < -180) dRA += 360;
+            return { id: s.id, x: dRA, y: -s.dec, mag: s.mag };
+          });
+          const xs = pts.map((pt) => pt.x);
+          const ys = pts.map((pt) => pt.y);
+          const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+          const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+          pts.forEach((pt) => {
+            pt.x -= cx;
+            pt.y -= cy;
+          });
+
+          const stageRect = stage.getBoundingClientRect();
+          const skyPt = celestialToScreen(constell.centerRA + cx, -cy);
+
+          revealAnim = {
+            constell,
+            pts,
+            spanX: Math.max(Math.max(...xs) - Math.min(...xs), 6),
+            spanY: Math.max(Math.max(...ys) - Math.min(...ys), 6),
+            startX: stageRect.left + skyPt.x,
+            startY: stageRect.top + skyPt.y,
+            startScale: getBaseSpan() / 360,
+            t0: null,
+            last: null,
+            sparks: []
+          };
+          requestAnimationFrame(tickReveal);
+        }
+
+        function stopRevealAnimation() {
+          revealAnim = null;
+        }
+
+        function addSpark(a, x, y, speed) {
+          if (a.sparks.length > 320) return;
+          const ang = Math.random() * Math.PI * 2;
+          const v = speed * (0.3 + Math.random() * 0.7);
+          a.sparks.push({
+            x,
+            y,
+            vx: Math.cos(ang) * v,
+            vy: Math.sin(ang) * v,
+            age: 0,
+            life: 0.5 + Math.random() * 0.9,
+            size: 2.5 + Math.random() * 5,
+            gold: Math.random() < 0.45
+          });
+        }
+
+        function tickReveal(now) {
+          const a = revealAnim;
+          if (!a) return;
+          if (a.t0 === null) {
+            a.t0 = now;
+            a.last = now;
+          }
+          const t = (now - a.t0) / 1000;
+          const dt = Math.min(0.05, (now - a.last) / 1000);
+          a.last = now;
+
+          const W = window.innerWidth;
+          const H = window.innerHeight;
+          const dpr = window.devicePixelRatio || 1;
+          if (revealCanvas.width !== Math.round(W * dpr) || revealCanvas.height !== Math.round(H * dpr)) {
+            revealCanvas.width = Math.round(W * dpr);
+            revealCanvas.height = Math.round(H * dpr);
+          }
+          revealCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          revealCtx.clearRect(0, 0, W, H);
+
+          // Resting place: right half on wide screens, top half when the layout stacks.
+          const narrow = W <= 760;
+          const endX = narrow ? W / 2 : W * 0.75;
+          const endY = narrow ? H * 0.23 : H / 2;
+          const boxW = narrow ? W * 0.7 : W * 0.34;
+          const boxH = narrow ? H * 0.3 : H * 0.58;
+          const endScale = Math.min(boxW / a.spanX, boxH / a.spanY);
+
+          const p = Math.min(1, t / TWIRL_SECONDS);
+          const glide = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+          const back = 1 + 2.70158 * Math.pow(p - 1, 3) + 1.70158 * Math.pow(p - 1, 2);
+          const startX = Math.max(0, Math.min(W, a.startX));
+          const startY = Math.max(0, Math.min(H, a.startY));
+          const x0 = startX + (endX - startX) * glide;
+          const y0 = startY + (endY - startY) * glide;
+          const scale = a.startScale + (endScale - a.startScale) * back;
+          const rot = Math.pow(1 - p, 3) * Math.PI * 4; // two full turns, easing to rest
+
+          const cosR = Math.cos(rot);
+          const sinR = Math.sin(rot);
+          const scr = {};
+          a.pts.forEach((pt) => {
+            scr[pt.id] = {
+              x: x0 + (pt.x * cosR - pt.y * sinR) * scale,
+              y: y0 + (pt.x * sinR + pt.y * cosR) * scale,
+              mag: pt.mag
+            };
+          });
+
+          // Sparkles: a shower thrown off the stars during the twirl, then a gentle shimmer.
+          a.pts.forEach((pt) => {
+            const sp = scr[pt.id];
+            if (p < 1) {
+              if (Math.random() < 0.6) addSpark(a, sp.x, sp.y, 190);
+            } else if (Math.random() < 0.05) {
+              addSpark(a, sp.x + (Math.random() - 0.5) * 30, sp.y + (Math.random() - 0.5) * 30, 26);
+            }
+          });
+
+          // Lines
+          revealCtx.save();
+          revealCtx.strokeStyle = "rgba(127, 211, 255, 0.95)";
+          revealCtx.lineWidth = 2.6;
+          revealCtx.lineCap = "round";
+          revealCtx.shadowColor = "rgba(127, 211, 255, 0.8)";
+          revealCtx.shadowBlur = 14;
+          revealCtx.beginPath();
+          a.constell.lines.forEach(([idA, idB]) => {
+            if (scr[idA] && scr[idB]) {
+              revealCtx.moveTo(scr[idA].x, scr[idA].y);
+              revealCtx.lineTo(scr[idB].x, scr[idB].y);
+            }
+          });
+          revealCtx.stroke();
+          revealCtx.restore();
+
+          // Stars with a pulsing four-point flare
+          a.pts.forEach((pt, i) => {
+            const sp = scr[pt.id];
+            const r = Math.max(3.2, Math.min(9, 4 + (2.5 - pt.mag) * 1.5));
+            const flare = r * (2.4 + 0.9 * Math.sin(t * 4 + i * 1.7));
+
+            revealCtx.save();
+            revealCtx.fillStyle = "rgba(127, 211, 255, 0.18)";
+            revealCtx.beginPath();
+            revealCtx.arc(sp.x, sp.y, r * 2.8, 0, Math.PI * 2);
+            revealCtx.fill();
+
+            revealCtx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+            revealCtx.lineWidth = 1.4;
+            revealCtx.beginPath();
+            revealCtx.moveTo(sp.x - flare, sp.y);
+            revealCtx.lineTo(sp.x + flare, sp.y);
+            revealCtx.moveTo(sp.x, sp.y - flare);
+            revealCtx.lineTo(sp.x, sp.y + flare);
+            revealCtx.stroke();
+
+            revealCtx.fillStyle = "#ffffff";
+            revealCtx.shadowColor = "rgba(127, 211, 255, 0.9)";
+            revealCtx.shadowBlur = 12;
+            revealCtx.beginPath();
+            revealCtx.arc(sp.x, sp.y, r, 0, Math.PI * 2);
+            revealCtx.fill();
+            revealCtx.restore();
+          });
+
+          // Sparkle particles
+          revealCtx.save();
+          revealCtx.lineWidth = 1.3;
+          a.sparks = a.sparks.filter((sp) => {
+            sp.age += dt;
+            if (sp.age >= sp.life) return false;
+            sp.x += sp.vx * dt;
+            sp.y += sp.vy * dt;
+            sp.vx *= 0.97;
+            sp.vy *= 0.97;
+            const k = 1 - sp.age / sp.life;
+            const len = sp.size * (0.4 + 0.6 * k);
+            revealCtx.globalAlpha = k;
+            revealCtx.strokeStyle = sp.gold ? "#ffd45c" : "#cfeeff";
+            revealCtx.beginPath();
+            revealCtx.moveTo(sp.x - len, sp.y);
+            revealCtx.lineTo(sp.x + len, sp.y);
+            revealCtx.moveTo(sp.x, sp.y - len);
+            revealCtx.lineTo(sp.x, sp.y + len);
+            revealCtx.stroke();
+            return true;
+          });
+          revealCtx.restore();
+
+          requestAnimationFrame(tickReveal);
         }
 
         nextTargetBtn.addEventListener("click", () => {
           completionOverlay.classList.remove("show");
+          stopRevealAnimation();
           if (state.currentTargetIndex < CONSTELLATIONS.length - 1) {
             setTargetIndex(state.currentTargetIndex + 1, true);
           } else {
@@ -1730,20 +2130,26 @@
         }
 
         function openRecallModal(constell) {
+          // Tapping the same scrapbook entry again puts the card away.
+          if (activeRecallConstellation === constell && recallCard.classList.contains("show")) {
+            recallCard.classList.remove("show");
+            return;
+          }
           activeRecallConstellation = constell;
           recallTitle.textContent = constell.name;
           recallSub.textContent = constell.desc;
           recallFact.innerHTML = `<b>Astronomical Fact:</b> ${constell.fact}`;
           drawShapePreview(recallCtx, recallCanvas.width, recallCanvas.height, constell);
-          recallOverlay.classList.add("show");
+          recallCard.classList.remove("show");
+          void recallCard.offsetWidth; // restart the pop-in when switching cards
+          recallCard.classList.add("show");
         }
 
         recallClose.addEventListener("click", () => {
-          recallOverlay.classList.remove("show");
+          recallCard.classList.remove("show");
         });
 
         recallHighlightBtn.addEventListener("click", () => {
-          recallOverlay.classList.remove("show");
           if (activeRecallConstellation) {
             state.highlightReplayId = activeRecallConstellation.id;
             glideCameraTo(activeRecallConstellation.centerRA, activeRecallConstellation.centerDec);
@@ -1790,6 +2196,7 @@
         }
 
         function drawCollectedConstellations() {
+          const justNamedId = state.revealPending ? getCurrentTarget().id : null;
           ctx.save();
           state.completedConstellations.forEach((cId) => {
             const constell = CONSTELLATIONS.find((c) => c.id === cId);
@@ -1806,7 +2213,7 @@
               if (sA && sB) {
                 const ptA = celestialToScreen(sA.ra, sA.dec);
                 const ptB = celestialToScreen(sB.ra, sB.dec);
-                if (Math.abs(ptA.x - ptB.x) < width * 0.7) {
+                if (Math.abs(ptA.x - ptB.x) < getBaseSpan() / 2) {
                   ctx.moveTo(ptA.x, ptA.y);
                   ctx.lineTo(ptB.x, ptB.y);
                 }
@@ -1816,8 +2223,8 @@
 
             const centerPt = celestialToScreen(constell.centerRA, constell.centerDec);
             if (centerPt.x > 20 && centerPt.x < width - 20 && centerPt.y > 20 && centerPt.y < height - 20) {
-              ctx.font = "bold 11px Orbitron";
-              ctx.fillStyle = isReplay ? "var(--glow-gold)" : "rgba(77, 214, 228, 0.75)";
+              ctx.font = cId === justNamedId ? "bold 14px Orbitron" : "bold 11px Orbitron";
+              ctx.fillStyle = isReplay || cId === justNamedId ? "#ffd45c" : "rgba(77, 214, 228, 0.75)";
               ctx.textAlign = "center";
               ctx.fillText(constell.name, centerPt.x, centerPt.y - 12);
             }
@@ -1842,7 +2249,7 @@
             if (sA && sB) {
               const ptA = celestialToScreen(sA.ra, sA.dec);
               const ptB = celestialToScreen(sB.ra, sB.dec);
-              if (Math.abs(ptA.x - ptB.x) < width * 0.7) {
+              if (Math.abs(ptA.x - ptB.x) < getBaseSpan() / 2) {
                 ctx.moveTo(ptA.x, ptA.y);
                 ctx.lineTo(ptB.x, ptB.y);
               }
@@ -1878,7 +2285,7 @@
               if (sA && sB) {
                 const ptA = celestialToScreen(sA.ra, sA.dec);
                 const ptB = celestialToScreen(sB.ra, sB.dec);
-                if (Math.abs(ptA.x - ptB.x) < width * 0.7) {
+                if (Math.abs(ptA.x - ptB.x) < getBaseSpan() / 2) {
                   ctx.moveTo(ptA.x, ptA.y);
                   ctx.lineTo(ptB.x, ptB.y);
                 }
@@ -1892,7 +2299,7 @@
         function drawStars() {
           const target = getCurrentTarget();
           const cutoff = getTierCutoff();
-          const baseSize = 4.2;
+          const baseSize = 4.2 * Math.pow(state.camera.zoom, 0.3);
 
           BACKGROUND_STARS.forEach((s) => {
             if (s.mag > cutoff) return;
