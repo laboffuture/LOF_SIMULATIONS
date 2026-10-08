@@ -912,12 +912,32 @@
       color: #1b2036;
     }
   </style>
+  <style id="lof-feedback">
+    /* mission messages: black text on a light box so they read on the dark panel */
+    .card .feedback { color: #000 !important; background: #eef3fa; }
+    .card .feedback.ok { background: #e3f7e8; }
+    .card .feedback.warn { background: #fff3dc; }
+    .card .feedback.bad { background: #ffe6e6; }
+  </style>
+  <style id="lof-guide">
+    /* guide pop-up: tabs centred in the header, grip pinned left, close button pinned right */
+    .fw-head { position: relative; }
+    .fw-head-actions { flex: 1; justify-content: center; }
+    .fw-head .fw-title { position: absolute; left: 12px; }
+    .fw-head .fw-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+    /* when the window is dragged very narrow there is no room to centre: sit the tabs beside the grip */
+    .helpbar.floatwin { container-type: inline-size; }
+    /* the header already has a close button — hide the old one left in the body */
+    .helpbar.floatwin .helpClose { display: none; }
+    @container (max-width: 340px) {
+      .fw-head-actions { justify-content: flex-start; min-width: 0; padding: 0 32px 0 20px; }
+    }
+  </style>
 </head>
   <body>
     <header class="top">
       <div class="title">
         <h1>STAR SPECTRUM DECODER</h1>
-        <p>Spectral colour sensing &amp; star classification</p>
       </div>
       <div class="helpbtns">
         <button type="button" class="helpbtn" data-tab="use">How To Use</button>
@@ -928,48 +948,101 @@
         <div class="tabpanel" data-panel="use">
           <ol>
             <li>
-              Pick a <b>wand colour</b>. The tip lights up, but nothing is read yet —
-              the sensor only sees light once you start the scan.
+              Pick a <b>Wand Colour</b> — <b>Blue</b>, <b>Sky Blue</b>,
+              <b>White</b>, <b>Yellow</b>, <b>Orange</b> or <b>Red</b>. The tip
+              lights up, but nothing is read yet — the sensor only sees light
+              once you start the scan.
             </li>
             <li>
-              Set <b>LED Intensity</b> and <b>interference</b> however you like, then
-              press <b>Start</b>. The wand swishes through the air on its own and
-              points itself at the decoder's sensor lens.
+              Set the <b>LED Intensity</b> (0–100%). 100% gives the full
+              reference reading. Dim it and the signal and graph dim with it,
+              down to a small sensor noise floor instead of zero.
             </li>
             <li>
-              Watch the decoder console's <b>AS7341 channel graph</b> plot F1-F8 once a
-              star is identified — the tallest points are what the controller compares
-              against its colour map. 100% intensity shows the full reference reading;
-              dim it down and the graph dims with it, right down to a small sensor
-              noise floor instead of dropping to zero.
+              Turn <b>Background Interference</b> <b>On</b> or <b>Off</b>.
+              <b>On</b> washes the scene bright with stray light and makes the
+              graph glitch. <b>Off</b> keeps a clean, dark reading.
             </li>
             <li>
-              Dim the LED <b>Intensity</b> right down and scan again — the reading
-              comes back too weak to classify.
+              Set the <b>Sensor Sensitivity</b> (0–100%). At 100% the graph is
+              normal and clean. Lower it and the graph shrinks and gets
+              shakier.
             </li>
             <li>
-              Turn <b>interference</b> on and scan a colour — the star is still
-              correctly decoded, but the scene washes bright and the graph glitches
-              while it reads.
+              Press <b>Start</b> under the decoder view. The wand swishes
+              through the air and points at the sensor lens. The
+              <b>Decoder Status</b> bar shows what is happening.
             </li>
             <li>
-              Use <b>Run Guided Decode</b> to watch all six colours scan back-to-back
-              and fill in the constellation.
+              Watch the <b>AS7341 channel graph</b> on the decoder console. It
+              plots channels F1–F8 once a star is identified. The tallest
+              points are what the controller compares against its colour map.
+            </li>
+            <li>
+              Read <b>Spectral Reading &amp; Decode Status</b>: the
+              <b>Wand Colour</b>, <b>Brightness</b>, <b>Interference</b>,
+              <b>Dominant Channel</b> and <b>Star Result</b>. Use the
+              <b>Star Mapping Reference</b> to see which colour matches which
+              star, from Rigel (blue) to Betelgeuse (red).
+            </li>
+            <li>
+              Try dimming the <b>LED Intensity</b> right down and scanning
+              again — the reading comes back too weak to classify. Then turn
+              interference on: the star is still decoded, but the graph
+              glitches while it reads.
+            </li>
+            <li>
+              Press <b>Run Guided Decode</b> to watch all six colours scan
+              one after another and fill in the
+              <b>Constellation Progress</b>. <b>System Feedback</b> tells you
+              when the hidden constellation is restored.
+            </li>
+            <li>
+              Press <b>Reset</b> to start again. Change <b>one</b> setting at
+              a time and compare.
             </li>
           </ol>
         </div>
         <div class="tabpanel" data-panel="learn">
           <ul>
-            <li>How LED colour can be used as a light signal</li>
-            <li>How a spectral colour sensor reads incoming light</li>
-            <li>How AS7341 readings can be shown as a spectral line graph</li>
-            <li>How colour intensity affects detection</li>
-            <li>Why a dimmer light still doesn't read as zero — sensors have a small noise floor</li>
-            <li>Why a channel already at the sensor's maximum stays clipped until the light dims enough to reveal its real value</li>
-            <li>How background light can interfere with colour detection</li>
-            <li>How colour mapping converts sensor readings into star identities</li>
-            <li>How OLED display can show both text and graph output</li>
-            <li>Why scientific decoding needs careful observation and measurement</li>
+            <li>
+              <b>Light as a signal:</b> the colour of an LED can carry
+              information, like a message sent with light.
+            </li>
+            <li>
+              <b>Spectral sensing:</b> a spectral sensor such as the AS7341
+              splits incoming light into channels (F1–F8) and measures each
+              one.
+            </li>
+            <li>
+              <b>Reading a spectrum:</b> the readings can be drawn as a line
+              graph, and the tallest channel shows the main colour.
+            </li>
+            <li>
+              <b>Intensity:</b> brighter light gives a stronger, clearer
+              reading. Too dim, and the sensor cannot tell the colour.
+            </li>
+            <li>
+              <b>Noise floor:</b> even in darkness a sensor never reads exactly
+              zero — there is always a little noise.
+            </li>
+            <li>
+              <b>Clipping:</b> a channel already at the sensor's maximum stays
+              stuck at the top until the light dims enough to show its real
+              value.
+            </li>
+            <li>
+              <b>Interference:</b> stray background light can confuse colour
+              detection.
+            </li>
+            <li>
+              <b>Colour mapping:</b> the controller turns sensor readings into a
+              star's identity by matching them to a colour map.
+            </li>
+            <li>
+              <b>Careful measurement:</b> scientific decoding needs careful
+              observation, and changing one thing at a time.
+            </li>
           </ul>
         </div>
       </div>
@@ -2201,8 +2274,7 @@
           head.className = "fw-head";
 
           var title = document.createElement("span");
-          title.className = "fw-title";
-          title.textContent = "How To Use";
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
           head.appendChild(title);
 
           var actions = document.createElement("div");
@@ -2217,7 +2289,7 @@
               b.type = "button";
               b.className = "fw-tab-btn";
               b.dataset.tab = t;
-              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What To Learn" : t);
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What You'll Learn" : t);
               actions.appendChild(b);
               tabBtns.push(b);
             });
@@ -2251,12 +2323,12 @@
 
         var btns = document.querySelectorAll(".helpbtn");
         var tabBtns = bar.querySelectorAll(".fw-tab-btn");
-        var titleEl = bar.querySelector(".fw-title");
         var closeBtn = bar.querySelector(".fw-close");
         var headEl = bar.querySelector(".fw-head");
         var gripEl = bar.querySelector(".fw-grip");
         var topZ = 10000;
         var posInit = false;
+        var userSized = false;
 
         function toFront() {
           bar.style.zIndex = ++topZ;
@@ -2272,9 +2344,7 @@
           toFront();
           if (!posInit) {
             var w = Math.min(440, window.innerWidth - 32);
-            var h = Math.min(540, window.innerHeight - 80);
             bar.style.width = w + "px";
-            bar.style.height = h + "px";
             bar.style.top = "65px";
             bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
             posInit = true;
@@ -2290,10 +2360,30 @@
           panels.forEach(function (p) {
             p.classList.toggle("on", p.dataset.panel === tab);
           });
-          if (titleEl) {
-            titleEl.textContent = tab === "use" ? "How To Use" : (tab === "learn" ? "What You'll Learn" : "Guide");
-          }
+          fitHeight();
         }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        // Rotating a phone or resizing the window: keep the guide on screen and re-fit it.
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
 
         btns.forEach(function (btn) {
           var newBtn = btn.cloneNode(true);
@@ -2370,6 +2460,7 @@
               var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
               var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
               bar.style.width = nw + "px";
+              userSized = true;
               bar.style.height = nh + "px";
             }
             function onUp(ev) {

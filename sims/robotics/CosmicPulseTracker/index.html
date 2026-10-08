@@ -912,11 +912,23 @@
       color: #18233a;
     }
   </style>
+  <style id="lof-guide">
+    /* guide pop-up: tabs centred in the header, grip pinned left, close button pinned right */
+    .fw-head { position: relative; }
+    .fw-head-actions { flex: 1; justify-content: center; }
+    .fw-head .fw-title { position: absolute; left: 12px; }
+    .fw-head .fw-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+    /* when the window is dragged very narrow there is no room to centre: sit the tabs beside the grip */
+    .helpbar.floatwin { container-type: inline-size; }
+    @container (max-width: 340px) {
+      .fw-head-actions { justify-content: flex-start; min-width: 0; padding: 0 32px 0 20px; }
+    }
+  </style>
 </head>
   <body>
     <header class="top">
       <div class="title">
-        <h1>COSMIC PULSE TRACKER — LOST SIGNAL LAB</h1>
+        <h1>COSMIC PULSE TRACKER</h1>
       </div>
       <div class="helpbtns">
         <button type="button" class="helpbtn" data-tab="use">How To Use</button>
@@ -928,53 +940,103 @@
         <div class="tabpanel" data-panel="use">
           <ol>
             <li>
-              Gibson is lost somewhere in the dark zone. His beacon is
-              transmitting — pick <b>what</b> he is sending: SOS, Warning,
-              Location Pulse or System Glitch.
+              Gibson is lost somewhere in the dark zone and his beacon is
+              transmitting. Under <b>Gibson Beacon — Transmitter</b>, pick
+              the message he is sending: <b>SOS</b>, <b>Warning</b>,
+              <b>Location Pulse</b> or <b>System Glitch</b>.
             </li>
             <li>
-              Choose an <b>RF pulse pattern</b>. Long and doubled pulses survive
-              damage; short and continuous ones fall apart.
+              Set <b>Signal Damage / Glitch</b> (0–100%) — how broken the
+              beacon's pulses are before they even leave.
             </li>
             <li>
-              <b>Click or drag anywhere</b> in the dark zone to move the
-              receiver. Drag the white knob on the antenna to <b>aim</b> it.
+              Choose an <b>RF Pulse Pattern</b>: <b>Short Burst</b>,
+              <b>Long Burst</b>, <b>Double Pulse</b> or <b>Continuous</b>.
+              Long and doubled pulses survive damage better; short and
+              continuous ones fall apart.
             </li>
             <li>
-              Watch the OLED climb
-              <b>NO SIGNAL → FAR → NEARBY → GIBSON IS HERE!</b> and the buzzer
-              beep faster as you close in.
+              Under <b>Alien Zone — Channel</b>, set
+              <b>Background Interference</b> (0–100%). This alien storm static
+              raises the noise everywhere. Press <b>Relocate Gibson</b> to hide
+              him somewhere new.
+            </li>
+            <li>
+              Move the <b>Receiver</b>: drag <b>Distance to Beacon</b>
+              (1–60 m), or just click and drag anywhere in the dark zone. Aim
+              the antenna with <b>Receiver Direction</b> (0°–359°) or by
+              dragging the white knob on the antenna. Aimed away, even a close
+              beacon reads faint.
+            </li>
+            <li>
+              Follow the <b>Receiver Verdict</b> as it climbs
+              <b>NO SIGNAL</b> → <b>FAR</b> → <b>NEARBY</b> →
+              <b>GIBSON IS HERE!</b>. The <b>Signal Bars</b> fill up and the
+              <b>Buzzer</b> beeps faster as you close in. Use
+              <b>Buzzer ON</b> to switch the sound on or off.
+            </li>
+            <li>
+              Read the <b>OLED</b> screen. <b>Message</b> mode shows what the
+              receiver thinks Gibson said. <b>Pulse View</b> shows the raw
+              pulses it is hearing.
+            </li>
+            <li>
+              Check <b>Signal Telemetry</b>: <b>Received Strength (RSSI)</b>,
+              the <b>Noise Floor</b>, <b>Signal-to-Noise</b> and
+              <b>Decode Confidence</b> — the share of symbols that survived the
+              trip. It decides whether the OLED shows a locked message, a
+              garbled one, or nothing.
             </li>
             <li>
               Push up <b>Signal Damage</b> and
-              <b>Background Interference</b> and watch the decoder start reading
-              the <b>wrong</b> message.
+              <b>Background Interference</b> and watch the decoder start
+              reading the <b>wrong</b> message.
             </li>
             <li>
-              Watch <b>Decode Confidence</b> on the right — it is the share of
-              symbols that survived the trip, and it is what decides whether the
-              OLED shows a locked message, a garbled one, or nothing.
+              Press <b>Pause</b> to freeze the signal, or
+              <b>Reset Simulation</b> to start again. Change <b>one</b>
+              setting at a time and compare.
             </li>
           </ol>
         </div>
         <div class="tabpanel" data-panel="learn">
           <ul>
-            <li>Why radio signal strength drops off sharply with distance</li>
             <li>
-              How a directional antenna makes the same spot read strong or weak
+              <b>Signal strength and distance:</b> a radio signal gets weaker
+              very quickly as you move away from the transmitter.
             </li>
             <li>
-              How a message rides on a pattern of short and long RF pulses
+              <b>Directional antennas:</b> an antenna hears best in the
+              direction it points, so the same spot can read strong or weak
+              depending on where you aim.
             </li>
             <li>
-              How noise and interference flip pulses into the wrong symbols
-            </li>
-            <li>How repeating a frame lets a receiver vote errors out</li>
-            <li>
-              Why a receiver can confidently decode the <i>wrong</i> message
+              <b>Messages made of pulses:</b> a message is sent as a pattern of
+              short and long RF pulses, like Morse code.
             </li>
             <li>
-              Why the receiver only knows what it hears — not the real distance
+              <b>Noise and interference:</b> static can hide pulses or flip
+              them into the wrong symbols.
+            </li>
+            <li>
+              <b>Signal-to-noise:</b> what matters is how much stronger the
+              signal is than the noise, not just how strong it is.
+            </li>
+            <li>
+              <b>Repeating a frame:</b> sending a message more than once lets
+              the receiver vote out errors.
+            </li>
+            <li>
+              <b>Confidently wrong:</b> a receiver can decode the
+              <i>wrong</i> message and still be sure of it.
+            </li>
+            <li>
+              <b>What the receiver knows:</b> it only knows what it hears — not
+              the real distance to the beacon.
+            </li>
+            <li>
+              <b>Fair testing:</b> change one setting at a time to see what
+              difference it makes.
             </li>
           </ul>
         </div>
@@ -2637,8 +2699,7 @@
           head.className = "fw-head";
 
           var title = document.createElement("span");
-          title.className = "fw-title";
-          title.textContent = "How To Use";
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
           head.appendChild(title);
 
           var actions = document.createElement("div");
@@ -2653,7 +2714,7 @@
               b.type = "button";
               b.className = "fw-tab-btn";
               b.dataset.tab = t;
-              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What To Learn" : t);
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What You'll Learn" : t);
               actions.appendChild(b);
               tabBtns.push(b);
             });
@@ -2687,12 +2748,12 @@
 
         var btns = document.querySelectorAll(".helpbtn");
         var tabBtns = bar.querySelectorAll(".fw-tab-btn");
-        var titleEl = bar.querySelector(".fw-title");
         var closeBtn = bar.querySelector(".fw-close");
         var headEl = bar.querySelector(".fw-head");
         var gripEl = bar.querySelector(".fw-grip");
         var topZ = 10000;
         var posInit = false;
+        var userSized = false;
 
         function toFront() {
           bar.style.zIndex = ++topZ;
@@ -2708,9 +2769,7 @@
           toFront();
           if (!posInit) {
             var w = Math.min(440, window.innerWidth - 32);
-            var h = Math.min(540, window.innerHeight - 80);
             bar.style.width = w + "px";
-            bar.style.height = h + "px";
             bar.style.top = "65px";
             bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
             posInit = true;
@@ -2726,10 +2785,30 @@
           panels.forEach(function (p) {
             p.classList.toggle("on", p.dataset.panel === tab);
           });
-          if (titleEl) {
-            titleEl.textContent = tab === "use" ? "How To Use" : (tab === "learn" ? "What You'll Learn" : "Guide");
-          }
+          fitHeight();
         }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        // Rotating a phone or resizing the window: keep the guide on screen and re-fit it.
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
 
         btns.forEach(function (btn) {
           var newBtn = btn.cloneNode(true);
@@ -2806,6 +2885,7 @@
               var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
               var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
               bar.style.width = nw + "px";
+              userSized = true;
               bar.style.height = nh + "px";
             }
             function onUp(ev) {

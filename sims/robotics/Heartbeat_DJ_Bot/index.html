@@ -1141,6 +1141,18 @@
     }
     #banner { background-color: #ffffff !important; }
   </style>
+  <style id="lof-guide">
+    /* guide pop-up: tabs centred in the header, grip pinned left, close button pinned right */
+    .fw-head { position: relative; }
+    .fw-head-actions { flex: 1; justify-content: center; }
+    .fw-head .fw-title { position: absolute; left: 12px; }
+    .fw-head .fw-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+    /* when the window is dragged very narrow there is no room to centre: sit the tabs beside the grip */
+    .helpbar.floatwin { container-type: inline-size; }
+    @container (max-width: 340px) {
+      .fw-head-actions { justify-content: flex-start; min-width: 0; padding: 0 32px 0 20px; }
+    }
+  </style>
 </head>
   <body>
     <header class="top">
@@ -1157,69 +1169,94 @@
         <div class="tabpanel" data-panel="use">
           <ol>
             <li>
-              Pick a <b>crew situation</b>. It presets the heart rate and the
-              room noise — every slider stays live afterwards, so you can take
-              over at any moment.
+              Pick a <b>Crew Situation</b> — <b>Rest Period</b>,
+              <b>Routine Ops</b>, <b>Comms Check</b>, <b>EVA Prep Stress</b>,
+              <b>Equipment Alarm</b> or <b>Post-Exercise</b>. Each one sets the
+              crew member's heart rate and how noisy the room is.
             </li>
             <li>
-              Drag <b>Heart Rate</b> up. Watch the PPG wave beat faster, the
-              detected BPM climb past the threshold line, and the bot switch to
-              a calming track.
+              Drag <b>Heart Rate</b> (45–175 BPM) up. Watch the PPG wave beat
+              faster, the detected BPM climb past the threshold line, and the
+              bot switch to a calming track.
             </li>
             <li>
-              Change the <b>sound type</b> and push <b>Ambient Level</b> up.
-              Each type has its own signature — an alarm spikes, machinery hums
-              flat, a crowd is dense and random.
+              Move the <b>Heart Rate Threshold</b> (70–150 BPM). Put it right
+              on top of the current reading and the bot starts flapping
+              between modes — that is the "too sensitive" lesson.
             </li>
             <li>
-              Watch the <b>situation matrix</b> on the right. The two thresholds
-              split the world into four boxes, and the lit box <i>is</i> the
-              bot's decision. Nothing is random.
+              Set <b>Sensor Averaging</b> (1–16 samples). At 1 the BPM reading
+              is jumpy. At 16 it is smooth, but it reacts late.
             </li>
             <li>
-              Move the <b>threshold</b> sliders. Put one right on top of the
-              current reading and the bot starts flapping between modes — that
-              is the "too sensitive" lesson.
+              Watch the <b>Situation Analysis</b> matrix. Heart rate (normal or
+              high) and room sound (low or high) split it into four boxes —
+              <b>Calm</b>, <b>Focus</b>, <b>Relax</b> and <b>Deep Calm</b>. The
+              lit box <i>is</i> the bot's decision. Nothing is random.
             </li>
             <li>
-              Turn <b>Sensor Averaging</b> down to 1 sample: the BPM reading
-              goes jumpy. Turn it up to 16: smooth, but it reacts late.
+              Read the readings under the matrix: <b>Heart Rate</b>,
+              <b>HR Status</b>, <b>Sound Level</b>, <b>Sound Status</b>, the
+              <b>raw beat reading</b>, the <b>BPM trend</b>, the thresholds and
+              how many times the mode has changed.
             </li>
             <li>
-              Leave it running. Calming music pulls the heart rate down, the bot
-              sees it falling, and <b>Recovery Mode</b> appears on its own.
+              Check the <b>DFPlayer Mini &amp; SD Card</b> panel to see the
+              mode the bot chose, the track number and the file it plays from
+              the SD card.
+            </li>
+            <li>
+              Under <b>Bot Response</b>, keep <b>Biofeedback</b> <b>On</b> so
+              the music calms the crew. Leave it running: the heart rate drops,
+              the bot sees it falling, and <b>Recovery Mode</b> appears on its
+              own.
+            </li>
+            <li>
+              Switch <b>Playback Source</b> to <b>Manual Preview</b> to hear
+              each mode yourself. Use <b>Sound On</b> / <b>Mute</b> and the
+              <b>Volume</b> (0–30) on the <b>Mini Speaker</b>.
+            </li>
+            <li>
+              Press <b>Pause</b> to freeze the readings, or <b>Reset</b> to
+              start again. Change <b>one</b> setting at a time and compare.
             </li>
           </ol>
         </div>
         <div class="tabpanel" data-panel="learn">
           <ul>
             <li>
-              How a MAX30102 reads pulse from an optical (PPG) waveform, not
-              from a BPM number
+              <b>Optical heart sensing:</b> a MAX30102 reads your pulse from a
+              light wave (PPG) bouncing off blood, not from a ready-made BPM
+              number.
             </li>
             <li>
-              Why BPM is calculated from the time <i>between</i> beats, and what
-              averaging does to it
-            </li>
-            <li>How a sound sensor reports ambient noise as a 0–1023 level</li>
-            <li>
-              Why sensor sensitivity changes the reading without the room
-              getting any louder
+              <b>Working out BPM:</b> heart rate is calculated from the time
+              <i>between</i> beats, and averaging smooths it but makes it
+              slower to react.
             </li>
             <li>
-              How two thresholds turn two continuous readings into four discrete
-              situations
+              <b>Sound sensing:</b> a sound sensor reports how noisy the room
+              is as a level from 0 to 1023.
             </li>
             <li>
-              Why a threshold set too tight makes a robot flap between states
+              <b>Thresholds:</b> two thresholds turn two changing readings into
+              four clear situations, and the bot picks music for each one.
             </li>
             <li>
-              How a controller sends a real DFPlayer serial command to pick a
-              track off an SD card
+              <b>Too sensitive:</b> a threshold set too close to the reading
+              makes a robot flap back and forth between states.
             </li>
             <li>
-              How a feedback loop — music calming the crew — changes the sensor
-              reading that chose the music
+              <b>Sending commands:</b> the controller sends a real serial
+              command to the DFPlayer to pick a track off the SD card.
+            </li>
+            <li>
+              <b>Feedback loops:</b> calming music lowers the heart rate, which
+              changes the very reading that chose the music.
+            </li>
+            <li>
+              <b>Fair testing:</b> change one setting at a time and keep the
+              others the same, so you know what caused the difference.
             </li>
           </ul>
         </div>
@@ -3399,8 +3436,7 @@
           head.className = "fw-head";
 
           var title = document.createElement("span");
-          title.className = "fw-title";
-          title.textContent = "How To Use";
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
           head.appendChild(title);
 
           var actions = document.createElement("div");
@@ -3415,7 +3451,7 @@
               b.type = "button";
               b.className = "fw-tab-btn";
               b.dataset.tab = t;
-              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What To Learn" : t);
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What You'll Learn" : t);
               actions.appendChild(b);
               tabBtns.push(b);
             });
@@ -3449,12 +3485,12 @@
 
         var btns = document.querySelectorAll(".helpbtn");
         var tabBtns = bar.querySelectorAll(".fw-tab-btn");
-        var titleEl = bar.querySelector(".fw-title");
         var closeBtn = bar.querySelector(".fw-close");
         var headEl = bar.querySelector(".fw-head");
         var gripEl = bar.querySelector(".fw-grip");
         var topZ = 10000;
         var posInit = false;
+        var userSized = false;
 
         function toFront() {
           bar.style.zIndex = ++topZ;
@@ -3470,9 +3506,7 @@
           toFront();
           if (!posInit) {
             var w = Math.min(440, window.innerWidth - 32);
-            var h = Math.min(540, window.innerHeight - 80);
             bar.style.width = w + "px";
-            bar.style.height = h + "px";
             bar.style.top = "65px";
             bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
             posInit = true;
@@ -3488,10 +3522,30 @@
           panels.forEach(function (p) {
             p.classList.toggle("on", p.dataset.panel === tab);
           });
-          if (titleEl) {
-            titleEl.textContent = tab === "use" ? "How To Use" : (tab === "learn" ? "What You'll Learn" : "Guide");
-          }
+          fitHeight();
         }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        // Rotating a phone or resizing the window: keep the guide on screen and re-fit it.
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
 
         btns.forEach(function (btn) {
           var newBtn = btn.cloneNode(true);
@@ -3568,6 +3622,7 @@
               var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
               var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
               bar.style.width = nw + "px";
+              userSized = true;
               bar.style.height = nh + "px";
             }
             function onUp(ev) {

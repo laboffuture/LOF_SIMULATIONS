@@ -1065,7 +1065,9 @@
       /* Floating, draggable & resizable Guide / How to Use window */
       .helpwrap {
         position: fixed;
-        top: 14px;
+        /* vertically centred on the title row */
+        top: 27px;
+        transform: translateY(-50%);
         right: clamp(12px, 2.4vw, 30px);
         z-index: 40;
         display: flex;
@@ -1263,6 +1265,7 @@
       @media (max-width: 900px) {
         .helpwrap {
           position: static;
+          transform: none;
           align-items: stretch;
           margin-bottom: 10px;
           flex: 0 0 auto;
@@ -1326,6 +1329,18 @@
     }
     .card button.mini { background: #f3f6f8; }
   </style>
+  <style id="lof-guide">
+    /* guide pop-up: tabs centred in the header, grip pinned left, close button pinned right */
+    .fw-head { position: relative; }
+    .fw-head-actions { flex: 1; justify-content: center; }
+    .fw-head .fw-title { position: absolute; left: 12px; }
+    .fw-head .fw-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+    /* when the window is dragged very narrow there is no room to centre: sit the tabs beside the grip */
+    .helpbar.floatwin { container-type: inline-size; }
+    @container (max-width: 340px) {
+      .fw-head-actions { justify-content: flex-start; min-width: 0; padding: 0 32px 0 20px; }
+    }
+  </style>
 </head>
   <body>
     <div class="helpwrap">
@@ -1338,36 +1353,103 @@
       <div class="helpbar" id="helpbar">
         <div class="tabpanel" data-panel="use">
           <ol>
-            <li>Press <b>Start Flight</b>. The aircraft flies forward and the radar starts sweeping its 0°–180° front arc.</li>
             <li>
-              Watch the <b>Side View</b> (altitude) and the <b>Top View</b> (left and right) together. An obstacle is only in your
-              way if it lines up in <b>both</b> views.
+              Press <b>Start Flight</b>. The aircraft flies forward and the
+              radar starts sweeping its 0°–180° front arc. The strip under the
+              views shows your <b>Altitude</b>, <b>Lateral</b> position,
+              <b>Airspeed</b>, <b>Distance</b> and <b>Flight Time</b>.
             </li>
             <li>
-              Hold <b>Climb</b>, <b>Descend</b>, <b>Left</b> or <b>Right</b>, or use the arrow keys or W A S D, to steer
-              around mountains, aircraft, masts, balloons, drones and birds. If you touch one, or the sea, the flight ends.
+              Watch the <b>Side View</b> (height) and the <b>Top View</b>
+              (left and right) together. An obstacle is only in your way if
+              it lines up in <b>both</b> views.
             </li>
             <li>
-              Each object the radar detects becomes a <b>tracked contact</b>. Its blip updates every time the beam passes over it.
-              Press <b>+ Log</b> to add a contact to the <b>Detection Log</b>.
+              Steer with <b>Flight Controls</b> — hold <b>Climb</b>,
+              <b>Descend</b>, <b>Left</b> or <b>Right</b>, or use the arrow
+              keys or W A S D. Fly around mountains, aircraft, masts,
+              balloons, drones and birds. Touching one, or the sea, ends the
+              flight.
             </li>
             <li>
-              Switch <b>Visibility</b> to <b>Fog</b> to hide obstacles in the views, so you have to fly by radar alone.
+              Set the <b>Airspeed</b> — use <b>− Slower</b> / <b>+ Faster</b>
+              or pick <b>Slow</b>, <b>Medium</b> or <b>Fast</b>. Flying slower
+              gives you more time to react.
             </li>
             <li>
-              Narrow the <b>Scan Angle</b> or turn the radar off to see what the radar stops noticing.
+              Switch <b>Visibility</b> to <b>Fog</b> to hide the obstacles in
+              the views, so you have to fly by radar alone.
+            </li>
+            <li>
+              Use the <b>Radar Settings</b>: <b>Start Scan</b> turns the radar
+              on or off, the <b>Scan Angle</b> slider (30°–180°) sets how wide
+              it sweeps, and <b>Scan Speed</b> sets how often the beam passes
+              each spot.
+            </li>
+            <li>
+              Read the <b>Radar Screen</b>. Each echo appears as a blip. Its
+              direction is the angle where the sweep line meets it, and its
+              distance is how far out along that line it sits. Press
+              <b>⤢ Pop Out</b> to open the radar in its own window.
+            </li>
+            <li>
+              Check <b>Nearest Contact</b>: its <b>Distance</b>,
+              <b>Direction</b>, <b>Altitude</b> and whether you are on a
+              <b>Collision Course</b>. Closer than 400 m is <b>Danger</b>
+              (red), 400–800 m is <b>Caution</b> (yellow), and further away
+              is <b>Safe</b> (green).
+            </li>
+            <li>
+              Every object the radar picks up becomes a
+              <b>tracked contact</b>. Press <b>+ Log</b> or <b>+ Log All</b>
+              to save contacts to the <b>Detection Log</b>.
+            </li>
+            <li>
+              Narrow the <b>Scan Angle</b> or turn the radar off and see what
+              it stops noticing. After a crash, press <b>Fly Again</b>, or
+              <b>Reset</b> to start over.
             </li>
           </ol>
         </div>
         <div class="tabpanel" data-panel="learn">
           <ul>
-            <li>Radar finds an object's <b>direction</b> from the angle where the sweep line meets it</li>
-            <li>Radar finds <b>distance</b> from how far out along that angle the echo returns</li>
-            <li>Near contacts are a red danger warning, medium contacts a yellow caution, and far contacts a green safe reading</li>
-            <li>Radar reaches further than you can see, and it sees through fog, so it gives you time to react</li>
-            <li>A narrower scan angle covers less of the arc, and anything in the <b>blind zone</b> is never detected</li>
-            <li>A faster sweep revisits each spot more often, so tracked blips update more quickly</li>
-            <li>To avoid an obstacle you need its direction, distance <b>and</b> height, then you climb, descend or steer away</li>
+            <li>
+              <b>How radar works:</b> it sends out a beam and listens for the
+              echo that bounces back off objects.
+            </li>
+            <li>
+              <b>Direction:</b> radar finds where an object is from the angle
+              where the sweep line meets it.
+            </li>
+            <li>
+              <b>Distance:</b> radar finds how far away an object is from how
+              far out along that angle the echo comes back.
+            </li>
+            <li>
+              <b>Danger zones:</b> near contacts are a red danger warning,
+              medium ones a yellow caution, and far ones a green safe reading.
+            </li>
+            <li>
+              <b>Seeing further:</b> radar reaches further than your eyes and
+              works through fog, so it gives you time to react.
+            </li>
+            <li>
+              <b>Scan angle and blind zones:</b> a narrower scan covers less
+              of the arc, and anything in the blind zone is never detected.
+            </li>
+            <li>
+              <b>Scan speed:</b> a faster sweep passes each spot more often,
+              so the blips update more quickly.
+            </li>
+            <li>
+              <b>Avoiding obstacles:</b> you need an object's direction,
+              distance <b>and</b> height to know whether to climb, descend or
+              steer away.
+            </li>
+            <li>
+              <b>Fair testing:</b> change one setting at a time to see what
+              difference it makes to what the radar detects.
+            </li>
           </ul>
         </div>
       </div>
@@ -3541,8 +3623,7 @@
           head.className = "fw-head";
 
           var title = document.createElement("span");
-          title.className = "fw-title";
-          title.textContent = "How To Use";
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
           head.appendChild(title);
 
           var actions = document.createElement("div");
@@ -3557,7 +3638,7 @@
               b.type = "button";
               b.className = "fw-tab-btn";
               b.dataset.tab = t;
-              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What To Learn" : t);
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What You'll Learn" : t);
               actions.appendChild(b);
               tabBtns.push(b);
             });
@@ -3591,12 +3672,12 @@
 
         var btns = document.querySelectorAll(".helpbtn");
         var tabBtns = bar.querySelectorAll(".fw-tab-btn");
-        var titleEl = bar.querySelector(".fw-title");
         var closeBtn = bar.querySelector(".fw-close");
         var headEl = bar.querySelector(".fw-head");
         var gripEl = bar.querySelector(".fw-grip");
         var topZ = 10000;
         var posInit = false;
+        var userSized = false;
 
         function toFront() {
           bar.style.zIndex = ++topZ;
@@ -3612,9 +3693,7 @@
           toFront();
           if (!posInit) {
             var w = Math.min(440, window.innerWidth - 32);
-            var h = Math.min(540, window.innerHeight - 80);
             bar.style.width = w + "px";
-            bar.style.height = h + "px";
             bar.style.top = "65px";
             bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
             posInit = true;
@@ -3630,10 +3709,30 @@
           panels.forEach(function (p) {
             p.classList.toggle("on", p.dataset.panel === tab);
           });
-          if (titleEl) {
-            titleEl.textContent = tab === "use" ? "How To Use" : (tab === "learn" ? "What You'll Learn" : "Guide");
-          }
+          fitHeight();
         }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        // Rotating a phone or resizing the window: keep the guide on screen and re-fit it.
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
 
         btns.forEach(function (btn) {
           var newBtn = btn.cloneNode(true);
@@ -3710,6 +3809,7 @@
               var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
               var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
               bar.style.width = nw + "px";
+              userSized = true;
               bar.style.height = nh + "px";
             }
             function onUp(ev) {
