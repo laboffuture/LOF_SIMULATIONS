@@ -829,12 +829,23 @@
       color: #18233a;
     }
   </style>
+  <style id="lof-guide">
+    /* guide pop-up: tabs centred in the header, grip pinned left, close button pinned right */
+    .fw-head { position: relative; }
+    .fw-head-actions { flex: 1; justify-content: center; }
+    .fw-head .fw-title { position: absolute; left: 12px; }
+    .fw-head .fw-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+    /* when the window is dragged very narrow there is no room to centre: sit the tabs beside the grip */
+    .helpbar.floatwin { container-type: inline-size; }
+    @container (max-width: 340px) {
+      .fw-head-actions { justify-content: flex-start; min-width: 0; padding: 0 32px 0 20px; }
+    }
+  </style>
 </head>
   <body>
     <header class="top">
       <div class="title">
         <h1>INVISIBLE LINE PATROL</h1>
-        <p>UV SENSOR COMPARISON · GEAR-DRIVEN WALKING · LOF ROBOTICS</p>
       </div>
       <div class="helpbtns">
         <button type="button" class="helpbtn" data-tab="use">How To Use</button>
@@ -846,37 +857,95 @@
         <div class="tabpanel" data-panel="use">
           <ol>
             <li>
-              Pick a mode: <b>Pre-Programmed Route</b> or
-              <b>UV Light Chaser</b>
+              Pick a <b>Simulation Mode</b>: <b>Pre-Programmed Route</b> (the
+              bot follows a path you draw) or <b>UV Light Chaser</b> (the bot
+              chases a moving UV light).
             </li>
             <li>
-              Route mode: click and drag anywhere on the floor to draw your own
-              invisible UV path
+              <b>Route mode:</b> click and drag anywhere on the floor to draw
+              your own invisible UV path. The bot starts again from wherever
+              the path begins. Press <b>Show UV Path</b> to see it, or
+              <b>Clear Path</b> to start over.
             </li>
             <li>
-              Chaser mode: point your mouse anywhere on the floor — that's the
-              UV light the bot will chase
-            </li>
-            <li>Press <b>Start</b> when you're ready to let the bot go</li>
-            <li>
-              Watch the sensor readings and mode banner explain every decision
-              it makes
+              <b>Chaser mode:</b> point your mouse anywhere on the floor — that
+              is the UV light the bot will chase.
             </li>
             <li>
-              Try <b>Manual Motor Test</b> to control both motors yourself and
-              see how a speed difference alone causes a turn
+              Set the <b>UV Signal</b>: <b>UV Intensity</b> (20–100%) is how
+              strong the signal is, and <b>Sensor Threshold</b> (10–90%) is how
+              high a reading must be to count as "detected".
+            </li>
+            <li>
+              Set the <b>Walking Speed</b> (15–70) — the bot's normal leg speed
+              when both sensors agree.
+            </li>
+            <li>
+              Press <b>Start</b> to let the bot go. <b>Pause</b> freezes it
+              and <b>Reset Simulation</b> starts again.
+            </li>
+            <li>
+              Watch the <b>Bot Mode</b> banner under the floor — it explains
+              every decision the bot makes, such as following, turning or
+              searching.
+            </li>
+            <li>
+              Read the <b>Sensor Telemetry</b>: the <b>Left</b> and
+              <b>Right UV Sensor</b> readings, what the comparison decided,
+              the <b>Left</b> and <b>Right Motor Speed</b>, the
+              <b>Bot Mode</b>, <b>Search Pattern</b>,
+              <b>Distance Walked</b> and <b>Gear Rotation</b>.
+            </li>
+            <li>
+              Watch the gear diagram: motor rotation turns the gear, the gear
+              moves the linkage, and the linkage moves the legs to make the bot
+              walk.
+            </li>
+            <li>
+              Try <b>Manual Motor Test</b> to set the <b>Left</b> and
+              <b>Right Motor</b> (0–70) yourself, and see how a speed
+              difference alone makes the bot turn.
             </li>
           </ol>
         </div>
         <div class="tabpanel" data-panel="learn">
           <ul>
-            <li>How UV sensors detect an invisible path or light source</li>
-            <li>How left/right sensor readings are compared</li>
-            <li>How comparison logic decides direction</li>
-            <li>How a bot can actively chase a moving light in real time</li>
-            <li>How motor speed difference makes it turn</li>
-            <li>How gears &amp; linkages create walking motion</li>
-            <li>How patrol mode searches when the signal is lost</li>
+            <li>
+              <b>UV sensing:</b> UV sensors can detect a path or light source
+              that people can't see.
+            </li>
+            <li>
+              <b>Comparing two sensors:</b> the bot compares its left and right
+              readings to tell which side the UV signal is on.
+            </li>
+            <li>
+              <b>Comparison logic:</b> if one side reads stronger, the bot
+              turns that way; if both agree, it walks straight.
+            </li>
+            <li>
+              <b>Thresholds:</b> a reading only counts as "detected" once it
+              goes above the sensor threshold.
+            </li>
+            <li>
+              <b>Chasing in real time:</b> the bot keeps re-reading its sensors
+              so it can follow a light that moves.
+            </li>
+            <li>
+              <b>Turning with speed:</b> running one motor faster than the other
+              makes the bot turn — no steering wheel needed.
+            </li>
+            <li>
+              <b>Gears and linkages:</b> gears and linkages change a motor's
+              spinning into the walking motion of the legs.
+            </li>
+            <li>
+              <b>Searching:</b> when the signal is lost, the bot switches to a
+              patrol pattern to find it again.
+            </li>
+            <li>
+              <b>Fair testing:</b> change one setting at a time and keep the
+              others the same, so you know what caused the difference.
+            </li>
           </ul>
         </div>
       </div>
@@ -2206,8 +2275,7 @@
           head.className = "fw-head";
 
           var title = document.createElement("span");
-          title.className = "fw-title";
-          title.textContent = "How To Use";
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
           head.appendChild(title);
 
           var actions = document.createElement("div");
@@ -2222,7 +2290,7 @@
               b.type = "button";
               b.className = "fw-tab-btn";
               b.dataset.tab = t;
-              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What To Learn" : t);
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What You'll Learn" : t);
               actions.appendChild(b);
               tabBtns.push(b);
             });
@@ -2256,12 +2324,12 @@
 
         var btns = document.querySelectorAll(".helpbtn");
         var tabBtns = bar.querySelectorAll(".fw-tab-btn");
-        var titleEl = bar.querySelector(".fw-title");
         var closeBtn = bar.querySelector(".fw-close");
         var headEl = bar.querySelector(".fw-head");
         var gripEl = bar.querySelector(".fw-grip");
         var topZ = 10000;
         var posInit = false;
+        var userSized = false;
 
         function toFront() {
           bar.style.zIndex = ++topZ;
@@ -2277,9 +2345,7 @@
           toFront();
           if (!posInit) {
             var w = Math.min(440, window.innerWidth - 32);
-            var h = Math.min(540, window.innerHeight - 80);
             bar.style.width = w + "px";
-            bar.style.height = h + "px";
             bar.style.top = "65px";
             bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
             posInit = true;
@@ -2295,10 +2361,30 @@
           panels.forEach(function (p) {
             p.classList.toggle("on", p.dataset.panel === tab);
           });
-          if (titleEl) {
-            titleEl.textContent = tab === "use" ? "How To Use" : (tab === "learn" ? "What You'll Learn" : "Guide");
-          }
+          fitHeight();
         }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        // Rotating a phone or resizing the window: keep the guide on screen and re-fit it.
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
 
         btns.forEach(function (btn) {
           var newBtn = btn.cloneNode(true);
@@ -2375,6 +2461,7 @@
               var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
               var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
               bar.style.width = nw + "px";
+              userSized = true;
               bar.style.height = nh + "px";
             }
             function onUp(ev) {

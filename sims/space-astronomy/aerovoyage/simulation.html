@@ -187,6 +187,9 @@
         color: var(--accent-cyan);
         font-weight: 700;
       }
+      /* inactive cards keep the badge space so every card lines up */
+      .target-badge:empty { visibility: hidden; }
+      .target-badge:empty::before { content: "\00a0"; }
       .target-badge {
         display: inline-block;
         font-family: var(--mono);
@@ -1009,7 +1012,19 @@
       }
 
     </style>
-  </head>
+    <style id="lof-guide">
+    /* guide pop-up: tabs centred in the header, grip pinned left, close button pinned right */
+    .fw-head { position: relative; }
+    .fw-head-actions { flex: 1; justify-content: center; }
+    .fw-head .fw-title { position: absolute; left: 12px; }
+    .fw-head .fw-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+    /* when the window is dragged very narrow there is no room to centre: sit the tabs beside the grip */
+    .helpbar.floatwin { container-type: inline-size; }
+    @container (max-width: 340px) {
+      .fw-head-actions { justify-content: flex-start; min-width: 0; padding: 0 32px 0 20px; }
+    }
+  </style>
+</head>
   <body>
     <!-- Top header: title centred, How To Use & Guide buttons on the right -->
     <header class="top">
@@ -1024,17 +1039,101 @@
       <div class="helpbar" id="helpbar">
         <div class="tabpanel" data-panel="use">
           <ol>
-            <li><b>Select Target Planet:</b> Choose from Earth, Mars, Titan, Venus, or Jupiter using the planetary selector bar.</li>
-            <li><b>Review Atmospheric Data:</b> Compare gravity ($g$), air density ($\rho$), and ambient temperature.</li>
-            <li><b>Configure Aircraft:</b> Tune wing surface area and propulsion thrust for the chosen atmosphere.</li>
-            <li><b>Fly and Maneuver:</b> Pilot the aircraft across altitude bands to feel the dramatic differences in aerodynamic response.</li>
+            <li>
+              Pick a planet from the cards at the top: <b>Earth</b>,
+              <b>Mars</b> (thin air), <b>Titan</b> (dense air) or <b>Moon</b>
+              (no air at all). Each card shows the air density and gravity
+              there.
+            </li>
+            <li>
+              Choose a <b>Rotor Configuration</b> — <b>Bi</b> (2 rotors),
+              <b>Quad</b> (4), <b>Hexa</b> (6) or <b>Octo</b> (8).
+            </li>
+            <li>
+              Set the <b>Vehicle Mass</b> (0.4–5.0 kg). A heavier craft needs
+              more lift to get off the ground.
+            </li>
+            <li>
+              Set the <b>Rotor Diameter</b> and the <b>Blade Pitch Angle</b>
+              (<b>Shallow</b>, <b>Standard</b> or <b>Steep</b>). Bigger rotors
+              and steeper blades push more air down.
+            </li>
+            <li>
+              Raise the <b>Throttle Control</b> with the slider or the
+              <b>−10%</b>, <b>−1%</b>, <b>+1%</b> and <b>+10%</b> buttons.
+              <b>Motor Power</b> shows the current setting.
+            </li>
+            <li>
+              Watch the arrows on the craft. When thrust is bigger than weight
+              it climbs; when weight is bigger it descends. The label tells you
+              which force is winning.
+            </li>
+            <li>
+              Read <b>Flight Telemetry</b>: <b>Altitude</b>,
+              <b>Vertical Speed</b>, <b>Motor RPM</b>, <b>Flight State</b>
+              (Parked, Climbing, Hovering or Descent), <b>Rotor Thrust</b> and
+              <b>Vehicle Weight</b>.
+            </li>
+            <li>
+              Check <b>Hover Effort</b> — how hard the motors must work to hover
+              compared with Earth — and the RPM needed to hover on this planet.
+            </li>
+            <li>
+              Under <b>Environment &amp; Physics</b>, turn on
+              <b>Crosswind Shear &amp; Gusts</b> and set the
+              <b>Wind Velocity</b>, or turn on
+              <b>Show Lift Equation &amp; Curves</b> to see the maths and the
+              hover-RPM graph. Use <b>+</b> and <b>−</b> to zoom the view.
+            </li>
+            <li>
+              Press <b>Reset Flight</b> to start again, then change
+              <b>one</b> setting and compare. Open the
+              <b>Mission Flight Manual</b> for more detail.
+            </li>
           </ol>
         </div>
         <div class="tabpanel" data-panel="learn">
           <ul>
-            <li><b>Planetary Aerodynamics:</b> Lift equation $L = \frac{1}{2} \rho v^2 C_L S$ under extreme planetary atmospheres (dense Titan vs thin Mars).</li>
-            <li><b>Atmospheric Density Profiles:</b> How temperature, molecular weight, and gravity define atmospheric scale height.</li>
-            <li><b>Planetary Exploration Craft:</b> Engineering trade-offs required for winged atmospheric probes on other worlds.</li>
+            <li>
+              <b>How rotors make lift:</b> spinning blades push air downwards,
+              and the air pushes the craft up.
+            </li>
+            <li>
+              <b>Air density:</b> thick air gives the blades more to push on.
+              On Titan the craft lifts easily; on Mars the thin air makes it
+              very hard.
+            </li>
+            <li>
+              <b>Gravity:</b> weaker gravity means less weight to lift, so the
+              same craft hovers more easily on Mars or Titan than its air alone
+              suggests.
+            </li>
+            <li>
+              <b>No air, no lift:</b> on the Moon there is no air for the rotors
+              to push, so a rotor craft cannot fly at all.
+            </li>
+            <li>
+              <b>Thrust versus weight:</b> the craft climbs when thrust is bigger
+              than weight, hovers when they are equal, and descends when weight
+              wins.
+            </li>
+            <li>
+              <b>Rotor design:</b> more rotors, bigger blades and a steeper
+              pitch all move more air and make more thrust.
+            </li>
+            <li>
+              <b>The lift equation:</b> lift depends on air density, blade
+              speed, blade area and blade shape — L = ½ ρ v² C<sub>L</sub> S.
+            </li>
+            <li>
+              <b>Designing for other worlds:</b> a craft for Mars needs huge,
+              fast-spinning rotors and a very light body — like NASA's
+              Ingenuity helicopter.
+            </li>
+            <li>
+              <b>Fair testing:</b> change one setting at a time to see what
+              difference it makes.
+            </li>
           </ul>
         </div>
       </div>
@@ -1046,17 +1145,9 @@
 
         <!-- HIGH VISIBILITY PLANET SELECTOR BAR -->
         <div id="worldtabs">
-          <div class="wt-head">
-            <span class="title-badge">🌍 PLANETARY FLIGHT TARGETS</span>
-            <span class="hint-badge">CLICK PLANET TO SWITCH ATMOSPHERE</span>
-          </div>
           <div class="wt-row" id="wtabRow"></div>
         </div>
 
-        <div id="titlecard">
-          <h1>AeroVoyage Lab</h1>
-          <p>Planetary Aerodynamics &amp; Rotor Lift Simulation</p>
-        </div>
 
         <!-- VIEW ZOOM CONTROL -->
         <div id="zoomctl">
@@ -1081,15 +1172,9 @@
       </div>
 
       <div id="panel">
-        <!-- SIDEBAR PLANET QUICK SWITCH -->
-        <div class="sec">
-          <div class="sec-h">Flight Target Atmosphere <span>Location</span></div>
-          <div class="side-planet-grid" id="sidePlanetGrid"></div>
-        </div>
-
         <!-- TELEMETRY -->
         <div class="sec">
-          <div class="sec-h">Flight Telemetry <span>HUD Gauges</span></div>
+          <div class="sec-h">Flight Telemetry</div>
           <div id="telem">
             <div class="row"><dt>Altitude</dt><dd id="t_alt">0.0 <span class="u">m</span></dd></div>
             <div class="row"><dt>Vertical Speed</dt><dd id="t_vspeed">0.0 <span class="u">m/s</span></dd></div>
@@ -1121,7 +1206,7 @@
 
         <!-- DRONE BUILDER CONTROLS -->
         <div class="sec">
-          <div class="sec-h">Vehicle Configuration <span>Specs</span></div>
+          <div class="sec-h">Vehicle Configuration</div>
 
           <div class="ctl">
             <div class="ctl-top">
@@ -1162,7 +1247,7 @@
 
         <!-- ENVIRONMENT & MATH -->
         <div class="sec">
-          <div class="sec-h">Environment &amp; Physics <span>Analysis</span></div>
+          <div class="sec-h">Environment &amp; Physics</div>
           <label class="tog"
             ><span>Crosswind Shear &amp; Gusts</span><input type="checkbox" id="windTog"
           /></label>
@@ -1658,7 +1743,7 @@
             `<div>` +
             `<div class="wn">${w.name}</div>` +
             `<div class="wsub">${w.sub}</div>` +
-            `<span class="target-badge ${isActive ? "active" : ""}">${isActive ? "⚡ ACTIVE TARGET" : "FLY HERE ➔"}</span>` +
+            `<span class="target-badge ${isActive ? "active" : ""}">${isActive ? "⚡ ACTIVE" : ""}</span>` +
             `</div>`;
           row.appendChild(btn);
         });
@@ -1745,7 +1830,7 @@
             `<svg class="rdiag" viewBox="0 0 50 50">${svgContent}</svg>` +
             `<span class="rname">${name}</span>` +
             `<span class="rload">${label}</span>` +
-            `<span class="target-badge ${isActive ? "active" : ""}" style="font-size:7.5px; padding:2px 5px; margin-top:2px;">${isActive ? "ACTIVE" : "SELECT"}</span>`;
+            `<span class="target-badge ${isActive ? "active" : ""}" style="font-size:7.5px; padding:2px 5px; margin-top:2px;">${isActive ? "ACTIVE" : ""}</span>`;
 
           el.appendChild(card);
         });
@@ -1972,8 +2057,7 @@
           head.className = "fw-head";
 
           var title = document.createElement("span");
-          title.className = "fw-title";
-          title.textContent = "How To Use";
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
           head.appendChild(title);
 
           var actions = document.createElement("div");
@@ -1988,7 +2072,7 @@
               b.type = "button";
               b.className = "fw-tab-btn";
               b.dataset.tab = t;
-              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What To Learn" : t);
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What You'll Learn" : t);
               actions.appendChild(b);
               tabBtns.push(b);
             });
@@ -2022,12 +2106,12 @@
 
         var btns = document.querySelectorAll(".helpbtn");
         var tabBtns = bar.querySelectorAll(".fw-tab-btn");
-        var titleEl = bar.querySelector(".fw-title");
         var closeBtn = bar.querySelector(".fw-close");
         var headEl = bar.querySelector(".fw-head");
         var gripEl = bar.querySelector(".fw-grip");
         var topZ = 10000;
         var posInit = false;
+        var userSized = false;
 
         function toFront() {
           bar.style.zIndex = ++topZ;
@@ -2043,9 +2127,7 @@
           toFront();
           if (!posInit) {
             var w = Math.min(440, window.innerWidth - 32);
-            var h = Math.min(540, window.innerHeight - 80);
             bar.style.width = w + "px";
-            bar.style.height = h + "px";
             bar.style.top = "65px";
             bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
             posInit = true;
@@ -2061,10 +2143,30 @@
           panels.forEach(function (p) {
             p.classList.toggle("on", p.dataset.panel === tab);
           });
-          if (titleEl) {
-            titleEl.textContent = tab === "use" ? "How To Use" : (tab === "learn" ? "What You'll Learn" : "Guide");
-          }
+          fitHeight();
         }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        // Rotating a phone or resizing the window: keep the guide on screen and re-fit it.
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
 
         btns.forEach(function (btn) {
           var newBtn = btn.cloneNode(true);
@@ -2141,6 +2243,7 @@
               var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
               var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
               bar.style.width = nw + "px";
+              userSized = true;
               bar.style.height = nh + "px";
             }
             function onUp(ev) {

@@ -522,7 +522,21 @@
       }
 
     </style>
-  </head>
+    <style id="lof-guide">
+    /* guide pop-up: tabs centred in the header, grip pinned left, close button pinned right */
+    .fw-head { position: relative; }
+    .fw-head-actions { flex: 1; justify-content: center; }
+    .fw-head .fw-title { position: absolute; left: 12px; }
+    .fw-head .fw-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+    /* when the window is dragged very narrow there is no room to centre: sit the tabs beside the grip */
+    .helpbar.floatwin { container-type: inline-size; }
+    /* the header already has a close button — hide the old one left in the body */
+    .helpbar.floatwin .helpCloseTop { display: none; }
+    @container (max-width: 340px) {
+      .fw-head-actions { justify-content: flex-start; min-width: 0; padding: 0 32px 0 20px; }
+    }
+  </style>
+</head>
   <body>
     <!-- ================= TOP HEADER SPACE (matches Lift-Off) ================= -->
     <header class="top">
@@ -538,17 +552,86 @@
         <button type="button" class="helpCloseTop" id="helpCloseTop" aria-label="Close">✕</button>
         <div class="tabpanel" data-panel="use">
           <ol>
-            <li><b>Pick Modules:</b> Select space station components from the orbital inventory (core, solar arrays, habitats, airlocks).</li>
-            <li><b>Dock Components:</b> Drag modules onto glowing docking target ports to assemble the station.</li>
-            <li><b>Deploy Power Trusses:</b> Extend solar panel wings to satisfy station electrical power requirements.</li>
-            <li><b>Go Live in Orbit:</b> Press <b>Go Live in Orbit</b> to inspect the completed space station flying around Earth in 3D.</li>
+            <li>
+              You start in <b>Build Mode</b> with the first piece of the
+              International Space Station floating in space. The
+              <b>Station Assembly</b> bar shows how many of the 11 parts are in
+              place.
+            </li>
+            <li>
+              Pick a part from the <b>Parts Tray</b> on the right — such as
+              <b>Unity</b>, <b>Zvezda</b>, <b>Destiny</b> or
+              <b>Harmony</b>. Each card says what the part does and which
+              country built it (<b>USA</b>, <b>RUS</b> and others).
+            </li>
+            <li>
+              Drop the part on a <b>glowing dot</b> on the station. The glowing
+              dots show where the next part can attach.
+            </li>
+            <li>
+              Drag anywhere in the scene to orbit all the way around the
+              station, and scroll to zoom in and out.
+            </li>
+            <li>
+              Use <b>Compare Size To</b> — a <b>Field</b>, an <b>A380</b>
+              airliner or a <b>Whale</b> — to see how big the station really
+              is. <b>Off</b> hides the comparison.
+            </li>
+            <li>
+              Press <b>Reset</b> at any time to start the build again.
+            </li>
+            <li>
+              When the station is complete, press <b>▶ Go Live in Orbit</b> to
+              watch it fly around Earth.
+            </li>
+            <li>
+              In orbit, watch <b>Solar Power Now</b> and
+              <b>Battery Charge</b> change as the station moves between
+              sunlight and Earth's shadow, and read <b>The Real Numbers</b>
+              for the station's height, speed and size.
+            </li>
+            <li>
+              Tap the station, or press <b>Open Station Map</b>, to learn about
+              each part. Some parts let you <b>Try the Microgravity Demo</b> to
+              see how objects move without gravity.
+            </li>
+            <li>
+              Open <b>Partner Nations</b> to see which countries built the
+              station, or press <b>Back to Build Mode</b> to build it again.
+            </li>
           </ol>
         </div>
         <div class="tabpanel" data-panel="learn">
           <ul>
-            <li><b>Orbital Assembly:</b> Principles of modular space architecture in Low Earth Orbit (LEO).</li>
-            <li><b>Power & Thermal Balance:</b> Managing orbital eclipse periods using solar power generation and radiator arrays.</li>
-            <li><b>Microgravity Environment:</b> Orbital speed ($7.66\text{ km/s}$) and centripetal acceleration balancing gravitational attraction.</li>
+            <li>
+              <b>Building in space:</b> the ISS was put together piece by piece
+              in orbit, with each new module docking onto the last.
+            </li>
+            <li>
+              <b>Modules and nodes:</b> modules are rooms for living and working,
+              and nodes are hubs that connect them together.
+            </li>
+            <li>
+              <b>International teamwork:</b> countries including the USA,
+              Russia, Europe, Japan and Canada each built parts of the station.
+            </li>
+            <li>
+              <b>Size in space:</b> the station is about as wide as a football
+              field and weighs around 420,000 kg.
+            </li>
+            <li>
+              <b>Low Earth Orbit:</b> the ISS flies about 420 km up at about
+              7.7 km/s (28,000 km/h), circling Earth every 93 minutes — 16 times
+              a day.
+            </li>
+            <li>
+              <b>Solar power:</b> big solar wings make electricity in sunlight,
+              and batteries keep the station running in Earth's shadow.
+            </li>
+            <li>
+              <b>Microgravity:</b> the station and everything in it are always
+              falling around Earth, so objects float.
+            </li>
           </ul>
         </div>
       </div>
@@ -558,10 +641,6 @@
       <div id="stage">
         <div id="build3d"></div>
         <canvas id="scene"></canvas>
-        <div id="titlecard">
-          <h1>Astro Build</h1>
-          <p>Build the Space Station — then fly it around Earth</p>
-        </div>
         <div id="phaseTag" class="build">Build Mode</div>
         <div id="buildDoneBanner">Station complete! Press ▶ Go Live in Orbit</div>
         <div id="hintbar">Pick a part on the right, then drop it on a <b>glowing dot</b>. Drag anywhere to orbit all the way around — the floor turns with it.</div>
@@ -2066,8 +2145,7 @@
           head.className = "fw-head";
 
           var title = document.createElement("span");
-          title.className = "fw-title";
-          title.textContent = "How To Use";
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
           head.appendChild(title);
 
           var actions = document.createElement("div");
@@ -2082,7 +2160,7 @@
               b.type = "button";
               b.className = "fw-tab-btn";
               b.dataset.tab = t;
-              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What To Learn" : t);
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What You'll Learn" : t);
               actions.appendChild(b);
               tabBtns.push(b);
             });
@@ -2116,12 +2194,12 @@
 
         var btns = document.querySelectorAll(".helpbtn");
         var tabBtns = bar.querySelectorAll(".fw-tab-btn");
-        var titleEl = bar.querySelector(".fw-title");
         var closeBtn = bar.querySelector(".fw-close");
         var headEl = bar.querySelector(".fw-head");
         var gripEl = bar.querySelector(".fw-grip");
         var topZ = 10000;
         var posInit = false;
+        var userSized = false;
 
         function toFront() {
           bar.style.zIndex = ++topZ;
@@ -2137,9 +2215,7 @@
           toFront();
           if (!posInit) {
             var w = Math.min(440, window.innerWidth - 32);
-            var h = Math.min(540, window.innerHeight - 80);
             bar.style.width = w + "px";
-            bar.style.height = h + "px";
             bar.style.top = "65px";
             bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
             posInit = true;
@@ -2155,10 +2231,30 @@
           panels.forEach(function (p) {
             p.classList.toggle("on", p.dataset.panel === tab);
           });
-          if (titleEl) {
-            titleEl.textContent = tab === "use" ? "How To Use" : (tab === "learn" ? "What You'll Learn" : "Guide");
-          }
+          fitHeight();
         }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        // Rotating a phone or resizing the window: keep the guide on screen and re-fit it.
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
 
         btns.forEach(function (btn) {
           var newBtn = btn.cloneNode(true);
@@ -2237,6 +2333,7 @@
               var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
               var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
               bar.style.width = nw + "px";
+              userSized = true;
               bar.style.height = nh + "px";
             }
             function onUp(ev) {
