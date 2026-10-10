@@ -18,8 +18,9 @@ const PROJECTS = [
   { id: "bluetooth-navigator", title: "Bluetooth Navigator", category: "robotics", status: "live", url: "../sims/robotics/bluetooth-navigator/simulation.html", description: "Pair a master controller with a rover receiver wirelessly and steer through commands." },
   { id: "lost-bot-navigator-rover", title: "Lost Bot Navigation", category: "robotics", status: "live", url: "../sims/robotics/lost-bot-navigator-rover/simulation.html", description: "Navigate obstacles using distance sensor feedback with adaptive speed and emergency stops." },
   { id: "stability-scout-rover", title: "Stability Scout", category: "robotics", status: "live", url: "../sims/robotics/StabilityScoutRover/simulation.html", description: "Analyze terrain stability with compass heading disturbances and manage rover balance and speed." },
-  ...Array.from({ length: 17 }, (_, i) => ({
-    id: `robotics-coming-soon-${i + 14}`,
+  { id: "magnetic-heading-patrol", title: "Magnetic Heading Patrol", category: "robotics", status: "live", url: "../sims/robotics/magnet-security-rover/index.html", description: "Guard two zones of a space base: a magnetometer keeps the rover on its heading while an AMG8833 thermal sensor spots intruders and sounds the alarm." },
+  ...Array.from({ length: 16 }, (_, i) => ({
+    id: `robotics-coming-soon-${i + 15}`,
     title: `Robotics Project ${String(i + 14).padStart(2, "0")}`,
     category: "robotics",
     status: "coming-soon",

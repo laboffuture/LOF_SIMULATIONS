@@ -761,7 +761,19 @@
         padding: 7px 12px;
       }
     </style>
-  </head>
+    <style id="lof-guide">
+    /* guide pop-up: tabs centred in the header, grip pinned left, close button pinned right */
+    .fw-head { position: relative; }
+    .fw-head-actions { flex: 1; justify-content: center; }
+    .fw-head .fw-title { position: absolute; left: 12px; }
+    .fw-head .fw-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+    /* when the window is dragged very narrow there is no room to centre: sit the tabs beside the grip */
+    .helpbar.floatwin { container-type: inline-size; }
+    @container (max-width: 340px) {
+      .fw-head-actions { justify-content: flex-start; min-width: 0; padding: 0 32px 0 20px; }
+    }
+  </style>
+</head>
   <body>
     <!-- ---- TOP HEADER ---- -->
     <header class="top">
@@ -782,32 +794,79 @@
       <div class="helpbar" id="helpbar">
         <div class="tabpanel" data-panel="use">
           <ol>
-            <li>Look at the <b>target shape card</b> at the top left to see the constellation outline you are hunting for.</li>
-            <li><b>Pan the sky</b> by dragging in any direction across the main view to locate the matching group of real stars.</li>
-            <li><b>Zoom</b> in or out with the mouse scroll wheel (or pinch on a touch screen), or use the <b>+ / &minus;</b> buttons in the bottom corner. Zoom in to separate stars that sit close together.</li>
-            <li><b>Tap the stars</b> that form the pattern in any reasonable order. Correct taps light up and connect automatically with lines following the real constellation's line data.</li>
-            <li>A wrong tap just doesn't connect — there is <b>no timer and no penalty</b> for wrong taps, keeping the experience low-pressure for pattern-recognition and collection.</li>
-            <li>Tap the <b>HINT</b> button in the top corner to toggle an optional faint guide outline over the correct stars in the current view.</li>
-            <li>Once all the right stars are connected, its name appears, then the constellation lifts out of the sky and twirls while a short <b>one-line fact</b> appears beside it.</li>
-            <li>Completed shapes are collected in your <b>star-map scrapbook</b> at the bottom. Tap any collected constellation in the scrapbook to pop up a small card with its shape, name, and fact, and to highlight it again in the sky.</li>
+            <li>
+              Look at the <b>Target Shape</b> card at the top left. It shows the
+              outline of the constellation you are hunting for.
+            </li>
+            <li>
+              <b>Drag</b> the sky in any direction to pan around and find the
+              group of stars that matches. The sky wraps around, so you can
+              keep going.
+            </li>
+            <li>
+              <b>Zoom</b> with the mouse wheel, by pinching on a touch screen,
+              or with the <b>+</b> and <b>−</b> buttons, to separate stars that
+              sit close together.
+            </li>
+            <li>
+              <b>Tap the stars</b> that make the shape, in any order. Correct
+              stars light up and join with lines; a wrong tap simply doesn't
+              connect. There is no timer.
+            </li>
+            <li>
+              Stuck? Press <b>Hint</b> to show a faint outline over the right
+              stars. Press it again to hide it.
+            </li>
+            <li>
+              When the shape is complete, the constellation's name and a short
+              fact appear. Press <b>Next Target</b> to hunt the next one.
+            </li>
+            <li>
+              Each find is saved in the <b>Star-Map Scrapbook</b> at the bottom
+              (18 to collect). Tap one to see its card, then press
+              <b>Highlight in Sky</b> to find it again.
+            </li>
+            <li>
+              Later rounds show fainter stars, so the shapes get harder to
+              spot.
+            </li>
           </ol>
         </div>
-
         <div class="tabpanel" data-panel="learn">
-          <p style="margin-bottom: 12px; font-size: 13.5px; color: var(--txt);">
-            <b>Learning Objective:</b> The learner should come away able to recognize that constellations are patterns made from real, specific stars in the actual sky, and be able to pick out a familiar shape (like the Big Dipper or Orion) from a busy field of stars on sight.
-          </p>
           <ul>
-            <li><b>Real Star Data:</b> The star field is a simplified but real rendering using genuine star positions:
-              <ul>
-                <li><b>Right Ascension (RA):</b> The star's position measured like longitude on the sky (0–360°).</li>
-                <li><b>Declination (Dec):</b> The star's position measured like latitude on the sky (−90° to +90°).</li>
-                <li><b>Apparent Magnitude:</b> How bright the star looks on a reversed, logarithmic scale (lower numbers are brighter; e.g. Sirius is about −1.46, naked-eye faint stars are around +5).</li>
-              </ul>
+            <li>
+              <b>Constellations are real:</b> each one is a pattern made from
+              real, specific stars in the night sky.
             </li>
-            <li><b>Flat, Pannable Sky Projection:</b> Treating the entire sky as one large, fixed, pannable flat map using equirectangular projection where RA wraps around seamlessly at the edges (panning past 360° loops back to 0°).</li>
-            <li><b>Real Brightness Rendering:</b> Display sizes follow the formula <code>displaySize = baseSize × 10^(-0.2 × magnitude)</code>, making bright stars noticeably larger and faint stars subtle.</li>
-            <li><b>Difficulty Progression:</b> As rounds advance, magnitude cutoffs progressively lower (allowing fainter stars up to magnitude 4–5 into the sky), making the correct pattern genuinely harder to pick out from background clutter.</li>
+            <li>
+              <b>Spotting shapes:</b> you learn to pick out familiar patterns,
+              like the Big Dipper or Orion, from a busy field of stars.
+            </li>
+            <li>
+              <b>Right Ascension (RA):</b> a star's position measured like
+              longitude on the sky, from 0° to 360°.
+            </li>
+            <li>
+              <b>Declination (Dec):</b> a star's position measured like
+              latitude on the sky, from −90° to +90°.
+            </li>
+            <li>
+              <b>Apparent magnitude:</b> how bright a star looks. Lower numbers
+              are brighter: Sirius is about −1.5, while the faintest stars you
+              can see by eye are about +5.
+            </li>
+            <li>
+              <b>Brightness and size:</b> bright stars are drawn bigger and
+              faint stars smaller, just as they look in the real sky.
+            </li>
+            <li>
+              <b>A sky map:</b> the whole sky is shown as one flat map. Going
+              past 360° of RA brings you back round to 0°.
+            </li>
+            <li>
+              <b>Faint stars make it harder:</b> as more faint stars appear,
+              the shape hides among them, just like under a dark sky.
+            </li>
           </ul>
         </div>
       </div>
@@ -2388,8 +2447,7 @@
           head.className = "fw-head";
 
           var title = document.createElement("span");
-          title.className = "fw-title";
-          title.textContent = "How To Use";
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
           head.appendChild(title);
 
           var actions = document.createElement("div");
@@ -2438,12 +2496,12 @@
 
         var btns = document.querySelectorAll(".helpbtn");
         var tabBtns = bar.querySelectorAll(".fw-tab-btn");
-        var titleEl = bar.querySelector(".fw-title");
         var closeBtn = bar.querySelector(".fw-close");
         var headEl = bar.querySelector(".fw-head");
         var gripEl = bar.querySelector(".fw-grip");
         var topZ = 10000;
         var posInit = false;
+        var userSized = false;
 
         function toFront() {
           bar.style.zIndex = ++topZ;
@@ -2458,10 +2516,8 @@
         function openTab(tab) {
           toFront();
           if (!posInit) {
-            var w = Math.min(460, window.innerWidth - 32);
-            var h = Math.min(540, window.innerHeight - 80);
+            var w = Math.min(440, window.innerWidth - 32);
             bar.style.width = w + "px";
-            bar.style.height = h + "px";
             bar.style.top = "65px";
             bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
             posInit = true;
@@ -2477,10 +2533,30 @@
           panels.forEach(function (p) {
             p.classList.toggle("on", p.dataset.panel === tab);
           });
-          if (titleEl) {
-            titleEl.textContent = tab === "use" ? "How To Use" : (tab === "learn" ? "What You'll Learn" : "Guide");
-          }
+          fitHeight();
         }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        // Rotating a phone or resizing the window: keep the guide on screen and re-fit it.
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
 
         btns.forEach(function (btn) {
           btn.addEventListener("click", function () {
@@ -2552,6 +2628,7 @@
               var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
               var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
               bar.style.width = nw + "px";
+              userSized = true;
               bar.style.height = nh + "px";
             }
             function onUp(ev) {

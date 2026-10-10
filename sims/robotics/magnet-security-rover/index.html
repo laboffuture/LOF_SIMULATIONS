@@ -1,0 +1,1825 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Magnetic Heading Patrol</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --card: rgba(13, 22, 48, 0.88);
+        --card2: rgba(22, 34, 70, 0.95);
+        --line: rgba(125, 155, 235, 0.2);
+        --txt: #e9eeff;
+        --mut: #a3b2d9;
+        --dim: #6c7ca6;
+        --accent: #f97316;
+        --blue: #3b82f6;
+        --cyan: #22d3ee;
+        --ok: #22c55e;
+        --warn: #f59e0b;
+        --danger: #ef4444;
+        --head: "Orbitron", sans-serif;
+        --body: "Rajdhani", sans-serif;
+        --r: 14px;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; }
+      body {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        font-family: var(--body);
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--txt);
+        background:
+          radial-gradient(1000px 600px at 12% -10%, rgba(59, 130, 246, 0.22), transparent 60%),
+          radial-gradient(900px 600px at 100% 110%, rgba(168, 85, 247, 0.18), transparent 60%),
+          linear-gradient(rgba(120, 150, 230, 0.05) 1px, transparent 1px) 0 0 / 32px 32px,
+          linear-gradient(90deg, rgba(120, 150, 230, 0.05) 1px, transparent 1px) 0 0 / 32px 32px,
+          #060c1d;
+      }
+
+      /* ================= HEADER ================= */
+      header.top {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 16px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(6, 12, 29, 0.72);
+        backdrop-filter: blur(8px);
+        flex: 0 0 auto;
+        position: relative;
+        z-index: 50;
+      }
+      .title { grid-column: 2; text-align: center; min-width: 0; }
+      .title h1 {
+        margin: 0;
+        font-family: var(--head);
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+      }
+      .helpbtns { grid-column: 3; justify-self: end; display: flex; gap: 8px; }
+      .helpbtn {
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: #fff;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 10px;
+        transition: transform 0.15s ease;
+      }
+      .helpbtn:hover { transform: translateY(-1px); }
+      .helpbtn[data-tab="use"] { background: linear-gradient(135deg, #fb923c, #ea580c); }
+      .helpbtn[data-tab="learn"] { background: linear-gradient(135deg, #60a5fa, #2563eb); }
+      .helpbtn.on { box-shadow: inset 0 0 0 2px #fff; }
+      .helpbar { display: none; }
+      .tabpanel { display: none; }
+      .tabpanel.on { display: block; }
+
+      /* ================= GUIDE POP-UP ================= */
+      .helpbar.floatwin {
+        position: fixed !important;
+        z-index: 10000 !important;
+        display: none;
+        flex-direction: column !important;
+        background: #fcfdfe !important;
+        border: 1px solid #dbe2e8 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45) !important;
+        overflow: hidden !important;
+        min-width: 280px !important;
+        min-height: 200px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: calc(100vw - 16px) !important;
+        max-height: calc(100vh - 16px) !important;
+        container-type: inline-size;
+      }
+      .helpbar.floatwin.show { display: flex !important; }
+      .fw-head {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 12px;
+        background: #f3f6f8;
+        border-bottom: 1px solid #dbe2e8;
+        cursor: move;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+        flex: 0 0 auto;
+      }
+      .fw-title { position: absolute; left: 12px; display: flex; align-items: center; }
+      .fw-title::before { content: "⠿"; font-size: 13px; color: #8a949d; }
+      .fw-head-actions { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; }
+      .fw-tab-btn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 4px 8px;
+        border-radius: 5px;
+        border: 1px solid #dbe2e8;
+        background: #fff;
+        color: #4c5c6b;
+      }
+      .fw-tab-btn:hover { border-color: #8a949d; color: #17293b; }
+      .fw-tab-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+      .fw-close {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        border: 1px solid #dbe2e8;
+        background: #fff;
+        color: #4c5c6b;
+        font-size: 12px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .fw-close:hover { background: #fbe7e7; border-color: #f0c4c4; color: #8a1f1f; }
+      .fw-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 14px 16px;
+        overflow-y: auto;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #17293b;
+      }
+      .fw-body ol, .fw-body ul { margin: 0; padding-left: 20px; }
+      .fw-body li { margin-bottom: 6px; }
+      .fw-body li:last-child { margin-bottom: 0; }
+      .fw-body b { color: #1d6fd8; }
+      .fw-grip {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 16px;
+        height: 16px;
+        cursor: nwse-resize;
+        touch-action: none;
+        background: linear-gradient(135deg, transparent 50%, #8a949d 50%, #8a949d 58%, transparent 58%, transparent 70%, #8a949d 70%, #8a949d 78%, transparent 78%);
+      }
+      .floatwin.dragging { opacity: 0.94; }
+      @container (max-width: 340px) {
+        .fw-head-actions { justify-content: flex-start; min-width: 0; padding: 0 32px 0 20px; }
+      }
+
+      /* ================= LAYOUT ================= */
+      .app {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(250px, 300px) minmax(0, 1fr) minmax(250px, 300px);
+        gap: 10px;
+        padding: 10px;
+      }
+      .col {
+        min-height: 0;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(125, 155, 235, 0.3) transparent;
+      }
+      .mid { overflow: hidden; }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        padding: 10px 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        flex: 0 0 auto;
+      }
+      .card h3 {
+        margin: 0 0 8px;
+        font-family: var(--head);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: var(--cyan);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
+      }
+      .sl { margin: 7px 0; }
+      .sl .lab { display: flex; justify-content: space-between; font-size: 13.5px; color: var(--mut); }
+      .sl .lab b { color: var(--txt); font-family: var(--head); font-size: 11px; }
+      input[type="range"] { width: 100%; accent-color: var(--accent); margin: 3px 0 0; cursor: pointer; }
+      .btn {
+        cursor: pointer;
+        font-family: var(--body);
+        font-weight: 700;
+        font-size: 13.5px;
+        color: var(--txt);
+        background: var(--card2);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        padding: 6px 10px;
+        transition: border-color 0.15s ease, background 0.15s ease;
+      }
+      .btn:hover { border-color: var(--cyan); }
+      .btn.pri { background: linear-gradient(135deg, #fb923c, #ea580c); border-color: transparent; color: #fff; }
+      .row { display: flex; gap: 6px; flex-wrap: wrap; }
+      .row .btn { flex: 1; }
+      .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+      .seg .btn { line-height: 1.15; padding: 6px 6px; }
+      .seg .btn small { display: block; font-weight: 600; font-size: 11.5px; color: var(--mut); }
+      .seg .btn.on { background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-color: transparent; }
+      .seg .btn[data-z="1"].on { background: linear-gradient(135deg, #a855f7, #7e22ce); }
+      .seg .btn.on small { color: #dbe6ff; }
+      .tog { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--mut); cursor: pointer; margin-top: 6px; }
+      .tog input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; cursor: pointer; }
+      .kv {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+        font-size: 13.5px;
+        color: var(--mut);
+        padding: 2px 0;
+        border-bottom: 1px dashed rgba(125, 155, 235, 0.13);
+      }
+      .kv:last-child { border-bottom: none; }
+      .kv b { color: var(--txt); font-family: var(--head); font-size: 11.5px; text-align: right; }
+      .sub { font-family: var(--head); font-size: 9.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--dim); margin: 8px 0 3px; }
+
+      /* compass */
+      .cmp { display: grid; grid-template-columns: 128px 1fr; gap: 10px; align-items: center; }
+      .cmp canvas { width: 128px; height: 128px; display: block; }
+      .legend { display: flex; gap: 10px; font-size: 12px; color: var(--mut); margin-top: 4px; }
+      .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+
+      /* centred bars */
+      .bars { display: grid; grid-template-columns: 22px 1fr 62px; gap: 4px 8px; align-items: center; font-size: 13px; }
+      .bars span:first-child, .bars .ax { color: var(--mut); font-family: var(--head); font-size: 10.5px; font-weight: 700; }
+      .bars .val { font-family: var(--head); font-size: 10.5px; text-align: right; }
+      .bar { position: relative; height: 8px; background: rgba(255, 255, 255, 0.07); border-radius: 4px; }
+      .bar::after { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: rgba(255, 255, 255, 0.25); }
+      .bar i { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--cyan); transition: width 0.08s linear, left 0.08s linear; }
+      .formula { margin-top: 8px; font-family: var(--head); font-size: 10px; color: var(--mut); background: rgba(0, 0, 0, 0.25); border-radius: 8px; padding: 6px 8px; text-align: center; }
+      .decision { margin-top: 8px; border-radius: 10px; padding: 7px 10px; background: rgba(34, 197, 94, 0.14); border: 1px solid rgba(34, 197, 94, 0.5); }
+      .decision .d1 { font-size: 12.5px; color: var(--mut); }
+      .decision .d2 { font-family: var(--head); font-size: 12px; font-weight: 700; }
+      .decision.warn { background: rgba(249, 115, 22, 0.14); border-color: rgba(249, 115, 22, 0.6); }
+      .decision.bad { background: rgba(239, 68, 68, 0.16); border-color: rgba(239, 68, 68, 0.6); }
+      .decision.idle { background: rgba(148, 163, 184, 0.12); border-color: rgba(148, 163, 184, 0.4); }
+
+      /* flow chips */
+      .flows { display: flex; flex-direction: column; gap: 6px; flex: 0 0 auto; }
+      .flow { display: flex; align-items: stretch; gap: 4px; }
+      .ftag {
+        flex: 0 0 58px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--head);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        border-radius: 10px;
+        color: #fff;
+      }
+      .ftag.h { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+      .ftag.t { background: linear-gradient(135deg, #f97316, #c2410c); }
+      .chip {
+        flex: 1 1 0;
+        min-width: 0;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 4px 3px;
+        text-align: center;
+        transition: background 0.2s ease, border-color 0.2s ease;
+      }
+      .chip .k { font-size: 11.5px; color: var(--mut); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .chip .v { font-family: var(--head); font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .arrow { align-self: center; color: var(--dim); font-size: 10px; }
+      .chip.on { border-color: rgba(34, 211, 238, 0.55); }
+      .chip.warn { border-color: var(--accent); background: rgba(249, 115, 22, 0.16); }
+      .chip.good { border-color: var(--ok); background: rgba(34, 197, 94, 0.14); }
+      .chip.bad { border-color: var(--danger); background: rgba(239, 68, 68, 0.22); }
+
+      /* stage */
+      .stage {
+        flex: 1 1 auto;
+        min-height: 0;
+        position: relative;
+        border-radius: var(--r);
+        border: 1px solid var(--line);
+        background: rgba(5, 10, 24, 0.6);
+        overflow: hidden;
+      }
+      .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; touch-action: none; }
+      .ov { position: absolute; top: 8px; left: 10px; right: 10px; display: flex; justify-content: space-between; gap: 8px; pointer-events: none; }
+      .pill {
+        display: inline-block;
+        padding: 4px 11px;
+        border-radius: 999px;
+        font-family: var(--head);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        border: 1px solid transparent;
+        white-space: nowrap;
+      }
+      .pill.safe, .pill.good { background: rgba(34, 197, 94, 0.18); border-color: rgba(34, 197, 94, 0.6); color: #86efac; }
+      .pill.mon, .pill.warn { background: rgba(245, 158, 11, 0.18); border-color: rgba(245, 158, 11, 0.6); color: #fcd34d; }
+      .pill.det, .pill.bad { background: rgba(239, 68, 68, 0.25); border-color: rgba(239, 68, 68, 0.75); color: #fecaca; }
+      .pill.idle { background: rgba(148, 163, 184, 0.16); border-color: rgba(148, 163, 184, 0.5); color: #cbd5e1; }
+      .pill.det { animation: blink 0.8s ease-in-out infinite; }
+      .hint { font-size: 12.5px; color: var(--mut); background: rgba(6, 12, 29, 0.7); border-radius: 8px; padding: 3px 8px; }
+      .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: 0 0 104px; min-height: 0; }
+      .charts .card { display: flex; flex-direction: column; padding: 7px 10px 8px; min-height: 0; }
+      .charts h3 { margin-bottom: 4px; }
+      .charts canvas { flex: 1 1 0; height: 0; min-height: 0; width: 100%; display: block; }
+
+      /* thermal */
+      .tgrid {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 2px;
+        aspect-ratio: 1;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #050a18;
+        padding: 2px;
+      }
+      .tgrid div {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.88);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        border-radius: 2px;
+      }
+      .tgrid div.hot { outline: 2px solid #fff; outline-offset: -2px; }
+      .scale { position: relative; height: 10px; border-radius: 5px; margin: 10px 0 2px; background: linear-gradient(90deg, #0a1640, #2a2f9a 20%, #7b2fb8 36%, #d6336c 52%, #f76707 64%, #fcc419 80%, #fff9db); }
+      .scale .thr { position: absolute; top: -5px; bottom: -5px; width: 3px; margin-left: -1.5px; background: #fff; border-radius: 2px; box-shadow: 0 0 0 1px #000; }
+      .scale .mx { position: absolute; top: -9px; width: 0; height: 0; margin-left: -5px; border: 5px solid transparent; border-top-color: var(--cyan); }
+      .scale-l { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--dim); }
+      .alerts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .dev { display: flex; align-items: center; gap: 9px; background: var(--card2); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+      .dev .n { font-size: 12.5px; color: var(--mut); line-height: 1.1; }
+      .dev .s { font-family: var(--head); font-size: 11px; font-weight: 700; }
+      .led { flex: 0 0 22px; width: 22px; height: 22px; border-radius: 50%; background: #3a1414; border: 2px solid #5a1d1d; }
+      .led.on { background: #ff3b3b; border-color: #ffb4b4; box-shadow: 0 0 18px 6px rgba(255, 59, 59, 0.7); animation: blink 0.5s steps(2) infinite; }
+      .buz { flex: 0 0 26px; width: 26px; height: 26px; color: #64748b; }
+      .buz .w { opacity: 0; }
+      .buz.on { color: #fbbf24; }
+      .buz.on .w { animation: wave 0.6s ease-out infinite; }
+      .buz.on .w2 { animation-delay: 0.2s; }
+      @keyframes blink { 50% { opacity: 0.45; } }
+      @keyframes wave { 0% { opacity: 1; } 100% { opacity: 0; } }
+      .log { font-size: 13px; color: var(--mut); max-height: 150px; overflow-y: auto; scrollbar-width: thin; }
+      .log div { padding: 3px 0; border-bottom: 1px dashed rgba(125, 155, 235, 0.13); line-height: 1.3; }
+      .log span { color: var(--dim); font-family: var(--head); font-size: 9.5px; margin-right: 6px; }
+
+      /* ================= PHONE / TABLET ================= */
+      @media (max-width: 980px) {
+        html, body { height: auto; overflow: auto; }
+        body { overflow-x: hidden; }
+        .app { grid-template-columns: 1fr; padding: 8px; }
+        .mid { order: -1; overflow: visible; }
+        .col { overflow: visible; }
+        .stage { flex: none; aspect-ratio: 22 / 16.5; }
+        .charts { flex: none; height: 104px; }
+        .flow { flex-wrap: wrap; }
+        .flow .arrow { display: none; }
+        .ftag { flex: 1 1 100%; padding: 3px 0; }
+        .chip { flex: 1 1 30%; }
+      }
+      @media (max-width: 600px) {
+        header.top { grid-template-columns: 1fr; gap: 6px; padding: 8px 12px; }
+        .helpbtns { grid-row: 1; grid-column: 1; justify-self: center; }
+        .title { grid-row: 2; grid-column: 1; }
+        .title h1 { font-size: 14px; }
+        .helpbtn { font-size: 10px; padding: 7px 10px; }
+        .charts { grid-template-columns: 1fr; height: auto; }
+        .charts .card { height: 100px; }
+        .hint { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div></div>
+      <div class="title"><h1>Magnetic Heading Patrol</h1></div>
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">What You'll Learn</button>
+      </div>
+      <div class="helpbar" id="helpbar">
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li>
+              The rover starts patrolling <b>Zone 1</b> on its own. Press
+              <b>Pause</b> to stop it and <b>Reset</b> to put it back at the
+              start of the zone.
+            </li>
+            <li>
+              Choose <b>Zone 1 · Habitat Corridor</b> or
+              <b>Zone 2 · Research Lab</b>. The rover loads that zone's
+              <b>target heading</b> (90° east or 0° north) and drives straight
+              along it.
+            </li>
+            <li>
+              Move the <b>Target Heading</b> slider. The rover sees a heading
+              error and turns until it faces the new direction.
+            </li>
+            <li>
+              Watch the <b>Magnetometer</b> panel: the compass shows the target
+              (green) and the current heading (orange), the
+              <b>X, Y and Z</b> field values, the <b>heading error</b>, the
+              rover's decision and the <b>left and right motor</b> speeds.
+            </li>
+            <li>
+              Press <b>Bump!</b> or <b>Rotate 30°</b> to knock the rover off
+              course. Watch the motors speed up on one side and the cyan trail
+              curve back onto the heading.
+            </li>
+            <li>
+              Raise <b>Vibration</b> to shake the rover as it drives. Small
+              wobbles inside the green <b>heading threshold</b> band are
+              ignored; bigger ones are corrected.
+            </li>
+            <li>
+              Change the <b>Heading Threshold</b> and
+              <b>Correction Sensitivity</b>, or turn off
+              <b>Auto-correction</b> to see the rover drift away from its path.
+            </li>
+            <li>
+              Click on the map to place the <b>alien intruder</b> (drag it to
+              move it), or press <b>Place Intruder Ahead</b>.
+            </li>
+            <li>
+              Watch the <b>AMG8833</b> 8×8 thermal grid warm up as the rover
+              gets close. The status changes from <b>Safe</b> to
+              <b>Monitoring</b> to <b>Intruder Detected</b>.
+            </li>
+            <li>
+              Change the <b>Intruder Temperature</b> and the
+              <b>Temperature Threshold</b>. The <b>light and buzzer</b> turn on
+              only when the hottest pixel crosses the threshold, and stay on
+              for the <b>Alert Duration</b> after the heat drops. Then the rover
+              continues its patrol.
+            </li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <ul>
+            <li>
+              <b>Magnetometer:</b> a triple-axis magnetometer measures the
+              magnetic field along its X, Y and Z axes.
+            </li>
+            <li>
+              <b>Calculating heading:</b> the X and Y values give the direction
+              the rover faces: heading = atan2(Y, X).
+            </li>
+            <li>
+              <b>Heading comparison:</b> the controller subtracts the current
+              heading from the target heading to get the heading error.
+            </li>
+            <li>
+              <b>Motor correction:</b> to turn right the left motor speeds up
+              and the right motor slows down, and the other way round to turn
+              left.
+            </li>
+            <li>
+              <b>Threshold and sensitivity:</b> errors smaller than the heading
+              threshold are ignored; the sensitivity sets how hard the rover
+              steers back.
+            </li>
+            <li>
+              <b>Disturbances:</b> bumps, vibration and uneven motors push the
+              rover off course, so it must keep checking and correcting.
+            </li>
+            <li>
+              <b>Thermal imaging:</b> the AMG8833 sees heat, not a picture: 64
+              infrared pixels each measure a temperature.
+            </li>
+            <li>
+              <b>Temperature threshold:</b> a warm intruder is only reported
+              when its heat crosses the set limit, which avoids false alarms.
+            </li>
+            <li>
+              <b>Automatic alerts:</b> the controller switches on the light and
+              buzzer by itself, keeps them on for a few seconds, then lets the
+              rover carry on.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <main class="app">
+      <!-- ============ LEFT: heading system ============ -->
+      <aside class="col left">
+        <div class="card">
+          <h3>Patrol Zone</h3>
+          <div class="seg" id="zoneSeg">
+            <button type="button" class="btn on" data-z="0">Zone 1<small>Habitat Corridor</small></button>
+            <button type="button" class="btn" data-z="1">Zone 2<small>Research Lab</small></button>
+          </div>
+          <div class="sl">
+            <div class="lab">Target Heading <b id="tgtV">90°</b></div>
+            <input type="range" id="tgt" min="0" max="359" step="1" value="90" />
+          </div>
+          <div class="row">
+            <button type="button" class="btn pri" id="runBtn">⏸ Pause</button>
+            <button type="button" class="btn" id="resetBtn">↺ Reset</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Magnetometer <span class="pill good" id="magPill">On course</span></h3>
+          <div class="cmp">
+            <canvas id="compass" width="128" height="128"></canvas>
+            <div>
+              <div class="kv">Target <b id="tV">90°</b></div>
+              <div class="kv">Current <b id="cV">90°</b></div>
+              <div class="kv">Error <b id="eV">0°</b></div>
+              <div class="legend"><span><i style="background:#22c55e"></i>Target</span><span><i style="background:#f97316"></i>Current</span></div>
+            </div>
+          </div>
+          <div class="decision" id="decBox">
+            <div class="d1" id="dec1">Correct path</div>
+            <div class="d2" id="dec2">Move straight</div>
+          </div>
+          <div class="sub">Magnetic field (µT)</div>
+          <div class="bars">
+            <span>X</span><div class="bar"><i id="bx"></i></div><span class="val" id="xV">0</span>
+            <span>Y</span><div class="bar"><i id="by"></i></div><span class="val" id="yV">0</span>
+            <span>Z</span><div class="bar"><i id="bz"></i></div><span class="val" id="zV">0</span>
+          </div>
+          <div class="formula" id="formula">heading = atan2(Y, X)</div>
+          <div class="sub">Motor speed</div>
+          <div class="bars">
+            <span>L</span><div class="bar"><i id="bl"></i></div><span class="val" id="lV">0%</span>
+            <span>R</span><div class="bar"><i id="br"></i></div><span class="val" id="rV">0%</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Heading Control</h3>
+          <div class="sl">
+            <div class="lab">Heading Threshold <b id="dbV">±3°</b></div>
+            <input type="range" id="db" min="1" max="15" step="1" value="3" />
+          </div>
+          <div class="sl">
+            <div class="lab">Correction Sensitivity <b id="gainV">1.0×</b></div>
+            <input type="range" id="gain" min="0.2" max="2.5" step="0.1" value="1" />
+          </div>
+          <div class="sl">
+            <div class="lab">Patrol Speed <b id="spdV">1.2 m/s</b></div>
+            <input type="range" id="spd" min="0.4" max="2.4" step="0.1" value="1.2" />
+          </div>
+          <label class="tog"><input type="checkbox" id="auto" checked /> Auto-correction</label>
+        </div>
+
+        <div class="card">
+          <h3>Disturbance</h3>
+          <div class="sl">
+            <div class="lab">Vibration <b id="vibV">2 / 10</b></div>
+            <input type="range" id="vib" min="0" max="10" step="1" value="2" />
+          </div>
+          <div class="row">
+            <button type="button" class="btn" id="rotL">⟲ Rotate 30°</button>
+            <button type="button" class="btn pri" id="bump">Bump!</button>
+            <button type="button" class="btn" id="rotR">⟳ Rotate 30°</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ============ MIDDLE: map ============ -->
+      <section class="col mid">
+        <div class="flows">
+          <div class="flow">
+            <div class="ftag h">HEADING</div>
+            <div class="chip on" id="fTgt"><div class="k">Target Heading</div><div class="v">90°</div></div>
+            <div class="arrow">➜</div>
+            <div class="chip on" id="fMag"><div class="k">Magnetometer</div><div class="v">90°</div></div>
+            <div class="arrow">➜</div>
+            <div class="chip on" id="fCmp"><div class="k">Comparison</div><div class="v">0°</div></div>
+            <div class="arrow">➜</div>
+            <div class="chip on" id="fMot"><div class="k">Motor Correction</div><div class="v">—</div></div>
+            <div class="arrow">➜</div>
+            <div class="chip on" id="fOut"><div class="k">Straight Patrol</div><div class="v">—</div></div>
+          </div>
+          <div class="flow">
+            <div class="ftag t">THERMAL</div>
+            <div class="chip on" id="fScan"><div class="k">Thermal Detection</div><div class="v">—</div></div>
+            <div class="arrow">➜</div>
+            <div class="chip on" id="fThr"><div class="k">Threshold</div><div class="v">—</div></div>
+            <div class="arrow">➜</div>
+            <div class="chip on" id="fInt"><div class="k">Intruder Alert</div><div class="v">—</div></div>
+            <div class="arrow">➜</div>
+            <div class="chip on" id="fAlr"><div class="k">Light &amp; Buzzer</div><div class="v">OFF</div></div>
+          </div>
+        </div>
+        <div class="stage" id="stage">
+          <canvas id="map"></canvas>
+          <div class="ov">
+            <span class="pill good" id="roverPill">Patrolling straight</span>
+            <span class="hint">Click the map to place an intruder · drag to move it</span>
+          </div>
+        </div>
+        <div class="charts">
+          <div class="card"><h3>Heading Error <span style="color:var(--dim)">last 20 s</span></h3><canvas id="errChart"></canvas></div>
+          <div class="card"><h3>Highest Temperature <span style="color:var(--dim)">last 20 s</span></h3><canvas id="tmpChart"></canvas></div>
+        </div>
+      </section>
+
+      <!-- ============ RIGHT: thermal system ============ -->
+      <aside class="col right">
+        <div class="card">
+          <h3>AMG8833 Thermal <span class="pill safe" id="thPill">Safe</span></h3>
+          <div class="tgrid" id="tgrid"></div>
+          <div class="scale" id="scale"><div class="thr" id="thrMark"></div><div class="mx" id="mxMark"></div></div>
+          <div class="scale-l"><span>20 °C</span><span>▏threshold</span><span>45 °C</span></div>
+          <div style="margin-top:6px">
+            <div class="kv">Highest temperature <b id="maxV">22.0 °C</b></div>
+            <div class="kv">Average temperature <b id="avgV">22.0 °C</b></div>
+            <div class="kv">Threshold <b id="thrV">35 °C</b></div>
+            <div class="kv">Intruder distance <b id="distV">No intruder</b></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Alert System</h3>
+          <div class="alerts">
+            <div class="dev"><div class="led" id="led"></div><div><div class="n">Alert Light</div><div class="s" id="ledV">OFF</div></div></div>
+            <div class="dev">
+              <svg class="buz" id="buz" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />
+                <path class="w" d="M16 9.5a3.5 3.5 0 0 1 0 5" />
+                <path class="w w2" d="M18.5 7a7 7 0 0 1 0 10" />
+              </svg>
+              <div><div class="n">Buzzer</div><div class="s" id="buzV">OFF</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Intruder</h3>
+          <div class="sl">
+            <div class="lab">Intruder Temperature <b id="aTV">38 °C</b></div>
+            <input type="range" id="aT" min="20" max="60" step="1" value="38" />
+          </div>
+          <div class="sl">
+            <div class="lab">Temperature Threshold <b id="thrSV">35 °C</b></div>
+            <input type="range" id="thr" min="25" max="50" step="1" value="35" />
+          </div>
+          <div class="sl">
+            <div class="lab">Alert Duration <b id="durV">3 s</b></div>
+            <input type="range" id="dur" min="1" max="10" step="1" value="3" />
+          </div>
+          <div class="row">
+            <button type="button" class="btn pri" id="placeBtn">Place Intruder Ahead</button>
+            <button type="button" class="btn" id="clearBtn">Remove</button>
+          </div>
+          <label class="tog"><input type="checkbox" id="flee" checked /> Intruder runs away when the alarm sounds</label>
+          <label class="tog"><input type="checkbox" id="sound" checked /> Buzzer sound</label>
+        </div>
+
+        <div class="card">
+          <h3>Mission Log</h3>
+          <div class="log" id="log"></div>
+        </div>
+      </aside>
+    </main>
+
+    <script>
+      (function () {
+        "use strict";
+        var D2R = Math.PI / 180, R2D = 180 / Math.PI;
+        var W = 22, H = 14; // world size in metres
+        var B = 30, BZ = -42; // horizontal and vertical field strength (µT)
+        var AMB = 22; // ambient temperature (°C)
+        var RANGE = 7; // AMG8833 useful range (m)
+        var ZONES = [
+          { name: "Zone 1", sub: "Habitat Corridor", x0: 0.5, y0: 0.5, x1: 10.75, y1: 13.5, target: 90, col: "59,130,246" },
+          { name: "Zone 2", sub: "Research Lab", x0: 11.25, y0: 0.5, x1: 21.5, y1: 13.5, target: 0, col: "168,85,247" },
+        ];
+        var $ = function (id) { return document.getElementById(id); };
+        function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+        function wrap360(a) { return ((a % 360) + 360) % 360; }
+        function wrap180(a) { a = wrap360(a); return a > 180 ? a - 360 : a; }
+        function randn() {
+          var u = 0, v = 0;
+          while (!u) u = Math.random();
+          while (!v) v = Math.random();
+          return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+        }
+        function sgn(v, d) {
+          d = d || 0;
+          var s = Math.abs(v).toFixed(d);
+          if (parseFloat(s) === 0) return "0";
+          return (v > 0 ? "+" : "−") + s;
+        }
+        function ov(a0, a1, b0, b1) { return Math.max(0, Math.min(a1, b1) - Math.max(a0, b0)); }
+        function inZone(x, y, z, m) { return x >= z.x0 + m && x <= z.x1 - m && y >= z.y0 + m && y <= z.y1 - m; }
+
+        var cfg = { deadband: 3, gain: 1, speed: 1.2, auto: true, vib: 2, alienT: 38, thr: 35, alertDur: 3, flee: true, sound: true };
+        var S = {
+          zone: 0, running: true, time: 0,
+          rover: { x: 0, y: 0, h: 90, L: 0, R: 0, trail: [] },
+          mx: B, my: 0, mz: BZ, meas: 90, err: 0, dec: "straight",
+          disturbT: 0, shakeT: 0, alertT: 0, alien: null,
+          pix: [], maxT: AMB, avgT: AMB, status: "safe", dist: null, rel: null,
+          tHist: [], eHist: [], scanAcc: 0, trailAcc: 0, buzzAcc: 0, lastLog: -9, corrLogged: false,
+        };
+        for (var i0 = 0; i0 < 64; i0++) S.pix.push(AMB);
+
+        /* ---------- log ---------- */
+        function log(msg) {
+          S.lastLog = S.time;
+          var t = Math.floor(S.time), el = document.createElement("div");
+          var mm = String(Math.floor(t / 60)).padStart(2, "0"), ss = String(t % 60).padStart(2, "0");
+          el.innerHTML = "<span>" + mm + ":" + ss + "</span>";
+          el.appendChild(document.createTextNode(msg));
+          var box = $("log");
+          box.insertBefore(el, box.firstChild);
+          while (box.children.length > 40) box.removeChild(box.lastChild);
+        }
+
+        /* ---------- controls ---------- */
+        function bind(id, key, out, fmt, cb) {
+          var el = $(id);
+          function set() {
+            cfg[key] = parseFloat(el.value);
+            $(out).textContent = fmt(cfg[key]);
+            if (cb) cb();
+          }
+          el.addEventListener("input", set);
+          set();
+        }
+        bind("db", "deadband", "dbV", function (v) { return "±" + v + "°"; });
+        bind("gain", "gain", "gainV", function (v) { return v.toFixed(1) + "×"; });
+        bind("spd", "speed", "spdV", function (v) { return v.toFixed(1) + " m/s"; });
+        bind("vib", "vib", "vibV", function (v) { return v === 0 ? "Off" : v + " / 10"; });
+        bind("aT", "alienT", "aTV", function (v) { return v + " °C"; }, function () { scan(); });
+        bind("thr", "thr", "thrSV", function (v) { return v + " °C"; }, function () { scan(); });
+        bind("dur", "alertDur", "durV", function (v) { return v + " s"; });
+        $("auto").addEventListener("change", function () {
+          cfg.auto = this.checked;
+          log(cfg.auto ? "Auto-correction ON — rover steers back to the target heading" : "Auto-correction OFF — rover no longer steers");
+        });
+        $("flee").addEventListener("change", function () { cfg.flee = this.checked; });
+        $("sound").addEventListener("change", function () { cfg.sound = this.checked; });
+        $("aT").addEventListener("change", function () { log("Intruder heat signature set to " + cfg.alienT + " °C"); });
+        $("thr").addEventListener("change", function () { log("Temperature threshold set to " + cfg.thr + " °C"); });
+
+        $("tgt").addEventListener("input", function () {
+          ZONES[S.zone].target = parseFloat(this.value);
+          $("tgtV").textContent = this.value + "°";
+        });
+        $("tgt").addEventListener("change", function () {
+          log(ZONES[S.zone].name + " target heading set to " + this.value + "°");
+        });
+
+        function placeRover() {
+          var z = ZONES[S.zone], r = S.rover, h = z.target;
+          var cx = (z.x0 + z.x1) / 2, cy = (z.y0 + z.y1) / 2;
+          r.x = cx - Math.sin(h * D2R) * 3.5;
+          r.y = cy + Math.cos(h * D2R) * 3.5;
+          r.h = h; r.L = 0; r.R = 0; r.trail = [];
+          S.mx = B * Math.cos(h * D2R); S.my = B * Math.sin(h * D2R); S.mz = BZ;
+          S.meas = h; S.err = 0; S.dec = "straight"; S.corrLogged = false;
+          S.alertT = 0; S.disturbT = 0; S.shakeT = 0;
+        }
+        function setZone(k) {
+          S.zone = k;
+          document.querySelectorAll("#zoneSeg .btn").forEach(function (b) {
+            b.classList.toggle("on", +b.dataset.z === k);
+          });
+          $("tgt").value = ZONES[k].target;
+          $("tgtV").textContent = ZONES[k].target + "°";
+          S.alien = null;
+          placeRover();
+          S.eHist = []; S.tHist = [];
+          scan();
+          log(ZONES[k].name + " (" + ZONES[k].sub + ") selected — target heading " + ZONES[k].target + "° loaded");
+        }
+        document.querySelectorAll("#zoneSeg .btn").forEach(function (b) {
+          b.addEventListener("click", function () { setZone(+b.dataset.z); });
+        });
+
+        $("runBtn").addEventListener("click", function () {
+          S.running = !S.running;
+          this.textContent = S.running ? "⏸ Pause" : "▶ Start";
+          log(S.running ? "Patrol resumed" : "Patrol paused");
+        });
+        $("resetBtn").addEventListener("click", function () {
+          S.alien = null;
+          placeRover();
+          S.eHist = []; S.tHist = [];
+          scan();
+          log("Rover reset to the start of " + ZONES[S.zone].name);
+        });
+        function kick(k, why) {
+          var r = S.rover;
+          r.h = wrap360(r.h + k);
+          S.disturbT = 1.5;
+          log(why + " — heading changed " + sgn(k) + "°");
+        }
+        $("rotL").addEventListener("click", function () { kick(-30, "Rover rotated by hand"); });
+        $("rotR").addEventListener("click", function () { kick(30, "Rover rotated by hand"); });
+        $("bump").addEventListener("click", function () {
+          var k = (Math.random() < 0.5 ? -1 : 1) * (25 + Math.random() * 30);
+          S.shakeT = 0.6;
+          kick(k, "Bump!");
+        });
+
+        function placeAlien(x, y, quiet) {
+          S.alien = { x: x, y: y, alpha: 1, bob: Math.random() * 6, flee: false, fleeIn: null, dir: 1 };
+          if (!quiet) log("Intruder placed — heat signature " + cfg.alienT + " °C");
+          scan();
+        }
+        $("placeBtn").addEventListener("click", function () {
+          var r = S.rover, z = ZONES[S.zone];
+          var x = r.x + Math.sin(r.h * D2R) * 4.5, y = r.y - Math.cos(r.h * D2R) * 4.5;
+          placeAlien(clamp(x, z.x0 + 0.6, z.x1 - 0.6), clamp(y, z.y0 + 0.6, z.y1 - 0.6));
+        });
+        $("clearBtn").addEventListener("click", function () {
+          if (S.alien) { S.alien = null; scan(); log("Intruder removed"); }
+        });
+
+        /* ---------- buzzer sound ---------- */
+        var ac = null;
+        function ensureAudio() {
+          if (!ac) {
+            try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; }
+          }
+          if (ac && ac.state === "suspended") ac.resume();
+        }
+        document.addEventListener("pointerdown", ensureAudio);
+        function beep() {
+          if (!ac || !cfg.sound || ac.state !== "running") return;
+          var o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
+          o.type = "square";
+          o.frequency.value = 2300;
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(0.04, t + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+          o.connect(g);
+          g.connect(ac.destination);
+          o.start(t);
+          o.stop(t + 0.16);
+        }
+
+        /* ---------- AMG8833 thermal scan (10 frames per second) ---------- */
+        function scan() {
+          var r = S.rover, a = S.alien, geo = null;
+          S.dist = null; S.rel = null;
+          if (a && a.alpha > 0 && inZone(a.x, a.y, ZONES[S.zone], -0.6)) {
+            var dx = a.x - r.x, dy = a.y - r.y, d = Math.hypot(dx, dy);
+            var rel = wrap180(Math.atan2(dx, -dy) * R2D - r.h);
+            S.dist = d; S.rel = rel;
+            if (d > 0.25 && d < 9) {
+              geo = {
+                rel: rel,
+                hw: Math.atan(0.35 / d) * R2D, // half width of the alien, in degrees
+                el: Math.atan(0.2 / d) * R2D, // body centre is a little above the sensor
+                hh: Math.atan(0.5 / d) * R2D, // half height, in degrees
+              };
+            }
+          }
+          var mx = -99, sum = 0;
+          for (var j = 0; j < 8; j++) {
+            for (var i = 0; i < 8; i++) {
+              var t = AMB + randn() * 0.15 + (j > 5 ? 0.4 : 0);
+              if (geo) {
+                var c0 = -30 + i * 7.5, e1 = 30 - j * 7.5;
+                var fx = ov(c0, c0 + 7.5, geo.rel - geo.hw, geo.rel + geo.hw) / 7.5;
+                var fy = ov(e1 - 7.5, e1, geo.el - geo.hh, geo.el + geo.hh) / 7.5;
+                t += (cfg.alienT - AMB) * fx * fy * a.alpha;
+              }
+              S.pix[j * 8 + i] = t;
+              if (t > mx) mx = t;
+              sum += t;
+            }
+          }
+          S.maxT = mx;
+          S.avgT = sum / 64;
+          S.status = mx >= cfg.thr ? "det" : mx >= cfg.thr - 3 ? "mon" : "safe";
+          renderGrid();
+        }
+        function checkAlert() {
+          if (S.status !== "det") return;
+          if (S.alertT <= 0) {
+            log("Intruder detected: " + S.maxT.toFixed(1) + " °C ≥ " + cfg.thr + " °C → light and buzzer ON");
+            if (S.alien && cfg.flee && !S.alien.flee) S.alien.fleeIn = 1.2;
+          }
+          S.alertT = cfg.alertDur;
+        }
+
+        /* ---------- simulation step ---------- */
+        function update(dt) {
+          var z = ZONES[S.zone], r = S.rover, mv = S.running;
+          if (mv) {
+            S.time += dt;
+            // vibration: small random wobbles plus occasional jolts
+            if (cfg.vib > 0) {
+              r.h = wrap360(r.h + randn() * cfg.vib * 1.0 * Math.sqrt(dt));
+              if (Math.random() < cfg.vib * 0.025 * dt) {
+                var k = (Math.random() < 0.5 ? -1 : 1) * (6 + cfg.vib * 2.5);
+                S.shakeT = 0.4;
+                kick(k, "Vibration jolt");
+              }
+            }
+          }
+          // magnetometer: field seen along the rover's own X and Y axes, plus noise
+          var n = 0.15 + cfg.vib * 0.3, hr = r.h * D2R;
+          var X = B * Math.cos(hr) + randn() * n, Y = B * Math.sin(hr) + randn() * n, Z = BZ + randn() * n;
+          var a = 1 - Math.exp(-dt * 12);
+          S.mx += (X - S.mx) * a; S.my += (Y - S.my) * a; S.mz += (Z - S.mz) * a;
+          S.meas = wrap360(Math.atan2(S.my, S.mx) * R2D);
+          S.err = wrap180(z.target - S.meas);
+
+          // controller decision
+          var L, R, dec, ae = Math.abs(S.err);
+          if (!mv) { L = 0; R = 0; dec = "paused"; }
+          else if (S.alertT > 0) { L = 0; R = 0; dec = "hold"; }
+          else if (!cfg.auto) { L = 60; R = 60; dec = "off"; }
+          else if (ae > 45) { var s = S.err > 0 ? 1 : -1; L = 50 * s; R = -50 * s; dec = "turn"; }
+          else if (ae > cfg.deadband) {
+            var c = clamp(cfg.gain * S.err, -35, 35);
+            L = 60 + c; R = 60 - c; dec = S.err > 0 ? "right" : "left";
+          } else { L = 60; R = 60; dec = "straight"; }
+
+          if (dec !== S.dec) {
+            var corr = dec === "left" || dec === "right" || dec === "turn";
+            if (corr && !S.corrLogged && S.time - S.lastLog > 0.8) {
+              log("Heading error " + sgn(S.err) + "° → " + (dec === "turn" ? "turning until aligned" : "adjusting " + dec));
+              S.corrLogged = true;
+            }
+            if (dec === "straight" && S.corrLogged) {
+              log("Back on " + Math.round(z.target) + "° — moving straight");
+              S.corrLogged = false;
+            }
+            S.dec = dec;
+          }
+
+          var m = Math.min(1, dt * 8);
+          r.L += (L - r.L) * m;
+          r.R += (R - r.R) * m;
+          if (mv) {
+            // the left motor is 3% weaker, so without correction the rover slowly drifts
+            var effL = r.L * 0.97;
+            r.h = wrap360(r.h + (effL - r.R) * 0.9 * dt);
+            var v = (cfg.speed * (effL + r.R)) / 120;
+            r.x += v * Math.sin(r.h * D2R) * dt;
+            r.y -= v * Math.cos(r.h * D2R) * dt;
+            var wrapped = false, mg = 0.6;
+            if (r.x < z.x0 + mg) { r.x = z.x1 - mg; wrapped = true; }
+            else if (r.x > z.x1 - mg) { r.x = z.x0 + mg; wrapped = true; }
+            if (r.y < z.y0 + mg) { r.y = z.y1 - mg; wrapped = true; }
+            else if (r.y > z.y1 - mg) { r.y = z.y0 + mg; wrapped = true; }
+            if (wrapped) r.trail.push(null);
+            S.trailAcc += dt;
+            if (S.trailAcc >= 0.08) {
+              S.trailAcc = 0;
+              r.trail.push({ x: r.x, y: r.y });
+              if (r.trail.length > 900) r.trail.shift();
+            }
+            // intruder
+            var al = S.alien;
+            if (al) {
+              al.bob += dt;
+              if (al.fleeIn != null) {
+                al.fleeIn -= dt;
+                if (al.fleeIn <= 0) {
+                  al.fleeIn = null;
+                  al.flee = true;
+                  al.dir = S.rel != null && S.rel < 0 ? -1 : 1;
+                  log("The alarm scared the intruder away");
+                }
+              }
+              if (al.flee) {
+                var ddx = al.x - r.x, ddy = al.y - r.y, dd = Math.hypot(ddx, ddy) || 1;
+                var ang = Math.atan2(ddy, ddx) + al.dir * 70 * D2R;
+                al.x += Math.cos(ang) * 2.2 * dt;
+                al.y += Math.sin(ang) * 2.2 * dt;
+                if (!inZone(al.x, al.y, z, 0.2)) {
+                  al.alpha -= dt * 1.5;
+                  if (al.alpha <= 0) { S.alien = null; log("Intruder left the zone"); }
+                }
+              }
+            }
+          }
+          if (S.disturbT > 0) S.disturbT -= dt;
+          if (S.shakeT > 0) S.shakeT -= dt;
+
+          // sensor runs at 10 frames per second
+          S.scanAcc += dt;
+          while (S.scanAcc >= 0.1) {
+            S.scanAcc -= 0.1;
+            scan();
+            checkAlert();
+            S.tHist.push(S.maxT);
+            S.eHist.push(S.err);
+            if (S.tHist.length > 200) S.tHist.shift();
+            if (S.eHist.length > 200) S.eHist.shift();
+          }
+
+          if (S.alertT > 0) {
+            S.alertT -= dt;
+            S.buzzAcc += dt;
+            if (S.buzzAcc >= 0.3) { S.buzzAcc = 0; beep(); }
+            if (S.alertT <= 0) {
+              S.alertT = 0;
+              log("Alert OFF — rover continues patrol");
+            }
+          }
+        }
+
+        /* ---------- drawing helpers ---------- */
+        var dpr = window.devicePixelRatio || 1;
+        function fit(c) {
+          var r = c.getBoundingClientRect();
+          dpr = window.devicePixelRatio || 1;
+          var w2 = Math.max(1, Math.round(r.width * dpr)), h2 = Math.max(1, Math.round(r.height * dpr));
+          if (c.width !== w2 || c.height !== h2) { c.width = w2; c.height = h2; }
+          var g = c.getContext("2d");
+          g.setTransform(dpr, 0, 0, dpr, 0, 0);
+          g.clearRect(0, 0, r.width, r.height);
+          return { g: g, w: r.width, h: r.height };
+        }
+        function rr(g, x, y, w, h, r) {
+          g.beginPath();
+          g.moveTo(x + r, y);
+          g.arcTo(x + w, y, x + w, y + h, r);
+          g.arcTo(x + w, y + h, x, y + h, r);
+          g.arcTo(x, y + h, x, y, r);
+          g.arcTo(x, y, x + w, y, r);
+          g.closePath();
+        }
+        var HEAT = [[20, [10, 22, 64]], [25, [42, 47, 154]], [29, [123, 47, 184]], [33, [214, 51, 108]], [36, [247, 103, 7]], [40, [252, 196, 25]], [45, [255, 249, 219]]];
+        function heatColor(t) {
+          if (t <= HEAT[0][0]) return "rgb(" + HEAT[0][1].join(",") + ")";
+          for (var i = 1; i < HEAT.length; i++) {
+            if (t <= HEAT[i][0]) {
+              var a = HEAT[i - 1], b = HEAT[i], f = (t - a[0]) / (b[0] - a[0]);
+              return "rgb(" + [0, 1, 2].map(function (k) { return Math.round(a[1][k] + (b[1][k] - a[1][k]) * f); }).join(",") + ")";
+            }
+          }
+          return "rgb(" + HEAT[HEAT.length - 1][1].join(",") + ")";
+        }
+
+        /* ---------- map ---------- */
+        var mapC = $("map"), view = { s: 20, ox: 0, oy: 0 };
+        function drawMap() {
+          var F = fit(mapC), g = F.g;
+          var TOP = 38; // room for the status pill above the map
+          var s = Math.min((F.w - 16) / W, (F.h - TOP - 8) / H);
+          view = { s: s, ox: (F.w - W * s) / 2, oy: TOP + (F.h - TOP - 8 - H * s) / 2 };
+          var X = function (x) { return view.ox + x * s; }, Y = function (y) { return view.oy + y * s; };
+          var r = S.rover, zA = ZONES[S.zone];
+
+          g.fillStyle = "#081025";
+          rr(g, X(0), Y(0), W * s, H * s, 12);
+          g.fill();
+
+          ZONES.forEach(function (z, k) {
+            var act = k === S.zone, x = X(z.x0), y = Y(z.y0), zw = (z.x1 - z.x0) * s, zh = (z.y1 - z.y0) * s;
+            g.fillStyle = "rgba(" + z.col + "," + (act ? 0.12 : 0.05) + ")";
+            rr(g, x, y, zw, zh, 10);
+            g.fill();
+            g.save();
+            rr(g, x, y, zw, zh, 10);
+            g.clip();
+            g.strokeStyle = "rgba(" + z.col + "," + (act ? 0.15 : 0.07) + ")";
+            g.lineWidth = 1;
+            g.beginPath();
+            for (var gx = Math.ceil(z.x0); gx < z.x1; gx++) { g.moveTo(X(gx), y); g.lineTo(X(gx), y + zh); }
+            for (var gy = Math.ceil(z.y0); gy < z.y1; gy++) { g.moveTo(x, Y(gy)); g.lineTo(x + zw, Y(gy)); }
+            g.stroke();
+            g.restore();
+            g.setLineDash(act ? [] : [6, 5]);
+            g.strokeStyle = "rgba(" + z.col + "," + (act ? 0.95 : 0.35) + ")";
+            g.lineWidth = act ? 2 : 1.2;
+            rr(g, x, y, zw, zh, 10);
+            g.stroke();
+            g.setLineDash([]);
+            g.fillStyle = "rgba(" + z.col + "," + (act ? 1 : 0.55) + ")";
+            g.font = "700 " + clamp(s * 0.5, 9, 13) + "px Orbitron, sans-serif";
+            g.textAlign = "left";
+            g.textBaseline = "top";
+            g.fillText(z.name.toUpperCase(), x + 8, y + 8);
+            g.font = "600 " + clamp(s * 0.55, 11, 14) + "px Rajdhani, sans-serif";
+            g.fillStyle = act ? "#c7d2fe" : "rgba(199,210,254,.5)";
+            g.fillText(z.sub + " · target " + Math.round(z.target) + "°", x + 8, y + 8 + clamp(s * 0.5, 9, 13) + 4);
+            // small target-heading arrow in the zone's top-right corner
+            var ax = x + zw - 20, ay = y + 20;
+            g.save();
+            g.translate(ax, ay);
+            g.strokeStyle = "rgba(34,197,94," + (act ? 0.9 : 0.4) + ")";
+            g.beginPath();
+            g.arc(0, 0, 13, 0, Math.PI * 2);
+            g.lineWidth = 1;
+            g.stroke();
+            g.rotate(z.target * D2R);
+            g.fillStyle = "rgba(34,197,94," + (act ? 1 : 0.45) + ")";
+            g.beginPath();
+            g.moveTo(0, -10); g.lineTo(5, 4); g.lineTo(0, 1); g.lineTo(-5, 4);
+            g.closePath();
+            g.fill();
+            g.restore();
+          });
+
+          // sensor view cone (60°, 7 m)
+          var fx = r.x + Math.sin(r.h * D2R) * 0.75, fy = r.y - Math.cos(r.h * D2R) * 0.75;
+          var col = S.status === "det" ? "239,68,68" : S.status === "mon" ? "245,158,11" : "34,211,238";
+          g.save();
+          rr(g, X(zA.x0), Y(zA.y0), (zA.x1 - zA.x0) * s, (zA.y1 - zA.y0) * s, 10);
+          g.clip();
+          var grd = g.createRadialGradient(X(fx), Y(fy), 0, X(fx), Y(fy), RANGE * s);
+          grd.addColorStop(0, "rgba(" + col + ",.30)");
+          grd.addColorStop(1, "rgba(" + col + ",0)");
+          g.fillStyle = grd;
+          g.beginPath();
+          g.moveTo(X(fx), Y(fy));
+          g.arc(X(fx), Y(fy), RANGE * s, (r.h - 30 - 90) * D2R, (r.h + 30 - 90) * D2R);
+          g.closePath();
+          g.fill();
+          g.strokeStyle = "rgba(" + col + ",.45)";
+          g.setLineDash([4, 4]);
+          g.lineWidth = 1;
+          g.stroke();
+          g.setLineDash([]);
+
+          // patrol trail
+          g.strokeStyle = "rgba(34,211,238,.75)";
+          g.lineWidth = 2;
+          g.lineJoin = "round";
+          g.beginPath();
+          var pen = false;
+          r.trail.forEach(function (p) {
+            if (!p) { pen = false; return; }
+            if (!pen) { g.moveTo(X(p.x), Y(p.y)); pen = true; } else g.lineTo(X(p.x), Y(p.y));
+          });
+          if (pen) g.lineTo(X(r.x), Y(r.y));
+          g.stroke();
+
+          // target heading guide (green, dashed)
+          var tx = Math.sin(zA.target * D2R), ty = -Math.cos(zA.target * D2R);
+          g.strokeStyle = "rgba(34,197,94,.85)";
+          g.setLineDash([7, 6]);
+          g.lineWidth = 2;
+          g.beginPath();
+          g.moveTo(X(r.x), Y(r.y));
+          g.lineTo(X(r.x + tx * 5.5), Y(r.y + ty * 5.5));
+          g.stroke();
+          g.setLineDash([]);
+          g.restore();
+
+          // intruder
+          var al = S.alien;
+          if (al) {
+            g.save();
+            g.globalAlpha = Math.max(0, al.alpha);
+            var px = X(al.x), py = Y(al.y) + Math.sin(al.bob * 3) * 1.5;
+            var heat = clamp((cfg.alienT - AMB) / 30, 0, 1);
+            var rg = g.createRadialGradient(px, py, 0, px, py, (0.6 + 1.4 * heat) * s);
+            rg.addColorStop(0, "rgba(251,146,60," + (0.05 + 0.55 * heat) + ")");
+            rg.addColorStop(1, "rgba(251,146,60,0)");
+            g.fillStyle = rg;
+            g.beginPath();
+            g.arc(px, py, (0.6 + 1.4 * heat) * s, 0, Math.PI * 2);
+            g.fill();
+            var u = Math.max(s, 16);
+            g.strokeStyle = "#166534";
+            g.lineWidth = 1.5;
+            g.beginPath();
+            g.moveTo(px - 0.12 * u, py - 0.38 * u); g.lineTo(px - 0.2 * u, py - 0.62 * u);
+            g.moveTo(px + 0.12 * u, py - 0.38 * u); g.lineTo(px + 0.2 * u, py - 0.62 * u);
+            g.stroke();
+            g.fillStyle = "#86efac";
+            g.beginPath(); g.arc(px - 0.2 * u, py - 0.64 * u, 0.06 * u, 0, Math.PI * 2); g.fill();
+            g.beginPath(); g.arc(px + 0.2 * u, py - 0.64 * u, 0.06 * u, 0, Math.PI * 2); g.fill();
+            g.fillStyle = "#4ade80";
+            g.beginPath();
+            g.ellipse(px, py, 0.32 * u, 0.42 * u, 0, 0, Math.PI * 2);
+            g.fill();
+            g.stroke();
+            [-0.13, 0, 0.13].forEach(function (ex, i) {
+              var ey = py - (i === 1 ? 0.2 : 0.12) * u;
+              g.fillStyle = "#fff";
+              g.beginPath(); g.arc(px + ex * u, ey, 0.075 * u, 0, Math.PI * 2); g.fill();
+              g.fillStyle = "#0f172a";
+              g.beginPath(); g.arc(px + ex * u, ey, 0.035 * u, 0, Math.PI * 2); g.fill();
+            });
+            g.fillStyle = "#14532d";
+            g.beginPath(); g.arc(px, py + 0.12 * u, 0.09 * u, 0, Math.PI); g.fill();
+            g.font = "700 12px Rajdhani, sans-serif";
+            g.textAlign = "center";
+            g.textBaseline = "top";
+            g.fillStyle = "#fde68a";
+            g.fillText(cfg.alienT + " °C", px, py + 0.5 * u);
+            g.restore();
+          }
+
+          // alert rings
+          if (S.alertT > 0) {
+            var ph = (performance.now() / 700) % 1;
+            g.strokeStyle = "rgba(239,68,68," + (1 - ph) + ")";
+            g.lineWidth = 3;
+            g.beginPath();
+            g.arc(X(r.x), Y(r.y), (0.8 + ph * 2.2) * s, 0, Math.PI * 2);
+            g.stroke();
+          }
+
+          // rover (top-down)
+          var u2 = Math.max(s, 16) * 1.05, jx = 0, jy = 0;
+          if (S.running && (S.shakeT > 0 || cfg.vib > 0)) {
+            var amp = S.shakeT > 0 ? 3.5 : cfg.vib * 0.15;
+            jx = (Math.random() - 0.5) * amp; jy = (Math.random() - 0.5) * amp;
+          }
+          g.save();
+          g.translate(X(r.x) + jx, Y(r.y) + jy);
+          g.rotate(r.h * D2R);
+          g.fillStyle = "rgba(0,0,0,.35)";
+          rr(g, -0.62 * u2, -0.72 * u2, 1.3 * u2, 1.5 * u2, 6);
+          g.fill();
+          function wheelCol(v) {
+            var k = clamp(Math.abs(v) / 100, 0, 1);
+            return v < -1 ? "rgba(248,113,113," + (0.5 + k * 0.5) + ")" : "rgba(34,211,238," + (0.3 + k * 0.7) + ")";
+          }
+          [-1, 1].forEach(function (side) {
+            [-1, 1].forEach(function (fb) {
+              g.fillStyle = "#1b2440";
+              rr(g, side * 0.6 * u2 - 0.13 * u2, fb * 0.4 * u2 - 0.22 * u2, 0.26 * u2, 0.44 * u2, 3);
+              g.fill();
+              g.strokeStyle = wheelCol(side < 0 ? r.L : r.R);
+              g.lineWidth = 2;
+              g.stroke();
+            });
+          });
+          var bg = g.createLinearGradient(-0.45 * u2, 0, 0.45 * u2, 0);
+          bg.addColorStop(0, "#94a3b8");
+          bg.addColorStop(0.5, "#e2e8f0");
+          bg.addColorStop(1, "#94a3b8");
+          g.fillStyle = bg;
+          rr(g, -0.45 * u2, -0.7 * u2, 0.9 * u2, 1.35 * u2, 6);
+          g.fill();
+          g.strokeStyle = "rgba(255,255,255,.6)";
+          g.lineWidth = 1;
+          g.stroke();
+          g.fillStyle = "#f97316"; // AMG8833 at the front
+          rr(g, -0.22 * u2, -0.82 * u2, 0.44 * u2, 0.17 * u2, 2);
+          g.fill();
+          g.fillStyle = "#2563eb"; // magnetometer chip
+          rr(g, -0.17 * u2, -0.25 * u2, 0.34 * u2, 0.34 * u2, 3);
+          g.fill();
+          g.fillStyle = "#fff";
+          g.font = "700 " + Math.round(0.24 * u2) + "px Orbitron, sans-serif";
+          g.textAlign = "center";
+          g.textBaseline = "middle";
+          g.fillText("M", 0, -0.08 * u2);
+          var on = S.alertT > 0 && Math.floor(performance.now() / 250) % 2 === 0;
+          g.fillStyle = on ? "#ff3b3b" : "#7f1d1d";
+          if (on) { g.shadowColor = "#ff3b3b"; g.shadowBlur = 18; }
+          g.beginPath();
+          g.arc(0, 0.38 * u2, 0.12 * u2, 0, Math.PI * 2);
+          g.fill();
+          g.restore();
+
+          // north arrow and scale
+          var nx = X(W) - 18, ny = Y(H) - 30;
+          g.fillStyle = "#ef4444";
+          g.beginPath();
+          g.moveTo(nx, ny - 12); g.lineTo(nx + 6, ny + 4); g.lineTo(nx, ny); g.lineTo(nx - 6, ny + 4);
+          g.closePath();
+          g.fill();
+          g.fillStyle = "#e9eeff";
+          g.font = "700 11px Orbitron, sans-serif";
+          g.textAlign = "center";
+          g.textBaseline = "top";
+          g.fillText("N", nx, ny + 7);
+          var sx = X(ZONES[1].x0) + 10, sy = Y(H) - 14;
+          g.strokeStyle = "#a3b2d9";
+          g.lineWidth = 2;
+          g.beginPath();
+          g.moveTo(sx, sy - 4); g.lineTo(sx, sy); g.lineTo(sx + 2 * s, sy); g.lineTo(sx + 2 * s, sy - 4);
+          g.stroke();
+          g.fillStyle = "#a3b2d9";
+          g.font = "600 11px Rajdhani, sans-serif";
+          g.textBaseline = "bottom";
+          g.fillText("2 m", sx + s, sy - 3);
+        }
+
+        /* ---------- compass ---------- */
+        function drawCompass() {
+          var F = fit($("compass")), g = F.g, cx = F.w / 2, cy = F.h / 2, R = Math.min(F.w, F.h) / 2 - 4;
+          var t = ZONES[S.zone].target, m = S.meas;
+          var A = function (d) { return (d - 90) * D2R; };
+          g.fillStyle = "rgba(8,16,37,.95)";
+          g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.fill();
+          g.strokeStyle = "rgba(125,155,235,.4)";
+          g.lineWidth = 2;
+          g.stroke();
+          // threshold band around the target
+          g.fillStyle = "rgba(34,197,94,.28)";
+          g.beginPath();
+          g.moveTo(cx, cy);
+          g.arc(cx, cy, R - 2, A(t - cfg.deadband), A(t + cfg.deadband));
+          g.closePath();
+          g.fill();
+          for (var a = 0; a < 360; a += 10) {
+            var big = a % 30 === 0, r1 = R - (big ? 9 : 5);
+            g.strokeStyle = big ? "rgba(233,238,255,.6)" : "rgba(233,238,255,.25)";
+            g.lineWidth = 1;
+            g.beginPath();
+            g.moveTo(cx + Math.cos(A(a)) * r1, cy + Math.sin(A(a)) * r1);
+            g.lineTo(cx + Math.cos(A(a)) * (R - 1), cy + Math.sin(A(a)) * (R - 1));
+            g.stroke();
+          }
+          g.font = "700 10px Orbitron, sans-serif";
+          g.textAlign = "center";
+          g.textBaseline = "middle";
+          [["N", 0], ["E", 90], ["S", 180], ["W", 270]].forEach(function (p) {
+            g.fillStyle = p[0] === "N" ? "#ef4444" : "#a3b2d9";
+            g.fillText(p[0], cx + Math.cos(A(p[1])) * (R - 18), cy + Math.sin(A(p[1])) * (R - 18));
+          });
+          // error arc
+          if (Math.abs(S.err) > 0.5) {
+            g.strokeStyle = "rgba(249,115,22,.85)";
+            g.lineWidth = 4;
+            g.beginPath();
+            g.arc(cx, cy, R * 0.55, A(m), A(m + S.err), S.err < 0);
+            g.stroke();
+          }
+          // target line
+          g.strokeStyle = "#22c55e";
+          g.setLineDash([4, 3]);
+          g.lineWidth = 2;
+          g.beginPath();
+          g.moveTo(cx, cy);
+          g.lineTo(cx + Math.cos(A(t)) * (R - 4), cy + Math.sin(A(t)) * (R - 4));
+          g.stroke();
+          g.setLineDash([]);
+          g.fillStyle = "#22c55e";
+          g.save();
+          g.translate(cx + Math.cos(A(t)) * (R - 2), cy + Math.sin(A(t)) * (R - 2));
+          g.rotate(t * D2R);
+          g.beginPath(); g.moveTo(0, 8); g.lineTo(6, -3); g.lineTo(-6, -3); g.closePath(); g.fill();
+          g.restore();
+          // current heading needle
+          g.save();
+          g.translate(cx, cy);
+          g.rotate(m * D2R);
+          g.fillStyle = "#f97316";
+          g.beginPath();
+          g.moveTo(0, -(R - 12)); g.lineTo(5, -6); g.lineTo(0, -10); g.lineTo(-5, -6);
+          g.closePath();
+          g.fill();
+          g.strokeStyle = "rgba(249,115,22,.55)";
+          g.lineWidth = 2;
+          g.beginPath(); g.moveTo(0, 0); g.lineTo(0, R * 0.35); g.stroke();
+          g.restore();
+          g.fillStyle = "#e9eeff";
+          g.beginPath(); g.arc(cx, cy, 4, 0, Math.PI * 2); g.fill();
+        }
+
+        /* ---------- charts ---------- */
+        function drawCharts() {
+          var F = fit($("errChart")), g = F.g, w = F.w, h = F.h, N = 200;
+          var yE = function (v) { return h / 2 - (clamp(v, -60, 60) / 60) * (h / 2 - 4); };
+          g.fillStyle = "rgba(34,197,94,.16)";
+          g.fillRect(0, yE(cfg.deadband), w, yE(-cfg.deadband) - yE(cfg.deadband));
+          g.strokeStyle = "rgba(34,197,94,.7)";
+          g.lineWidth = 1;
+          g.beginPath(); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke();
+          g.fillStyle = "#6c7ca6";
+          g.font = "600 10px Rajdhani, sans-serif";
+          g.textAlign = "left";
+          g.textBaseline = "top";
+          g.fillText("+60°", 2, 1);
+          g.textBaseline = "bottom";
+          g.fillText("−60°", 2, h - 1);
+          g.strokeStyle = "#f97316";
+          g.lineWidth = 1.8;
+          g.beginPath();
+          var e = S.eHist;
+          e.forEach(function (v, i) {
+            var x = w - ((e.length - 1 - i) / (N - 1)) * w;
+            if (i === 0) g.moveTo(x, yE(v)); else g.lineTo(x, yE(v));
+          });
+          g.stroke();
+
+          F = fit($("tmpChart")); g = F.g; w = F.w; h = F.h;
+          var yT = function (v) { return h - 3 - ((clamp(v, 18, 50) - 18) / 32) * (h - 6); };
+          var tt = S.tHist;
+          if (tt.length > 1) {
+            g.beginPath();
+            tt.forEach(function (v, i) {
+              var x = w - ((tt.length - 1 - i) / (N - 1)) * w;
+              if (i === 0) g.moveTo(x, yT(v)); else g.lineTo(x, yT(v));
+            });
+            g.strokeStyle = "#22d3ee";
+            g.lineWidth = 1.8;
+            g.stroke();
+            g.lineTo(w, h);
+            g.lineTo(w - ((tt.length - 1) / (N - 1)) * w, h);
+            g.closePath();
+            g.fillStyle = "rgba(34,211,238,.12)";
+            g.fill();
+          }
+          g.strokeStyle = "#ef4444";
+          g.setLineDash([5, 4]);
+          g.lineWidth = 1.5;
+          g.beginPath(); g.moveTo(0, yT(cfg.thr)); g.lineTo(w, yT(cfg.thr)); g.stroke();
+          g.setLineDash([]);
+          g.fillStyle = "#fca5a5";
+          g.font = "600 10px Rajdhani, sans-serif";
+          g.textAlign = "left";
+          g.textBaseline = "bottom";
+          g.fillText("threshold " + cfg.thr + " °C", 2, yT(cfg.thr) - 1);
+        }
+
+        /* ---------- thermal grid ---------- */
+        var cells = [];
+        (function () {
+          var grid = $("tgrid");
+          for (var i = 0; i < 64; i++) {
+            var d = document.createElement("div");
+            grid.appendChild(d);
+            cells.push(d);
+          }
+        })();
+        function renderGrid() {
+          if (!cells || !cells.length) return; // sliders scan once before the grid is built
+          for (var i = 0; i < 64; i++) {
+            var t = S.pix[i];
+            cells[i].style.background = heatColor(t);
+            cells[i].textContent = Math.round(t);
+            cells[i].classList.toggle("hot", t >= cfg.thr);
+          }
+        }
+
+        /* ---------- panels ---------- */
+        var DEC = {
+          straight: ["Correct path", "Move straight", ""],
+          right: ["Needs correction", "Adjust right", "warn"],
+          left: ["Needs correction", "Adjust left", "warn"],
+          turn: ["Large heading error", "Turn until aligned", "warn"],
+          hold: ["Intruder alert", "Hold position", "bad"],
+          off: ["Auto-correction OFF", "No steering — drifting", "idle"],
+          paused: ["Paused", "Motors stopped", "idle"],
+        };
+        function setBar(el, v, m, color) {
+          var f = (clamp(Math.abs(v), 0, m) / m) * 50;
+          el.style.width = f + "%";
+          el.style.left = (v >= 0 ? 50 : 50 - f) + "%";
+          if (color) el.style.background = color;
+        }
+        function chip(id, cls, val) {
+          var el = $(id);
+          el.className = "chip " + cls;
+          el.querySelector(".v").textContent = val;
+        }
+        function ui() {
+          var z = ZONES[S.zone], r = S.rover, err = S.err;
+          var correcting = S.dec === "left" || S.dec === "right" || S.dec === "turn";
+          $("tV").textContent = Math.round(z.target) + "°";
+          $("cV").textContent = Math.round(S.meas) + "°";
+          $("eV").textContent = sgn(err) + "°";
+          $("eV").style.color = Math.abs(err) > cfg.deadband ? "#fb923c" : "#86efac";
+          var d = DEC[S.dec];
+          if (correcting && S.disturbT > 0) d = ["Disturbed — heading changed", "Recalculate & correct", "warn"];
+          $("dec1").textContent = d[0];
+          $("dec2").textContent = d[1];
+          $("decBox").className = "decision " + d[2];
+
+          $("xV").textContent = S.mx.toFixed(1);
+          $("yV").textContent = S.my.toFixed(1);
+          $("zV").textContent = S.mz.toFixed(1);
+          setBar($("bx"), S.mx, 50, "#f87171");
+          setBar($("by"), S.my, 50, "#4ade80");
+          setBar($("bz"), S.mz, 50, "#60a5fa");
+          $("formula").textContent = "heading = atan2(" + S.my.toFixed(1) + ", " + S.mx.toFixed(1) + ") = " + Math.round(S.meas) + "°";
+          $("lV").textContent = Math.round(r.L) + "%";
+          $("rV").textContent = Math.round(r.R) + "%";
+          setBar($("bl"), r.L, 100, r.L < -1 ? "#f87171" : "#22d3ee");
+          setBar($("br"), r.R, 100, r.R < -1 ? "#f87171" : "#22d3ee");
+
+          var rp, rc;
+          if (!S.running) { rp = "Paused"; rc = "idle"; }
+          else if (S.alertT > 0) { rp = "Intruder alert — holding position"; rc = "bad"; }
+          else if (!cfg.auto) { rp = "Auto-correction OFF — drifting"; rc = "idle"; }
+          else if (S.dec === "turn") { rp = "Turning to align"; rc = "warn"; }
+          else if (correcting) { rp = "Correcting path · adjust " + S.dec; rc = "warn"; }
+          else { rp = "Patrolling straight · " + Math.round(z.target) + "°"; rc = "good"; }
+          $("roverPill").textContent = rp;
+          $("roverPill").className = "pill " + rc;
+          var mp = $("magPill");
+          mp.textContent = Math.abs(err) <= cfg.deadband ? "On course" : "Off by " + Math.abs(Math.round(err)) + "°";
+          mp.className = "pill " + (Math.abs(err) <= cfg.deadband ? "good" : "warn");
+
+          // flow chips
+          chip("fTgt", "on", Math.round(z.target) + "°");
+          chip("fMag", "on", Math.round(S.meas) + "°");
+          chip("fCmp", Math.abs(err) > cfg.deadband ? "warn" : "good", "Error " + sgn(err) + "°");
+          chip("fMot", correcting ? "warn" : "on", "L" + Math.round(r.L) + " R" + Math.round(r.R));
+          var outT = !S.running ? "Paused" : S.alertT > 0 ? "Holding" : !cfg.auto ? "Drifting" : correcting ? "Correcting" : "On course";
+          chip("fOut", !S.running || !cfg.auto ? "on" : S.alertT > 0 ? "bad" : correcting ? "warn" : "good", outT);
+          var det = S.status === "det";
+          chip("fScan", S.status === "safe" ? "on" : S.status === "mon" ? "warn" : "bad", "Max " + S.maxT.toFixed(1) + " °C");
+          chip("fThr", det ? "bad" : S.status === "mon" ? "warn" : "good", cfg.thr + " °C · " + (det ? "crossed" : "below"));
+          chip("fInt", det ? "bad" : S.status === "mon" ? "warn" : "on", det ? "Detected" : S.status === "mon" ? "Monitoring" : "Clear");
+          chip("fAlr", S.alertT > 0 ? "bad" : "on", S.alertT > 0 ? "ON " + S.alertT.toFixed(1) + " s" : "OFF");
+
+          // thermal panel
+          $("maxV").textContent = S.maxT.toFixed(1) + " °C";
+          $("avgV").textContent = S.avgT.toFixed(1) + " °C";
+          $("thrV").textContent = cfg.thr + " °C";
+          var dt = "No intruder";
+          if (S.alien && S.dist == null) dt = "Outside zone";
+          else if (S.dist != null) {
+            dt = S.dist.toFixed(1) + " m · " + (S.dist > RANGE ? "out of range" : Math.abs(S.rel) > 30 ? "outside view" : "in range");
+          }
+          $("distV").textContent = dt;
+          var tp = $("thPill");
+          tp.textContent = det ? "Intruder Detected" : S.status === "mon" ? "Monitoring" : "Safe";
+          tp.className = "pill " + S.status;
+          var pos = function (t) { return clamp(((t - 20) / 25) * 100, 0, 100) + "%"; };
+          $("thrMark").style.left = pos(cfg.thr);
+          $("mxMark").style.left = pos(S.maxT);
+          var on = S.alertT > 0;
+          $("led").classList.toggle("on", on);
+          $("buz").classList.toggle("on", on);
+          $("ledV").textContent = on ? "ON" : "OFF";
+          $("buzV").textContent = on ? "ON " + S.alertT.toFixed(1) + " s" : "OFF";
+          $("ledV").style.color = $("buzV").style.color = on ? "#fca5a5" : "";
+        }
+
+        /* ---------- map pointer: place and drag the intruder ---------- */
+        var dragging = false;
+        function toWorld(e) {
+          var b = mapC.getBoundingClientRect();
+          return { x: (e.clientX - b.left - view.ox) / view.s, y: (e.clientY - b.top - view.oy) / view.s };
+        }
+        mapC.addEventListener("pointerdown", function (e) {
+          var p = toWorld(e), z = ZONES[S.zone], a = S.alien;
+          if (a && Math.hypot(p.x - a.x, p.y - a.y) < 0.9) {
+            a.flee = false; a.fleeIn = null; a.alpha = 1;
+          } else if (inZone(p.x, p.y, z, 0.3)) {
+            placeAlien(p.x, p.y);
+          } else {
+            log("Place the intruder inside " + z.name + " — the zone the rover is guarding");
+            return;
+          }
+          dragging = true;
+          mapC.setPointerCapture(e.pointerId);
+        });
+        mapC.addEventListener("pointermove", function (e) {
+          if (!dragging || !S.alien) return;
+          var p = toWorld(e), z = ZONES[S.zone];
+          S.alien.x = clamp(p.x, z.x0 + 0.4, z.x1 - 0.4);
+          S.alien.y = clamp(p.y, z.y0 + 0.4, z.y1 - 0.4);
+        });
+        function endDrag() { dragging = false; }
+        mapC.addEventListener("pointerup", endDrag);
+        mapC.addEventListener("pointercancel", endDrag);
+
+        /* ---------- start ---------- */
+        placeRover();
+        scan();
+        log("Patrol started in Zone 1 (Habitat Corridor) — target heading 90°");
+        var last = performance.now();
+        function frame(now) {
+          var dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+          last = now;
+          update(dt);
+          drawMap();
+          drawCompass();
+          drawCharts();
+          ui();
+          requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+      })();
+    </script>
+
+    <script>
+      /* Universal Floating, Draggable & Resizable How-to-Use & Guide System */
+      (function initUniversalHelpFloatwin() {
+        var bar = document.getElementById("helpbar");
+        if (!bar) return;
+
+        if (!bar.classList.contains("floatwin")) {
+          bar.classList.add("floatwin");
+          bar.setAttribute("role", "dialog");
+          bar.setAttribute("aria-label", "Help Guide");
+
+          var head = document.createElement("div");
+          head.className = "fw-head";
+
+          var title = document.createElement("span");
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
+          head.appendChild(title);
+
+          var actions = document.createElement("div");
+          actions.className = "fw-head-actions";
+
+          var origPanels = bar.querySelectorAll(".tabpanel");
+          if (origPanels.length > 1) {
+            origPanels.forEach(function (p) {
+              var t = p.dataset.panel;
+              var b = document.createElement("button");
+              b.type = "button";
+              b.className = "fw-tab-btn";
+              b.dataset.tab = t;
+              b.textContent = t === "use" ? "How To Use" : t === "learn" ? "What You'll Learn" : t;
+              actions.appendChild(b);
+            });
+          }
+
+          var closeBtn = document.createElement("button");
+          closeBtn.type = "button";
+          closeBtn.className = "fw-close";
+          closeBtn.title = "Close Guide";
+          closeBtn.setAttribute("aria-label", "Close");
+          closeBtn.textContent = "✕";
+          actions.appendChild(closeBtn);
+          head.appendChild(actions);
+
+          var body = document.createElement("div");
+          body.className = "fw-body";
+          while (bar.firstChild) body.appendChild(bar.firstChild);
+
+          var grip = document.createElement("div");
+          grip.className = "fw-grip";
+          grip.title = "Drag to resize";
+
+          bar.appendChild(head);
+          bar.appendChild(body);
+          bar.appendChild(grip);
+          document.body.appendChild(bar);
+        }
+
+        var btns = document.querySelectorAll(".helpbtn");
+        var tabBtns = bar.querySelectorAll(".fw-tab-btn");
+        var closeBtnEl = bar.querySelector(".fw-close");
+        var headEl = bar.querySelector(".fw-head");
+        var gripEl = bar.querySelector(".fw-grip");
+        var topZ = 10000;
+        var posInit = false;
+        var userSized = false;
+
+        function toFront() { bar.style.zIndex = ++topZ; }
+
+        function closeAll() {
+          bar.classList.remove("show");
+          btns.forEach(function (b) { b.classList.remove("on"); });
+          tabBtns.forEach(function (b) { b.classList.remove("on"); });
+        }
+
+        function openTab(tab) {
+          toFront();
+          if (!posInit) {
+            var w = Math.min(440, window.innerWidth - 32);
+            bar.style.width = w + "px";
+            bar.style.top = "65px";
+            bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
+            posInit = true;
+          }
+          bar.classList.add("show");
+          btns.forEach(function (b) { b.classList.toggle("on", b.dataset.tab === tab); });
+          tabBtns.forEach(function (b) { b.classList.toggle("on", b.dataset.tab === tab); });
+          bar.querySelectorAll(".tabpanel").forEach(function (p) {
+            p.classList.toggle("on", p.dataset.panel === tab);
+          });
+          fitHeight();
+        }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
+
+        btns.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var tab = btn.dataset.tab || "use";
+            if (bar.classList.contains("show") && btn.classList.contains("on")) closeAll();
+            else openTab(tab);
+          });
+        });
+
+        tabBtns.forEach(function (tb) {
+          tb.addEventListener("click", function (e) {
+            e.stopPropagation();
+            openTab(tb.dataset.tab);
+          });
+        });
+
+        if (closeBtnEl) closeBtnEl.addEventListener("click", closeAll);
+        bar.addEventListener("pointerdown", toFront);
+
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && bar.classList.contains("show")) closeAll();
+        });
+
+        if (headEl) {
+          headEl.addEventListener("pointerdown", function (e) {
+            if (e.target.closest(".fw-head-actions")) return;
+            e.preventDefault();
+            toFront();
+            headEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var dx = e.clientX - r.left, dy = e.clientY - r.top;
+            bar.classList.add("dragging");
+            function onMove(ev) {
+              bar.style.left = Math.max(8, Math.min(window.innerWidth - bar.offsetWidth - 8, ev.clientX - dx)) + "px";
+              bar.style.top = Math.max(8, Math.min(window.innerHeight - 40, ev.clientY - dy)) + "px";
+            }
+            function onUp() {
+              bar.classList.remove("dragging");
+              headEl.removeEventListener("pointermove", onMove);
+              headEl.removeEventListener("pointerup", onUp);
+              headEl.removeEventListener("pointercancel", onUp);
+            }
+            headEl.addEventListener("pointermove", onMove);
+            headEl.addEventListener("pointerup", onUp);
+            headEl.addEventListener("pointercancel", onUp);
+          });
+        }
+
+        if (gripEl) {
+          gripEl.addEventListener("pointerdown", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toFront();
+            gripEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var startX = e.clientX, startY = e.clientY, startW = r.width, startH = r.height;
+            function onMove(ev) {
+              bar.style.width = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX))) + "px";
+              bar.style.height = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY))) + "px";
+              userSized = true;
+            }
+            function onUp() {
+              gripEl.removeEventListener("pointermove", onMove);
+              gripEl.removeEventListener("pointerup", onUp);
+              gripEl.removeEventListener("pointercancel", onUp);
+            }
+            gripEl.addEventListener("pointermove", onMove);
+            gripEl.addEventListener("pointerup", onUp);
+            gripEl.addEventListener("pointercancel", onUp);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

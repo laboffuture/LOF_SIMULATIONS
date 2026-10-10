@@ -45,10 +45,41 @@
         overflow: hidden;
         -webkit-font-smoothing: antialiased;
       }
+      body {
+        display: flex;
+        flex-direction: column;
+      }
+      header.top {
+        flex: 0 0 auto;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 16px;
+        background: rgba(9, 13, 22, 0.95);
+        border-bottom: 1px solid var(--border-color);
+        position: relative;
+        z-index: 40;
+      }
+      .top-title {
+        grid-column: 2;
+        margin: 0;
+        font-family: var(--sans);
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        text-align: center;
+        background: linear-gradient(90deg, #00f2fe, #4facfe);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
       #app {
         display: grid;
         grid-template-columns: 1fr 380px;
-        height: 100vh;
+        flex: 1 1 auto;
+        min-height: 0;
       }
 
       /* ---- STAGE ---- */
@@ -714,10 +745,8 @@
     
       /* Floating, draggable & resizable Guide / How to Use window */
       .helpwrap {
-        position: fixed;
-        top: 14px;
-        right: clamp(12px, 2.4vw, 30px);
-        z-index: 40;
+        grid-column: 3;
+        justify-self: end;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -912,10 +941,24 @@
       }
       @media (max-width: 900px) {
         .helpwrap {
-          position: static;
           align-items: stretch;
-          margin-bottom: 10px;
-          flex: 0 0 auto;
+        }
+      }
+      @media (max-width: 600px) {
+        header.top {
+          grid-template-columns: 1fr;
+          gap: 6px;
+          padding: 8px 12px;
+        }
+        .helpwrap {
+          grid-row: 1;
+          grid-column: 1;
+          justify-self: center;
+        }
+        .top-title {
+          grid-row: 2;
+          grid-column: 1;
+          font-size: 15px;
         }
       }
       @media (prefers-reduced-motion: reduce) {
@@ -925,9 +968,24 @@
       }
 
     </style>
-  </head>
+    <style id="lof-guide">
+    /* guide pop-up: tabs centred in the header, grip pinned left, close button pinned right */
+    .fw-head { position: relative; }
+    .fw-head-actions { flex: 1; justify-content: center; }
+    .fw-head .fw-title { position: absolute; left: 12px; }
+    .fw-head .fw-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+    /* when the window is dragged very narrow there is no room to centre: sit the tabs beside the grip */
+    .helpbar.floatwin { container-type: inline-size; }
+    @container (max-width: 340px) {
+      .fw-head-actions { justify-content: flex-start; min-width: 0; padding: 0 32px 0 20px; }
+    }
+  </style>
+</head>
   <body>
-    <!-- How To Use & Guide Buttons -->
+    <header class="top">
+      <div></div>
+      <h1 class="top-title">Mirror Maze Spectrum</h1>
+      <!-- How To Use & Guide Buttons -->
     <div class="helpwrap">
       <div class="helpbtns">
         <button type="button" class="helpbtn" data-tab="use">How To Use</button>
@@ -936,35 +994,98 @@
       <div class="helpbar" id="helpbar">
         <div class="tabpanel" data-panel="use">
           <ol>
-            <li><b>Position Optical Elements:</b> Place prisms, mirrors, and lenses onto the ray bench.</li>
-            <li><b>Aim Light Source:</b> Adjust incident beam angle and light wavelength (monochromatic vs white light).</li>
-            <li><b>Position Detector Screen:</b> Drag the detection screen along the curved arc to capture refracted and reflected rays.</li>
-            <li><b>Measure Dispersion:</b> Measure beam separation and spectral bandwidth.</li>
+            <li>
+              Light leaves the source on the left, passes through up to two
+              elements and lands on the <b>detector screen</b> (bottom view).
+            </li>
+            <li>
+              For a quick start, press a <b>Quick Scenario</b>:
+              <b>Rainbow Prism</b>, <b>Laser Beam</b>, <b>Diffraction</b> or
+              <b>Bent Path</b>.
+            </li>
+            <li>
+              Under <b>Light Source</b>, set the <b>Brightness</b> and pick
+              <b>White Light</b> (all colours) or <b>Monochromatic</b> (one
+              <b>Wavelength</b>, 400–700 nm).
+            </li>
+            <li>
+              Choose <b>Slot 1</b> or <b>Slot 2</b>, then click an element in
+              the tray (<b>Mirror</b>, <b>Prism</b>, <b>Grating</b>,
+              <b>Filter</b>, <b>Blocker</b>, <b>Diffuser</b> or <b>Lens</b>) or
+              drag it onto a slot. <b>Remove</b> clears a slot.
+            </li>
+            <li>
+              Change each element's settings in its slot: the
+              <b>Tilt Angle</b> for a mirror, prism, grating or lens, the
+              <b>Lines per mm</b> (100, 300 or 600) for a grating, the
+              <b>Passband Color</b> for a filter, and
+              <b>Converging</b>/<b>Diverging</b> and the
+              <b>Focal Length</b> for a lens. A prism also shows its
+              <b>Snell's law</b> working.
+            </li>
+            <li>
+              <b>Auto-aim</b> keeps the screen on the beam. Turn it off to move
+              the screen with the <b>Screen Angle</b> slider.
+            </li>
+            <li>
+              Read the line under the detector view: it names the pattern you
+              made, such as a rainbow, a focused spot or a dark screen.
+            </li>
+            <li>
+              Change <b>one</b> thing at a time and compare the results.
+            </li>
           </ol>
         </div>
         <div class="tabpanel" data-panel="learn">
           <ul>
-            <li><b>Snell's Law of Refraction:</b> $n_1 \sin \theta_1 = n_2 \sin \theta_2$.</li>
-            <li><b>Wavelength Dispersion:</b> Refractive index variation with wavelength causing white light to separate into spectral colours.</li>
-            <li><b>Total Internal Reflection:</b> Conditions for internal reflection when incident angle exceeds the critical angle.</li>
+            <li>
+              <b>White light:</b> sunlight-like white light is a mix of all the
+              colours, from violet (about 400 nm) to red (about 700 nm).
+            </li>
+            <li>
+              <b>Reflection:</b> a mirror bounces light so that it leaves at the
+              same angle it arrived; tilting the mirror steers the beam.
+            </li>
+            <li>
+              <b>Refraction:</b> light bends when it passes into glass and out
+              again, following Snell's law: n₁ sin θ₁ = n₂ sin θ₂.
+            </li>
+            <li>
+              <b>Dispersion:</b> glass bends violet light more than red, so a
+              prism spreads white light into a rainbow. A single laser colour
+              does not spread.
+            </li>
+            <li>
+              <b>Diffraction:</b> a grating's fine lines split light into
+              several beams called orders; more lines per mm spread them wider,
+              and red bends the most.
+            </li>
+            <li>
+              <b>Filters:</b> a colour filter lets only one band of colours
+              through and absorbs the rest.
+            </li>
+            <li>
+              <b>Lenses:</b> a converging lens brings light to a focus and a
+              diverging lens spreads it out; the focal length sets how strongly.
+            </li>
+            <li>
+              <b>Scattering and blocking:</b> a diffuser scatters light in all
+              directions, while a blocker stops it completely.
+            </li>
+            <li>
+              <b>Fair testing:</b> change one element or setting at a time to
+              see what each one does to the light.
+            </li>
           </ul>
         </div>
       </div>
     </div>
+    </header>
 
     <div id="app">
       <div id="stage">
         <div class="view" id="benchView">
           <canvas id="bench"></canvas>
-          <div class="viewtag">
-            Optics Bench — Top View<small
-              >Drag screen along the arc to capture dispersed rays</small
-            >
-          </div>
-          <div id="titlecard">
-            <h1>Mirror Maze Spectrum</h1>
-            <p>Optics Workbench — Refraction &amp; Dispersion</p>
-          </div>
         </div>
         <div class="view" id="screenView">
           <canvas id="screen"></canvas>
@@ -1067,13 +1188,6 @@
           <div class="note">
             Turn off auto-aim to manually position the screen detector along the orbital arc.
           </div>
-        </div>
-
-        <!-- HELP -->
-        <div class="sec">
-          <button class="linkbtn" id="helpBtn">
-            ? Guide &amp; Optical Concepts
-          </button>
         </div>
       </div>
     </div>
@@ -2438,7 +2552,6 @@
       });
       benchC.style.touchAction = "none";
 
-      $("helpBtn").onclick = () => $("scrim").classList.add("show");
       $("helpClose").onclick = () => $("scrim").classList.remove("show");
       $("scrim").addEventListener("click", (e) => {
         if (e.target === $("scrim")) $("scrim").classList.remove("show");
@@ -2488,8 +2601,7 @@
           head.className = "fw-head";
 
           var title = document.createElement("span");
-          title.className = "fw-title";
-          title.textContent = "How To Use";
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
           head.appendChild(title);
 
           var actions = document.createElement("div");
@@ -2504,7 +2616,7 @@
               b.type = "button";
               b.className = "fw-tab-btn";
               b.dataset.tab = t;
-              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What To Learn" : t);
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What You'll Learn" : t);
               actions.appendChild(b);
               tabBtns.push(b);
             });
@@ -2538,12 +2650,12 @@
 
         var btns = document.querySelectorAll(".helpbtn");
         var tabBtns = bar.querySelectorAll(".fw-tab-btn");
-        var titleEl = bar.querySelector(".fw-title");
         var closeBtn = bar.querySelector(".fw-close");
         var headEl = bar.querySelector(".fw-head");
         var gripEl = bar.querySelector(".fw-grip");
         var topZ = 10000;
         var posInit = false;
+        var userSized = false;
 
         function toFront() {
           bar.style.zIndex = ++topZ;
@@ -2559,9 +2671,7 @@
           toFront();
           if (!posInit) {
             var w = Math.min(440, window.innerWidth - 32);
-            var h = Math.min(540, window.innerHeight - 80);
             bar.style.width = w + "px";
-            bar.style.height = h + "px";
             bar.style.top = "65px";
             bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
             posInit = true;
@@ -2577,10 +2687,30 @@
           panels.forEach(function (p) {
             p.classList.toggle("on", p.dataset.panel === tab);
           });
-          if (titleEl) {
-            titleEl.textContent = tab === "use" ? "How To Use" : (tab === "learn" ? "What You'll Learn" : "Guide");
-          }
+          fitHeight();
         }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        // Rotating a phone or resizing the window: keep the guide on screen and re-fit it.
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
 
         btns.forEach(function (btn) {
           var newBtn = btn.cloneNode(true);
@@ -2657,6 +2787,7 @@
               var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
               var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
               bar.style.width = nw + "px";
+              userSized = true;
               bar.style.height = nh + "px";
             }
             function onUp(ev) {
