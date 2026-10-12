@@ -29,6 +29,10 @@
         --mono: "IBM Plex Mono", ui-monospace, monospace;
       }
 
+      [hidden] {
+        display: none !important;
+      }
+
       * {
         box-sizing: border-box;
         margin: 0;
@@ -61,22 +65,6 @@
         flex: 0 0 auto;
         position: relative;
         z-index: 50;
-      }
-      .nav-back {
-        grid-column: 1;
-        justify-self: start;
-        font-family: var(--mono);
-        font-size: 11px;
-        font-weight: 500;
-        color: var(--mut);
-        text-decoration: none;
-        transition: 0.15s;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .nav-back:hover {
-        color: var(--glow);
       }
       .title {
         grid-column: 2;
@@ -280,9 +268,6 @@
           grid-template-columns: 1fr;
           gap: 6px;
         }
-        .nav-back {
-          display: none;
-        }
         .helpbtns {
           grid-row: 1;
           grid-column: 1;
@@ -383,13 +368,59 @@
         font-size: 13px;
         color: var(--mut);
       }
+      .target-clue {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        color: var(--glow);
+        margin-top: 4px;
+      }
+      .link-btn {
+        appearance: none;
+        align-self: flex-start;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 0;
+        margin-top: 2px;
+        font-family: var(--body);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--glow-gold);
+        text-decoration: underline;
+      }
+      .link-btn:hover {
+        color: #fff;
+      }
+      /* Small screens: the card collapses to its thumbnail; tap the thumbnail to open it. */
+      @media (max-width: 600px) {
+        #topStrip {
+          top: 10px;
+          left: 10px;
+        }
+        .target-card {
+          padding: 6px;
+        }
+        .target-preview-wrap {
+          cursor: pointer;
+        }
+        .target-card:not(.open) .target-meta {
+          display: none;
+        }
+        .target-card.open .target-meta {
+          padding-right: 6px;
+        }
+      }
 
-      /* ---- CORNER BUTTON: HINT OUTLINE TOGGLE ---- */
+      /* ---- CORNER BUTTONS: HINT OUTLINE AND RA/DEC GRID TOGGLES ---- */
       #cornerControl {
         position: absolute;
         top: 14px;
         right: 18px;
         z-index: 20;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
       }
       .corner-btn {
         cursor: pointer;
@@ -417,21 +448,190 @@
         box-shadow: inset 0 0 0 2px #06121c, 0 0 14px rgba(127, 211, 255, 0.5);
       }
 
-      /* ---- CORNER BUTTONS: ZOOM IN / OUT ---- */
+      .grid-prompt {
+        position: absolute;
+        top: 38px;
+        right: calc(100% + 10px);
+        width: 190px;
+        cursor: pointer;
+        font-family: var(--body);
+        font-size: 13.5px;
+        line-height: 1.3;
+        color: #06121c;
+        background: var(--glow-gold);
+        border-radius: 8px;
+        padding: 7px 10px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+      }
+      .grid-prompt::after {
+        content: "";
+        position: absolute;
+        top: 12px;
+        left: 100%;
+        border: 6px solid transparent;
+        border-left-color: var(--glow-gold);
+      }
+
+      /* ---- BOTTOM BAR OF THE SKY: COORDINATE READOUT AND MAGNITUDE LEGEND ---- */
+      #skyBar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 6px 12px;
+        background: rgba(8, 17, 26, 0.86);
+        border-top: 1px solid var(--line);
+        backdrop-filter: blur(6px);
+        cursor: default;
+      }
+      /* First discovery: lift the bar above the celebration so the coach mark can point at it. */
+      #skyBar.coach {
+        z-index: 120;
+      }
+      #skyBar.coach .hud {
+        border-color: var(--glow-gold);
+        box-shadow: 0 0 0 2px var(--glow-gold), 0 0 18px rgba(255, 212, 92, 0.7);
+      }
+      .hud {
+        appearance: none;
+        cursor: pointer;
+        flex: 0 0 auto;
+        display: flex;
+        gap: 7px;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--glow);
+        background: #0c1824;
+        border: 1px solid var(--line2);
+        border-radius: 6px;
+        padding: 5px 10px;
+        white-space: nowrap;
+        transition: 0.15s;
+      }
+      .hud:hover {
+        border-color: var(--glow);
+      }
+      .hud-dot {
+        color: var(--dim);
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+      .legend {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        color: var(--mut);
+      }
+      .lg-arrow {
+        white-space: nowrap;
+        color: var(--dim);
+      }
+      .lg-scale {
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        height: 28px;
+      }
+      .lg-step {
+        width: 22px;
+        height: 28px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 2px;
+        transition: opacity 0.6s ease;
+      }
+      .lg-step.dim {
+        opacity: 0.3;
+      }
+      .lg-step i {
+        display: block;
+        flex: 0 0 auto;
+        border-radius: 50%;
+        background: #e8f2ff;
+        margin: auto 0;
+      }
+      .lg-step b {
+        font-weight: 400;
+        font-size: 9.5px;
+        line-height: 1;
+        color: var(--mut);
+      }
+      .lg-marker {
+        position: absolute;
+        top: -2px;
+        bottom: -2px;
+        width: 0;
+        border-left: 2px solid var(--glow-gold);
+        transition: left 0.8s ease;
+      }
+      /* Pointer for the star just tapped: slides to that star's magnitude. */
+      .lg-star-marker {
+        display: none;
+        position: absolute;
+        top: -5px;
+        bottom: 9px;
+        width: 0;
+        margin-left: -1px;
+        border-left: 2px solid var(--glow);
+        transition: left 0.5s ease;
+      }
+      .lg-star-marker.show {
+        display: block;
+      }
+      .lg-star-marker::before {
+        content: "";
+        position: absolute;
+        top: -1px;
+        left: -6px;
+        border: 5px solid transparent;
+        border-top-color: var(--glow);
+      }
+      .lg-star {
+        color: var(--glow);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .lg-star:empty {
+        display: none;
+      }
+      .lg-limit {
+        color: var(--glow-gold);
+        white-space: nowrap;
+      }
+      /* ---- CORNER BUTTONS: ZOOM IN / OUT, ABOVE THE BOTTOM BAR ---- */
       #zoomControl {
         position: absolute;
         right: 18px;
-        bottom: 14px;
+        bottom: 56px;
         z-index: 20;
         display: flex;
         flex-direction: column;
         gap: 6px;
       }
       .zoom-btn {
-        width: 36px;
-        height: 36px;
+        width: 42px;
+        height: 42px;
         padding: 0;
-        font-size: 18px;
+        font-size: 22px;
         line-height: 1;
       }
       .zoom-btn:disabled {
@@ -440,11 +640,121 @@
         border-color: var(--line2);
         box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
       }
+      @media (max-width: 860px) {
+        .lg-arrow,
+        .lg-scale {
+          display: none;
+        }
+      }
+      @media (max-width: 520px) {
+        #skyBar {
+          flex-wrap: wrap;
+          gap: 4px 10px;
+          padding: 5px 10px;
+        }
+        .legend {
+          order: 3;
+          flex-basis: 100%;
+          justify-content: flex-start;
+        }
+        #zoomControl {
+          right: 10px;
+          bottom: 72px;
+        }
+      }
+
+      /* ---- STAR INFO POPOVER AND TAP LABEL ---- */
+      #starInfo {
+        display: none;
+        position: absolute;
+        z-index: 25;
+        min-width: 180px;
+        max-width: 240px;
+        pointer-events: none;
+        background: rgba(11, 20, 30, 0.96);
+        border: 1px solid var(--line2);
+        border-radius: 8px;
+        padding: 9px 11px;
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6);
+      }
+      #starInfo.show {
+        display: block;
+      }
+      .si-name {
+        font-family: var(--head);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--txt);
+        margin-bottom: 5px;
+      }
+      .si-bayer {
+        font-family: var(--mono);
+        font-weight: 500;
+        color: var(--glow-gold);
+        margin-left: 7px;
+      }
+      .si-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        font-family: var(--mono);
+        font-size: 11.5px;
+        line-height: 1.5;
+        color: var(--mut);
+      }
+      .si-row b {
+        font-weight: 500;
+        color: var(--txt);
+      }
+      .si-bar {
+        display: flex;
+        gap: 3px;
+        margin: 5px 0 2px;
+      }
+      .si-bar i {
+        flex: 1;
+        height: 5px;
+        border-radius: 2px;
+        background: var(--line);
+      }
+      .si-bar i.on {
+        background: var(--glow);
+      }
+      .si-var {
+        font-size: 12.5px;
+        color: var(--glow-gold);
+        margin-top: 4px;
+      }
+      .si-note {
+        font-size: 12.5px;
+        line-height: 1.3;
+        color: var(--mut);
+        margin-top: 2px;
+      }
+      #starFlash {
+        display: none;
+        position: absolute;
+        z-index: 22;
+        transform: translate(-50%, -100%);
+        pointer-events: none;
+        font-family: var(--mono);
+        font-size: 11.5px;
+        font-weight: 500;
+        color: #06121c;
+        background: var(--glow);
+        border-radius: 5px;
+        padding: 2px 7px;
+        white-space: nowrap;
+      }
+      #starFlash.show {
+        display: block;
+      }
 
       /* ---- BOTTOM STRIP: SCROLLABLE STAR-MAP SCRAPBOOK ---- */
       #bottomStrip {
         flex: 0 0 auto;
-        height: 96px;
+        height: 106px;
         background: #09131d;
         border-top: 1px solid var(--line);
         display: flex;
@@ -465,12 +775,37 @@
         text-transform: uppercase;
         color: var(--mut);
       }
+      .scrapbook-lead {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .scrapbook-nav {
+        display: flex;
+        gap: 6px;
+      }
+      .nav-btn {
+        width: 30px;
+        height: 24px;
+        padding: 0;
+        font-size: 17px;
+        line-height: 1;
+      }
+      .nav-btn:disabled {
+        opacity: 0.4;
+        cursor: default;
+        border-color: var(--line2);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      }
       .scrapbook-count {
         font-family: var(--mono);
-        font-size: 10.5px;
-        color: var(--dim);
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--mut);
       }
       .scrapbook-count b {
+        font-size: 21px;
+        font-weight: 600;
         color: var(--glow);
       }
 
@@ -519,6 +854,14 @@
         border-color: var(--glow);
         transform: translateY(-2px);
         box-shadow: 0 0 12px rgba(127, 211, 255, 0.25);
+      }
+      .scrap-icon.active {
+        border-color: var(--glow);
+        box-shadow: 0 0 12px rgba(127, 211, 255, 0.4);
+      }
+      .scrap-icon.lit {
+        border-color: #fff3c4;
+        box-shadow: 0 0 10px rgba(255, 232, 150, 0.45);
       }
       .scrap-icon-thumb {
         width: 40px;
@@ -579,13 +922,15 @@
         border: 1px solid var(--line2);
         box-shadow: 0 0 40px rgba(127, 211, 255, 0.2), 0 20px 50px rgba(0, 0, 0, 0.7);
         border-radius: 12px;
-        max-width: 460px;
+        max-width: 500px;
         width: 100%;
-        padding: 26px 28px;
+        max-height: 100%;
+        overflow-y: auto;
+        padding: 22px 26px;
         text-align: center;
       }
       #completionOverlay.show .reveal-box {
-        animation: revealSlideIn 0.7s 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+        animation: revealSlideUp 0.7s 1.7s cubic-bezier(0.2, 0.9, 0.3, 1) both;
       }
       @keyframes revealFade {
         from {
@@ -595,14 +940,14 @@
           opacity: 1;
         }
       }
-      @keyframes revealSlideIn {
+      @keyframes revealSlideUp {
         from {
           opacity: 0;
-          transform: translateX(-60px);
+          transform: translateY(70vh);
         }
         to {
           opacity: 1;
-          transform: translateX(0);
+          transform: translateY(0);
         }
       }
       .reveal-tag {
@@ -637,7 +982,7 @@
         border: 1px solid var(--line);
         border-radius: 8px;
         padding: 14px 16px;
-        margin-bottom: 20px;
+        margin-bottom: 12px;
       }
       .reveal-fact b {
         color: var(--glow-gold);
@@ -676,10 +1021,12 @@
         display: none;
         position: absolute;
         left: 18px;
-        bottom: 14px;
+        bottom: 54px;
         z-index: 20;
-        width: 280px;
-        max-width: calc(100% - 90px);
+        width: 350px;
+        max-width: calc(100% - 36px);
+        max-height: calc(100% - 170px);
+        overflow-y: auto;
         background: rgba(11, 20, 30, 0.94);
         border: 1px solid var(--line2);
         border-radius: 10px;
@@ -756,9 +1103,198 @@
         color: var(--txt);
         margin-bottom: 10px;
       }
+      /* Phones: leave the zoom buttons clear of the scrapbook card. */
+      @media (max-width: 520px) {
+        #recallCard {
+          left: 10px;
+          bottom: 72px;
+          max-width: calc(100% - 72px);
+          padding: 10px;
+        }
+      }
+      .recall-btn.lit {
+        background: #fff3c4;
+      }
       .recall-btn {
         font-size: 10px;
         padding: 7px 12px;
+      }
+
+      /* ---- STAR DATA: CENTRE LINE AND TABLE (DISCOVERY CARD AND SCRAPBOOK CARD) ---- */
+      .data-centre {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--glow);
+        text-align: left;
+        margin-bottom: 8px;
+      }
+      .coach-mark {
+        text-align: left;
+        font-size: 14px;
+        line-height: 1.35;
+        font-weight: 600;
+        color: #06121c;
+        background: var(--glow-gold);
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-bottom: 10px;
+      }
+      .star-data {
+        text-align: left;
+        margin-bottom: 12px;
+      }
+      .star-data summary {
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--mut);
+        margin-bottom: 4px;
+      }
+      .star-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: var(--mono);
+        font-size: 11px;
+        text-align: left;
+      }
+      .star-table th {
+        font-weight: 500;
+        color: var(--dim);
+        padding: 3px 6px;
+        border-bottom: 1px solid var(--line);
+      }
+      .star-table td {
+        padding: 3px 6px;
+        color: var(--txt);
+        white-space: nowrap;
+      }
+      .star-table tbody tr {
+        cursor: pointer;
+      }
+      .star-table tbody tr:hover td {
+        background: rgba(127, 211, 255, 0.1);
+      }
+      .star-table tr.brightest td {
+        color: var(--glow-gold);
+        background: rgba(255, 212, 92, 0.09);
+      }
+      .star-table tbody tr.picked td {
+        background: rgba(127, 211, 255, 0.22);
+        box-shadow: inset 0 1px 0 var(--glow), inset 0 -1px 0 var(--glow);
+      }
+      .star-table .var {
+        font-size: 9.5px;
+        color: var(--glow-gold);
+        border: 1px solid rgba(255, 212, 92, 0.5);
+        border-radius: 3px;
+        padding: 0 3px;
+        margin-left: 3px;
+      }
+      #recallCard .data-centre {
+        font-size: 11px;
+      }
+      #recallCard .star-table {
+        font-size: 10px;
+        margin-bottom: 10px;
+      }
+      #recallCard .star-table th,
+      #recallCard .star-table td {
+        padding: 2px 4px;
+      }
+
+      /* ---- TIER 3 CHECK QUESTION ---- */
+      .check-box {
+        text-align: left;
+        background: #08111b;
+        border: 1px solid var(--line2);
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 14px;
+      }
+      .check-q {
+        font-size: 14.5px;
+        font-weight: 600;
+        line-height: 1.35;
+        color: var(--txt);
+      }
+      .check-opts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .check-opts:empty {
+        display: none;
+      }
+      .check-opt {
+        cursor: pointer;
+        font-family: var(--body);
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--txt);
+        background: #0c1824;
+        border: 1px solid var(--line2);
+        border-radius: 7px;
+        padding: 6px 12px;
+        text-align: left;
+        transition: 0.15s;
+      }
+      .check-opt:hover:not(:disabled) {
+        border-color: var(--glow);
+      }
+      .check-opt:disabled {
+        cursor: default;
+        opacity: 0.55;
+      }
+      .check-opt.right {
+        opacity: 1;
+        border-color: var(--glow-gold);
+        color: var(--glow-gold);
+      }
+      .check-feedback {
+        font-size: 13.5px;
+        color: var(--glow-gold);
+        margin-top: 6px;
+      }
+      .check-feedback:empty {
+        display: none;
+      }
+      .scrap-tick {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--glow-gold);
+        margin-left: -4px;
+      }
+      .scrap-tick.wrong {
+        color: var(--dim);
+      }
+
+      /* Phones: a more compact discovery card. */
+      @media (max-width: 760px) {
+        .reveal-info {
+          padding: 10px 12px;
+        }
+        .reveal-box {
+          padding: 14px 16px;
+        }
+        .reveal-title {
+          font-size: 20px;
+        }
+        .reveal-sub {
+          font-size: 15px;
+          margin-bottom: 10px;
+        }
+        .reveal-fact {
+          font-size: 14px;
+          padding: 10px 12px;
+        }
+        .star-table td,
+        .star-table th {
+          padding: 3px 4px;
+        }
       }
     </style>
     <style id="lof-guide">
@@ -777,10 +1313,6 @@
   <body>
     <!-- ---- TOP HEADER ---- -->
     <header class="top">
-      <a href="../../categories/space-astronomy.html" class="nav-back">
-        &larr; Space &amp; Astronomy
-      </a>
-
       <div class="title">
         <h1>Stargazer's Portal</h1>
       </div>
@@ -796,12 +1328,17 @@
           <ol>
             <li>
               Look at the <b>Target Shape</b> card at the top left. It shows the
-              outline of the constellation you are hunting for.
+              outline of the constellation you are hunting for. Its name stays
+              hidden until you connect it.
             </li>
             <li>
-              <b>Drag</b> the sky in any direction to pan around and find the
-              group of stars that matches. The sky wraps around, so you can
-              keep going.
+              <b>Drag</b> the sky in any direction (or use the arrow keys) to
+              look around and find the group of stars that matches.
+            </li>
+            <li>
+              The <b>readout</b> at the bottom shows the RA and Dec under the
+              small cross in the middle of the sky. Tap it (or press <b>U</b>)
+              to switch RA between hours and degrees.
             </li>
             <li>
               <b>Zoom</b> with the mouse wheel, by pinching on a touch screen,
@@ -810,21 +1347,42 @@
             </li>
             <li>
               <b>Tap the stars</b> that make the shape, in any order. Correct
-              stars light up and join with lines; a wrong tap simply doesn't
-              connect. There is no timer.
+              stars light up, join with lines and flash their name and
+              brightness. A wrong tap shows a quick red ring and nothing else.
+              There is no timer.
+            </li>
+            <li>
+              <b>Hover over any star</b> (or press and hold it on a touch
+              screen) to see its name, RA, Dec and brightness. The blue pointer
+              on the <b>brightness scale</b> at the bottom slides to that star.
             </li>
             <li>
               Stuck? Press <b>Hint</b> to show a faint outline over the right
-              stars. Press it again to hide it.
+              stars. Press <b>Grid</b> (or <b>G</b>) to draw the RA and Dec
+              lines of the sky.
             </li>
             <li>
-              When the shape is complete, the constellation's name and a short
-              fact appear. Press <b>Next Target</b> to hunt the next one.
+              From <b>Round 5</b> the sky no longer moves to the target for
+              you. Use the clue on the card, such as
+              <b>Look near RA 7h 00m, Dec +25°</b>, with the readout and the
+              grid. <b>Take me there</b> is there if you get stuck.
+            </li>
+            <li>
+              When the shape is complete, its name appears and the
+              constellation twirls. A card follows with a sky fact and a table
+              of its stars; tap a row to make that star pulse. Later rounds add
+              one quick question. Press <b>Next Target</b> to hunt the next one.
             </li>
             <li>
               Each find is saved in the <b>Star-Map Scrapbook</b> at the bottom
-              (18 to collect). Tap one to see its card, then press
-              <b>Highlight in Sky</b> to find it again.
+              (18 to collect) and is kept on this device. Tap one, or step
+              through them with the <b>&#8249; &#8250;</b> buttons, to see its
+              card. Tap a star's row and the sky turns to that star.
+            </li>
+            <li>
+              On a scrapbook card, press <b>Highlight in Sky</b> to light that
+              constellation up, and press it again to put it out. Each one can
+              be lit or unlit on its own.
             </li>
             <li>
               Later rounds show fainter stars, so the shapes get harder to
@@ -836,7 +1394,8 @@
           <ul>
             <li>
               <b>Constellations are real:</b> each one is a pattern made from
-              real, specific stars in the night sky.
+              real, specific stars in the night sky. The background stars come
+              from the Yale Bright Star Catalogue.
             </li>
             <li>
               <b>Spotting shapes:</b> you learn to pick out familiar patterns,
@@ -844,28 +1403,37 @@
             </li>
             <li>
               <b>Right Ascension (RA):</b> a star's position measured like
-              longitude on the sky, from 0° to 360°.
+              longitude on the sky, from 0h to 24h (or 0° to 360°).
+              <i>See it: the readout at the bottom of the sky.</i>
             </li>
             <li>
               <b>Declination (Dec):</b> a star's position measured like
               latitude on the sky, from −90° to +90°.
+              <i>See it: the readout at the bottom of the sky, and the Grid
+              button.</i>
             </li>
             <li>
               <b>Apparent magnitude:</b> how bright a star looks. Lower numbers
               are brighter: Sirius is about −1.5, while the faintest stars you
-              can see by eye are about +5.
+              can see by eye are about +6 under a dark sky.
+              <i>See it: the brightness scale at the bottom right of the sky.
+              Tap or hover over any star and the blue pointer slides to that
+              star's brightness.</i>
             </li>
             <li>
               <b>Brightness and size:</b> bright stars are drawn bigger and
               faint stars smaller, just as they look in the real sky.
             </li>
             <li>
-              <b>A sky map:</b> the whole sky is shown as one flat map. Going
-              past 360° of RA brings you back round to 0°.
+              <b>A sky you can turn:</b> the sky is drawn the way you see it
+              from Earth, so constellations keep their true shapes everywhere,
+              even next to the pole. East is to the left, so RA increases to
+              the left.
             </li>
             <li>
-              <b>Faint stars make it harder:</b> as more faint stars appear,
-              the shape hides among them, just like under a dark sky.
+              <b>Faint stars make it harder:</b> the limit rises from
+              magnitude 3.4 to 4.3 to 5.0 as you go. As more faint stars
+              appear, the shape hides among them, just like under a dark sky.
             </li>
           </ul>
         </div>
@@ -876,32 +1444,34 @@
     <div id="app">
       <!-- MAIN VIEW: NIGHT SKY DOME -->
       <div id="stage">
-        <canvas id="skyCanvas"></canvas>
+        <canvas id="skyCanvas" aria-label="Night sky. Drag to look around and tap stars to connect them."></canvas>
 
         <!-- TOP STRIP: TARGET SHAPE CARD -->
         <div id="topStrip">
-          <div class="target-card">
-            <div class="target-preview-wrap">
+          <div class="target-card" id="targetCard">
+            <div class="target-preview-wrap" id="targetPreviewWrap">
               <canvas id="targetPreviewCanvas" width="120" height="120"></canvas>
             </div>
             <div class="target-meta">
               <span class="target-tag" id="targetTierLabel">Target Shape</span>
               <span class="target-name" id="targetName">? ? ?</span>
               <span class="target-desc" id="targetDesc">Connect the stars to reveal its name</span>
+              <span class="target-clue" id="targetClue" hidden></span>
+              <button type="button" class="link-btn" id="takeMeBtn" hidden>Take me there</button>
             </div>
           </div>
         </div>
 
-        <!-- CORNER BUTTON: HINT OUTLINE TOGGLE -->
+        <!-- CORNER BUTTONS: HINT OUTLINE AND RA/DEC GRID TOGGLES -->
         <div id="cornerControl">
           <button type="button" class="corner-btn" id="hintBtn">Hint</button>
+          <button type="button" class="corner-btn" id="gridBtn" aria-pressed="false">Grid</button>
+          <div class="grid-prompt" id="gridPrompt" hidden>Try the <b>Grid</b>: it draws the address lines of the sky.</div>
         </div>
 
-        <!-- CORNER BUTTONS: ZOOM IN / OUT -->
-        <div id="zoomControl">
-          <button type="button" class="corner-btn zoom-btn" id="zoomInBtn" title="Zoom in" aria-label="Zoom in">+</button>
-          <button type="button" class="corner-btn zoom-btn" id="zoomOutBtn" title="Zoom out" aria-label="Zoom out">&minus;</button>
-        </div>
+        <!-- STAR INFO POPOVER (HOVER OR LONG-PRESS) AND CORRECT-TAP LABEL -->
+        <div id="starInfo" role="tooltip"></div>
+        <div id="starFlash"></div>
 
         <!-- SCRAPBOOK CARD: SMALL POP-UP FOR A COLLECTED CONSTELLATION -->
         <div id="recallCard">
@@ -916,14 +1486,48 @@
             </div>
           </div>
           <div class="recall-fact" id="recallFact"></div>
+          <div class="data-centre" id="recallCentre"></div>
+          <div id="recallTable"></div>
           <button type="button" class="ovl-btn recall-btn" id="recallHighlightBtn">Highlight in Sky</button>
+        </div>
+
+        <!-- BOTTOM BAR: COORDINATE READOUT (LEFT), MAGNITUDE LEGEND (RIGHT) -->
+        <div id="skyBar">
+          <button type="button" class="hud" id="hud" aria-label="Sky position at the crosshair. Tap to switch RA between hours and degrees.">
+            <span id="hudRA" title="Right Ascension: how far round the sky a star is, like longitude on Earth. Measured in hours, 0h to 24h.">RA 12h 16m</span>
+            <span class="hud-dot" aria-hidden="true">·</span>
+            <span id="hudDec" title="Declination: how far north or south a star is, like latitude. +90° is above the North Pole, −90° above the South Pole.">Dec +56°</span>
+          </button>
+          <div class="sr-only" id="hudLive" aria-live="polite"></div>
+
+          <div class="legend" id="legend" title="Apparent magnitude: how bright a star looks from Earth. Smaller numbers are brighter. Sirius is −1.5; the faintest stars you can see on a dark night are about +6.">
+            <span class="lg-star" id="legendStar" aria-live="polite"></span>
+            <span class="lg-arrow" aria-hidden="true">&larr; brighter</span>
+            <div class="lg-scale" id="legendScale" aria-hidden="true">
+              <span class="lg-marker" id="legendMarker"></span>
+              <span class="lg-star-marker" id="legendStarMarker"></span>
+            </div>
+            <span class="lg-limit" id="legendLimit"></span>
+          </div>
+        </div>
+
+        <!-- CORNER BUTTONS: ZOOM IN / OUT -->
+        <div id="zoomControl">
+          <button type="button" class="corner-btn zoom-btn" id="zoomInBtn" title="Zoom in" aria-label="Zoom in">+</button>
+          <button type="button" class="corner-btn zoom-btn" id="zoomOutBtn" title="Zoom out" aria-label="Zoom out">&minus;</button>
         </div>
       </div>
 
       <!-- BOTTOM STRIP: SCROLLABLE STAR-MAP SCRAPBOOK -->
       <div id="bottomStrip">
         <div class="scrapbook-header">
-          <span class="scrapbook-title">Star-Map Scrapbook</span>
+          <div class="scrapbook-lead">
+            <span class="scrapbook-title">Star-Map Scrapbook</span>
+            <div class="scrapbook-nav">
+              <button type="button" class="corner-btn nav-btn" id="recallPrevBtn" title="Previous found constellation" aria-label="Previous found constellation" disabled>&#8249;</button>
+              <button type="button" class="corner-btn nav-btn" id="recallNextBtn" title="Next found constellation" aria-label="Next found constellation" disabled>&#8250;</button>
+            </div>
+          </div>
           <span class="scrapbook-count"><b id="collectedCount">0</b> / 18 Found</span>
         </div>
         <div class="scrapbook-track" id="scrapbookTrack">
@@ -934,7 +1538,7 @@
       </div>
     </div>
 
-    <!-- DISCOVERY CELEBRATION: INFO CARD ON THE LEFT, TWIRLING CONSTELLATION ON THE RIGHT -->
+    <!-- DISCOVERY CELEBRATION: TWIRLING CONSTELLATION ON THE RIGHT, INFO CARD ON THE LEFT -->
     <div id="completionOverlay">
       <canvas id="revealCanvas"></canvas>
       <div class="reveal-info">
@@ -943,6 +1547,20 @@
           <div class="reveal-title" id="revealTitle"></div>
           <div class="reveal-sub" id="revealSub"></div>
           <div class="reveal-fact" id="revealFact"></div>
+          <div class="data-centre" id="revealCentre"></div>
+          <div class="coach-mark" id="coachMark" hidden>
+            Every star has an address in the sky. Look at the bottom of the screen: that's where you are right now.
+            <span aria-hidden="true">&darr;</span>
+          </div>
+          <details class="star-data" id="revealData">
+            <summary>Star data</summary>
+            <div id="revealTable"></div>
+          </details>
+          <div class="check-box" id="checkBox" hidden>
+            <div class="check-q" id="checkText"></div>
+            <div class="check-opts" id="checkOptions"></div>
+            <div class="check-feedback" id="checkFeedback" aria-live="polite"></div>
+          </div>
           <button type="button" class="ovl-btn" id="nextTargetBtn">Next Target &rarr;</button>
         </div>
       </div>
@@ -954,24 +1572,25 @@
         "use strict";
 
         /* ================= 18 TARGET CONSTELLATIONS (FROM DESIGN DOCUMENT) ================= */
+        // J2000 positions (degrees) and V magnitudes. `variable` is the magnitude range of a variable star.
         const CONSTELLATIONS = [
-          // Batch 1 (Tier 1: Early - Brightest stars only <= 2.5, localized pannable area)
+          // Batch 1 (Tier 1: rounds 1-4, stars to mag 3.4, camera glides near the target)
           {
             id: "ursa-major",
             tier: 1,
             name: "Ursa Major",
-            desc: "The Big Dipper",
+            desc: "The Great Bear",
             fact: "Ursa Major contains the Big Dipper; its two pointer stars line up directly with the North Star.",
             centerRA: 184,
             centerDec: 56,
             stars: [
-              { id: "uma_dubhe", name: "Dubhe", ra: 165.93, dec: 61.75, mag: 1.79 },
-              { id: "uma_merak", name: "Merak", ra: 165.46, dec: 56.38, mag: 2.37 },
-              { id: "uma_phecda", name: "Phecda", ra: 178.46, dec: 53.69, mag: 2.44 },
-              { id: "uma_megrez", name: "Megrez", ra: 183.86, dec: 57.03, mag: 3.31 },
-              { id: "uma_alioth", name: "Alioth", ra: 193.51, dec: 55.96, mag: 1.77 },
-              { id: "uma_mizar", name: "Mizar", ra: 200.98, dec: 54.92, mag: 2.23 },
-              { id: "uma_alkaid", name: "Alkaid", ra: 206.88, dec: 49.31, mag: 1.86 }
+              { id: "uma_dubhe", name: "Dubhe", bayer: "α UMa", ra: 165.93, dec: 61.75, mag: 1.79, note: "" },
+              { id: "uma_merak", name: "Merak", bayer: "β UMa", ra: 165.46, dec: 56.38, mag: 2.37, note: "" },
+              { id: "uma_phecda", name: "Phecda", bayer: "γ UMa", ra: 178.46, dec: 53.69, mag: 2.44, note: "" },
+              { id: "uma_megrez", name: "Megrez", bayer: "δ UMa", ra: 183.86, dec: 57.03, mag: 3.31, note: "" },
+              { id: "uma_alioth", name: "Alioth", bayer: "ε UMa", ra: 193.51, dec: 55.96, mag: 1.77, note: "" },
+              { id: "uma_mizar", name: "Mizar", bayer: "ζ UMa", ra: 200.98, dec: 54.92, mag: 2.23, note: "" },
+              { id: "uma_alkaid", name: "Alkaid", bayer: "η UMa", ra: 206.88, dec: 49.31, mag: 1.86, note: "" }
             ],
             lines: [
               ["uma_dubhe", "uma_merak"],
@@ -992,11 +1611,11 @@
             centerRA: 15,
             centerDec: 60,
             stars: [
-              { id: "cas_caph", name: "Caph", ra: 2.29, dec: 59.15, mag: 2.28 },
-              { id: "cas_schedar", name: "Schedar", ra: 10.13, dec: 56.54, mag: 2.24 },
-              { id: "cas_gamma", name: "Navi", ra: 14.18, dec: 60.72, mag: 2.15 },
-              { id: "cas_ruchbah", name: "Ruchbah", ra: 21.45, dec: 60.23, mag: 2.68 },
-              { id: "cas_segin", name: "Segin", ra: 26.17, dec: 63.67, mag: 3.35 }
+              { id: "cas_caph", name: "Caph", bayer: "β Cas", ra: 2.29, dec: 59.15, mag: 2.28, note: "" },
+              { id: "cas_schedar", name: "Schedar", bayer: "α Cas", ra: 10.13, dec: 56.54, mag: 2.24, note: "" },
+              { id: "cas_gamma", name: "Navi", bayer: "γ Cas", ra: 14.18, dec: 60.72, mag: 2.15, variable: "1.6–3.0", note: "" },
+              { id: "cas_ruchbah", name: "Ruchbah", bayer: "δ Cas", ra: 21.45, dec: 60.23, mag: 2.68, note: "" },
+              { id: "cas_segin", name: "Segin", bayer: "ε Cas", ra: 28.6, dec: 63.67, mag: 3.35, note: "" }
             ],
             lines: [
               ["cas_caph", "cas_schedar"],
@@ -1014,13 +1633,13 @@
             centerRA: 84,
             centerDec: 1,
             stars: [
-              { id: "ori_betelgeuse", name: "Betelgeuse", ra: 88.79, dec: 7.41, mag: 0.5 },
-              { id: "ori_bellatrix", name: "Bellatrix", ra: 81.28, dec: 6.35, mag: 1.64 },
-              { id: "ori_mintaka", name: "Mintaka", ra: 83.0, dec: -0.3, mag: 2.23 },
-              { id: "ori_alnilam", name: "Alnilam", ra: 84.05, dec: -1.2, mag: 1.69 },
-              { id: "ori_alnitak", name: "Alnitak", ra: 85.19, dec: -1.94, mag: 1.77 },
-              { id: "ori_saiph", name: "Saiph", ra: 86.94, dec: -9.67, mag: 2.07 },
-              { id: "ori_rigel", name: "Rigel", ra: 78.63, dec: -8.2, mag: 0.13 }
+              { id: "ori_betelgeuse", name: "Betelgeuse", bayer: "α Ori", ra: 88.79, dec: 7.41, mag: 0.5, variable: "0.0–1.6", note: "" },
+              { id: "ori_bellatrix", name: "Bellatrix", bayer: "γ Ori", ra: 81.28, dec: 6.35, mag: 1.64, note: "" },
+              { id: "ori_mintaka", name: "Mintaka", bayer: "δ Ori", ra: 83.0, dec: -0.3, mag: 2.23, note: "" },
+              { id: "ori_alnilam", name: "Alnilam", bayer: "ε Ori", ra: 84.05, dec: -1.2, mag: 1.69, note: "" },
+              { id: "ori_alnitak", name: "Alnitak", bayer: "ζ Ori", ra: 85.19, dec: -1.94, mag: 1.77, note: "" },
+              { id: "ori_saiph", name: "Saiph", bayer: "κ Ori", ra: 86.94, dec: -9.67, mag: 2.07, note: "" },
+              { id: "ori_rigel", name: "Rigel", bayer: "β Ori", ra: 78.63, dec: -8.2, mag: 0.13, note: "" }
             ],
             lines: [
               ["ori_betelgeuse", "ori_bellatrix"],
@@ -1042,11 +1661,11 @@
             centerRA: 305,
             centerDec: 42,
             stars: [
-              { id: "cyg_deneb", name: "Deneb", ra: 310.36, dec: 45.28, mag: 1.25 },
-              { id: "cyg_sadr", name: "Sadr", ra: 305.56, dec: 40.26, mag: 2.23 },
-              { id: "cyg_albireo", name: "Albireo", ra: 292.68, dec: 27.96, mag: 3.05 },
-              { id: "cyg_fawaris", name: "Fawaris", ra: 296.24, dec: 45.13, mag: 2.86 },
-              { id: "cyg_gienah", name: "Gienah", ra: 311.55, dec: 33.97, mag: 2.48 }
+              { id: "cyg_deneb", name: "Deneb", bayer: "α Cyg", ra: 310.36, dec: 45.28, mag: 1.25, note: "" },
+              { id: "cyg_sadr", name: "Sadr", bayer: "γ Cyg", ra: 305.56, dec: 40.26, mag: 2.23, note: "" },
+              { id: "cyg_albireo", name: "Albireo", bayer: "β Cyg", ra: 292.68, dec: 27.96, mag: 3.05, note: "" },
+              { id: "cyg_fawaris", name: "Fawaris", bayer: "δ Cyg", ra: 296.24, dec: 45.13, mag: 2.86, note: "" },
+              { id: "cyg_gienah", name: "Gienah (ε Cyg)", bayer: "ε Cyg", ra: 311.55, dec: 33.97, mag: 2.48, note: "" }
             ],
             lines: [
               ["cyg_deneb", "cyg_sadr"],
@@ -1056,7 +1675,7 @@
             ]
           },
 
-          // Batch 2 (Tier 2: Middle rounds - Magnitude cutoff <= 3.5, medium region)
+          // Batch 2 (Tier 2: rounds 5-10, stars to mag 4.3, found from a coordinate clue)
           {
             id: "leo",
             tier: 2,
@@ -1066,12 +1685,12 @@
             centerRA: 160,
             centerDec: 18,
             stars: [
-              { id: "leo_regulus", name: "Regulus", ra: 152.09, dec: 11.97, mag: 1.36 },
-              { id: "leo_algieba", name: "Algieba", ra: 154.99, dec: 19.84, mag: 2.01 },
-              { id: "leo_denebola", name: "Denebola", ra: 177.26, dec: 14.57, mag: 2.14 },
-              { id: "leo_zosma", name: "Zosma", ra: 168.53, dec: 20.52, mag: 2.56 },
-              { id: "leo_chertan", name: "Chertan", ra: 168.52, dec: 15.43, mag: 3.33 },
-              { id: "leo_adhafera", name: "Adhafera", ra: 154.17, dec: 23.42, mag: 3.44 }
+              { id: "leo_regulus", name: "Regulus", bayer: "α Leo", ra: 152.09, dec: 11.97, mag: 1.36, note: "" },
+              { id: "leo_algieba", name: "Algieba", bayer: "γ Leo", ra: 154.99, dec: 19.84, mag: 2.01, note: "" },
+              { id: "leo_denebola", name: "Denebola", bayer: "β Leo", ra: 177.26, dec: 14.57, mag: 2.14, note: "" },
+              { id: "leo_zosma", name: "Zosma", bayer: "δ Leo", ra: 168.53, dec: 20.52, mag: 2.56, note: "" },
+              { id: "leo_chertan", name: "Chertan", bayer: "θ Leo", ra: 168.52, dec: 15.43, mag: 3.33, note: "" },
+              { id: "leo_adhafera", name: "Adhafera", bayer: "ζ Leo", ra: 154.17, dec: 23.42, mag: 3.44, note: "" }
             ],
             lines: [
               ["leo_regulus", "leo_algieba"],
@@ -1092,11 +1711,11 @@
             centerRA: 105,
             centerDec: 24,
             stars: [
-              { id: "gem_pollux", name: "Pollux", ra: 116.33, dec: 28.03, mag: 1.16 },
-              { id: "gem_castor", name: "Castor", ra: 113.65, dec: 31.89, mag: 1.58 },
-              { id: "gem_alhena", name: "Alhena", ra: 99.43, dec: 16.4, mag: 1.93 },
-              { id: "gem_wasat", name: "Wasat", ra: 108.03, dec: 21.98, mag: 3.52 },
-              { id: "gem_mebsuta", name: "Mebsuta", ra: 100.98, dec: 25.13, mag: 3.06 }
+              { id: "gem_pollux", name: "Pollux", bayer: "β Gem", ra: 116.33, dec: 28.03, mag: 1.16, note: "" },
+              { id: "gem_castor", name: "Castor", bayer: "α Gem", ra: 113.65, dec: 31.89, mag: 1.58, note: "" },
+              { id: "gem_alhena", name: "Alhena", bayer: "γ Gem", ra: 99.43, dec: 16.4, mag: 1.93, note: "" },
+              { id: "gem_wasat", name: "Wasat", bayer: "δ Gem", ra: 110.03, dec: 21.98, mag: 3.52, note: "" },
+              { id: "gem_mebsuta", name: "Mebsuta", bayer: "ε Gem", ra: 100.98, dec: 25.13, mag: 3.06, note: "" }
             ],
             lines: [
               ["gem_castor", "gem_pollux"],
@@ -1114,11 +1733,11 @@
             centerRA: 70,
             centerDec: 20,
             stars: [
-              { id: "tau_aldebaran", name: "Aldebaran", ra: 68.98, dec: 16.51, mag: 0.85 },
-              { id: "tau_elnath", name: "Elnath", ra: 81.57, dec: 28.61, mag: 1.65 },
-              { id: "tau_tianguan", name: "Tianguan", ra: 84.41, dec: 21.14, mag: 2.97 },
-              { id: "tau_ain", name: "Ain", ra: 67.15, dec: 19.18, mag: 3.53 },
-              { id: "tau_hyadum", name: "Hyadum I", ra: 64.95, dec: 15.63, mag: 3.65 }
+              { id: "tau_aldebaran", name: "Aldebaran", bayer: "α Tau", ra: 68.98, dec: 16.51, mag: 0.85, note: "" },
+              { id: "tau_elnath", name: "Elnath", bayer: "β Tau", ra: 81.57, dec: 28.61, mag: 1.65, note: "" },
+              { id: "tau_tianguan", name: "Tianguan", bayer: "ζ Tau", ra: 84.41, dec: 21.14, mag: 2.97, note: "" },
+              { id: "tau_ain", name: "Ain", bayer: "ε Tau", ra: 67.15, dec: 19.18, mag: 3.53, note: "" },
+              { id: "tau_hyadum", name: "Hyadum I", bayer: "γ Tau", ra: 64.95, dec: 15.63, mag: 3.65, note: "" }
             ],
             lines: [
               ["tau_aldebaran", "tau_ain"],
@@ -1137,11 +1756,11 @@
             centerRA: 102,
             centerDec: -24,
             stars: [
-              { id: "cma_sirius", name: "Sirius", ra: 101.29, dec: -16.72, mag: -1.46 },
-              { id: "cma_mirzam", name: "Mirzam", ra: 95.68, dec: -17.96, mag: 1.98 },
-              { id: "cma_wezen", name: "Wezen", ra: 107.1, dec: -26.39, mag: 1.83 },
-              { id: "cma_adhara", name: "Adhara", ra: 104.66, dec: -28.97, mag: 1.5 },
-              { id: "cma_aludra", name: "Aludra", ra: 111.02, dec: -29.3, mag: 2.45 }
+              { id: "cma_sirius", name: "Sirius", bayer: "α CMa", ra: 101.29, dec: -16.72, mag: -1.46, note: "" },
+              { id: "cma_mirzam", name: "Mirzam", bayer: "β CMa", ra: 95.68, dec: -17.96, mag: 1.98, note: "" },
+              { id: "cma_wezen", name: "Wezen", bayer: "δ CMa", ra: 107.1, dec: -26.39, mag: 1.83, note: "" },
+              { id: "cma_adhara", name: "Adhara", bayer: "ε CMa", ra: 104.66, dec: -28.97, mag: 1.5, note: "" },
+              { id: "cma_aludra", name: "Aludra", bayer: "η CMa", ra: 111.02, dec: -29.3, mag: 2.45, note: "" }
             ],
             lines: [
               ["cma_sirius", "cma_mirzam"],
@@ -1159,12 +1778,12 @@
             centerRA: 220,
             centerDec: 30,
             stars: [
-              { id: "boo_arcturus", name: "Arcturus", ra: 213.91, dec: 19.18, mag: -0.05 },
-              { id: "boo_muphrid", name: "Muphrid", ra: 208.68, dec: 18.4, mag: 2.68 },
-              { id: "boo_izar", name: "Izar", ra: 221.25, dec: 27.07, mag: 2.35 },
-              { id: "boo_princeps", name: "Princeps", ra: 228.91, dec: 33.31, mag: 3.47 },
-              { id: "boo_nekkar", name: "Nekkar", ra: 225.48, dec: 40.39, mag: 3.49 },
-              { id: "boo_seginus", name: "Seginus", ra: 218.0, dec: 38.31, mag: 3.04 }
+              { id: "boo_arcturus", name: "Arcturus", bayer: "α Boo", ra: 213.91, dec: 19.18, mag: -0.05, note: "" },
+              { id: "boo_muphrid", name: "Muphrid", bayer: "η Boo", ra: 208.68, dec: 18.4, mag: 2.68, note: "" },
+              { id: "boo_izar", name: "Izar", bayer: "ε Boo", ra: 221.25, dec: 27.07, mag: 2.35, note: "" },
+              { id: "boo_princeps", name: "Princeps", bayer: "δ Boo", ra: 228.91, dec: 33.31, mag: 3.47, note: "" },
+              { id: "boo_nekkar", name: "Nekkar", bayer: "β Boo", ra: 225.48, dec: 40.39, mag: 3.49, note: "" },
+              { id: "boo_seginus", name: "Seginus", bayer: "γ Boo", ra: 218.0, dec: 38.31, mag: 3.04, note: "" }
             ],
             lines: [
               ["boo_arcturus", "boo_muphrid"],
@@ -1184,10 +1803,10 @@
             centerRA: 283,
             centerDec: 36,
             stars: [
-              { id: "lyr_vega", name: "Vega", ra: 279.23, dec: 38.78, mag: 0.03 },
-              { id: "lyr_delta", name: "Delta2 Lyr", ra: 283.65, dec: 36.9, mag: 4.22 },
-              { id: "lyr_sulafat", name: "Sulafat", ra: 284.74, dec: 32.69, mag: 3.25 },
-              { id: "lyr_sheliak", name: "Sheliak", ra: 282.52, dec: 33.36, mag: 3.52 }
+              { id: "lyr_vega", name: "Vega", bayer: "α Lyr", ra: 279.23, dec: 38.78, mag: 0.03, note: "" },
+              { id: "lyr_delta", name: "Delta2 Lyr", bayer: "δ² Lyr", ra: 283.65, dec: 36.9, mag: 4.3, note: "" },
+              { id: "lyr_sulafat", name: "Sulafat", bayer: "γ Lyr", ra: 284.74, dec: 32.69, mag: 3.25, note: "" },
+              { id: "lyr_sheliak", name: "Sheliak", bayer: "β Lyr", ra: 282.52, dec: 33.36, mag: 3.52, variable: "3.3–4.4", note: "" }
             ],
             lines: [
               ["lyr_vega", "lyr_delta"],
@@ -1198,7 +1817,7 @@
             ]
           },
 
-          // Batch 3 (Tier 3: Late rounds - Magnitude cutoff <= 5.0, full star map)
+          // Batch 3 (Tier 3: rounds 11-18, stars to mag 5.0, clue plus one check question)
           {
             id: "scorpius",
             tier: 3,
@@ -1208,12 +1827,12 @@
             centerRA: 250,
             centerDec: -30,
             stars: [
-              { id: "sco_antares", name: "Antares", ra: 247.35, dec: -26.43, mag: 1.06 },
-              { id: "sco_dschubba", name: "Dschubba", ra: 240.08, dec: -22.62, mag: 2.29 },
-              { id: "sco_graffias", name: "Graffias", ra: 241.36, dec: -19.81, mag: 2.56 },
-              { id: "sco_wei", name: "Wei", ra: 252.54, dec: -34.29, mag: 2.29 },
-              { id: "sco_sargas", name: "Sargas", ra: 264.33, dec: -42.99, mag: 1.86 },
-              { id: "sco_shaula", name: "Shaula", ra: 263.4, dec: -37.1, mag: 1.62 }
+              { id: "sco_antares", name: "Antares", bayer: "α Sco", ra: 247.35, dec: -26.43, mag: 1.06, variable: "0.6–1.6", note: "" },
+              { id: "sco_dschubba", name: "Dschubba", bayer: "δ Sco", ra: 240.08, dec: -22.62, mag: 2.29, note: "" },
+              { id: "sco_graffias", name: "Graffias", bayer: "β Sco", ra: 241.36, dec: -19.81, mag: 2.56, note: "" },
+              { id: "sco_wei", name: "Wei", bayer: "ε Sco", ra: 252.54, dec: -34.29, mag: 2.29, note: "" },
+              { id: "sco_sargas", name: "Sargas", bayer: "θ Sco", ra: 264.33, dec: -42.99, mag: 1.86, note: "" },
+              { id: "sco_shaula", name: "Shaula", bayer: "λ Sco", ra: 263.4, dec: -37.1, mag: 1.62, note: "" }
             ],
             lines: [
               ["sco_graffias", "sco_dschubba"],
@@ -1232,18 +1851,20 @@
             centerRA: 260,
             centerDec: 62,
             stars: [
-              { id: "dra_eltanin", name: "Eltanin", ra: 269.15, dec: 51.49, mag: 2.24 },
-              { id: "dra_rastaban", name: "Rastaban", ra: 262.61, dec: 52.3, mag: 2.79 },
-              { id: "dra_grumium", name: "Grumium", ra: 268.37, dec: 56.87, mag: 3.73 },
-              { id: "dra_altais", name: "Altais", ra: 288.08, dec: 67.66, mag: 3.07 },
-              { id: "dra_aldhibah", name: "Aldhibah", ra: 257.21, dec: 65.71, mag: 3.17 }
+              { id: "dra_eltanin", name: "Eltanin", bayer: "γ Dra", ra: 269.15, dec: 51.49, mag: 2.24, note: "" },
+              { id: "dra_rastaban", name: "Rastaban", bayer: "β Dra", ra: 262.61, dec: 52.3, mag: 2.79, note: "" },
+              { id: "dra_grumium", name: "Grumium", bayer: "ξ Dra", ra: 268.37, dec: 56.87, mag: 3.73, note: "" },
+              { id: "dra_altais", name: "Altais", bayer: "δ Dra", ra: 288.08, dec: 67.66, mag: 3.07, note: "" },
+              { id: "dra_aldhibah", name: "Aldhibah", bayer: "ζ Dra", ra: 257.21, dec: 65.71, mag: 3.17, note: "" },
+              { id: "dra_thuban", name: "Thuban", bayer: "α Dra", ra: 211.1, dec: 64.38, mag: 3.65, note: "" }
             ],
             lines: [
               ["dra_eltanin", "dra_rastaban"],
               ["dra_rastaban", "dra_grumium"],
               ["dra_grumium", "dra_eltanin"],
               ["dra_grumium", "dra_altais"],
-              ["dra_altais", "dra_aldhibah"]
+              ["dra_altais", "dra_aldhibah"],
+              ["dra_aldhibah", "dra_thuban"]
             ]
           },
           {
@@ -1255,11 +1876,11 @@
             centerRA: 52,
             centerDec: 42,
             stars: [
-              { id: "per_mirfak", name: "Mirfak", ra: 51.08, dec: 49.86, mag: 1.79 },
-              { id: "per_algol", name: "Algol", ra: 47.04, dec: 40.96, mag: 2.09 },
-              { id: "per_gamma", name: "Gamma Per", ra: 46.12, dec: 53.51, mag: 2.91 },
-              { id: "per_delta", name: "Delta Per", ra: 55.73, dec: 47.79, mag: 3.01 },
-              { id: "per_epsilon", name: "Epsilon Per", ra: 59.46, dec: 40.01, mag: 2.9 }
+              { id: "per_mirfak", name: "Mirfak", bayer: "α Per", ra: 51.08, dec: 49.86, mag: 1.79, note: "" },
+              { id: "per_algol", name: "Algol", bayer: "β Per", ra: 47.04, dec: 40.96, mag: 2.09, variable: "2.1–3.4", note: "" },
+              { id: "per_gamma", name: "Gamma Per", bayer: "γ Per", ra: 46.12, dec: 53.51, mag: 2.91, note: "" },
+              { id: "per_delta", name: "Delta Per", bayer: "δ Per", ra: 55.73, dec: 47.79, mag: 3.01, note: "" },
+              { id: "per_epsilon", name: "Epsilon Per", bayer: "ε Per", ra: 59.46, dec: 40.01, mag: 2.9, note: "" }
             ],
             lines: [
               ["per_mirfak", "per_gamma"],
@@ -1277,10 +1898,10 @@
             centerRA: 16,
             centerDec: 36,
             stars: [
-              { id: "and_alpheratz", name: "Alpheratz", ra: 2.1, dec: 29.09, mag: 2.07 },
-              { id: "and_delta", name: "Delta And", ra: 9.83, dec: 30.86, mag: 3.27 },
-              { id: "and_mirach", name: "Mirach", ra: 17.43, dec: 35.62, mag: 2.07 },
-              { id: "and_almach", name: "Almach", ra: 30.97, dec: 42.33, mag: 2.1 }
+              { id: "and_alpheratz", name: "Alpheratz", bayer: "α And", ra: 2.1, dec: 29.09, mag: 2.07, note: "" },
+              { id: "and_delta", name: "Delta And", bayer: "δ And", ra: 9.83, dec: 30.86, mag: 3.27, note: "" },
+              { id: "and_mirach", name: "Mirach", bayer: "β And", ra: 17.43, dec: 35.62, mag: 2.07, note: "" },
+              { id: "and_almach", name: "Almach", bayer: "γ And", ra: 30.97, dec: 42.33, mag: 2.1, note: "" }
             ],
             lines: [
               ["and_alpheratz", "and_delta"],
@@ -1293,15 +1914,15 @@
             tier: 3,
             name: "Auriga",
             desc: "The Charioteer",
-            fact: "A celestial pentagon marked by brilliant golden-yellow Capella, a quadruple star system.",
+            fact: "A celestial pentagon marked by brilliant golden-yellow Capella, a quadruple star system. Elnath is shared with Taurus, where it is officially β Tauri.",
             centerRA: 82,
             centerDec: 42,
             stars: [
-              { id: "aur_capella", name: "Capella", ra: 79.17, dec: 45.99, mag: 0.08 },
-              { id: "aur_menkalinan", name: "Menkalinan", ra: 89.88, dec: 44.95, mag: 1.9 },
-              { id: "aur_mahasim", name: "Mahasim", ra: 89.92, dec: 37.21, mag: 2.65 },
-              { id: "aur_hassaleh", name: "Hassaleh", ra: 74.12, dec: 33.17, mag: 2.69 },
-              { id: "aur_elnath_j", name: "Elnath", ra: 81.57, dec: 28.61, mag: 1.65 }
+              { id: "aur_capella", name: "Capella", bayer: "α Aur", ra: 79.17, dec: 45.99, mag: 0.08, note: "" },
+              { id: "aur_menkalinan", name: "Menkalinan", bayer: "β Aur", ra: 89.88, dec: 44.95, mag: 1.9, note: "" },
+              { id: "aur_mahasim", name: "Mahasim", bayer: "θ Aur", ra: 89.92, dec: 37.21, mag: 2.65, note: "" },
+              { id: "aur_hassaleh", name: "Hassaleh", bayer: "ι Aur", ra: 74.25, dec: 33.17, mag: 2.69, note: "" },
+              { id: "aur_elnath_j", name: "Elnath", bayer: "β Tau", ra: 81.57, dec: 28.61, mag: 1.65, note: "Shared with Taurus, where it is officially β Tauri." }
             ],
             lines: [
               ["aur_capella", "aur_menkalinan"],
@@ -1320,11 +1941,11 @@
             centerRA: 297,
             centerDec: 6,
             stars: [
-              { id: "aql_altair", name: "Altair", ra: 297.7, dec: 8.87, mag: 0.77 },
-              { id: "aql_tarazed", name: "Tarazed", ra: 296.57, dec: 10.61, mag: 2.72 },
-              { id: "aql_alshain", name: "Alshain", ra: 298.83, dec: 6.41, mag: 3.71 },
-              { id: "aql_delta", name: "Delta Aql", ra: 291.36, dec: 3.11, mag: 3.36 },
-              { id: "aql_zeta", name: "Zeta Aql", ra: 286.35, dec: 13.86, mag: 2.99 }
+              { id: "aql_altair", name: "Altair", bayer: "α Aql", ra: 297.7, dec: 8.87, mag: 0.77, note: "" },
+              { id: "aql_tarazed", name: "Tarazed", bayer: "γ Aql", ra: 296.57, dec: 10.61, mag: 2.72, note: "" },
+              { id: "aql_alshain", name: "Alshain", bayer: "β Aql", ra: 298.83, dec: 6.41, mag: 3.71, note: "" },
+              { id: "aql_delta", name: "Delta Aql", bayer: "δ Aql", ra: 291.36, dec: 3.11, mag: 3.36, note: "" },
+              { id: "aql_zeta", name: "Zeta Aql", bayer: "ζ Aql", ra: 286.35, dec: 13.86, mag: 2.99, note: "" }
             ],
             lines: [
               ["aql_tarazed", "aql_altair"],
@@ -1342,12 +1963,12 @@
             centerRA: 280,
             centerDec: -28,
             stars: [
-              { id: "sgr_kaus_aus", name: "Kaus Australis", ra: 276.04, dec: -34.38, mag: 1.79 },
-              { id: "sgr_nunki", name: "Nunki", ra: 283.82, dec: -26.3, mag: 2.05 },
-              { id: "sgr_ascella", name: "Ascella", ra: 285.59, dec: -29.88, mag: 2.6 },
-              { id: "sgr_kaus_med", name: "Kaus Media", ra: 275.24, dec: -29.83, mag: 2.72 },
-              { id: "sgr_kaus_bor", name: "Kaus Borealis", ra: 276.99, dec: -25.42, mag: 2.82 },
-              { id: "sgr_alnasl", name: "Alnasl", ra: 271.45, dec: -30.42, mag: 2.98 }
+              { id: "sgr_kaus_aus", name: "Kaus Australis", bayer: "ε Sgr", ra: 276.04, dec: -34.38, mag: 1.85, note: "" },
+              { id: "sgr_nunki", name: "Nunki", bayer: "σ Sgr", ra: 283.82, dec: -26.3, mag: 2.05, note: "" },
+              { id: "sgr_ascella", name: "Ascella", bayer: "ζ Sgr", ra: 285.59, dec: -29.88, mag: 2.6, note: "" },
+              { id: "sgr_kaus_med", name: "Kaus Media", bayer: "δ Sgr", ra: 275.24, dec: -29.83, mag: 2.72, note: "" },
+              { id: "sgr_kaus_bor", name: "Kaus Borealis", bayer: "λ Sgr", ra: 276.99, dec: -25.42, mag: 2.82, note: "" },
+              { id: "sgr_alnasl", name: "Alnasl", bayer: "γ² Sgr", ra: 271.45, dec: -30.42, mag: 2.98, note: "" }
             ],
             lines: [
               ["sgr_alnasl", "sgr_kaus_med"],
@@ -1366,12 +1987,12 @@
             centerRA: 240,
             centerDec: 78,
             stars: [
-              { id: "umi_polaris", name: "Polaris", ra: 37.95, dec: 89.26, mag: 1.98 },
-              { id: "umi_yildun", name: "Yildun", ra: 262.7, dec: 86.58, mag: 4.36 },
-              { id: "umi_epsilon", name: "Epsilon UMi", ra: 251.27, dec: 82.03, mag: 4.21 },
-              { id: "umi_zeta", name: "Zeta UMi", ra: 236.0, dec: 77.79, mag: 4.27 },
-              { id: "umi_kochab", name: "Kochab", ra: 222.68, dec: 74.16, mag: 2.08 },
-              { id: "umi_pherkad", name: "Pherkad", ra: 230.18, dec: 71.83, mag: 3.05 }
+              { id: "umi_polaris", name: "Polaris", bayer: "α UMi", ra: 37.95, dec: 89.26, mag: 1.98, note: "" },
+              { id: "umi_yildun", name: "Yildun", bayer: "δ UMi", ra: 263.05, dec: 86.58, mag: 4.36, note: "" },
+              { id: "umi_epsilon", name: "Epsilon UMi", bayer: "ε UMi", ra: 251.49, dec: 82.03, mag: 4.21, note: "" },
+              { id: "umi_zeta", name: "Zeta UMi", bayer: "ζ UMi", ra: 236.0, dec: 77.79, mag: 4.27, note: "" },
+              { id: "umi_kochab", name: "Kochab", bayer: "β UMi", ra: 222.68, dec: 74.16, mag: 2.08, note: "" },
+              { id: "umi_pherkad", name: "Pherkad", bayer: "γ UMi", ra: 230.18, dec: 71.83, mag: 3.05, note: "" }
             ],
             lines: [
               ["umi_polaris", "umi_yildun"],
@@ -1383,55 +2004,345 @@
           }
         ];
 
-        /* ================= BACKGROUND STARS CATALOG ================= */
-        const BACKGROUND_STARS = [];
-        function seededRandom(seed) {
-          const s = Math.sin(seed) * 10000;
-          return s - Math.floor(s);
-        }
-
-        const BRIGHT_SKY_STARS = [
-          { name: "Procyon", ra: 114.83, dec: 5.22, mag: 0.38 },
-          { name: "Spica", ra: 201.3, dec: -11.16, mag: 0.98 },
-          { name: "Fomalhaut", ra: 344.41, dec: -29.62, mag: 1.17 },
-          { name: "Achernar", ra: 24.43, dec: -57.24, mag: 0.45 },
-          { name: "Canopus", ra: 95.99, dec: -52.7, mag: -0.74 },
-          { name: "Rigil Kentaurus", ra: 219.9, dec: -60.83, mag: -0.27 },
-          { name: "Hadar", ra: 210.96, dec: -60.37, mag: 0.61 },
-          { name: "Acrux", ra: 186.65, dec: -63.1, mag: 0.77 },
-          { name: "Hamal", ra: 31.79, dec: 23.46, mag: 2.01 },
-          { name: "Alphecca", ra: 233.67, dec: 26.71, mag: 2.22 },
-          { name: "Diphda", ra: 10.9, dec: -17.99, mag: 2.04 },
-          { name: "Enif", ra: 326.05, dec: 9.87, mag: 2.38 },
-          { name: "Markab", ra: 346.19, dec: 15.21, mag: 2.49 }
+        /* ================= BACKGROUND STAR CATALOGUE ================= */
+        // Yale Bright Star Catalogue (BSC5), every star to V mag 4.5, J2000.
+        // Each row: [name, Bayer label ("" when the name is the designation), RA°, Dec°, V mag]
+        // prettier-ignore
+        const CATALOGUE = [
+          ["30 Psc","",0.49,-6.01,4.41],["Alpheratz","α And",2.1,29.09,2.06],["Caph","β Cas",2.29,59.15,2.27],["ε Phe","",2.35,-45.75,3.88],
+          ["Algenib","γ Peg",3.31,15.18,2.83],["7 Cet","",3.66,-18.93,4.44],["Deneb Kaitos Schemali","ι Cet",4.86,-8.82,3.56],["ζ Tuc","",5.02,-64.87,4.23],
+          ["β Hyi","",6.44,-77.25,2.8],["κ Phe","",6.55,-43.68,3.94],["Ankaa","α Phe",6.57,-42.31,2.39],["β¹ Tuc","",7.89,-62.96,4.37],
+          ["κ Cas","",8.25,62.93,4.16],["π And","",9.22,33.72,4.36],["ζ Cas","",9.24,53.9,3.66],["ε And","",9.64,29.31,4.37],["δ And","",9.83,30.86,3.27],
+          ["Schedar","α Cas",10.13,56.54,2.23],["η Phe","",10.84,-57.46,4.36],["Diphda","β Cet",10.9,-17.99,2.04],["ζ And","",11.83,24.27,4.06],
+          ["δ Psc","",12.17,7.58,4.43],["Achird","η Cas",12.28,57.82,3.44],["Navi","γ Cas",14.18,60.72,2.47],["μ And","",14.19,38.5,3.87],
+          ["η And","",14.3,23.42,4.42],["α Scl","",14.65,-29.36,4.31],["ε Psc","",15.74,7.89,4.28],["β Phe","",16.52,-46.72,3.31],["ζ Phe","",17.1,-55.25,3.92],
+          ["Dheneb","η Cet",17.15,-10.18,3.45],["HR 285","",17.19,86.26,4.25],["φ And","",17.38,47.24,4.25],["Mirach","β And",17.43,35.62,2.06],
+          ["Marfark","θ Cas",17.78,55.15,4.33],["θ Cet","",21.01,-8.18,3.6],["Ruchbah","δ Cas",21.45,60.24,2.68],["γ Phe","",22.09,-43.32,3.41],
+          ["δ Phe","",22.81,-49.07,3.95],["Kullat Nunu","η Psc",22.87,15.35,3.62],["υ And","",24.2,41.41,4.09],["Achernar","α Eri",24.43,-57.24,0.46],
+          ["Nembus","",24.5,48.63,3.57],["ν Psc","",25.36,5.49,4.44],["φ Per","",25.91,50.69,4.07],["τ Cet","",26.02,-15.94,3.5],
+          ["Torcularis Septentrionalis","ο Psc",26.35,9.16,4.26],["Baten Kaitos","ζ Cet",27.87,-10.34,3.73],["Mothallah","α Tri",28.27,29.58,3.41],
+          ["ψ Phe","",28.41,-46.3,4.41],["Segin","ε Cas",28.6,63.67,3.38],["Sheratan","β Ari",28.66,20.81,2.64],["χ Eri","",28.99,-51.61,3.7],
+          ["Head of Hydrus","α Hyi",29.69,-61.57,2.86],["υ Cet","",30,-21.08,4],["Alrescha","α Psc",30.51,2.76,4.33],["50 Cas","",30.86,72.42,3.98],
+          ["Almach","γ¹ And",30.97,42.33,2.26],["Hamal","α Ari",31.79,23.46,2],["β Tri","",32.39,34.99,3],["ξ¹ Cet","",33.25,8.85,4.37],
+          ["φ Eri","",34.13,-51.51,3.56],["γ Tri","",34.33,33.85,4.01],["Mira","ο Cet",34.84,-2.98,3.04],["δ Hyi","",35.44,-68.66,4.09],
+          ["κ Eri","",36.75,-47.7,4.25],["ξ² Cet","",37.04,8.46,4.28],["Polaris","α UMi",37.95,89.26,2.02],["δ Cet","",39.87,0.33,4.07],
+          ["ε Hyi","",39.9,-68.27,4.11],["ι Eri","",40.17,-39.86,4.11],["Kaffaljidhma","γ Cet",40.83,3.24,3.47],["π Cet","",41.03,-13.86,4.25],
+          ["θ Per","",41.05,49.23,4.12],["μ Cet","",41.24,10.11,4.27],["τ¹ Eri","",41.28,-18.57,4.47],["β For","",42.27,-32.41,4.46],
+          ["41 Ari","",42.5,27.26,3.63],["16 Per","",42.65,38.32,4.23],["Miram","η Per",42.67,55.9,3.76],["HR 868","",43.47,-49.89,4],
+          ["τ Per","",43.56,52.76,3.95],["Azha","η Eri",44.11,-8.9,3.89],["Acamar","θ¹ Eri",44.57,-40.3,3.24],["Menkar","α Cet",45.57,4.09,2.53],
+          ["τ³ Eri","",45.6,-23.62,4.09],["γ Per","",46.2,53.51,2.93],["Gorgonea Tertia","ρ Per",46.29,38.84,3.39],["Algol","β Per",47.04,40.96,2.12],
+          ["ι Per","",47.27,49.61,4.05],["Misam","κ Per",47.37,44.86,3.8],["Botein","δ Ari",47.91,19.73,4.35],["Fornacis","α For",48.02,-28.99,3.87],
+          ["τ⁴ Eri","",49.88,-21.76,3.69],["HR 1008","",49.98,-43.07,4.27],["HR 999","",50.09,29.05,4.47],["Mirfak","α Per",51.08,49.86,1.79],
+          ["ο Tau","",51.2,9.03,3.6],["ξ Tau","",51.79,9.73,3.74],["HR 1035","",52.27,59.94,4.21],["σ Per","",52.64,48,4.36],["5 Tau","",52.72,12.94,4.11],
+          ["Ran","ε Eri",53.23,-9.46,3.73],["τ⁵ Eri","",53.45,-21.63,4.27],["ψ Per","",54.12,48.19,4.23],["10 Tau","",54.22,0.4,4.28],
+          ["δ Per","",55.73,47.79,3.01],["Rana","δ Eri",55.81,-9.76,3.54],["β Ret","",56.05,-64.81,3.85],["Atik","ο Per",56.08,32.29,3.83],
+          ["Electra","",56.22,24.11,3.7],["ν Per","",56.3,42.58,3.77],["Taygeta","",56.3,24.47,4.3],["Maia","",56.46,24.37,3.87],["π Eri","",56.54,-12.1,4.42],
+          ["Merope","",56.58,23.95,4.18],["τ⁶ Eri","",56.71,-23.25,4.23],["γ Hyi","",56.81,-74.24,3.24],["Alcyone","η Tau",56.87,24.11,2.87],
+          ["Atlas","",57.29,24.05,3.63],["HR 1195","",57.36,-36.2,4.17],["HR 1155","",57.38,65.53,4.47],["ζ Per","",58.53,31.88,2.85],
+          ["ε Per","",59.46,40.01,2.89],["Zaurak","γ Eri",59.51,-13.51,2.95],["Menkib","ξ Per",59.74,35.79,4.04],["λ Tau","",60.17,12.49,3.47],
+          ["ν Tau","",60.79,5.99,3.91],["37 Tau","",61.17,22.08,4.36],["λ Per","",61.65,50.35,4.29],["48 Per","",62.17,47.71,4.04],
+          ["Beid","ο¹ Eri",62.97,-6.84,4.04],["α Hor","",63.5,-42.29,3.86],["α Ret","",63.61,-62.47,3.35],["μ Per","",63.72,48.41,4.14],
+          ["Keid","ο² Eri",63.82,-7.65,4.43],["μ Tau","",63.88,8.89,4.29],["γ Dor","",64.01,-51.49,4.25],["ε Ret","",64.12,-59.3,4.44],
+          ["υ⁴ Eri","",64.47,-33.8,3.56],["Hyadum I","γ Tau",64.95,15.63,3.65],["Hyadum II","δ¹ Tau",65.73,17.54,3.76],["43 Eri","",66.01,-34.02,3.96],
+          ["κ¹ Tau","",66.34,22.29,4.22],["δ³ Tau","",66.37,17.93,4.29],["υ Tau","",66.58,22.81,4.28],["71 Tau","",66.59,15.62,4.49],
+          ["θ¹ Tau","",67.14,15.96,3.84],["Ain","ε Tau",67.15,19.18,3.53],["θ² Tau","",67.17,15.87,3.4],["α Dor","",68.5,-55.04,3.27],
+          ["Theemin","υ² Eri",68.89,-30.56,3.82],["88 Tau","",68.91,10.16,4.25],["Aldebaran","α Tau",68.98,16.51,0.85],["ν Eri","",69.08,-3.35,3.93],
+          ["58 Per","",69.17,41.26,4.25],["Sceptrum","",69.54,-14.3,3.87],["90 Tau","",69.54,12.51,4.27],["54 Eri","",70.11,-19.67,4.32],
+          ["α Cae","",70.14,-41.86,4.45],["τ Tau","",70.56,22.96,4.28],["μ Eri","",71.38,-3.25,4.02],["Tabit","π³ Ori",72.46,6.96,3.19],
+          ["π² Ori","",72.65,8.9,4.36],["π⁴ Ori","",72.8,5.6,3.69],["ω Eri","",73.22,-5.45,4.39],["α Cam","",73.51,66.34,4.29],["π⁵ Ori","",73.56,2.44,3.72],
+          ["ο² Ori","",74.09,13.51,4.07],["Kabdhilinan","ι Aur",74.25,33.17,2.69],["7 Cam","",74.32,53.75,4.47],["π⁶ Ori","",74.64,1.71,4.47],
+          ["Haldus","ε Aur",75.49,43.82,2.99],["Haedus","ζ Aur",75.62,41.08,3.75],["β Cam","",75.85,60.44,4.03],["ε Lep","",76.37,-22.37,3.19],
+          ["Hoedus II","η Aur",76.63,41.23,3.17],["Cursa","β Eri",76.96,-5.09,2.79],["λ Eri","",77.29,-8.75,4.27],["ι Lep","",78.07,-11.87,4.45],
+          ["μ Lep","",78.23,-16.21,3.31],["κ Lep","",78.31,-12.94,4.36],["ρ Ori","",78.32,2.86,4.46],["Rigel","β Ori",78.63,-8.2,0.12],
+          ["Capella","α Aur",79.17,46,0.08],["τ Ori","",79.4,-6.84,3.6],["λ Lep","",79.89,-13.18,4.29],["29 Ori","",80.99,-7.81,4.14],
+          ["η Ori","",81.12,-2.4,3.36],["Bellatrix","γ Ori",81.28,6.35,1.64],["Elnath","β Tau",81.57,28.61,1.65],["Nihal","β Lep",82.06,-20.76,2.84],
+          ["32 Ori","",82.7,5.95,4.2],["ε Col","",82.8,-35.47,3.87],["Mintaka","δ Ori",83,-0.3,2.23],["119 Tau","",83.05,18.59,4.38],
+          ["Arneb","α Lep",83.18,-17.82,2.58],["β Dor","",83.41,-62.49,3.76],["φ¹ Ori","",83.7,9.49,4.41],["Meissa","λ Ori",83.78,9.93,3.54],
+          ["Nair Al Saif","ι Ori",83.86,-5.91,2.77],["Alnilam","ε Ori",84.05,-1.2,1.7],["φ² Ori","",84.23,9.29,4.09],["Tien Kwan","ζ Tau",84.41,21.14,3],
+          ["σ Ori","",84.69,-2.6,3.81],["Phact","α Col",84.91,-34.07,2.64],["Alnitak","ζ Ori",85.19,-1.94,2.05],["γ Lep","",86.12,-22.45,3.6],
+          ["δ Dor","",86.19,-65.74,4.35],["ζ Lep","",86.74,-14.82,3.55],["β Pic","",86.82,-51.07,3.85],["Saiph","κ Ori",86.94,-9.67,2.06],
+          ["Wazn","β Col",87.74,-35.77,3.12],["δ Lep","",87.83,-20.88,3.81],["ν Aur","",87.87,39.15,3.97],["χ¹ Ori","",88.6,20.28,4.41],
+          ["Betelgeuse","α Ori",88.79,7.41,0.5],["η Lep","",89.1,-14.17,3.71],["γ Col","",89.38,-35.28,4.36],["η Col","",89.79,-42.82,3.96],
+          ["Menkalinan","β Aur",89.88,44.95,1.9],["δ Aur","",89.88,54.28,3.72],["Mahasim","θ Aur",89.93,37.21,2.62],["π Aur","",89.98,45.94,4.26],
+          ["μ Ori","",90.6,9.65,4.12],["1 Gem","",91.03,23.26,4.16],["ν Ori","",91.89,14.77,4.42],["ξ Ori","",92.98,14.21,4.48],["γ Mon","",93.71,-6.27,3.98],
+          ["Propus","η Gem",93.72,22.51,3.28],["κ Aur","",93.84,29.5,4.35],["κ Col","",94.14,-35.14,4.37],["2 Lyn","",94.91,59.01,4.48],
+          ["Furud","ζ CMa",95.08,-30.06,3.02],["δ Col","",95.53,-33.44,3.85],["Mirzam","β CMa",95.67,-17.96,1.98],["Tejat Posterior","μ Gem",95.74,22.51,2.88],
+          ["ε Mon","",95.94,4.59,4.44],["Canopus","α Car",95.99,-52.7,-0.72],["λ CMa","",97.04,-32.58,4.48],["ν Gem","",97.24,20.21,4.15],
+          ["ξ¹ CMa","",97.96,-23.42,4.33],["13 Mon","",98.23,7.33,4.5],["HR 2435","",98.74,-52.98,4.39],["ν² CMa","",99.17,-19.26,3.95],
+          ["Alhena","γ Gem",99.43,16.4,1.93],["ν Pup","",99.44,-43.2,3.17],["ν³ CMa","",99.47,-18.24,4.43],["Mebsuta","ε Gem",100.98,25.13,2.98],
+          ["30 Gem","",101,13.23,4.49],["Sirius","α CMa",101.29,-16.72,-1.46],["Alzir","ξ Gem",101.32,12.9,3.36],["18 Mon","",101.96,2.41,4.47],
+          ["α Pic","",102.05,-61.94,3.27],["κ CMa","",102.46,-32.51,3.96],["HR 2554","",102.46,-53.62,4.4],["τ Pup","",102.48,-50.61,2.93],
+          ["θ Gem","",103.2,33.96,3.6],["ο¹ CMa","",103.53,-24.18,3.87],["θ CMa","",103.55,-12.04,4.07],["ι CMa","",104.03,-17.05,4.37],
+          ["15 Lyn","",104.32,58.42,4.35],["Adhara","ε CMa",104.66,-28.97,1.5],["σ CMa","",105.43,-27.93,3.47],["ο² CMa","",105.76,-23.83,3.02],
+          ["Muliphein","γ CMa",105.94,-15.63,4.12],["Mekbuda","ζ Gem",106.03,20.57,3.79],["Wezen","δ CMa",107.1,-26.39,1.84],["γ² Vol","",107.19,-70.5,3.78],
+          ["τ Gem","",107.79,30.25,4.41],["δ Mon","",107.97,-0.49,4.15],["HR 2740","",108.14,-46.76,4.49],["ω CMa","",108.7,-26.77,3.85],
+          ["δ Vol","",109.21,-67.96,3.98],["π Pup","",109.29,-37.1,2.7],["λ Gem","",109.52,16.54,3.58],["τ CMa","",109.68,-24.95,4.4],
+          ["Wasat","δ Gem",110.03,21.98,3.53],["Aludra","η CMa",111.02,-29.3,2.45],["ι Gem","",111.43,27.8,3.79],["Gomeisa","β CMi",111.79,8.29,2.9],
+          ["γ CMi","",112.04,8.93,4.32],["ρ Gem","",112.28,31.78,4.18],["σ Pup","",112.31,-43.3,3.25],["HR 2906","",113.51,-22.3,4.45],
+          ["Castor","α Gem",113.65,31.89,1.98],["υ Gem","",113.98,26.9,4.06],["Markab","",114.71,-26.8,4.5],["Procyon","α CMi",114.83,5.23,0.38],
+          ["α Mon","",115.31,-9.55,3.93],["ζ Vol","",115.45,-72.61,3.95],["σ Gem","",115.83,28.88,4.28],["3 Pup","",115.95,-28.95,3.96],
+          ["κ Gem","",116.11,24.4,3.57],["HR 3017","",116.31,-37.97,3.61],["Pollux","β Gem",116.33,28.03,1.14],["ο Pup","",117.02,-25.94,4.5],
+          ["HR 3055","",117.31,-46.37,4.11],["Azmidiske","ξ Pup",117.32,-24.86,3.34],["HR 3080","",118.05,-40.58,3.73],["HR 3084","",118.16,-38.86,4.49],
+          ["HR 3090","",118.33,-48.1,4.24],["χ Car","",119.19,-52.98,3.47],["11 Pup","",119.21,-22.88,4.2],["HR 3129","",119.56,-49.24,4.41],
+          ["HR 3145","",120.57,2.33,4.39],["Naos","ζ Pup",120.9,-40,2.25],["Tureis","ρ Pup",121.89,-24.3,2.81],["ε Vol","",121.98,-68.62,4.35],
+          ["ζ Mon","",122.15,-2.98,4.34],["16 Pup","",122.26,-19.25,4.4],["γ² Vel","",122.38,-47.34,1.78],["HR 3225","",122.84,-39.62,4.45],
+          ["HR 3243","",123.51,-40.35,4.44],["Altarf","β Cnc",124.13,9.19,3.52],["α Cha","",124.63,-76.92,4.07],["HR 3270","",124.64,-36.66,4.45],
+          ["θ Cha","",125.16,-77.48,4.35],["Avior","ε Car",125.63,-59.51,1.86],["Alsciaukat","",125.71,43.19,4.25],["HR 3314","",126.41,-3.91,3.9],
+          ["β Vol","",126.43,-66.14,3.77],["Muscida","ο UMa",127.57,60.72,3.36],["HR 3426","",129.41,-42.99,4.14],["δ Hya","",129.41,5.7,4.16],
+          ["Minchir","σ Hya",129.69,3.34,4.44],["β Pyx","",130.03,-35.31,3.97],["HR 3447","",130.07,-52.92,3.62],["HR 3457","",130.15,-59.76,4.33],
+          ["HR 3445","",130.16,-46.65,3.84],["η Hya","",130.81,3.4,4.3],["α Pyx","",130.9,-33.19,3.68],["HR 3477","",131.1,-42.65,4.07],
+          ["Asellus Australis","δ Cnc",131.17,18.15,3.94],["δ Vel","",131.18,-54.71,1.96],["HR 3487","",131.51,-46.04,3.91],["12 Hya","",131.59,-13.55,4.32],
+          ["ι Cnc","",131.67,28.76,4.02],["HR 3498","",131.68,-56.77,4.49],["ε Hya","",131.69,6.42,3.38],["ρ Hya","",132.11,5.84,4.36],
+          ["γ Pyx","",132.63,-27.71,4.01],["HR 3571","",133.76,-60.64,3.84],["Hydrobius","ζ Hya",133.85,5.95,3.11],["Acubens","α Cnc",134.62,11.86,4.25],
+          ["Talitha","ι UMa",134.8,48.04,3.14],["HR 3591","",135.02,-41.25,4.45],["HR 3579","",135.16,41.78,3.97],["α Vol","",135.61,-66.4,4],
+          ["Talitha Australis","κ UMa",135.91,47.16,3.6],["HR 3614","",136.04,-47.1,3.75],["HR 3643","",136.29,-72.6,4.48],["Suhail","λ Vel",137,-43.43,2.21],
+          ["15 UMa","",137.22,51.6,4.48],["HR 3659","",137.74,-58.97,3.44],["HR 3663","",137.82,-62.32,3.97],["Miaplacidus","β Car",138.3,-69.72,1.68],
+          ["θ Hya","",138.59,2.31,3.88],["HR 3696","",139.05,-57.54,4.34],["Aspidiske","ι Car",139.27,-59.28,2.25],["38 Lyn","",139.71,36.8,3.82],
+          ["α Lyn","",140.26,34.39,3.13],["κ Vel","",140.53,-55.01,2.5],["Al Minliar al Asad","κ Leo",141.16,26.18,4.46],["Alphard","α Hya",141.9,-8.66,1.98],
+          ["ψ Vel","",142.68,-40.47,3.6],["HR 3803","",142.81,-57.03,3.13],["23 UMa","",142.88,63.06,3.67],["Alterf","λ Leo",142.93,22.97,4.31],
+          ["Sarir","θ UMa",143.21,51.68,3.17],["HR 3825","",143.61,-59.23,4.08],["26 UMa","",143.71,52.05,4.5],["HR 3836","",144.21,-49.36,4.35],
+          ["HR 3751","",144.27,81.33,4.29],["ι Hya","",144.96,-1.14,3.91],["Subra","ο Leo",145.29,9.89,3.52],["HR 3884","",146.31,-62.51,3.69],
+          ["Ras Elased Australis","ε Leo",146.46,23.77,2.98],["υ Car","",146.78,-65.07,3.01],["υ UMa","",147.75,59.04,3.8],["υ¹ Hya","",147.87,-14.85,4.12],
+          ["Rasalas","μ Leo",148.19,26.01,3.88],["φ Vel","",149.22,-54.57,3.54],["η Leo","",151.83,16.76,3.52],["21 LMi","",151.86,35.24,4.48],
+          ["31 Leo","",151.98,10,4.37],["α Sex","",151.98,-0.37,4.49],["Regulus","α Leo",152.09,11.97,1.35],["λ Hya","",152.65,-12.35,3.61],
+          ["ω Car","",153.43,-70.04,3.32],["HR 4023","",153.68,-42.12,3.85],["Adhafera","ζ Leo",154.17,23.42,3.44],["HR 4050","",154.27,-61.33,3.4],
+          ["Tania Borealis","λ UMa",154.27,42.91,3.45],["Algieba","γ¹ Leo",154.99,19.84,2.61],["HR 4074","",155.23,-56.04,4.5],
+          ["Tania Australis","μ UMa",155.58,41.5,3.05],["HR 4102","",156.1,-74.03,4],["μ Hya","",156.52,-16.84,3.81],["α Ant","",156.79,-31.07,4.25],
+          ["HR 4114","",156.97,-58.74,3.82],["β LMi","",156.97,36.71,4.21],["HR 4140","",158.01,-61.69,3.32],["ρ Leo","",158.2,9.31,3.85],
+          ["γ Cha","",158.87,-78.61,4.11],["HR 4159","",158.9,-57.56,4.45],["HR 4167","",159.33,-48.23,3.84],["HR 4180","",159.83,-55.6,4.28],
+          ["θ Car","",160.74,-64.39,2.76],["δ² Cha","",161.44,-80.54,4.45],["μ Vel","",161.69,-49.42,2.69],["ν Hya","",162.41,-16.19,3.11],
+          ["Praecipua","",163.33,34.22,3.83],["HR 4257","",163.37,-58.85,3.78],["54 Leo","",163.9,24.75,4.5],["Alkes","α Crt",164.94,-18.3,4.08],
+          ["HR 4293","",165.04,-42.23,4.39],["Merak","β UMa",165.46,56.38,2.37],["60 Leo","",165.58,20.18,4.42],["Dubhe","α UMa",165.93,61.75,1.79],
+          ["HR 4337","",167.15,-58.98,3.91],["ψ UMa","",167.42,44.5,3.01],["β Crt","",167.91,-22.83,4.48],["Zosma","δ Leo",168.53,20.52,2.56],
+          ["Chertan","θ Leo",168.56,15.43,3.34],["φ Leo","",169.17,-3.65,4.47],["Alula Australis","ξ UMa",169.55,31.53,4.41],
+          ["Alula Borealis","ν UMa",169.62,33.09,3.48],["δ Crt","",169.84,-14.78,3.56],["π Cen","",170.25,-54.49,3.89],["σ Leo","",170.28,6.03,4.05],
+          ["ι Leo","",170.98,10.53,3.94],["γ Crt","",171.22,-17.68,4.08],["Gianfar","λ Dra",172.85,69.33,3.84],["ξ Hya","",173.25,-31.86,3.54],
+          ["λ Cen","",173.94,-63.02,3.13],["υ Leo","",174.24,-0.82,4.3],["λ Mus","",176.4,-66.73,3.64],["ν Vir","",176.47,6.53,4.03],
+          ["Al Kaphrah","χ UMa",176.51,47.78,3.71],["HR 4522","",176.63,-61.18,4.11],["Denebola","β Leo",177.26,14.57,2.14],["HR 4537","",177.42,-63.79,4.32],
+          ["Zavijava","β Vir",177.67,1.76,3.61],["HR 4546","",177.79,-45.17,4.46],["β Hya","",178.23,-33.91,4.28],["Phecda","γ UMa",178.46,53.69,2.44],
+          ["θ¹ Cru","",180.76,-63.31,4.33],["ο Vir","",181.3,8.73,4.12],["η Cru","",181.72,-64.61,4.15],["HR 4618","",182.02,-50.66,4.47],
+          ["δ Cen","",182.09,-50.72,2.6],["Alchiba","α Crv",182.1,-24.73,4.02],["Minkar","ε Crv",182.53,-22.62,3],["ρ Cen","",182.91,-52.37,3.96],
+          ["δ Cru","",183.79,-58.75,2.8],["Megrez","δ UMa",183.86,57.03,3.31],["Gienah (γ Crv)","γ Crv",183.95,-17.54,2.59],["ε Mus","",184.39,-67.96,4.11],
+          ["β Cha","",184.59,-79.31,4.26],["ζ Cru","",184.61,-64,4.04],["Zaniah","η Vir",184.98,-0.67,3.89],["ε Cru","",185.34,-60.4,3.59],
+          ["Acrux","α¹ Cru",186.65,-63.1,1.33],["γ Com","",186.73,28.27,4.36],["σ Cen","",187.01,-50.23,3.91],["Algorab","δ Crv",187.47,-16.52,2.95],
+          ["Gacrux","γ Cru",187.79,-57.11,1.63],["η Crv","",188.02,-16.2,4.31],["γ Mus","",188.12,-72.13,3.87],["κ Dra","",188.37,69.79,3.87],
+          ["Chara","β CVn",188.44,41.36,4.26],["Kraz","β Crv",188.6,-23.4,2.65],["α Mus","",189.3,-69.14,2.69],["τ Cen","",189.43,-48.54,3.86],
+          ["γ Cen","",190.38,-48.96,2.17],["Porrima","γ Vir",190.41,-1.45,3.65],["β Mus","",191.57,-68.11,3.05],["Mimosa","β Cru",191.93,-59.69,1.25],
+          ["HR 4888","",193.28,-48.94,4.33],["HR 4889","",193.36,-40.18,4.27],["Alioth","ε UMa",193.51,55.96,1.77],["μ¹ Cru","",193.65,-57.18,4.03],
+          ["Auva","δ Vir",193.9,3.4,3.38],["Chara","α² CVn",194.01,38.32,2.9],["Vindemiatrix","ε Vir",195.54,10.96,2.83],["δ Mus","",195.57,-71.55,3.62],
+          ["ξ² Cen","",196.73,-49.91,4.27],["θ Vir","",197.49,-5.54,4.38],["β Com","",197.97,27.88,4.26],["γ Hya","",199.73,-23.17,3],
+          ["ι Cen","",200.15,-36.71,2.75],["Mizar","ζ UMa",200.98,54.93,2.27],["Spica","α Vir",201.3,-11.16,0.98],["Alcor","",201.31,54.99,4.01],
+          ["HR 5089","",202.76,-39.41,3.88],["Heze","ζ Vir",203.67,-0.6,3.37],["ε Cen","",204.97,-53.47,2.3],["1 Cen","",206.42,-33.04,4.23],
+          ["τ Boo","",206.82,17.46,4.5],["Alkaid","η UMa",206.88,49.31,1.86],["2 Cen","",207.36,-34.45,4.19],["υ Boo","",207.37,15.8,4.07],
+          ["ν Cen","",207.38,-41.69,3.41],["μ Cen","",207.4,-42.47,3.04],["Muphrid","η Boo",208.67,18.4,2.68],["ζ Cen","",208.88,-47.29,2.55],
+          ["φ Cen","",209.57,-42.1,3.83],["υ¹ Cen","",209.67,-44.8,3.87],["τ Vir","",210.41,1.54,4.26],["υ² Cen","",210.43,-45.6,4.34],
+          ["Hadar","β Cen",210.96,-60.37,0.61],["Thuban","α Dra",211.1,64.38,3.65],["χ Cen","",211.51,-41.18,4.36],["π Hya","",211.59,-26.68,3.27],
+          ["Menkent","θ Cen",211.67,-36.37,2.06],["κ Vir","",213.22,-10.27,4.19],["Arcturus","α Boo",213.92,19.18,-0.04],["Syrma","ι Vir",214,-6,4.08],
+          ["λ Boo","",214.1,46.09,4.18],["ι Lup","",214.85,-46.06,3.55],["HR 5358","",215.08,-56.39,4.33],["ψ Cen","",215.14,-37.89,4.05],
+          ["HR 5378","",215.76,-39.51,4.42],["Asellus Primus","θ Boo",216.3,51.85,4.05],["τ² Lup","",216.55,-45.38,4.35],["δ Oct","",216.73,-83.67,4.32],
+          ["5 UMi","",216.88,75.7,4.25],["ρ Boo","",217.96,30.37,3.58],["Seginus","γ Boo",218.02,38.31,3.03],["σ Lup","",218.15,-50.46,4.42],
+          ["σ Boo","",218.67,29.75,4.46],["η Cen","",218.88,-42.16,2.31],["ρ Lup","",219.47,-49.43,4.05],["Rigil Kentaurus","α¹ Cen",219.9,-60.84,-0.01],
+          ["ζ Boo","",220.29,13.73,4.43],["α Lup","",220.48,-47.39,2.3],["HR 5471","",220.49,-37.79,4],["α Cir","",220.63,-64.98,3.19],
+          ["Rijl al Awwa","μ Vir",220.76,-5.66,3.88],["HR 5485","",220.91,-35.17,4.05],["Izar","ε Boo",221.25,27.07,2.7],["109 Vir","",221.56,1.89,3.72],
+          ["α Aps","",221.97,-79.04,3.83],["58 Hya","",222.57,-27.96,4.41],["Kochab","β UMi",222.68,74.16,2.08],["Zubenelgenubi","α² Lib",222.72,-16.04,2.75],
+          ["ο Lup","",222.91,-43.58,4.32],["16 Lib","",224.3,-4.35,4.49],["β Lup","",224.63,-43.13,2.68],["κ Cen","",224.79,-42.1,3.13],
+          ["Nekkar","β Boo",225.49,40.39,3.5],["110 Vir","",225.72,2.09,4.4],["Brachium","σ Lib",226.02,-25.28,3.29],["λ Lup","",227.21,-45.28,4.05],
+          ["κ¹ Lup","",227.98,-48.74,3.87],["ζ Lup","",228.07,-52.1,3.41],["δ Boo","",228.88,33.31,3.47],["Zubeneschamali","β Lib",229.25,-9.38,2.61],
+          ["β Cir","",229.38,-58.8,4.07],["2 Lup","",229.46,-30.15,4.34],["μ Lup","",229.63,-47.88,4.27],["Gatria","γ TrA",229.73,-68.68,2.89],
+          ["Pherkad","γ UMi",230.18,71.83,3.05],["δ Lup","",230.34,-40.65,3.22],["φ¹ Lup","",230.45,-36.26,3.56],["ε Lup","",230.67,-44.69,3.37],
+          ["Alkalurops","μ¹ Boo",231.12,37.38,4.31],["Edasich","ι Dra",231.23,58.97,3.29],["Nusakan","β CrB",231.96,29.11,3.68],["θ CrB","",233.23,31.36,4.14],
+          ["Alphecca","α CrB",233.67,26.71,2.23],["δ Ser","",233.7,10.54,3.8],["γ Lup","",233.79,-41.17,2.78],["Zuben-el-Akrab","γ Lib",233.88,-14.79,3.91],
+          ["ε TrA","",234.18,-66.32,4.11],["υ Lib","",234.26,-28.13,3.58],["ω Lup","",234.51,-42.57,4.33],["τ Lib","",234.66,-29.78,3.66],
+          ["γ CrB","",235.69,26.3,3.84],["ζ UMi","",236.01,77.79,4.32],["Unukalhai","α Ser",236.07,6.43,2.65],["Chow","β Ser",236.55,15.42,3.67],
+          ["λ Ser","",236.61,7.35,4.43],["κ Ser","",237.19,18.14,4.09],["μ Ser","",237.41,-3.43,3.53],["ε Ser","",237.7,4.48,3.71],
+          ["χ Lup","",237.74,-33.63,3.95],["θ Lib","",238.46,-16.73,4.15],["Betria","β TrA",238.79,-63.43,2.85],["γ Ser","",239.11,15.66,3.85],
+          ["ρ Sco","",239.22,-29.21,3.88],["ε CrB","",239.4,26.88,4.15],["π Sco","",239.71,-26.11,2.89],["HR 5958","",239.88,25.92,2],
+          ["η Lup","",240.03,-38.4,3.41],["Dschubba","δ Sco",240.08,-22.62,2.32],["θ Dra","",240.47,58.57,4.01],["Acrab","β¹ Sco",241.36,-19.81,2.62],
+          ["θ Lup","",241.65,-36.8,4.23],["ω¹ Sco","",241.7,-20.67,3.96],["ω² Sco","",241.85,-20.87,4.32],["φ Her","",242.19,44.93,4.26],
+          ["Jabbah","ν Sco",243,-19.46,4.01],["Yed Prior","δ Oph",243.59,-3.69,2.74],["δ TrA","",243.86,-63.69,3.85],["Yed Posterior","ε Oph",244.58,-4.69,3.24],
+          ["τ Her","",244.94,46.31,3.89],["γ² Nor","",244.96,-50.16,4.02],["Al Niyat","σ Sco",245.3,-25.59,2.89],["γ Her","",245.48,19.15,3.75],
+          ["η Dra","",246,61.51,2.74],["ψ Oph","",246.03,-20.04,4.5],["χ Oph","",246.76,-18.46,4.42],["ε Nor","",246.8,-47.55,4.47],
+          ["Antares","α Sco",247.35,-26.43,0.96],["Kornephoros","β Her",247.56,21.49,2.77],["Marfik","λ Oph",247.73,1.98,3.82],["φ Oph","",247.78,-16.61,4.28],
+          ["HR 6143","",247.85,-34.7,4.23],["ω Oph","",248.03,-21.47,4.45],["γ Aps","",248.36,-78.9,3.89],["σ Her","",248.53,42.44,4.2],
+          ["Alniyat","τ Sco",248.97,-28.22,2.82],["HR 6166","",249.09,-35.26,4.16],["ζ Oph","",249.29,-10.57,2.56],["ζ Her","",250.32,31.6,2.81],
+          ["η Her","",250.72,38.92,3.53],["β Aps","",250.77,-77.52,4.24],["ε UMi","",251.49,82.04,4.23],["Atria","α TrA",252.17,-69.03,1.92],
+          ["η Ara","",252.45,-59.04,3.76],["ε Sco","",252.54,-34.29,2.29],["μ¹ Sco","",252.97,-38.05,3.08],["μ² Sco","",253.08,-38.02,3.57],
+          ["ι Oph","",253.5,10.17,4.38],["ζ² Sco","",253.65,-42.36,3.62],["κ Oph","",254.42,9.38,3.2],["ζ Ara","",254.65,-55.99,3.13],
+          ["ε¹ Ara","",254.9,-53.16,4.06],["ε Her","",255.07,30.93,3.92],["Aldhibain","ζ Dra",257.2,65.71,3.17],["Sabik","η Oph",257.59,-15.72,2.43],
+          ["η Sco","",258.04,-43.24,3.33],["Rasalgethi","α¹ Her",258.66,14.39,3.48],["Sarin","δ Her",258.76,24.84,3.14],["π Her","",258.76,36.81,3.16],
+          ["ν Ser","",260.21,-12.85,4.33],["ξ Oph","",260.25,-21.11,4.39],["θ Oph","",260.5,-25,3.27],["β Ara","",261.32,-55.53,2.85],
+          ["γ Ara","",261.35,-56.38,3.34],["44 Oph","",261.59,-24.18,4.17],["σ Oph","",261.63,4.14,4.34],["45 Oph","",261.84,-29.87,4.29],
+          ["Rastaban","β Dra",262.61,52.3,2.79],["Maasym","λ Her",262.68,26.11,4.41],["Lesath","υ Sco",262.69,-37.3,2.69],["δ Ara","",262.77,-60.68,3.62],
+          ["α Ara","",262.96,-49.88,2.95],["Yildun","δ UMi",263.05,86.59,4.36],["Shaula","λ Sco",263.4,-37.1,1.63],["Rasalhague","α Oph",263.73,12.56,2.08],
+          ["HR 6546","",264.14,-38.64,4.29],["Sargas","θ Sco",264.33,-43,1.87],["ξ Ser","",264.4,-15.4,3.54],["ι Her","",264.87,46.01,3.8],
+          ["ο Ser","",265.35,-12.88,4.26],["Girtab","κ Sco",265.62,-39.03,2.41],["Cebalrai","β Oph",265.87,4.57,2.77],["η Pav","",266.43,-64.72,3.62],
+          ["μ Her","",266.61,27.72,3.42],["ι¹ Sco","",266.9,-40.13,3.03],["γ Oph","",266.97,2.71,3.75],["HR 6630","",267.46,-37.04,3.21],
+          ["Grumium","ξ Dra",268.38,56.87,3.75],["θ Her","",269.06,37.25,3.86],["Eltanin","γ Dra",269.15,51.49,2.23],["ξ Her","",269.44,29.25,3.7],
+          ["ν Her","",269.63,30.19,4.41],["Sinistra","ν Oph",269.76,-9.77,3.34],["67 Oph","",270.16,2.93,3.97],["68 Oph","",270.44,1.31,4.45],
+          ["70 Oph","",271.36,2.5,4.03],["Alnasl","γ² Sgr",271.45,-30.42,2.99],["θ Ara","",271.66,-50.09,3.66],["72 Oph","",271.84,9.56,3.73],
+          ["ο Her","",271.89,28.76,3.83],["π Pav","",272.14,-63.67,4.35],["102 Her","",272.19,20.81,4.36],["μ Sgr","",273.44,-21.06,3.86],
+          ["η Sgr","",274.41,-36.76,3.11],["κ Lyr","",274.97,36.06,4.33],["φ Dra","",275.19,71.34,4.22],["Kaus Media","δ Sgr",275.25,-29.83,2.7],
+          ["χ Dra","",275.26,72.73,3.57],["η Ser","",275.33,-2.9,3.26],["ξ Pav","",275.81,-61.49,4.36],["109 Her","",275.92,21.77,3.84],
+          ["Kaus Australis","ε Sgr",276.04,-34.38,1.85],["α Tel","",276.74,-45.97,3.51],["Kaus Borealis","λ Sgr",276.99,-25.42,2.81],
+          ["ζ Tel","",277.21,-49.07,4.13],["α Sct","",278.8,-8.24,3.85],["Vega","α Lyr",279.23,38.78,0.03],["ζ Pav","",280.76,-71.43,4.01],
+          ["ζ¹ Lyr","",281.19,37.61,4.36],["φ Sgr","",281.41,-26.99,3.17],["110 Her","",281.42,20.55,4.19],["111 Her","",281.76,18.18,4.36],
+          ["β Sct","",281.79,-4.75,4.22],["Sheliak","β Lyr",282.52,33.36,3.45],["λ Pav","",283.05,-62.19,4.22],["δ² Lyr","",283.63,36.9,4.3],
+          ["Nunki","σ Sgr",283.82,-26.3,2.02],["13 Lyr","",283.83,43.95,4.04],["κ Pav","",284.24,-67.23,4.44],["ξ² Sgr","",284.43,-21.11,3.51],
+          ["Sulafat","γ Lyr",284.74,32.69,3.24],["ε Aql","",284.91,15.07,4.02],["12 Aql","",285.42,-5.74,4.02],["Ascella","ζ Sgr",285.65,-29.88,2.6],
+          ["ο Sgr","",286.17,-21.74,3.77],["Deneb el Okab","ζ Aql",286.35,13.86,2.99],["Al Thalimain","λ Aql",286.56,-4.88,3.44],["τ Sgr","",286.74,-27.67,3.32],
+          ["Alfecca Meridiana","α CrA",287.37,-37.9,4.11],["Albaldah","π Sgr",287.44,-21.02,2.89],["β CrA","",287.51,-39.34,4.11],
+          ["Altais","δ Dra",288.14,67.66,3.07],["Aladfar","η Lyr",288.44,39.15,4.39],["τ Dra","",288.89,73.36,4.45],["θ Lyr","",289.09,38.13,4.36],
+          ["κ Cyg","",289.28,53.37,3.77],["ρ¹ Sgr","",290.42,-17.85,3.93],["Arkab Prior","β¹ Sgr",290.66,-44.46,4.01],
+          ["Arkab Posterior","β² Sgr",290.81,-44.8,4.29],["Rukbat","α Sgr",290.97,-40.62,3.97],["δ Aql","",291.37,3.11,3.36],
+          ["Lucida Anseris","α Vul",292.18,24.66,4.44],["ι² Cyg","",292.43,51.73,3.79],["Albireo","β¹ Cyg",292.68,27.96,3.08],["μ Aql","",293.52,7.38,4.45],
+          ["θ Cyg","",294.11,50.22,4.48],["Al Thalimain","ι Aql",294.18,-1.29,4.36],["Sham","α Sge",295.02,18.01,4.37],["β Sge","",295.26,17.48,4.37],
+          ["Al Fawaris","δ Cyg",296.24,45.13,2.87],["Tarazed","γ Aql",296.56,10.61,2.72],["δ Sge","",296.85,18.53,3.82],["Tyl","ε Dra",297.04,70.27,3.83],
+          ["χ Cyg","",297.64,32.91,4.23],["Altair","α Aql",297.7,8.87,0.77],["η Aql","",298.12,1.01,3.9],["ι Sgr","",298.82,-41.87,4.13],
+          ["Alshain","β Aql",298.83,6.41,3.71],["η Cyg","",299.08,35.08,3.89],["γ Sge","",299.69,19.49,3.47],["θ¹ Sgr","",299.93,-35.28,4.37],
+          ["ε Pav","",300.15,-72.91,3.96],["δ Pav","",302.18,-66.18,3.56],["κ Cep","",302.22,77.71,4.39],["θ Aql","",302.83,-0.82,3.23],
+          ["33 Cyg","",303.35,56.57,4.3],["31 Cyg","",303.41,46.74,3.79],["32 Cyg","",303.87,47.71,3.98],["Al Giedi","α¹ Cap",304.41,-12.51,4.24],
+          ["Algedi","α² Cap",304.51,-12.54,3.57],["Dabih","β Cap",305.25,-14.78,3.08],["Sadr","γ Cyg",305.56,40.26,2.2],["39 Cyg","",305.97,32.19,4.43],
+          ["Peacock","α Pav",306.41,-56.73,1.94],["41 Cyg","",307.35,30.37,4.01],["θ Cep","",307.4,62.99,4.22],["Deneb Dulfim","ε Del",308.3,11.3,4.03],
+          ["α Ind","",309.39,-47.29,3.11],["Rotanev","β Del",309.39,14.6,3.63],["71 Aql","",309.58,-1.11,4.32],["Sualocin","α Del",309.91,15.91,3.77],
+          ["Deneb","α Cyg",310.36,45.28,1.25],["δ Del","",310.86,15.07,4.43],["β Pav","",311.24,-66.2,3.42],["η Cep","",311.32,61.84,3.43],
+          ["52 Cyg","",311.42,30.72,4.22],["ψ Cap","",311.52,-25.27,4.14],["ε Cyg","",311.55,33.97,2.46],["γ² Del","",311.66,16.12,4.27],
+          ["Albali","ε Aqr",311.92,-9.5,3.77],["3 Aqr","",311.93,-5.03,4.42],["ω Cap","",312.96,-26.92,4.11],["β Ind","",313.7,-58.45,3.65],
+          ["ν Cyg","",314.29,41.17,3.94],["ξ Cyg","",316.23,43.93,3.72],["θ Cap","",316.49,-17.23,4.07],["24 Cap","",316.78,-25.01,4.5],
+          ["ζ Cyg","",318.23,30.23,3.2],["δ Equ","",318.62,10.01,4.49],["τ Cyg","",318.7,38.05,3.72],["Kitalpha","α Equ",318.96,5.25,3.92],
+          ["σ Cyg","",319.35,39.39,4.23],["υ Cyg","",319.48,34.9,4.43],["Alderamin","α Cep",319.65,62.59,2.44],["θ Ind","",319.97,-53.45,4.39],
+          ["1 Peg","",320.52,19.8,4.08],["ι Cap","",320.56,-16.83,4.28],["γ Pav","",321.61,-65.37,4.22],["ζ Cap","",321.67,-22.41,3.74],
+          ["Alfirk","β Cep",322.16,70.56,3.23],["Sadalsuud","β Aqr",322.89,-5.57,2.91],["ρ Cyg","",323.5,45.59,4.02],["Nashira","γ Cap",325.02,-16.66,3.68],
+          ["ν Oct","",325.37,-77.39,3.76],["Garnet Star","μ Cep",325.88,58.78,4.08],["Enif","ε Peg",326.05,9.88,2.39],["9 Peg","",326.13,17.35,4.34],
+          ["κ Peg","",326.16,25.64,4.13],["ι PsA","",326.24,-33.03,4.34],["ν Cep","",326.36,61.12,4.29],["π² Cyg","",326.7,49.31,4.23],
+          ["Deneb Algedi","δ Cap",326.76,-16.13,2.87],["Aldhanab","γ Gru",328.48,-37.37,3.01],["δ Ind","",329.48,-54.99,4.4],
+          ["Kurhah","ξ Cep",330.95,64.63,4.29],["Sadalmelik","α Aqr",331.45,-0.32,2.96],["λ Gru","",331.53,-39.54,4.46],["ι Aqr","",331.61,-13.87,4.27],
+          ["ι Peg","",331.75,25.34,3.76],["Alnair","α Gru",332.06,-46.96,1.74],["μ PsA","",332.1,-32.99,4.5],["π² Peg","",332.5,33.18,4.29],
+          ["Biham","θ Peg",332.55,6.2,3.53],["ζ Cep","",332.71,58.2,3.35],["HR 8485","",333.47,39.72,4.49],["ε Cep","",333.76,57.04,4.19],
+          ["1 Lac","",333.99,37.75,4.13],["Ancha","θ Aqr",334.21,-7.78,4.16],["α Tuc","",334.63,-60.26,2.86],["Sadachbia","γ Aqr",335.41,-1.39,3.84],
+          ["β Lac","",335.89,52.23,4.43],["δ Tuc","",336.83,-64.97,4.48],["ζ² Aqr","",337.21,-0.02,4.42],["δ Cep","",337.29,58.42,3.75],
+          ["δ¹ Gru","",337.32,-43.5,3.97],["5 Lac","",337.38,47.71,4.36],["δ² Gru","",337.44,-43.75,4.11],["α Lac","",337.82,50.28,3.77],
+          ["β PsA","",337.88,-32.35,4.29],["η Aqr","",338.84,-0.12,4.02],["11 Lac","",340.13,44.28,4.46],["ε PsA","",340.16,-27.04,4.17],
+          ["Homam","ζ Peg",340.37,10.83,3.4],["β Gru","",340.67,-46.88,2.1],["Matar","η Peg",340.75,30.22,2.94],["β Oct","",341.51,-81.38,4.15],
+          ["λ Peg","",341.63,23.57,3.95],["ξ Peg","",341.67,12.17,4.19],["ε Gru","",342.14,-51.32,3.49],["τ² Aqr","",342.4,-13.59,4.01],
+          ["ι Cep","",342.42,66.2,3.52],["Sadalbari","μ Peg",342.5,24.6,3.48],["γ PsA","",343.13,-32.88,4.46],["λ Aqr","",343.15,-7.58,3.74],
+          ["Skat","δ Aqr",343.66,-15.82,3.27],["δ PsA","",343.99,-32.54,4.21],["Fomalhaut","α PsA",344.41,-29.62,1.16],["ζ Gru","",345.22,-52.75,4.12],
+          ["ο And","",345.48,42.33,3.62],["Scheat","β Peg",345.94,28.08,2.42],["Markab","α Peg",346.19,15.21,2.49],["86 Aqr","",346.67,-23.74,4.47],
+          ["θ Gru","",346.72,-43.52,4.28],["π Cep","",346.97,75.39,4.41],["88 Aqr","",347.36,-21.17,3.66],["ι Gru","",347.59,-45.25,3.9],
+          ["φ Aqr","",348.58,-6.05,4.22],["ψ¹ Aqr","",348.97,-9.09,4.21],["γ Psc","",349.29,3.28,3.69],["γ Tuc","",349.36,-58.24,3.99],
+          ["ψ² Aqr","",349.48,-9.18,4.39],["γ Scl","",349.71,-32.53,4.41],["98 Aqr","",350.74,-20.1,3.97],["υ Peg","",351.35,23.4,4.4],
+          ["99 Aqr","",351.51,-20.64,4.39],["θ Psc","",351.99,6.38,4.28],["β Scl","",353.24,-37.82,4.37],["λ And","",354.39,46.46,3.82],
+          ["ι And","",354.53,43.27,4.29],["Errai","γ Cep",354.84,77.63,3.21],["ι Psc","",354.99,5.63,4.13],["κ And","",355.1,44.33,4.14],
+          ["λ Psc","",355.51,1.78,4.5],["ω² Aqr","",355.68,-14.54,4.49],["ω Psc","",359.83,6.86,4.01],["ε Tuc","",359.98,-65.58,4.5]
         ];
 
-        BRIGHT_SKY_STARS.forEach((s, idx) => {
-          BACKGROUND_STARS.push({
-            id: `bstar_${idx}`,
-            name: s.name,
-            ra: s.ra,
-            dec: s.dec,
-            mag: s.mag,
-            twinkle: idx * 0.9
+        /* ================= SKY STAR LIST ================= */
+        // Every star that can be drawn, one entry per real star. Constellation stars come first and
+        // carry the ids that use them (Elnath belongs to both Taurus and Auriga); catalogue stars
+        // that are the same star as a constellation star are dropped.
+        const DEG = Math.PI / 180;
+
+        function angSep(ra1, dec1, ra2, dec2) {
+          const a = dec1 * DEG;
+          const b = dec2 * DEG;
+          const c = Math.sin(a) * Math.sin(b) + Math.cos(a) * Math.cos(b) * Math.cos((ra1 - ra2) * DEG);
+          return Math.acos(Math.max(-1, Math.min(1, c))) / DEG;
+        }
+
+        const SKY_STARS = [];
+        const STAR_BY_ID = {};
+
+        CONSTELLATIONS.forEach((c) => {
+          c.stars.forEach((s) => {
+            let entry = SKY_STARS.find((o) => angSep(o.ra, o.dec, s.ra, s.dec) < 0.05);
+            if (!entry) {
+              entry = {
+                name: s.name,
+                bayer: s.bayer,
+                ra: s.ra,
+                dec: s.dec,
+                mag: s.mag,
+                variable: s.variable || null,
+                note: s.note,
+                ids: [],
+                twinkle: SKY_STARS.length * 0.9
+              };
+              SKY_STARS.push(entry);
+            }
+            if (!entry.note && s.note) entry.note = s.note;
+            entry.ids.push(s.id);
+            STAR_BY_ID[s.id] = entry;
           });
         });
 
-        for (let i = 0; i < 280; i++) {
-          const u = seededRandom(i * 3 + 1);
-          const v = seededRandom(i * 3 + 2);
-          const w = seededRandom(i * 3 + 3);
-          const ra = u * 360;
-          const dec = (Math.asin(v * 1.9 - 0.95) * 180) / Math.PI;
-          const mag = 2.4 + w * 2.6;
-          BACKGROUND_STARS.push({
-            id: `bg_${i}`,
-            ra: ra,
-            dec: dec,
-            mag: mag,
-            twinkle: i * 0.7
-          });
-        }
+        const CONSTELLATION_STAR_COUNT = SKY_STARS.length;
+        CATALOGUE.forEach(([name, bayer, ra, dec, mag], i) => {
+          for (let k = 0; k < CONSTELLATION_STAR_COUNT; k++) {
+            if (angSep(SKY_STARS[k].ra, SKY_STARS[k].dec, ra, dec) < 0.1) return;
+          }
+          SKY_STARS.push({ name, bayer, ra, dec, mag, variable: null, note: "", ids: [], twinkle: i * 0.7 });
+        });
+
+        /* ================= TIER 3 CHECK QUESTIONS ================= */
+        // One per discovery. "row" questions are answered by tapping a row in the star data table.
+        const CHECK_QUESTIONS = {
+          scorpius: {
+            type: "row",
+            q: "Which star in Scorpius is brightest? Tap its row in the star data.",
+            answer: "sco_antares",
+            explain: "Antares is brightest: it has the smallest magnitude number."
+          },
+          draco: {
+            type: "row",
+            q: "Which star in Draco is brightest? Tap its row in the star data.",
+            answer: "dra_eltanin",
+            explain: "Eltanin is brightest: it has the smallest magnitude number."
+          },
+          perseus: {
+            type: "choice",
+            q: "Mirfak is mag 1.79 and Algol is mag 2.09. Which looks brighter?",
+            options: ["Mirfak", "Algol"],
+            answer: 0,
+            explain: "Mirfak: smaller magnitude numbers are brighter."
+          },
+          andromeda: {
+            type: "choice",
+            q: "Is Andromeda north or south of the celestial equator?",
+            options: ["North", "South"],
+            answer: 0,
+            explain: "North: its Dec is positive."
+          },
+          auriga: {
+            type: "row",
+            q: "Which star in Auriga is brightest? Tap its row in the star data.",
+            answer: "aur_capella",
+            explain: "Capella is brightest: it has the smallest magnitude number."
+          },
+          aquila: {
+            type: "choice",
+            q: "Altair is mag 0.77 and Tarazed is mag 2.72. Which looks brighter?",
+            options: ["Altair", "Tarazed"],
+            answer: 0,
+            explain: "Altair: smaller magnitude numbers are brighter."
+          },
+          sagittarius: {
+            type: "choice",
+            q: "Is Sagittarius north or south of the celestial equator?",
+            options: ["North", "South"],
+            answer: 1,
+            explain: "South: its Dec is negative."
+          },
+          "ursa-minor": {
+            type: "choice",
+            q: "Polaris has Dec +89°. What does that tell you?",
+            options: [
+              "It sits almost exactly over Earth's North Pole",
+              "It is the brightest star in the sky",
+              "It is the closest star to Earth"
+            ],
+            answer: 0,
+            explain: "It sits almost exactly over Earth's North Pole."
+          }
+        };
 
         /* ================= GAME STATE ================= */
         const state = {
@@ -1439,8 +2350,14 @@
           completedConstellations: [],
           selectedStarIds: new Set(),
           connectedLines: new Set(),
-          lastSelectedStarId: null,
           hintActive: false,
+
+          showGrid: false,
+          raUnit: "h",
+          coachSeen: false,
+          gridPromptSeen: false,
+          checkAnswers: {},
+          hintedIds: [],
 
           camera: {
             ra: 184,
@@ -1451,32 +2368,91 @@
             zoom: 1
           },
 
-          isDragging: false,
-          dragStartMouseX: 0,
-          dragStartMouseY: 0,
-          dragStartRA: 0,
-          dragStartDec: 0,
-          draggedDistance: 0,
-
-          highlightReplayId: null,
+          highlightedIds: new Set(), // found constellations the learner has lit up in the sky
           revealPending: false,
           time: 0
         };
+
+        const TIER_CUTOFF = { 1: 3.4, 2: 4.3, 3: 5.0 };
+        const HIT_RADIUS = 30;
+        const TAP_SLOP = 6;
+        const LONG_PRESS_MS = 400;
+        const FLASH_MS = 1500;
+
+        function nowMs() {
+          return typeof performance !== "undefined" ? performance.now() : Date.now();
+        }
+
+        /* ================= SAVED PROGRESS ================= */
+        const SAVE_KEY = "stargazers-portal-progress";
+
+        function saveProgress() {
+          try {
+            localStorage.setItem(
+              SAVE_KEY,
+              JSON.stringify({
+                completed: state.completedConstellations,
+                checkAnswers: state.checkAnswers,
+                hinted: state.hintedIds,
+                coachSeen: state.coachSeen,
+                gridPromptSeen: state.gridPromptSeen
+              })
+            );
+          } catch (e) {}
+        }
+
+        function loadProgress() {
+          try {
+            const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || "null");
+            if (!saved) return;
+            const known = (id) => CONSTELLATIONS.some((c) => c.id === id);
+            if (Array.isArray(saved.completed)) state.completedConstellations = saved.completed.filter(known);
+            if (Array.isArray(saved.hinted)) state.hintedIds = saved.hinted.filter(known);
+            if (saved.checkAnswers && typeof saved.checkAnswers === "object") {
+              Object.keys(saved.checkAnswers).forEach((id) => {
+                if (known(id)) state.checkAnswers[id] = !!saved.checkAnswers[id];
+              });
+            }
+            state.coachSeen = !!saved.coachSeen;
+            state.gridPromptSeen = !!saved.gridPromptSeen;
+          } catch (e) {}
+        }
 
         /* ================= DOM ELEMENTS ================= */
         const skyCanvas = document.getElementById("skyCanvas");
         const ctx = skyCanvas.getContext("2d");
         const stage = document.getElementById("stage");
 
+        const targetCard = document.getElementById("targetCard");
+        const targetPreviewWrap = document.getElementById("targetPreviewWrap");
         const targetPreviewCanvas = document.getElementById("targetPreviewCanvas");
         const targetPreviewCtx = targetPreviewCanvas.getContext("2d");
         const targetTierLabel = document.getElementById("targetTierLabel");
         const targetName = document.getElementById("targetName");
         const targetDesc = document.getElementById("targetDesc");
+        const targetClue = document.getElementById("targetClue");
+        const takeMeBtn = document.getElementById("takeMeBtn");
 
         const hintBtn = document.getElementById("hintBtn");
+        const gridBtn = document.getElementById("gridBtn");
+        const gridPrompt = document.getElementById("gridPrompt");
         const zoomInBtn = document.getElementById("zoomInBtn");
         const zoomOutBtn = document.getElementById("zoomOutBtn");
+
+        const skyBar = document.getElementById("skyBar");
+        const hud = document.getElementById("hud");
+        const hudRA = document.getElementById("hudRA");
+        const hudDec = document.getElementById("hudDec");
+        const hudLive = document.getElementById("hudLive");
+        const legendScale = document.getElementById("legendScale");
+        const legendMarker = document.getElementById("legendMarker");
+        const legendStarMarker = document.getElementById("legendStarMarker");
+        const legendStar = document.getElementById("legendStar");
+        const legendLimit = document.getElementById("legendLimit");
+
+        const starInfo = document.getElementById("starInfo");
+        const starFlash = document.getElementById("starFlash");
+
         const scrapbookTrack = document.getElementById("scrapbookTrack");
         const collectedCount = document.getElementById("collectedCount");
         const emptyScrapbookMsg = document.getElementById("emptyScrapbookMsg");
@@ -1485,6 +2461,14 @@
         const revealTitle = document.getElementById("revealTitle");
         const revealSub = document.getElementById("revealSub");
         const revealFact = document.getElementById("revealFact");
+        const revealCentre = document.getElementById("revealCentre");
+        const coachMark = document.getElementById("coachMark");
+        const revealData = document.getElementById("revealData");
+        const revealTable = document.getElementById("revealTable");
+        const checkBox = document.getElementById("checkBox");
+        const checkText = document.getElementById("checkText");
+        const checkOptions = document.getElementById("checkOptions");
+        const checkFeedback = document.getElementById("checkFeedback");
         const revealCanvas = document.getElementById("revealCanvas");
         const revealCtx = revealCanvas.getContext("2d");
         const nextTargetBtn = document.getElementById("nextTargetBtn");
@@ -1494,9 +2478,13 @@
         const recallTitle = document.getElementById("recallTitle");
         const recallSub = document.getElementById("recallSub");
         const recallFact = document.getElementById("recallFact");
+        const recallCentre = document.getElementById("recallCentre");
+        const recallTable = document.getElementById("recallTable");
         const recallCanvas = document.getElementById("recallCanvas");
         const recallCtx = recallCanvas.getContext("2d");
         const recallHighlightBtn = document.getElementById("recallHighlightBtn");
+        const recallPrevBtn = document.getElementById("recallPrevBtn");
+        const recallNextBtn = document.getElementById("recallNextBtn");
 
         let activeRecallConstellation = null;
 
@@ -1548,6 +2536,120 @@
           });
         }
 
+        /* ================= DISPLAY FORMATS ================= */
+        const MINUS = "−";
+        const RA_TIP =
+          "Right Ascension: how far round the sky a star is, like longitude on Earth. Measured in hours, 0h to 24h.";
+        const DEC_TIP =
+          "Declination: how far north or south a star is, like latitude. +90° is above the North Pole, " +
+          MINUS +
+          "90° above the South Pole.";
+        const MAG_TIP =
+          "Apparent magnitude: how bright a star looks from Earth. Smaller numbers are brighter. Sirius is " +
+          MINUS +
+          "1.5; the faintest stars you can see on a dark night are about +6.";
+
+        function pad2(n) {
+          return (n < 10 ? "0" : "") + n;
+        }
+
+        function normRA(deg) {
+          return ((deg % 360) + 360) % 360;
+        }
+
+        // Degrees -> "07h 45m" (unit "h") or "116.3°" (unit "deg").
+        function formatRA(deg, unit) {
+          const d = normRA(deg);
+          if (unit === "deg") {
+            const v = d.toFixed(1);
+            return (v === "360.0" ? "0.0" : v) + "°";
+          }
+          const totalMin = Math.round(d * 4) % 1440;
+          return pad2(Math.floor(totalMin / 60)) + "h " + pad2(totalMin % 60) + "m";
+        }
+
+        // Degrees -> "+28°", or "+28° 02′" with detail. Always signed, with a true minus.
+        function formatDec(deg, detail) {
+          if (!detail) {
+            const r = Math.round(deg);
+            return (r < 0 ? MINUS : "+") + pad2(Math.abs(r)) + "°";
+          }
+          const totalArcmin = Math.round(Math.abs(deg) * 60);
+          const sign = deg < 0 && totalArcmin > 0 ? MINUS : "+";
+          return sign + pad2(Math.floor(totalArcmin / 60)) + "° " + pad2(totalArcmin % 60) + "′";
+        }
+
+        function formatMag(m, places) {
+          const v = Math.abs(m).toFixed(places);
+          return (m < 0 && parseFloat(v) !== 0 ? MINUS : "") + v;
+        }
+
+        // "Look near RA 7h 30m, Dec +25°": rounded to 30 m and 5° so it points to an area, not a star.
+        function getClue(target) {
+          const halfHours = Math.round(normRA(target.centerRA) / 7.5) % 48;
+          const dec = Math.round(target.centerDec / 5) * 5;
+          return (
+            "Look near RA " +
+            Math.floor(halfHours / 2) +
+            "h " +
+            (halfHours % 2 ? "30" : "00") +
+            "m, Dec " +
+            (dec < 0 ? MINUS : "+") +
+            Math.abs(dec) +
+            "°"
+          );
+        }
+
+        function centreLine(constell) {
+          return "Centre: RA " + formatRA(constell.centerRA, "h") + ", Dec " + formatDec(constell.centerDec);
+        }
+
+        function escapeHtml(text) {
+          return String(text).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+        }
+
+        // The sorted star table shown on the discovery card and the scrapbook card.
+        function renderStarTable(constellation) {
+          const rows = constellation.stars
+            .slice()
+            .sort((a, b) => a.mag - b.mag)
+            .map((s, i) => {
+              const variable = s.variable
+                ? ' <span class="var" title="Changes brightness: mag ' + escapeHtml(s.variable) + '">varies</span>'
+                : "";
+              return (
+                '<tr data-star="' +
+                s.id +
+                '"' +
+                (i === 0 ? ' class="brightest"' : "") +
+                "><td>" +
+                escapeHtml(s.name) +
+                variable +
+                "</td><td>" +
+                formatRA(s.ra, "h") +
+                " (" +
+                formatRA(s.ra, "deg") +
+                ")</td><td>" +
+                formatDec(s.dec, true) +
+                "</td><td>" +
+                formatMag(s.mag, 2) +
+                "</td></tr>"
+              );
+            })
+            .join("");
+          return (
+            '<table class="star-table"><thead><tr><th scope="col">Star</th><th scope="col" title="' +
+            RA_TIP +
+            '">RA</th><th scope="col" title="' +
+            DEC_TIP +
+            '">Dec</th><th scope="col" title="' +
+            MAG_TIP +
+            '">Mag</th></tr></thead><tbody>' +
+            rows +
+            "</tbody></table>"
+          );
+        }
+
         /* ================= TARGET CARD & PROGRESSION HELPERS ================= */
         function getPairKey(a, b) {
           return a < b ? `${a}--${b}` : `${b}--${a}`;
@@ -1557,21 +2659,44 @@
           return CONSTELLATIONS[state.currentTargetIndex];
         }
 
-        function setTargetIndex(idx, panToCenter = true) {
+        function getTierCutoff() {
+          return TIER_CUTOFF[getCurrentTarget().tier];
+        }
+
+        let lastTier = null;
+        let lastCutoff = null;
+        let cutoffFade = null; // stars between the old and new limit fade in when a tier unlocks
+
+        function setTargetIndex(idx, panToTarget = true) {
           state.currentTargetIndex = Math.max(0, Math.min(CONSTELLATIONS.length - 1, idx));
           const target = getCurrentTarget();
 
           state.selectedStarIds.clear();
           state.connectedLines.clear();
-          state.lastSelectedStarId = null;
-          state.highlightReplayId = null;
+          state.hintActive = false;
+          hintBtn.classList.remove("on");
+          hideStarInfo();
+          markStarOnLegend(null);
 
           targetTierLabel.textContent = `Round ${state.currentTargetIndex + 1} • Tier ${target.tier}`;
           updateTargetCardName();
-
           drawShapePreview(targetPreviewCtx, targetPreviewCanvas.width, targetPreviewCanvas.height, target);
 
-          if (panToCenter) {
+          // The grid is offered in Tier 1 and switched on when Tier 2 begins.
+          if (target.tier !== lastTier) {
+            if (target.tier === 2 || (lastTier === null && target.tier === 3)) setGrid(true);
+            lastTier = target.tier;
+          }
+
+          const cutoff = getTierCutoff();
+          if (lastCutoff !== null && cutoff > lastCutoff) {
+            cutoffFade = { from: lastCutoff, t0: nowMs() };
+          }
+          lastCutoff = cutoff;
+          updateLegend();
+
+          // Tier 1 glides near the target. From Tier 2 the learner navigates by the clue instead.
+          if (panToTarget && target.tier === 1) {
             glideCameraNear(target);
           }
         }
@@ -1582,72 +2707,113 @@
           const revealed = state.completedConstellations.includes(target.id);
           targetName.textContent = revealed ? target.name : "? ? ?";
           targetDesc.textContent = revealed ? target.desc : "Connect the stars to reveal its name";
+
+          const showClue = target.tier >= 2;
+          targetClue.hidden = !showClue;
+          takeMeBtn.hidden = !showClue;
+          if (showClue) targetClue.textContent = getClue(target);
+        }
+
+        function markHinted() {
+          const id = getCurrentTarget().id;
+          if (!state.hintedIds.includes(id)) {
+            state.hintedIds.push(id);
+            saveProgress();
+          }
+        }
+
+        // Below 600 px the card collapses to its thumbnail; tapping the thumbnail opens it.
+        targetPreviewWrap.addEventListener("click", () => {
+          targetCard.classList.toggle("open");
+        });
+
+        takeMeBtn.addEventListener("click", () => {
+          markHinted();
+          glideCameraNear(getCurrentTarget());
+        });
+
+        /* ================= STEREOGRAPHIC PROJECTION ================= */
+        // Projects (ra, dec) about the centre (ra0, dec0). The result is in degrees on the tangent
+        // plane: x grows to the right, so RA increases to the left as on the real sky; y grows north.
+        // Returns null for points too far round the back of the sphere to draw.
+        function project(ra, dec, ra0, dec0) {
+          const dRA = (ra - ra0) * DEG;
+          const d = dec * DEG;
+          const d0 = dec0 * DEG;
+          const cosc = Math.sin(d0) * Math.sin(d) + Math.cos(d0) * Math.cos(d) * Math.cos(dRA);
+          if (cosc < -0.8) return null;
+          const k = 2 / (1 + cosc) / DEG;
+          return {
+            x: -k * Math.cos(d) * Math.sin(dRA),
+            y: k * (Math.cos(d0) * Math.sin(d) - Math.sin(d0) * Math.cos(d) * Math.cos(dRA))
+          };
+        }
+
+        // A constellation projected about its own centre, with its bounding box centred on (0, 0).
+        // Screen-style axes (y down), in degrees. Used by thumbnails and the discovery twirl so the
+        // card and the sky show the same shape.
+        function figurePoints(constell) {
+          const pts = constell.stars.map((s) => {
+            const p = project(s.ra, s.dec, constell.centerRA, constell.centerDec);
+            return { id: s.id, x: p.x, y: -p.y, mag: s.mag };
+          });
+          const xs = pts.map((pt) => pt.x);
+          const ys = pts.map((pt) => pt.y);
+          const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+          const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+          pts.forEach((pt) => {
+            pt.x -= cx;
+            pt.y -= cy;
+          });
+          return {
+            pts,
+            cx,
+            cy,
+            spanX: Math.max(Math.max(...xs) - Math.min(...xs), 6),
+            spanY: Math.max(Math.max(...ys) - Math.min(...ys), 6)
+          };
         }
 
         function drawShapePreview(pCtx, w, h, constell) {
           pCtx.clearRect(0, 0, w, h);
 
-          let minRA = 999,
-            maxRA = -999,
-            minDec = 999,
-            maxDec = -999;
-          constell.stars.forEach((s) => {
-            if (s.ra < minRA) minRA = s.ra;
-            if (s.ra > maxRA) maxRA = s.ra;
-            if (s.dec < minDec) minDec = s.dec;
-            if (s.dec > maxDec) maxDec = s.dec;
+          const fig = figurePoints(constell);
+          const pad = w * 0.12;
+          const scale = Math.min((w - pad * 2) / fig.spanX, (h - pad * 2) / fig.spanY);
+          const at = {};
+          fig.pts.forEach((pt) => {
+            at[pt.id] = { x: w / 2 + pt.x * scale, y: h / 2 + pt.y * scale };
           });
-
-          const spanRA = Math.max(maxRA - minRA, 8);
-          const spanDec = Math.max(maxDec - minDec, 8);
-          const pad = 14;
-
-          function project(ra, dec) {
-            const x = pad + ((ra - minRA) / spanRA) * (w - pad * 2);
-            const y = h - (pad + ((dec - minDec) / spanDec) * (h - pad * 2));
-            return { x, y };
-          }
 
           pCtx.strokeStyle = "rgba(127, 211, 255, 0.85)";
           pCtx.lineWidth = 1.8;
           pCtx.beginPath();
           constell.lines.forEach(([idA, idB]) => {
-            const sA = constell.stars.find((s) => s.id === idA);
-            const sB = constell.stars.find((s) => s.id === idB);
-            if (sA && sB) {
-              const pA = project(sA.ra, sA.dec);
-              const pB = project(sB.ra, sB.dec);
-              pCtx.moveTo(pA.x, pA.y);
-              pCtx.lineTo(pB.x, pB.y);
+            if (at[idA] && at[idB]) {
+              pCtx.moveTo(at[idA].x, at[idA].y);
+              pCtx.lineTo(at[idB].x, at[idB].y);
             }
           });
           pCtx.stroke();
 
-          constell.stars.forEach((s) => {
-            const pt = project(s.ra, s.dec);
+          fig.pts.forEach((pt) => {
             pCtx.fillStyle = "#ffffff";
             pCtx.beginPath();
-            pCtx.arc(pt.x, pt.y, 2.8, 0, Math.PI * 2);
+            pCtx.arc(at[pt.id].x, at[pt.id].y, 2.8, 0, Math.PI * 2);
             pCtx.fill();
           });
         }
 
-        /* ================= TIER PARAMETERS (SECTION 6 OF SPEC) ================= */
-        function getTierCutoff() {
-          const target = getCurrentTarget();
-          if (target.tier === 1) return 2.5;
-          if (target.tier === 2) return 3.5;
-          return 5.0;
-        }
-
-        /* ================= CANVAS & EQUIRECTANGULAR PROJECTION ================= */
+        /* ================= CANVAS & CAMERA ================= */
         let width = 0;
         let height = 0;
+        let barHeight = 40;
 
         function resizeCanvas() {
           const rect = stage.getBoundingClientRect();
           width = rect.width;
           height = rect.height;
+          barHeight = skyBar.offsetHeight || 40;
           const dpr = window.devicePixelRatio || 1;
           skyCanvas.width = width * dpr;
           skyCanvas.height = height * dpr;
@@ -1659,49 +2825,74 @@
         const MIN_ZOOM = 0.7;
         const MAX_ZOOM = 6;
 
-        function getBaseSpan() {
-          return Math.max(width * 1.5, 1200) * state.camera.zoom;
+        function getPxPerDeg() {
+          return (Math.max(width * 1.5, 1200) / 360) * state.camera.zoom;
         }
 
-        // The whole sky is reachable in every round, from pole to pole.
         function clampDec(dec) {
-          return Math.max(-85, Math.min(85, dec));
+          return Math.max(-90, Math.min(90, dec));
         }
 
         function celestialToScreen(ra, dec) {
-          const baseSpan = getBaseSpan();
+          const p = project(ra, dec, state.camera.ra, state.camera.dec);
+          if (!p) return null;
+          const s = getPxPerDeg();
+          return { x: width / 2 + p.x * s, y: height / 2 - p.y * s };
+        }
 
-          let diffRA = ra - state.camera.ra;
-          while (diffRA > 180) diffRA -= 360;
-          while (diffRA < -180) diffRA += 360;
+        // Inverse of celestialToScreen.
+        function screenToCelestial(x, y) {
+          const s = getPxPerDeg();
+          const X = (-(x - width / 2) / s) * DEG;
+          const Y = (-(y - height / 2) / s) * DEG;
+          const rho = Math.hypot(X, Y);
+          if (rho < 1e-9) return { ra: state.camera.ra, dec: state.camera.dec };
+          const c = 2 * Math.atan(rho / 2);
+          const d0 = state.camera.dec * DEG;
+          const dec = Math.asin(Math.max(-1, Math.min(1, Math.cos(c) * Math.sin(d0) + (Y * Math.sin(c) * Math.cos(d0)) / rho)));
+          const ra =
+            state.camera.ra +
+            Math.atan2(X * Math.sin(c), rho * Math.cos(d0) * Math.cos(c) - Y * Math.sin(d0) * Math.sin(c)) / DEG;
+          return { ra: normRA(ra), dec: dec / DEG };
+        }
 
-          const screenX = width / 2 + (diffRA / 360) * baseSpan;
-          const decSpan = baseSpan / 2;
-          const diffDec = dec - state.camera.dec;
-          const screenY = height / 2 - (diffDec / 180) * decSpan;
+        function onScreen(pt, margin) {
+          return pt && pt.x > -margin && pt.x < width + margin && pt.y > -margin && pt.y < height + margin;
+        }
 
-          return { x: screenX, y: screenY };
+        // Turns the camera so the sky follows the finger by (dx, dy) pixels.
+        function panByPixels(dx, dy) {
+          const s = getPxPerDeg();
+          const dec = clampDec(state.camera.dec + dy / s);
+          const ra = normRA(state.camera.ra + dx / s / Math.max(0.05, Math.cos(dec * DEG)));
+          state.camera.ra = ra;
+          state.camera.dec = dec;
+          state.camera.targetRA = ra;
+          state.camera.targetDec = dec;
+          state.camera.isGliding = false;
         }
 
         function glideCameraTo(targetRA, targetDec) {
-          state.camera.targetRA = ((targetRA % 360) + 360) % 360;
-          state.camera.targetDec = Math.max(-70, Math.min(70, targetDec));
+          state.camera.targetRA = normRA(targetRA);
+          state.camera.targetDec = clampDec(targetDec);
           state.camera.isGliding = true;
         }
 
         // Glide to the general area of a constellation rather than dead-centre on it,
         // so the learner still has to pick the pattern out of the surrounding sky.
         function glideCameraNear(constell) {
-          const degPerPx = 360 / getBaseSpan();
+          const degPerPx = 1 / getPxPerDeg();
           let offX, offY;
           do {
             const ang = Math.random() * Math.PI * 2;
             const frac = 0.12 + Math.random() * 0.12;
+            // where the pattern's centre should land, relative to the middle of the screen
             offX = Math.cos(ang) * frac * width;
             offY = Math.sin(ang) * frac * height;
-            // offX > 0 && offY < 0 would park the pattern under the target card
-          } while (offX > 0 && offY < 0);
-          glideCameraTo(constell.centerRA + offX * degPerPx, clampDec(constell.centerDec + offY * degPerPx));
+            // up and to the left would park the pattern under the target card
+          } while (offX < 0 && offY < 0);
+          const cosDec = Math.max(0.2, Math.cos(constell.centerDec * DEG));
+          glideCameraTo(constell.centerRA + (offX * degPerPx) / cosDec, constell.centerDec + offY * degPerPx);
         }
 
         /* ================= ZOOM ================= */
@@ -1710,22 +2901,15 @@
           const z = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
           if (z === state.camera.zoom) return;
 
-          const oldSpan = getBaseSpan();
-          const anchorRA = state.camera.ra + ((ax - width / 2) / oldSpan) * 360;
-          const anchorDec = state.camera.dec - ((ay - height / 2) / oldSpan) * 360;
-
+          const anchor = screenToCelestial(ax, ay);
           state.camera.zoom = z;
-          const newSpan = getBaseSpan();
-
-          let newRA = anchorRA - ((ax - width / 2) / newSpan) * 360;
-          newRA = ((newRA % 360) + 360) % 360;
-          const newDec = clampDec(anchorDec + ((ay - height / 2) / newSpan) * 360);
-
-          state.camera.ra = newRA;
-          state.camera.dec = newDec;
-          state.camera.targetRA = newRA;
-          state.camera.targetDec = newDec;
+          for (let i = 0; i < 6; i++) {
+            const pt = celestialToScreen(anchor.ra, anchor.dec);
+            if (!pt) break;
+            panByPixels(ax - pt.x, ay - pt.y);
+          }
           state.camera.isGliding = false;
+          hideStarInfo();
 
           zoomInBtn.disabled = z >= MAX_ZOOM;
           zoomOutBtn.disabled = z <= MIN_ZOOM;
@@ -1750,173 +2934,390 @@
           setZoom(state.camera.zoom / 1.4, width / 2, height / 2);
         });
 
-        /* ================= INTERACTION: LOOK AROUND BY PANNING ================= */
-        stage.addEventListener("mousedown", (e) => {
-          if (e.button !== 0 || e.target !== skyCanvas) return;
-          getAudioContext();
-          state.isDragging = true;
-          state.draggedDistance = 0;
-          state.dragStartMouseX = e.clientX;
-          state.dragStartMouseY = e.clientY;
-          state.dragStartRA = state.camera.ra;
-          state.dragStartDec = state.camera.dec;
-          stage.classList.add("panning");
-        });
-
-        window.addEventListener("mousemove", (e) => {
-          if (!state.isDragging) return;
-
-          const dx = e.clientX - state.dragStartMouseX;
-          const dy = e.clientY - state.dragStartMouseY;
-          state.draggedDistance += Math.abs(dx) + Math.abs(dy);
-
-          const baseSpan = getBaseSpan();
-          const decSpan = baseSpan / 2;
-
-          let newRA = state.dragStartRA - (dx / baseSpan) * 360;
-          while (newRA >= 360) newRA -= 360;
-          while (newRA < 0) newRA += 360;
-
-          const newDec = clampDec(state.dragStartDec + (dy / decSpan) * 180);
-
-          state.camera.ra = newRA;
-          state.camera.dec = newDec;
-          state.camera.targetRA = newRA;
-          state.camera.targetDec = newDec;
-          state.camera.isGliding = false;
-        });
-
-        window.addEventListener("mouseup", (e) => {
-          if (!state.isDragging) return;
-          state.isDragging = false;
-          stage.classList.remove("panning");
-
-          if (state.draggedDistance < 5) {
-            const rect = stage.getBoundingClientRect();
-            handleStarTap(e.clientX - rect.left, e.clientY - rect.top);
-          }
-        });
-
+        /* ================= INTERACTION: PAN, PINCH, TAP, HOVER AND LONG-PRESS ================= */
+        const pointers = new Map();
+        let drag = null; // the single pointer that is panning or tapping
         let pinch = null;
-        function touchDistance(e) {
-          return Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-          );
+        let pressTimer = null;
+
+        function stagePoint(e) {
+          const rect = stage.getBoundingClientRect();
+          return { x: e.clientX - rect.left, y: e.clientY - rect.top };
         }
 
-        stage.addEventListener("touchstart", (e) => {
-          if (e.target !== skyCanvas) return;
+        function pinchState() {
+          const [a, b] = Array.from(pointers.values());
+          const rect = stage.getBoundingClientRect();
+          return {
+            dist: Math.hypot(a.x - b.x, a.y - b.y),
+            x: (a.x + b.x) / 2 - rect.left,
+            y: (a.y + b.y) / 2 - rect.top
+          };
+        }
+
+        // The nearest star that is currently drawn, within `radius` pixels of (x, y).
+        function nearestStar(x, y, radius) {
+          const cutoff = getTierCutoff();
+          let best = null;
+          let bestDist = radius;
+          for (const s of SKY_STARS) {
+            if (s.mag > cutoff) continue;
+            const pt = celestialToScreen(s.ra, s.dec);
+            if (!pt) continue;
+            const d = Math.hypot(pt.x - x, pt.y - y);
+            if (d < bestDist) {
+              bestDist = d;
+              best = s;
+            }
+          }
+          return best;
+        }
+
+        skyCanvas.addEventListener("pointerdown", (e) => {
+          if (e.pointerType === "mouse" && e.button !== 0) return;
           getAudioContext();
-          if (e.touches.length === 2) {
-            state.isDragging = false;
-            pinch = { dist: touchDistance(e), zoom: state.camera.zoom };
-          } else if (e.touches.length === 1) {
-            state.isDragging = true;
-            state.draggedDistance = 0;
-            state.dragStartMouseX = e.touches[0].clientX;
-            state.dragStartMouseY = e.touches[0].clientY;
-            state.dragStartRA = state.camera.ra;
-            state.dragStartDec = state.camera.dec;
+          try {
+            skyCanvas.setPointerCapture(e.pointerId);
+          } catch (err) {}
+          pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          hideStarInfo();
+          clearTimeout(pressTimer);
+
+          if (pointers.size === 1) {
+            const p = stagePoint(e);
+            drag = { id: e.pointerId, lastX: e.clientX, lastY: e.clientY, startX: p.x, startY: p.y, moved: 0, longPressed: false };
+            stage.classList.add("panning");
+
+            // Touch has no hover, so a long press opens the star info instead. It never connects a star.
+            if (e.pointerType !== "mouse") {
+              const pressed = drag;
+              pressTimer = setTimeout(() => {
+                if (drag !== pressed || pressed.moved >= TAP_SLOP) return;
+                const star = nearestStar(pressed.startX, pressed.startY, HIT_RADIUS);
+                if (!star) return;
+                pressed.longPressed = true;
+                const pt = celestialToScreen(star.ra, star.dec);
+                showStarInfo(star, pt.x, pt.y);
+              }, LONG_PRESS_MS);
+            }
+          } else if (pointers.size === 2) {
+            drag = null;
+            pinch = { dist: pinchState().dist, zoom: state.camera.zoom };
           }
         });
 
-        stage.addEventListener("touchmove", (e) => {
-          if (pinch && e.touches.length === 2) {
-            const rect = stage.getBoundingClientRect();
-            setZoom(
-              (pinch.zoom * touchDistance(e)) / Math.max(1, pinch.dist),
-              (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left,
-              (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top
-            );
+        skyCanvas.addEventListener("pointermove", (e) => {
+          if (!pointers.has(e.pointerId)) {
+            if (e.pointerType === "mouse") hoverStar(e);
             return;
           }
-          if (!state.isDragging || e.touches.length !== 1) return;
-          const dx = e.touches[0].clientX - state.dragStartMouseX;
-          const dy = e.touches[0].clientY - state.dragStartMouseY;
-          state.draggedDistance += Math.abs(dx) + Math.abs(dy);
+          pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
-          const baseSpan = getBaseSpan();
-          const decSpan = baseSpan / 2;
+          if (pinch && pointers.size === 2) {
+            const now = pinchState();
+            setZoom((pinch.zoom * now.dist) / Math.max(1, pinch.dist), now.x, now.y);
+            return;
+          }
+          if (!drag || drag.id !== e.pointerId || drag.longPressed) return;
 
-          let newRA = state.dragStartRA - (dx / baseSpan) * 360;
-          while (newRA >= 360) newRA -= 360;
-          while (newRA < 0) newRA += 360;
+          const dx = e.clientX - drag.lastX;
+          const dy = e.clientY - drag.lastY;
+          drag.lastX = e.clientX;
+          drag.lastY = e.clientY;
+          drag.moved += Math.abs(dx) + Math.abs(dy);
+          if (drag.moved < TAP_SLOP) return;
 
-          const newDec = clampDec(state.dragStartDec + (dy / decSpan) * 180);
-
-          state.camera.ra = newRA;
-          state.camera.dec = newDec;
-          state.camera.targetRA = newRA;
-          state.camera.targetDec = newDec;
-          state.camera.isGliding = false;
+          clearTimeout(pressTimer);
+          panByPixels(dx, dy);
         });
 
-        stage.addEventListener("touchend", (e) => {
+        function endPointer(e, cancelled) {
+          if (!pointers.has(e.pointerId)) return;
+          pointers.delete(e.pointerId);
+          clearTimeout(pressTimer);
+
           if (pinch) {
-            if (e.touches.length < 2) pinch = null;
-            state.isDragging = false;
+            if (pointers.size < 2) pinch = null;
+            drag = null;
+            if (pointers.size === 0) stage.classList.remove("panning");
             return;
           }
-          if (state.isDragging && state.draggedDistance < 6) {
-            const rect = stage.getBoundingClientRect();
-            handleStarTap(state.dragStartMouseX - rect.left, state.dragStartMouseY - rect.top);
+          if (drag && drag.id === e.pointerId) {
+            const ended = drag;
+            drag = null;
+            stage.classList.remove("panning");
+            if (!cancelled && ended.moved < TAP_SLOP && !ended.longPressed) {
+              handleStarTap(ended.startX, ended.startY);
+            }
           }
-          state.isDragging = false;
+        }
+
+        skyCanvas.addEventListener("pointerup", (e) => endPointer(e, false));
+        skyCanvas.addEventListener("pointercancel", (e) => endPointer(e, true));
+        skyCanvas.addEventListener("pointerleave", (e) => {
+          if (e.pointerType === "mouse" && !pointers.has(e.pointerId)) hideStarInfo();
         });
 
         hintBtn.addEventListener("click", () => {
           state.hintActive = !state.hintActive;
           hintBtn.classList.toggle("on", state.hintActive);
+          if (state.hintActive) markHinted();
           playTone(state.hintActive ? 783.99 : 440, "sine", 0.15, 0.12);
         });
 
+        // Arrow keys pan, G toggles the grid, U switches RA units.
+        document.addEventListener("keydown", (e) => {
+          if (completionOverlay.classList.contains("show")) return;
+          if (e.ctrlKey || e.metaKey || e.altKey) return;
+          const tag = e.target && e.target.tagName;
+          if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+          const step = 40;
+          const pan = { ArrowLeft: [step, 0], ArrowRight: [-step, 0], ArrowUp: [0, step], ArrowDown: [0, -step] }[e.key];
+          if (pan) {
+            e.preventDefault();
+            hideStarInfo();
+            panByPixels(pan[0], pan[1]);
+          } else if (e.key === "g" || e.key === "G") {
+            setGrid(!state.showGrid);
+          } else if (e.key === "u" || e.key === "U") {
+            toggleRAUnit();
+          }
+        });
+
+        /* ================= SKY COORDINATE READOUT (HUD) ================= */
+        let hudLastUpdate = 0;
+        let hudText = "";
+        let hudLiveTimer = null;
+
+        // Writes the RA and Dec under the crosshair into the readout, at most ~10 times a second.
+        // The screen-reader copy is only refreshed once the view has stopped moving.
+        function updateHUD(force) {
+          const t = nowMs();
+          if (!force && t - hudLastUpdate < 100) return;
+          hudLastUpdate = t;
+
+          const ra = "RA " + formatRA(state.camera.ra, state.raUnit);
+          const dec = "Dec " + formatDec(state.camera.dec);
+          const text = ra + " · " + dec;
+          if (text === hudText) return;
+          hudText = text;
+          hudRA.textContent = ra;
+          hudDec.textContent = dec;
+
+          clearTimeout(hudLiveTimer);
+          hudLiveTimer = setTimeout(() => {
+            hudLive.textContent = "Sky position: " + text;
+          }, 700);
+        }
+
+        function toggleRAUnit() {
+          state.raUnit = state.raUnit === "h" ? "deg" : "h";
+          updateHUD(true);
+        }
+
+        hud.addEventListener("click", toggleRAUnit);
+
+        /* ================= GRID TOGGLE ================= */
+        function dismissGridPrompt() {
+          if (gridPrompt.hidden) return;
+          gridPrompt.hidden = true;
+          state.gridPromptSeen = true;
+          saveProgress();
+        }
+
+        function setGrid(on) {
+          state.showGrid = on;
+          gridBtn.classList.toggle("on", on);
+          gridBtn.setAttribute("aria-pressed", on ? "true" : "false");
+          dismissGridPrompt();
+        }
+
+        gridBtn.addEventListener("click", () => setGrid(!state.showGrid));
+        gridPrompt.addEventListener("click", dismissGridPrompt);
+
+        /* ================= MAGNITUDE LEGEND ================= */
+        const LEGEND_MAGS = [-1, 0, 1, 2, 3, 4, 5];
+        const LEGEND_STEP_PX = 22;
+        const legendSteps = [];
+
+        function starRadius(mag) {
+          return Math.max(0.7, 4.2 * Math.pow(10, -0.2 * mag));
+        }
+
+        function starOpacity(mag) {
+          return Math.min(1.0, Math.max(0.2, (5.2 - mag) / 4.5));
+        }
+
+        // Dots drawn at the sim's own star sizes for mag -1 to 5.
+        function buildLegend() {
+          LEGEND_MAGS.forEach((mag) => {
+            const step = document.createElement("div");
+            step.className = "lg-step";
+            const dot = document.createElement("i");
+            const size = (starRadius(mag) * 2).toFixed(1) + "px";
+            dot.style.width = size;
+            dot.style.height = size;
+            const label = document.createElement("b");
+            label.textContent = formatMag(mag, 0);
+            step.appendChild(dot);
+            step.appendChild(label);
+            legendScale.appendChild(step);
+            legendSteps.push({ mag, step });
+          });
+        }
+
+        // Slides the marker to the current tier's limit.
+        function updateLegend() {
+          const cutoff = getTierCutoff();
+          legendMarker.style.left = ((cutoff - LEGEND_MAGS[0]) * LEGEND_STEP_PX + LEGEND_STEP_PX / 2).toFixed(1) + "px";
+          legendLimit.textContent = "Showing stars brighter than mag " + formatMag(cutoff, 1);
+          legendSteps.forEach(({ mag, step }) => step.classList.toggle("dim", mag > cutoff));
+        }
+
+        // Tapping (or pointing at) a star slides the blue pointer to its magnitude on the scale,
+        // so the learner sees where that star sits between bright and faint.
+        function markStarOnLegend(star) {
+          if (!star) {
+            legendStarMarker.classList.remove("show");
+            legendStar.textContent = "";
+            return;
+          }
+          const lo = LEGEND_MAGS[0];
+          const hi = LEGEND_MAGS[LEGEND_MAGS.length - 1];
+          const mag = Math.max(lo - 0.5, Math.min(hi + 0.5, star.mag));
+          legendStarMarker.style.left = ((mag - lo) * LEGEND_STEP_PX + LEGEND_STEP_PX / 2).toFixed(1) + "px";
+          legendStarMarker.classList.add("show");
+          legendStar.textContent = star.name + ": mag " + formatMag(star.mag, 2);
+        }
+
+        /* ================= STAR INFO POPOVER AND TAP LABEL ================= */
+        let infoStar = null;
+
+        function showStarInfo(star, x, y) {
+          if (infoStar === star) return;
+          infoStar = star;
+          markStarOnLegend(star);
+
+          const filled = star.mag < 0.5 ? 5 : star.mag < 1.5 ? 4 : star.mag < 2.5 ? 3 : star.mag < 3.5 ? 2 : 1;
+          let bar = "";
+          for (let i = 0; i < 5; i++) bar += i < filled ? '<i class="on"></i>' : "<i></i>";
+
+          starInfo.innerHTML =
+            '<div class="si-name">' +
+            escapeHtml(star.name) +
+            (star.bayer ? '<span class="si-bayer">' + escapeHtml(star.bayer) + "</span>" : "") +
+            '</div><div class="si-row"><span title="' +
+            RA_TIP +
+            '">RA</span><b>' +
+            formatRA(star.ra, state.raUnit) +
+            '</b></div><div class="si-row"><span title="' +
+            DEC_TIP +
+            '">Dec</span><b>' +
+            formatDec(star.dec, true) +
+            '</b></div><div class="si-row"><span title="' +
+            MAG_TIP +
+            '">Brightness (mag)</span><b>' +
+            formatMag(star.mag, 2) +
+            '</b></div><div class="si-bar" aria-hidden="true">' +
+            bar +
+            "</div>" +
+            (star.variable ? '<div class="si-var">Changes brightness (mag ' + escapeHtml(star.variable) + ")</div>" : "") +
+            (star.note ? '<div class="si-note">' + escapeHtml(star.note) + "</div>" : "");
+          starInfo.classList.add("show");
+
+          // Sit beside the star, flipping to the other side to stay on screen.
+          const w = starInfo.offsetWidth || 200;
+          const h = starInfo.offsetHeight || 120;
+          let left = x + 16;
+          if (left + w > width - 8) left = x - 16 - w;
+          left = Math.max(8, left);
+          const top = Math.max(8, Math.min(height - barHeight - h - 8, y - h / 2));
+          starInfo.style.left = left + "px";
+          starInfo.style.top = top + "px";
+        }
+
+        function hideStarInfo() {
+          if (!infoStar) return;
+          infoStar = null;
+          starInfo.classList.remove("show");
+        }
+
+        function hoverStar(e) {
+          const p = stagePoint(e);
+          const star = nearestStar(p.x, p.y, 12);
+          if (!star) {
+            hideStarInfo();
+            return;
+          }
+          const pt = celestialToScreen(star.ra, star.dec);
+          showStarInfo(star, pt.x, pt.y);
+        }
+
+        // Each correct tap flashes "Dubhe · mag 1.8" above the star for 1.5 s.
+        let flash = null;
+
+        function flashStarLabel(star) {
+          flash = { star, until: nowMs() + FLASH_MS };
+          starFlash.textContent = star.name + " · mag " + formatMag(star.mag, 1);
+          starFlash.classList.add("show");
+          positionFlash();
+        }
+
+        function positionFlash() {
+          if (!flash) return;
+          const pt = nowMs() < flash.until ? celestialToScreen(flash.star.ra, flash.star.dec) : null;
+          if (!pt) {
+            flash = null;
+            starFlash.classList.remove("show");
+            return;
+          }
+          starFlash.style.left = pt.x + "px";
+          starFlash.style.top = pt.y - 14 + "px";
+        }
+
         /* ================= GAMEPLAY: STAR SELECTION & CONNECTING LINES ================= */
+        let wrongRing = null; // brief red ring on a tapped star that is not part of the target
+        let pulse = null; // gold pulse on a star picked from a data table
+
         function handleStarTap(x, y) {
           if (state.revealPending) return;
           const target = getCurrentTarget();
-          let hitStar = null;
-          let hitDist = 30;
 
           // Nearest star within reach wins, so close neighbours stay individually tappable.
-          for (let s of target.stars) {
-            const pt = celestialToScreen(s.ra, s.dec);
-            const d = Math.hypot(pt.x - x, pt.y - y);
-            if (d < hitDist) {
-              hitDist = d;
-              hitStar = s;
-            }
-          }
-
-          if (hitStar) {
-            const idx = target.stars.indexOf(hitStar);
-            playChime(idx);
-            state.selectedStarIds.add(hitStar.id);
-
-            if (state.lastSelectedStarId && state.lastSelectedStarId !== hitStar.id) {
-              const pairKey = getPairKey(state.lastSelectedStarId, hitStar.id);
-              const isValidLine = target.lines.some(([a, b]) => getPairKey(a, b) === pairKey);
-              if (isValidLine) {
-                state.connectedLines.add(pairKey);
-              }
-            }
-
-            target.lines.forEach(([a, b]) => {
-              if (state.selectedStarIds.has(a) && state.selectedStarIds.has(b)) {
-                state.connectedLines.add(getPairKey(a, b));
-              }
-            });
-
-            state.lastSelectedStarId = hitStar.id;
-
-            const allDone = target.lines.every(([a, b]) => state.connectedLines.has(getPairKey(a, b)));
-
-            if (allDone) {
-              completeShape(target);
-            }
-          } else {
+          const star = nearestStar(x, y, HIT_RADIUS);
+          if (!star) {
             playTone(180, "sine", 0.15, 0.05);
+            return;
           }
+
+          const idx = target.stars.findIndex((s) => star.ids.includes(s.id));
+          if (idx === -1) {
+            wrongRing = { star, t0: nowMs() };
+            markStarOnLegend(star);
+            playTone(180, "sine", 0.15, 0.05);
+            return;
+          }
+
+          playChime(idx);
+          state.selectedStarIds.add(target.stars[idx].id);
+          flashStarLabel(star);
+          markStarOnLegend(star);
+
+          target.lines.forEach(([a, b]) => {
+            if (state.selectedStarIds.has(a) && state.selectedStarIds.has(b)) {
+              state.connectedLines.add(getPairKey(a, b));
+            }
+          });
+
+          const allDone = target.lines.every(([a, b]) => state.connectedLines.has(getPairKey(a, b)));
+          if (allDone) {
+            completeShape(target);
+          }
+        }
+
+        function pulseStar(id) {
+          if (STAR_BY_ID[id]) pulse = { id, t0: nowMs() };
         }
 
         function completeShape(target) {
@@ -1925,58 +3326,134 @@
           if (!state.completedConstellations.includes(target.id)) {
             state.completedConstellations.push(target.id);
             addConstellationToScrapbook(target);
+            saveProgress();
           }
 
           revealTitle.textContent = target.name;
           revealSub.textContent = target.desc;
-          revealFact.innerHTML = `<b>Astronomical Lore:</b> ${target.fact}`;
+          revealFact.innerHTML = `<b>Sky fact:</b> ${target.fact}`;
+          revealCentre.textContent = centreLine(target);
+          revealTable.innerHTML = renderStarTable(target);
+          setupCheckQuestion(target);
+
+          // On narrow screens the table is a collapsible "Star data" row, unless a question needs it.
+          revealData.open = window.innerWidth > 760 || !!(activeQuestion && activeQuestion.q.type === "row");
+
+          // First discovery: point from the card's centre line to the readout at the bottom.
+          coachMark.hidden = state.coachSeen;
+          if (!state.coachSeen) {
+            // Lift the bar above the celebration and keep the card clear of it.
+            skyBar.classList.add("coach");
+            completionOverlay.style.paddingBottom = Math.round(window.innerHeight - skyBar.getBoundingClientRect().top + 8) + "px";
+            state.coachSeen = true;
+            saveProgress();
+          }
 
           // Name the constellation on the card and in the sky first, then celebrate.
           updateTargetCardName();
+          hideStarInfo();
           state.revealPending = true;
           setTimeout(() => {
             state.revealPending = false;
-            recallCard.classList.remove("show");
+            closeRecallCard();
             completionOverlay.classList.add("show");
             startRevealAnimation(target);
           }, REVEAL_DELAY_MS);
         }
 
+        /* ================= TIER 3 CHECK QUESTION ================= */
+        let activeQuestion = null;
+        let checkButtons = [];
+
+        function setupCheckQuestion(target) {
+          const q = CHECK_QUESTIONS[target.id];
+          activeQuestion = null;
+          checkButtons = [];
+          checkBox.hidden = true;
+          if (!q || target.tier !== 3 || target.id in state.checkAnswers) return;
+
+          activeQuestion = { q, id: target.id };
+          checkText.textContent = q.q;
+          checkFeedback.textContent = "";
+          checkOptions.innerHTML = "";
+          (q.options || []).forEach((label, i) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "check-opt";
+            btn.textContent = label;
+            btn.addEventListener("click", () => answerCheck(i));
+            checkOptions.appendChild(btn);
+            checkButtons.push(btn);
+          });
+          checkBox.hidden = false;
+        }
+
+        // One pick per question, with no penalty for a wrong one. The result shows on the scrapbook entry.
+        function answerCheck(value) {
+          if (!activeQuestion) return;
+          const { q, id } = activeQuestion;
+          activeQuestion = null;
+
+          const correct = value === q.answer;
+          state.checkAnswers[id] = correct;
+          saveProgress();
+
+          checkFeedback.textContent = (correct ? "Correct! " : "Not quite. ") + q.explain;
+          checkButtons.forEach((btn, i) => {
+            btn.disabled = true;
+            btn.classList.toggle("right", i === q.answer);
+          });
+          updateScrapbookTick(id);
+        }
+
+        function onStarTableClick(e) {
+          const row = e.target && e.target.closest ? e.target.closest("tr[data-star]") : null;
+          if (!row) return;
+          const id = row.dataset.star;
+
+          // Mark the picked row, so the tap is acknowledged on the card itself.
+          const table = e.currentTarget;
+          if (table.querySelectorAll) {
+            table.querySelectorAll("tr.picked").forEach((tr) => tr.classList.remove("picked"));
+          }
+          row.classList.add("picked");
+
+          // From the scrapbook card, turn the sky to the star so the pulse is always in view
+          // and the readout lands on the numbers in that row.
+          const star = STAR_BY_ID[id];
+          if (table === recallTable && star) {
+            glideCameraTo(star.ra, star.dec);
+          }
+          pulseStar(id);
+          if (e.currentTarget === revealTable && activeQuestion && activeQuestion.q.type === "row") {
+            answerCheck(id);
+          }
+        }
+
+        revealTable.addEventListener("click", onStarTableClick);
+        recallTable.addEventListener("click", onStarTableClick);
+
         /* ================= DISCOVERY CELEBRATION ================= */
-        // The finished constellation lifts out of the sky, twirls while sparkling and
-        // settles on the right half of the screen, beside the info card on the left.
+        // The finished constellation lifts out of the sky, twirls while sparkling and settles on
+        // the right half of the screen. The info card slides up once the twirl has finished.
         const REVEAL_DELAY_MS = 1400;
         const TWIRL_SECONDS = 1.6;
         let revealAnim = null;
 
         function startRevealAnimation(constell) {
-          // Figure coordinates in degrees, laid out the same way round as in the sky.
-          const pts = constell.stars.map((s) => {
-            let dRA = s.ra - constell.centerRA;
-            while (dRA > 180) dRA -= 360;
-            while (dRA < -180) dRA += 360;
-            return { id: s.id, x: dRA, y: -s.dec, mag: s.mag };
-          });
-          const xs = pts.map((pt) => pt.x);
-          const ys = pts.map((pt) => pt.y);
-          const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-          const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
-          pts.forEach((pt) => {
-            pt.x -= cx;
-            pt.y -= cy;
-          });
-
+          const fig = figurePoints(constell);
           const stageRect = stage.getBoundingClientRect();
-          const skyPt = celestialToScreen(constell.centerRA + cx, -cy);
+          const s = getPxPerDeg();
+          const skyPt = celestialToScreen(constell.centerRA, constell.centerDec) || { x: width / 2, y: height / 2 };
 
           revealAnim = {
             constell,
-            pts,
-            spanX: Math.max(Math.max(...xs) - Math.min(...xs), 6),
-            spanY: Math.max(Math.max(...ys) - Math.min(...ys), 6),
-            startX: stageRect.left + skyPt.x,
-            startY: stageRect.top + skyPt.y,
-            startScale: getBaseSpan() / 360,
+            pts: fig.pts,
+            spanX: fig.spanX,
+            spanY: fig.spanY,
+            startX: stageRect.left + skyPt.x + fig.cx * s,
+            startY: stageRect.top + skyPt.y + fig.cy * s,
+            startScale: s,
             t0: null,
             last: null,
             sparks: []
@@ -2111,6 +3588,11 @@
             revealCtx.restore();
           });
 
+          // A star picked from the data table pulses here too, since the card covers the sky.
+          if (pulse && scr[pulse.id]) {
+            drawPulseRing(revealCtx, scr[pulse.id].x, scr[pulse.id].y);
+          }
+
           // Sparkle particles
           revealCtx.save();
           revealCtx.lineWidth = 1.3;
@@ -2140,7 +3622,11 @@
 
         nextTargetBtn.addEventListener("click", () => {
           completionOverlay.classList.remove("show");
+          skyBar.classList.remove("coach");
+          completionOverlay.style.paddingBottom = "";
           stopRevealAnimation();
+          activeQuestion = null;
+          pulse = null;
           if (state.currentTargetIndex < CONSTELLATIONS.length - 1) {
             setTargetIndex(state.currentTargetIndex + 1, true);
           } else {
@@ -2149,6 +3635,9 @@
         });
 
         /* ================= STAR-MAP SCRAPBOOK ================= */
+        const scrapbookTicks = {};
+        const scrapbookItems = {};
+
         function addConstellationToScrapbook(constell) {
           if (emptyScrapbookMsg) {
             emptyScrapbookMsg.style.display = "none";
@@ -2158,7 +3647,7 @@
 
           const item = document.createElement("div");
           item.className = "scrap-icon";
-          item.title = `Revisit ${constell.name}`;
+          item.title = `Revisit ${constell.name}` + (state.hintedIds.includes(constell.id) ? " (found with a hint)" : "");
 
           const thumb = document.createElement("div");
           thumb.className = "scrap-icon-thumb";
@@ -2172,41 +3661,108 @@
           nameSpan.className = "scrap-icon-name";
           nameSpan.textContent = constell.name;
 
+          // Small tick once the Tier 3 check question has been answered.
+          const tick = document.createElement("span");
+          tick.className = "scrap-tick";
+          tick.hidden = true;
+          scrapbookTicks[constell.id] = tick;
+          scrapbookItems[constell.id] = item;
+
           item.appendChild(thumb);
           item.appendChild(nameSpan);
+          item.appendChild(tick);
 
           item.addEventListener("click", () => {
             openRecallModal(constell);
           });
 
           scrapbookTrack.appendChild(item);
+          recallPrevBtn.disabled = false;
+          recallNextBtn.disabled = false;
+          updateScrapbookTick(constell.id);
+        }
+
+        function updateScrapbookTick(id) {
+          const tick = scrapbookTicks[id];
+          if (!tick || !(id in state.checkAnswers)) return;
+          const correct = state.checkAnswers[id];
+          tick.hidden = false;
+          tick.textContent = correct ? "✓" : "○";
+          tick.classList.toggle("wrong", !correct);
+          tick.title = correct ? "Check question: answered correctly" : "Check question: answered, not correct";
         }
 
         function openRecallModal(constell) {
           // Tapping the same scrapbook entry again puts the card away.
           if (activeRecallConstellation === constell && recallCard.classList.contains("show")) {
-            recallCard.classList.remove("show");
+            closeRecallCard();
             return;
           }
+          showRecallCard(constell);
+        }
+
+        function closeRecallCard() {
+          recallCard.classList.remove("show");
+          Object.keys(scrapbookItems).forEach((id) => scrapbookItems[id].classList.remove("active"));
+        }
+
+        function showRecallCard(constell) {
           activeRecallConstellation = constell;
           recallTitle.textContent = constell.name;
           recallSub.textContent = constell.desc;
-          recallFact.innerHTML = `<b>Astronomical Fact:</b> ${constell.fact}`;
+          recallFact.innerHTML = `<b>Sky fact:</b> ${constell.fact}`;
+          recallCentre.textContent = centreLine(constell);
+          recallTable.innerHTML = renderStarTable(constell);
           drawShapePreview(recallCtx, recallCanvas.width, recallCanvas.height, constell);
           recallCard.classList.remove("show");
           void recallCard.offsetWidth; // restart the pop-in when switching cards
           recallCard.classList.add("show");
+          updateHighlightButton();
+
+          // Mark the entry whose card is open and keep it in view in the strip.
+          Object.keys(scrapbookItems).forEach((id) => scrapbookItems[id].classList.toggle("active", id === constell.id));
+          const item = scrapbookItems[constell.id];
+          if (item && item.scrollIntoView) item.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
         }
 
-        recallClose.addEventListener("click", () => {
-          recallCard.classList.remove("show");
-        });
+        // Back / forward through the found constellations, in the order they were found,
+        // popping up each one's card. Wraps round at either end.
+        function stepRecall(dir) {
+          const ids = state.completedConstellations;
+          if (!ids.length) return;
+          const open = recallCard.classList.contains("show") && activeRecallConstellation;
+          const at = open ? ids.indexOf(activeRecallConstellation.id) : -1;
+          const next = at === -1 ? (dir > 0 ? 0 : ids.length - 1) : (at + dir + ids.length) % ids.length;
+          showRecallCard(CONSTELLATIONS.find((c) => c.id === ids[next]));
+        }
 
+        recallPrevBtn.addEventListener("click", () => stepRecall(-1));
+        recallNextBtn.addEventListener("click", () => stepRecall(1));
+
+        // Any found constellation can be lit up in the sky, and put out again, on its own.
+        function updateHighlightButton() {
+          const lit = !!activeRecallConstellation && state.highlightedIds.has(activeRecallConstellation.id);
+          recallHighlightBtn.textContent = lit ? "Remove Highlight" : "Highlight in Sky";
+          recallHighlightBtn.classList.toggle("lit", lit);
+          recallHighlightBtn.setAttribute("aria-pressed", lit ? "true" : "false");
+        }
+
+        recallClose.addEventListener("click", closeRecallCard);
+
+        // Turning a highlight on glides to the stored centre, so the readout lands on the
+        // numbers shown on the card. Turning it off leaves the view where it is.
         recallHighlightBtn.addEventListener("click", () => {
-          if (activeRecallConstellation) {
-            state.highlightReplayId = activeRecallConstellation.id;
-            glideCameraTo(activeRecallConstellation.centerRA, activeRecallConstellation.centerDec);
+          const constell = activeRecallConstellation;
+          if (!constell) return;
+          const lit = !state.highlightedIds.has(constell.id);
+          if (lit) {
+            state.highlightedIds.add(constell.id);
+            glideCameraTo(constell.centerRA, constell.centerDec);
+          } else {
+            state.highlightedIds.delete(constell.id);
           }
+          scrapbookItems[constell.id].classList.toggle("lit", lit);
+          updateHighlightButton();
         });
 
         /* ================= RENDERING LOOP ================= */
@@ -2217,14 +3773,12 @@
             let dRA = state.camera.targetRA - state.camera.ra;
             while (dRA > 180) dRA -= 360;
             while (dRA < -180) dRA += 360;
+            const dDec = state.camera.targetDec - state.camera.dec;
 
-            state.camera.ra += dRA * 0.08;
-            state.camera.dec += (state.camera.targetDec - state.camera.dec) * 0.08;
+            state.camera.ra = normRA(state.camera.ra + dRA * 0.08);
+            state.camera.dec += dDec * 0.08;
 
-            while (state.camera.ra >= 360) state.camera.ra -= 360;
-            while (state.camera.ra < 0) state.camera.ra += 360;
-
-            if (Math.abs(dRA) < 0.1 && Math.abs(state.camera.targetDec - state.camera.dec) < 0.1) {
+            if (Math.abs(dRA) < 0.02 && Math.abs(dDec) < 0.02) {
               state.camera.ra = state.camera.targetRA;
               state.camera.dec = state.camera.targetDec;
               state.camera.isGliding = false;
@@ -2240,12 +3794,114 @@
           ctx.fillStyle = grad;
           ctx.fillRect(0, 0, width, height);
 
+          if (state.showGrid) drawGrid();
           drawCollectedConstellations();
           drawHintOutline();
           drawConnectedTargetLines();
           drawStars();
+          drawTapFeedback();
+          drawCrosshair();
+
+          updateHUD(false);
+          positionFlash();
 
           requestAnimationFrame(render);
+        }
+
+        /* ---- RA/Dec grid, drawn beneath the stars ---- */
+        function drawGrid() {
+          const lowZoom = state.camera.zoom < 1;
+          const raStep = lowZoom ? 30 : 15; // 2h or 1h
+          const decStep = lowZoom ? 30 : 10;
+          const labelY = height - barHeight - 16; // RA labels run along the bottom edge
+          const labelX = 10; // Dec labels run down the left edge
+          const raLabels = [];
+          const decLabels = [];
+          let equatorLabel = null;
+
+          // Strokes one grid line through `points`, noting where it crosses the label edges.
+          function trace(points, onCross) {
+            ctx.beginPath();
+            let prev = null;
+            points.forEach(([ra, dec]) => {
+              const pt = celestialToScreen(ra, dec);
+              const cur = onScreen(pt, 300) ? pt : null;
+              if (cur && prev) {
+                ctx.moveTo(prev.x, prev.y);
+                ctx.lineTo(cur.x, cur.y);
+                onCross(prev, cur);
+              }
+              prev = cur;
+            });
+            ctx.stroke();
+          }
+
+          ctx.save();
+          ctx.lineWidth = 1;
+
+          for (let ra = 0; ra < 360; ra += raStep) {
+            // Only the 6h lines run all the way to the poles, to keep the poles uncluttered.
+            const top = ra % 90 === 0 ? 90 : 80;
+            const points = [];
+            for (let dec = -top; dec <= top; dec += 2) points.push([ra, dec]);
+            ctx.strokeStyle = "rgba(127, 211, 255, 0.13)";
+            trace(points, (a, b) => {
+              if ((a.y - labelY) * (b.y - labelY) <= 0 && a.y !== b.y) {
+                const x = a.x + ((b.x - a.x) * (labelY - a.y)) / (b.y - a.y);
+                if (x > 46 && x < width - 20) raLabels.push({ x, text: state.raUnit === "h" ? ra / 15 + "h" : ra + "°" });
+              }
+            });
+          }
+
+          for (let dec = -90 + decStep; dec < 90; dec += decStep) {
+            const points = [];
+            for (let ra = 0; ra <= 360; ra += 2) points.push([ra, dec]);
+            const equator = dec === 0;
+            ctx.strokeStyle = equator ? "rgba(127, 211, 255, 0.45)" : "rgba(127, 211, 255, 0.13)";
+            ctx.lineWidth = equator ? 1.4 : 1;
+            trace(points, (a, b) => {
+              if ((a.x - labelX) * (b.x - labelX) <= 0 && a.x !== b.x) {
+                const y = a.y + ((b.y - a.y) * (labelX - a.x)) / (b.x - a.x);
+                if (y > 110 && y < labelY - 14) {
+                  decLabels.push({ y, text: (dec < 0 ? MINUS : dec > 0 ? "+" : "") + Math.abs(dec) + "°" });
+                }
+              }
+              if (equator && onScreen(b, -60)) {
+                const want = width * 0.62;
+                if (!equatorLabel || Math.abs(b.x - want) < Math.abs(equatorLabel.x - want)) equatorLabel = b;
+              }
+            });
+          }
+
+          ctx.font = "10px 'IBM Plex Mono', monospace";
+          ctx.fillStyle = "rgba(139, 163, 184, 0.95)";
+          ctx.textAlign = "center";
+          raLabels.forEach((l) => ctx.fillText(l.text, l.x, labelY + 10));
+          ctx.textAlign = "left";
+          decLabels.forEach((l) => ctx.fillText(l.text, labelX - 4, l.y - 3));
+          if (equatorLabel) {
+            ctx.fillStyle = "rgba(127, 211, 255, 0.8)";
+            ctx.textAlign = "center";
+            ctx.fillText("Celestial equator", equatorLabel.x, equatorLabel.y - 6);
+          }
+          ctx.restore();
+        }
+
+        // Strokes the lines of a constellation that pass `include`, in the current stroke style.
+        function strokeConstellationLines(constell, include) {
+          ctx.beginPath();
+          constell.lines.forEach(([idA, idB]) => {
+            if (include && !include(idA, idB)) return;
+            const sA = STAR_BY_ID[idA];
+            const sB = STAR_BY_ID[idB];
+            const ptA = celestialToScreen(sA.ra, sA.dec);
+            const ptB = celestialToScreen(sB.ra, sB.dec);
+            if (ptA && ptB) {
+              ctx.moveTo(ptA.x, ptA.y);
+              ctx.lineTo(ptB.x, ptB.y);
+            }
+          });
+          ctx.stroke();
         }
 
         function drawCollectedConstellations() {
@@ -2255,29 +3911,19 @@
             const constell = CONSTELLATIONS.find((c) => c.id === cId);
             if (!constell) return;
 
-            const isReplay = state.highlightReplayId === cId;
-            ctx.strokeStyle = isReplay ? "rgba(255, 212, 92, 0.9)" : "rgba(77, 214, 228, 0.45)";
-            ctx.lineWidth = isReplay ? 2.5 : 1.5;
-
-            ctx.beginPath();
-            constell.lines.forEach(([idA, idB]) => {
-              const sA = constell.stars.find((s) => s.id === idA);
-              const sB = constell.stars.find((s) => s.id === idB);
-              if (sA && sB) {
-                const ptA = celestialToScreen(sA.ra, sA.dec);
-                const ptB = celestialToScreen(sB.ra, sB.dec);
-                if (Math.abs(ptA.x - ptB.x) < getBaseSpan() / 2) {
-                  ctx.moveTo(ptA.x, ptA.y);
-                  ctx.lineTo(ptB.x, ptB.y);
-                }
-              }
-            });
-            ctx.stroke();
+            // Highlighted constellations get a mild yellow-white glow.
+            const lit = state.highlightedIds.has(cId);
+            ctx.strokeStyle = lit ? "rgba(255, 246, 214, 0.9)" : "rgba(77, 214, 228, 0.45)";
+            ctx.lineWidth = lit ? 2 : 1.5;
+            ctx.shadowColor = "rgba(255, 232, 150, 0.75)";
+            ctx.shadowBlur = lit ? 12 : 0;
+            strokeConstellationLines(constell);
+            ctx.shadowBlur = 0;
 
             const centerPt = celestialToScreen(constell.centerRA, constell.centerDec);
-            if (centerPt.x > 20 && centerPt.x < width - 20 && centerPt.y > 20 && centerPt.y < height - 20) {
+            if (onScreen(centerPt, -20)) {
               ctx.font = cId === justNamedId ? "bold 14px Orbitron" : "bold 11px Orbitron";
-              ctx.fillStyle = isReplay || cId === justNamedId ? "#ffd45c" : "rgba(77, 214, 228, 0.75)";
+              ctx.fillStyle = cId === justNamedId ? "#ffd45c" : lit ? "rgba(255, 246, 214, 0.95)" : "rgba(77, 214, 228, 0.75)";
               ctx.textAlign = "center";
               ctx.fillText(constell.name, centerPt.x, centerPt.y - 12);
             }
@@ -2288,31 +3934,17 @@
         function drawHintOutline() {
           if (!state.hintActive) return;
           const target = getCurrentTarget();
-          if (!target) return;
 
           ctx.save();
           ctx.strokeStyle = "rgba(127, 211, 255, 0.35)";
           ctx.lineWidth = 1.6;
           ctx.setLineDash([5, 5]);
+          strokeConstellationLines(target);
 
-          ctx.beginPath();
-          target.lines.forEach(([idA, idB]) => {
-            const sA = target.stars.find((s) => s.id === idA);
-            const sB = target.stars.find((s) => s.id === idB);
-            if (sA && sB) {
-              const ptA = celestialToScreen(sA.ra, sA.dec);
-              const ptB = celestialToScreen(sB.ra, sB.dec);
-              if (Math.abs(ptA.x - ptB.x) < getBaseSpan() / 2) {
-                ctx.moveTo(ptA.x, ptA.y);
-                ctx.lineTo(ptB.x, ptB.y);
-              }
-            }
-          });
-          ctx.stroke();
-
+          ctx.strokeStyle = "rgba(127, 211, 255, 0.4)";
           target.stars.forEach((s) => {
             const pt = celestialToScreen(s.ra, s.dec);
-            ctx.strokeStyle = "rgba(127, 211, 255, 0.4)";
+            if (!pt) return;
             ctx.beginPath();
             ctx.arc(pt.x, pt.y, 8, 0, Math.PI * 2);
             ctx.stroke();
@@ -2322,79 +3954,56 @@
 
         function drawConnectedTargetLines() {
           const target = getCurrentTarget();
-          if (!target) return;
 
           ctx.save();
           ctx.strokeStyle = "rgba(127, 211, 255, 0.95)";
           ctx.lineWidth = 2.2;
           ctx.shadowColor = "rgba(127, 211, 255, 0.6)";
           ctx.shadowBlur = 8;
-
-          ctx.beginPath();
-          target.lines.forEach(([idA, idB]) => {
-            if (state.connectedLines.has(getPairKey(idA, idB))) {
-              const sA = target.stars.find((s) => s.id === idA);
-              const sB = target.stars.find((s) => s.id === idB);
-              if (sA && sB) {
-                const ptA = celestialToScreen(sA.ra, sA.dec);
-                const ptB = celestialToScreen(sB.ra, sB.dec);
-                if (Math.abs(ptA.x - ptB.x) < getBaseSpan() / 2) {
-                  ctx.moveTo(ptA.x, ptA.y);
-                  ctx.lineTo(ptB.x, ptB.y);
-                }
-              }
-            }
-          });
-          ctx.stroke();
+          strokeConstellationLines(target, (idA, idB) => state.connectedLines.has(getPairKey(idA, idB)));
           ctx.restore();
         }
 
+        // Every star goes through the same path: size, opacity and twinkle depend only on the star,
+        // so nothing marks out the target's stars until they are tapped.
         function drawStars() {
           const target = getCurrentTarget();
           const cutoff = getTierCutoff();
-          const baseSize = 4.2 * Math.pow(state.camera.zoom, 0.3);
+          const zoomScale = Math.pow(state.camera.zoom, 0.3);
 
-          BACKGROUND_STARS.forEach((s) => {
+          let fadeIn = 1;
+          if (cutoffFade) {
+            fadeIn = Math.min(1, (nowMs() - cutoffFade.t0) / 2500);
+            if (fadeIn >= 1) cutoffFade = null;
+          }
+
+          SKY_STARS.forEach((s) => {
             if (s.mag > cutoff) return;
             const pt = celestialToScreen(s.ra, s.dec);
-            if (pt.x < -20 || pt.x > width + 20 || pt.y < -20 || pt.y > height + 20) return;
+            if (!onScreen(pt, 20)) return;
 
             const twinkle = 1.0 + 0.15 * Math.sin(state.time * 2.5 + s.twinkle);
-            const size = Math.max(0.7, baseSize * Math.pow(10, -0.2 * s.mag) * twinkle);
-            const opacity = Math.min(1.0, Math.max(0.2, (5.2 - s.mag) / 4.5));
+            const size = starRadius(s.mag) * zoomScale * twinkle;
+            let opacity = starOpacity(s.mag);
+            if (cutoffFade && s.mag > cutoffFade.from) opacity *= fadeIn;
 
             drawStarDot(pt.x, pt.y, size, "#e8f2ff", opacity);
           });
 
-          CONSTELLATIONS.forEach((c) => {
-            if (c.id === target.id) return;
-            c.stars.forEach((s) => {
-              if (s.mag > cutoff) return;
-              const pt = celestialToScreen(s.ra, s.dec);
-              if (pt.x < -20 || pt.x > width + 20 || pt.y < -20 || pt.y > height + 20) return;
-
-              const size = Math.max(1.0, baseSize * Math.pow(10, -0.2 * s.mag));
-              drawStarDot(pt.x, pt.y, size, "#ffffff", 0.9);
-            });
-          });
-
           target.stars.forEach((s) => {
+            if (!state.selectedStarIds.has(s.id)) return;
             const pt = celestialToScreen(s.ra, s.dec);
-            const isTapped = state.selectedStarIds.has(s.id);
-            const twinkle = 1.0 + 0.12 * Math.sin(state.time * 3);
-            const size = Math.max(1.8, baseSize * Math.pow(10, -0.2 * s.mag) * twinkle);
+            if (!onScreen(pt, 20)) return;
+            const size = starRadius(s.mag) * zoomScale;
 
-            drawStarDot(pt.x, pt.y, size, isTapped ? "var(--glow)" : "#ffffff", 1.0);
-
-            if (isTapped) {
-              ctx.save();
-              ctx.strokeStyle = "rgba(127, 211, 255, 0.8)";
-              ctx.lineWidth = 1.5;
-              ctx.beginPath();
-              ctx.arc(pt.x, pt.y, size + 4, 0, Math.PI * 2);
-              ctx.stroke();
-              ctx.restore();
-            }
+            drawStarDot(pt.x, pt.y, Math.max(1.8, size), "#7fd3ff", 1.0);
+            ctx.save();
+            ctx.strokeStyle = "rgba(127, 211, 255, 0.8)";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, Math.max(1.8, size) + 4, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
           });
         }
 
@@ -2417,10 +4026,89 @@
           ctx.restore();
         }
 
+        function drawPulseRing(c, x, y) {
+          const age = (nowMs() - pulse.t0) / 1000;
+          if (age > 3.6) {
+            pulse = null;
+            return;
+          }
+          const phase = (age % 0.6) / 0.6;
+          c.save();
+          c.strokeStyle = "rgba(255, 212, 92, " + (1 - phase).toFixed(2) + ")";
+          c.lineWidth = 2.5;
+          c.beginPath();
+          c.arc(x, y, 8 + phase * 22, 0, Math.PI * 2);
+          c.stroke();
+          c.restore();
+        }
+
+        // Red ring for a wrong tap, gold pulse for a star picked from a data table.
+        function drawTapFeedback() {
+          if (wrongRing) {
+            const k = (nowMs() - wrongRing.t0) / 600;
+            const pt = k < 1 ? celestialToScreen(wrongRing.star.ra, wrongRing.star.dec) : null;
+            if (!pt) {
+              wrongRing = null;
+            } else {
+              ctx.save();
+              ctx.strokeStyle = "rgba(255, 90, 90, " + (1 - k).toFixed(2) + ")";
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.arc(pt.x, pt.y, 9 + k * 6, 0, Math.PI * 2);
+              ctx.stroke();
+              ctx.restore();
+            }
+          }
+          if (pulse) {
+            const star = STAR_BY_ID[pulse.id];
+            const pt = celestialToScreen(star.ra, star.dec);
+            if (pt) drawPulseRing(ctx, pt.x, pt.y);
+          }
+        }
+
+        // Marks the point the readout describes.
+        function drawCrosshair() {
+          const cx = width / 2;
+          const cy = height / 2;
+          ctx.save();
+          ctx.strokeStyle = "rgba(127, 211, 255, 0.55)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(cx - 11, cy);
+          ctx.lineTo(cx - 4, cy);
+          ctx.moveTo(cx + 4, cy);
+          ctx.lineTo(cx + 11, cy);
+          ctx.moveTo(cx, cy - 11);
+          ctx.lineTo(cx, cy - 4);
+          ctx.moveTo(cx, cy + 4);
+          ctx.lineTo(cx, cy + 11);
+          ctx.stroke();
+          ctx.restore();
+        }
+
         /* ================= INITIALIZATION ================= */
         function init() {
           resizeCanvas();
-          setTargetIndex(0, true);
+          buildLegend();
+          loadProgress();
+
+          // Rebuild the scrapbook from saved progress and carry on at the first unfound constellation.
+          const saved = state.completedConstellations.slice();
+          state.completedConstellations = [];
+          saved.forEach((id) => {
+            state.completedConstellations.push(id);
+            addConstellationToScrapbook(CONSTELLATIONS.find((c) => c.id === id));
+          });
+          const next = CONSTELLATIONS.findIndex((c) => !saved.includes(c.id));
+          setTargetIndex(next === -1 ? 0 : next, true);
+
+          // One-time nudge to try the grid, which starts switched off in Tier 1.
+          if (!state.gridPromptSeen && !state.showGrid) {
+            gridPrompt.hidden = false;
+            setTimeout(dismissGridPrompt, 15000);
+          }
+
+          updateHUD(true);
           requestAnimationFrame(render);
         }
 
