@@ -1177,13 +1177,10 @@
       .star-table tbody tr:hover td {
         background: rgba(127, 211, 255, 0.1);
       }
-      .star-table tr.brightest td {
-        color: var(--glow-gold);
-        background: rgba(255, 212, 92, 0.09);
-      }
       .star-table tbody tr.picked td {
-        background: rgba(127, 211, 255, 0.22);
-        box-shadow: inset 0 1px 0 var(--glow), inset 0 -1px 0 var(--glow);
+        color: var(--glow-gold);
+        background: rgba(255, 212, 92, 0.14);
+        box-shadow: inset 0 1px 0 var(--glow-gold), inset 0 -1px 0 var(--glow-gold);
       }
       .star-table .var {
         font-size: 9.5px;
@@ -1192,6 +1189,18 @@
         border-radius: 3px;
         padding: 0 3px;
         margin-left: 3px;
+      }
+      /* Tag on the brightest star. Hidden while a "which is brightest?" question is open. */
+      .star-table .top {
+        font-size: 9.5px;
+        color: var(--glow);
+        border: 1px solid rgba(127, 211, 255, 0.5);
+        border-radius: 3px;
+        padding: 0 3px;
+        margin-left: 3px;
+      }
+      .quiz .star-table .top {
+        display: none;
       }
       #recallCard .data-centre {
         font-size: 11px;
@@ -1370,7 +1379,7 @@
             <li>
               When the shape is complete, its name appears and the
               constellation twirls. A card follows with a sky fact and a table
-              of its stars; tap a row to make that star pulse. Later rounds add
+              of its stars; tap a row to ring that star in gold. Later rounds add
               one quick question. Press <b>Next Target</b> to hunt the next one.
             </li>
             <li>
@@ -2614,16 +2623,16 @@
             .slice()
             .sort((a, b) => a.mag - b.mag)
             .map((s, i) => {
+              const top = i === 0 ? ' <span class="top" title="Brightest star in this constellation">★ brightest</span>' : "";
               const variable = s.variable
                 ? ' <span class="var" title="Changes brightness: mag ' + escapeHtml(s.variable) + '">varies</span>'
                 : "";
               return (
                 '<tr data-star="' +
                 s.id +
-                '"' +
-                (i === 0 ? ' class="brightest"' : "") +
-                "><td>" +
+                '"><td>' +
                 escapeHtml(s.name) +
+                top +
                 variable +
                 "</td><td>" +
                 formatRA(s.ra, "h") +
@@ -2815,8 +2824,8 @@
           height = rect.height;
           barHeight = skyBar.offsetHeight || 40;
           const dpr = window.devicePixelRatio || 1;
-          skyCanvas.width = width * dpr;
-          skyCanvas.height = height * dpr;
+          skyCanvas.width = Math.round(width * dpr);
+          skyCanvas.height = Math.round(height * dpr);
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
 
@@ -3141,12 +3150,17 @@
         const LEGEND_STEP_PX = 22;
         const legendSteps = [];
 
+        // Size and opacity still fall with magnitude, but gently and with a floor,
+        // so the faintest star on screen stays an easy-to-see dot rather than a speck.
+        const MIN_STAR_RADIUS = 1.5;
+        const MIN_STAR_OPACITY = 0.55;
+
         function starRadius(mag) {
-          return Math.max(0.7, 4.2 * Math.pow(10, -0.2 * mag));
+          return Math.max(MIN_STAR_RADIUS, 5.0 * Math.pow(10, -0.13 * mag));
         }
 
         function starOpacity(mag) {
-          return Math.min(1.0, Math.max(0.2, (5.2 - mag) / 4.5));
+          return Math.min(1.0, Math.max(MIN_STAR_OPACITY, (6.2 - mag) / 4.5));
         }
 
         // Dots drawn at the sim's own star sizes for mag -1 to 5.
@@ -3278,7 +3292,7 @@
 
         /* ================= GAMEPLAY: STAR SELECTION & CONNECTING LINES ================= */
         let wrongRing = null; // brief red ring on a tapped star that is not part of the target
-        let pulse = null; // gold pulse on a star picked from a data table
+        let pulse = null; // gold ring on the star picked from a data table
 
         function handleStarTap(x, y) {
           if (state.revealPending) return;
@@ -3370,9 +3384,11 @@
           activeQuestion = null;
           checkButtons = [];
           checkBox.hidden = true;
+          revealTable.classList.remove("quiz");
           if (!q || target.tier !== 3 || target.id in state.checkAnswers) return;
 
           activeQuestion = { q, id: target.id };
+          revealTable.classList.toggle("quiz", q.type === "row");
           checkText.textContent = q.q;
           checkFeedback.textContent = "";
           checkOptions.innerHTML = "";
@@ -3393,6 +3409,7 @@
           if (!activeQuestion) return;
           const { q, id } = activeQuestion;
           activeQuestion = null;
+          revealTable.classList.remove("quiz");
 
           const correct = value === q.answer;
           state.checkAnswers[id] = correct;
@@ -3418,7 +3435,7 @@
           }
           row.classList.add("picked");
 
-          // From the scrapbook card, turn the sky to the star so the pulse is always in view
+          // From the scrapbook card, turn the sky to the star so the ring is always in view
           // and the readout lands on the numbers in that row.
           const star = STAR_BY_ID[id];
           if (table === recallTable && star) {
@@ -3434,7 +3451,7 @@
         recallTable.addEventListener("click", onStarTableClick);
 
         /* ================= DISCOVERY CELEBRATION ================= */
-        // The finished constellation lifts out of the sky, twirls while sparkling and settles on
+        // The finished constellation lifts out of the sky, twirls and settles on
         // the right half of the screen. The info card slides up once the twirl has finished.
         const REVEAL_DELAY_MS = 1400;
         const TWIRL_SECONDS = 1.6;
@@ -3455,30 +3472,13 @@
             startY: stageRect.top + skyPt.y + fig.cy * s,
             startScale: s,
             t0: null,
-            last: null,
-            sparks: []
+            last: null
           };
           requestAnimationFrame(tickReveal);
         }
 
         function stopRevealAnimation() {
           revealAnim = null;
-        }
-
-        function addSpark(a, x, y, speed) {
-          if (a.sparks.length > 320) return;
-          const ang = Math.random() * Math.PI * 2;
-          const v = speed * (0.3 + Math.random() * 0.7);
-          a.sparks.push({
-            x,
-            y,
-            vx: Math.cos(ang) * v,
-            vy: Math.sin(ang) * v,
-            age: 0,
-            life: 0.5 + Math.random() * 0.9,
-            size: 2.5 + Math.random() * 5,
-            gold: Math.random() < 0.45
-          });
         }
 
         function tickReveal(now) {
@@ -3489,7 +3489,6 @@
             a.last = now;
           }
           const t = (now - a.t0) / 1000;
-          const dt = Math.min(0.05, (now - a.last) / 1000);
           a.last = now;
 
           const W = window.innerWidth;
@@ -3529,16 +3528,6 @@
               y: y0 + (pt.x * sinR + pt.y * cosR) * scale,
               mag: pt.mag
             };
-          });
-
-          // Sparkles: a shower thrown off the stars during the twirl, then a gentle shimmer.
-          a.pts.forEach((pt) => {
-            const sp = scr[pt.id];
-            if (p < 1) {
-              if (Math.random() < 0.6) addSpark(a, sp.x, sp.y, 190);
-            } else if (Math.random() < 0.05) {
-              addSpark(a, sp.x + (Math.random() - 0.5) * 30, sp.y + (Math.random() - 0.5) * 30, 26);
-            }
           });
 
           // Lines
@@ -3588,34 +3577,10 @@
             revealCtx.restore();
           });
 
-          // A star picked from the data table pulses here too, since the card covers the sky.
+          // A star picked from the data table is ringed here too, since the card covers the sky.
           if (pulse && scr[pulse.id]) {
             drawPulseRing(revealCtx, scr[pulse.id].x, scr[pulse.id].y);
           }
-
-          // Sparkle particles
-          revealCtx.save();
-          revealCtx.lineWidth = 1.3;
-          a.sparks = a.sparks.filter((sp) => {
-            sp.age += dt;
-            if (sp.age >= sp.life) return false;
-            sp.x += sp.vx * dt;
-            sp.y += sp.vy * dt;
-            sp.vx *= 0.97;
-            sp.vy *= 0.97;
-            const k = 1 - sp.age / sp.life;
-            const len = sp.size * (0.4 + 0.6 * k);
-            revealCtx.globalAlpha = k;
-            revealCtx.strokeStyle = sp.gold ? "#ffd45c" : "#cfeeff";
-            revealCtx.beginPath();
-            revealCtx.moveTo(sp.x - len, sp.y);
-            revealCtx.lineTo(sp.x + len, sp.y);
-            revealCtx.moveTo(sp.x, sp.y - len);
-            revealCtx.lineTo(sp.x, sp.y + len);
-            revealCtx.stroke();
-            return true;
-          });
-          revealCtx.restore();
 
           requestAnimationFrame(tickReveal);
         }
@@ -3703,6 +3668,7 @@
 
         function closeRecallCard() {
           recallCard.classList.remove("show");
+          pulse = null;
           Object.keys(scrapbookItems).forEach((id) => scrapbookItems[id].classList.remove("active"));
         }
 
@@ -3713,6 +3679,7 @@
           recallFact.innerHTML = `<b>Sky fact:</b> ${constell.fact}`;
           recallCentre.textContent = centreLine(constell);
           recallTable.innerHTML = renderStarTable(constell);
+          pulse = null;
           drawShapePreview(recallCtx, recallCanvas.width, recallCanvas.height, constell);
           recallCard.classList.remove("show");
           void recallCard.offsetWidth; // restart the pop-in when switching cards
@@ -3965,11 +3932,14 @@
         }
 
         // Every star goes through the same path: size, opacity and twinkle depend only on the star,
-        // so nothing marks out the target's stars until they are tapped.
+        // so nothing marks out the target's stars until they are tapped. The one exception is Tier 1,
+        // where the target's stars are drawn slightly larger to help the shape stand out.
         function drawStars() {
           const target = getCurrentTarget();
           const cutoff = getTierCutoff();
           const zoomScale = Math.pow(state.camera.zoom, 0.3);
+          const targetBoost = target.tier === 1 ? TIER1_TARGET_BOOST : 1;
+          const targetEntries = new Set(target.stars.map((t) => STAR_BY_ID[t.id]));
 
           let fadeIn = 1;
           if (cutoffFade) {
@@ -3983,7 +3953,8 @@
             if (!onScreen(pt, 20)) return;
 
             const twinkle = 1.0 + 0.15 * Math.sin(state.time * 2.5 + s.twinkle);
-            const size = starRadius(s.mag) * zoomScale * twinkle;
+            const boost = targetEntries.has(s) ? targetBoost : 1;
+            const size = starRadius(s.mag) * zoomScale * twinkle * boost;
             let opacity = starOpacity(s.mag);
             if (cutoffFade && s.mag > cutoffFade.from) opacity *= fadeIn;
 
@@ -3994,7 +3965,7 @@
             if (!state.selectedStarIds.has(s.id)) return;
             const pt = celestialToScreen(s.ra, s.dec);
             if (!onScreen(pt, 20)) return;
-            const size = starRadius(s.mag) * zoomScale;
+            const size = starRadius(s.mag) * zoomScale * targetBoost;
 
             drawStarDot(pt.x, pt.y, Math.max(1.8, size), "#7fd3ff", 1.0);
             ctx.save();
@@ -4007,42 +3978,52 @@
           });
         }
 
+        // Soft halo, painted once and stamped under every star. A sprite keeps this cheap
+        // enough to give all visible stars a glow, not just the brightest few.
+        const TIER1_TARGET_BOOST = 1.2;
+        const GLOW_SPREAD = 3.2; // halo radius as a multiple of the star's radius
+        const glowSprite = document.createElement("canvas");
+        glowSprite.width = glowSprite.height = 64;
+        (function paintGlowSprite() {
+          const g = glowSprite.getContext("2d");
+          const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+          grad.addColorStop(0, "rgba(190, 228, 255, 0.55)");
+          grad.addColorStop(0.35, "rgba(127, 211, 255, 0.2)");
+          grad.addColorStop(1, "rgba(127, 211, 255, 0)");
+          g.fillStyle = grad;
+          g.fillRect(0, 0, 64, 64);
+        })();
+
         function drawStarDot(x, y, radius, color, opacity) {
           ctx.save();
           ctx.globalAlpha = opacity;
 
-          if (radius > 2.0) {
-            ctx.fillStyle = "rgba(127, 211, 255, 0.15)";
-            ctx.beginPath();
-            ctx.arc(x, y, radius * 2.5, 0, Math.PI * 2);
-            ctx.fill();
-          }
+          const halo = Math.max(MIN_STAR_RADIUS, radius) * GLOW_SPREAD;
+          ctx.drawImage(glowSprite, x - halo, y - halo, halo * 2, halo * 2);
 
           ctx.fillStyle = color;
           ctx.beginPath();
-          ctx.arc(x, y, Math.max(0.6, radius), 0, Math.PI * 2);
+          ctx.arc(x, y, Math.max(MIN_STAR_RADIUS, radius), 0, Math.PI * 2);
           ctx.fill();
 
           ctx.restore();
         }
 
+        // Steady glowing gold ring. It stays on the picked star until another row is picked
+        // or the card is put away.
         function drawPulseRing(c, x, y) {
-          const age = (nowMs() - pulse.t0) / 1000;
-          if (age > 3.6) {
-            pulse = null;
-            return;
-          }
-          const phase = (age % 0.6) / 0.6;
           c.save();
-          c.strokeStyle = "rgba(255, 212, 92, " + (1 - phase).toFixed(2) + ")";
+          c.strokeStyle = "rgba(255, 212, 92, 0.95)";
           c.lineWidth = 2.5;
+          c.shadowColor = "rgba(255, 212, 92, 0.9)";
+          c.shadowBlur = 14;
           c.beginPath();
-          c.arc(x, y, 8 + phase * 22, 0, Math.PI * 2);
+          c.arc(x, y, 16, 0, Math.PI * 2);
           c.stroke();
           c.restore();
         }
 
-        // Red ring for a wrong tap, gold pulse for a star picked from a data table.
+        // Red ring for a wrong tap, gold ring for a star picked from a data table.
         function drawTapFeedback() {
           if (wrongRing) {
             const k = (nowMs() - wrongRing.t0) / 600;
