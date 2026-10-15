@@ -38,9 +38,10 @@ const PROJECTS = [
   { id: "anemometer", title: "Anemometer", category: "aerospace", status: "live", url: "../sims/aerospace/Anemometer/Anemometer.html", description: "Change the wind's speed, direction and gusts, watch the cups spin, and see how rotor RPM becomes a measured wind speed." },
   { id: "hydraulic-landing-gear", title: "Hydraulic Landing Gear", category: "aerospace", status: "live", url: "../sims/aerospace/HydraulicLandingGear/HydraulicLandingGear.html", description: "Use hydraulic pressure to extend and retract an aircraft's landing gear, watch the fluid push the piston, and lock it safely for landing." },
   { id: "anti-icing-system", title: "Anti-Icing System", category: "aerospace", status: "live", url: "../sims/aerospace/Anti-IcingSystem/simulation.html", description: "Fly a wing through freezing cloud, then compare anti-icing and de-icing heaters to keep ice off while watching temperature, lift and energy use." },
-  ...Array.from({ length: 20 }, (_, i) => ({
-    id: `aerospace-coming-soon-${i + 11}`,
-    title: `Aerospace Project ${String(i + 11).padStart(2, "0")}`,
+  { id: "emergency-messenger-system", title: "Emergency Messenger System", category: "aerospace", status: "live", url: "../sims/aerospace/EmergencyMessengerSystem/simulation.html", description: "When a storm knocks out the mobile network, power up the EMS, send SOS, Medical Help or Food & Water by radio, and watch the rescue team respond." },
+  ...Array.from({ length: 19 }, (_, i) => ({
+    id: `aerospace-coming-soon-${i + 12}`,
+    title: `Aerospace Project ${String(i + 12).padStart(2, "0")}`,
     category: "aerospace",
     status: "coming-soon",
     description: "Coming soon.",
