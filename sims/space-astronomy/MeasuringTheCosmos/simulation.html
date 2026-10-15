@@ -1,0 +1,2782 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Measuring the Cosmos — Solar System Scale Jump</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #060b12;
+        --panel: #0b141e;
+        --panel2: #0f1b28;
+        --line: #1c2b3b;
+        --line2: #27405a;
+        --txt: #d8e6f2;
+        --mut: #8ba3b8;
+        --dim: #5b738a;
+        --glow: #7fd3ff;
+        --glow-gold: #ffd45c;
+        --accent: #ff8a3d;
+        --good: #59d98c;
+        --bad: #ff6b6b;
+        --head: "Orbitron", sans-serif;
+        --body: "Rajdhani", sans-serif;
+        --mono: "IBM Plex Mono", ui-monospace, monospace;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--txt);
+        font-family: var(--body);
+        -webkit-font-smoothing: antialiased;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ---- TOP HEADER (matches space-astronomy simulations) ---- */
+      header.top {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 18px;
+        background: #08111a;
+        border-bottom: 1px solid var(--line);
+        flex: 0 0 auto;
+        position: relative;
+        z-index: 50;
+      }
+      .title {
+        grid-column: 2;
+        text-align: center;
+      }
+      .title h1 {
+        font-family: var(--head);
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        color: var(--txt);
+      }
+      .helpbtns {
+        grid-column: 3;
+        justify-self: end;
+        display: flex;
+        gap: 8px;
+      }
+      .helpbtn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        color: #06121c;
+        background: var(--glow);
+        border: 1px solid var(--glow);
+        padding: 8px 14px;
+        border-radius: 8px;
+        transition: transform 0.15s ease, background 0.15s ease;
+        box-shadow: 0 4px 12px rgba(127, 211, 255, 0.25);
+      }
+      .helpbtn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 0 14px rgba(127, 211, 255, 0.45);
+      }
+      .helpbtn.on {
+        background: var(--accent) !important;
+        border-color: var(--accent) !important;
+        color: #fff !important;
+        box-shadow: 0 6px 14px rgba(255, 138, 61, 0.35);
+      }
+
+      /* ---- FLOATING, DRAGGABLE & RESIZABLE GUIDE WINDOW ---- */
+      .helpbar.floatwin {
+        position: fixed !important;
+        z-index: 10000 !important;
+        display: none;
+        flex-direction: column !important;
+        background: var(--panel) !important;
+        border: 1px solid var(--line2) !important;
+        border-radius: 10px !important;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7) !important;
+        overflow: hidden !important;
+        min-width: 280px !important;
+        min-height: 200px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: calc(100vw - 16px) !important;
+        max-height: calc(100vh - 16px) !important;
+      }
+      .helpbar.floatwin.show {
+        display: flex !important;
+      }
+      .fw-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 12px;
+        background: var(--panel2);
+        border-bottom: 1px solid var(--line);
+        cursor: move;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+        flex: 0 0 auto;
+      }
+      .fw-title {
+        font-family: var(--head);
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--txt);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .fw-title::before {
+        content: "⠿";
+        font-size: 13px;
+        color: var(--dim);
+      }
+      .fw-head-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .fw-tab-btn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 4px 8px;
+        border-radius: 5px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--mut);
+        transition: 0.15s ease;
+      }
+      .fw-tab-btn:hover {
+        border-color: var(--line2);
+        color: var(--txt);
+      }
+      .fw-tab-btn.on {
+        background: var(--accent) !important;
+        border-color: var(--accent) !important;
+        color: #fff !important;
+      }
+      .fw-close {
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--mut);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.15s ease;
+      }
+      .fw-close:hover {
+        background: #8a1f1f;
+        border-color: #c44040;
+        color: #fff;
+      }
+      .fw-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 14px 18px;
+        overflow-y: auto;
+        font-size: 13.5px;
+        line-height: 1.55;
+        color: var(--mut);
+      }
+      .fw-body ol,
+      .fw-body ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .fw-body li {
+        margin-bottom: 8px;
+      }
+      .fw-body p {
+        margin-bottom: 8px;
+      }
+      .fw-body b {
+        color: var(--glow);
+      }
+      .fw-grip {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 16px;
+        height: 16px;
+        cursor: nwse-resize;
+        touch-action: none;
+        background: linear-gradient(
+          135deg,
+          transparent 50%,
+          var(--dim) 50%,
+          var(--dim) 58%,
+          transparent 58%,
+          transparent 70%,
+          var(--dim) 70%,
+          var(--dim) 78%,
+          transparent 78%
+        );
+      }
+      .floatwin.dragging {
+        opacity: 0.94;
+      }
+
+      .tabpanel {
+        display: none;
+      }
+      .tabpanel.on {
+        display: block;
+      }
+
+      @media (max-width: 760px) {
+        header.top {
+          grid-template-columns: 1fr;
+          gap: 6px;
+        }
+        .helpbtns {
+          grid-row: 1;
+          grid-column: 1;
+          justify-self: center;
+        }
+        .title {
+          grid-row: 2;
+          grid-column: 1;
+        }
+      }
+
+      /* ---- MAIN VIEWPORT ---- */
+      #app {
+        flex: 1 1 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* ---- TOP PANEL: SCALE MODE, CURRENT PLANET, NEXT TARGET, JUMP POWER BAR ---- */
+      #hud {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: stretch;
+        gap: 8px;
+        padding: 8px 14px;
+        background: var(--panel);
+        border-bottom: 1px solid var(--line);
+        flex-wrap: wrap;
+      }
+      .chip {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1px;
+        padding: 5px 12px;
+        background: var(--panel2);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        min-width: 86px;
+      }
+      .chip span {
+        font-family: var(--head);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      .chip b {
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.15;
+        color: var(--txt);
+        white-space: nowrap;
+      }
+      .chip.mode b {
+        color: var(--glow);
+      }
+      .chip.next b {
+        color: var(--glow-gold);
+      }
+      .chip.num b {
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .chip.power {
+        flex: 1 1 200px;
+        min-width: 170px;
+      }
+      .power-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .pbar {
+        flex: 1 1 auto;
+        height: 12px;
+        border-radius: 6px;
+        background: #070d16;
+        border: 1px solid var(--line2);
+        overflow: hidden;
+      }
+      .pbar i {
+        display: block;
+        height: 100%;
+        width: 0%;
+        border-radius: 5px;
+        background: linear-gradient(90deg, #4dd6e4, var(--glow-gold) 60%, var(--accent));
+      }
+      .power-row em {
+        font-family: var(--mono);
+        font-style: normal;
+        font-size: 12px;
+        color: var(--mut);
+        min-width: 74px;
+        text-align: right;
+        white-space: nowrap;
+      }
+      .hudbtn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--txt);
+        background: var(--panel2);
+        border: 1px solid var(--line2);
+        border-radius: 8px;
+        padding: 0 14px;
+        min-height: 40px;
+        transition: 0.15s ease;
+      }
+      .hudbtn:hover {
+        border-color: var(--glow);
+        color: var(--glow);
+      }
+
+      /* ---- MAIN VIEW: SIDE-SCROLLING SPACE SCENE ---- */
+      #stage {
+        flex: 1 1 0;
+        min-height: 0;
+        position: relative;
+        overflow: hidden;
+        background: #03060c;
+        touch-action: none;
+        cursor: pointer;
+      }
+      #gameCanvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* ---- FEEDBACK POP-UP (AFTER EACH LANDING) ---- */
+      .toast {
+        position: absolute;
+        top: 14px;
+        left: 50%;
+        transform: translate(-50%, -8px);
+        max-width: min(520px, calc(100% - 28px));
+        width: max-content;
+        background: rgba(11, 20, 30, 0.94);
+        border: 1px solid var(--line2);
+        border-left: 3px solid var(--glow);
+        border-radius: 10px;
+        padding: 10px 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        z-index: 20;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+      .toast h3 {
+        font-family: var(--head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--glow);
+        margin-bottom: 2px;
+      }
+      .toast h3 small {
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0;
+        text-transform: none;
+        color: var(--glow-gold);
+        margin-left: 8px;
+      }
+      .toast p {
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.3;
+        color: var(--txt);
+      }
+      .toast.boost {
+        border-left-color: var(--accent);
+      }
+      .toast.boost h3 {
+        color: var(--accent);
+      }
+
+      /* ---- MISS BANNER WITH RETRY BUTTON ---- */
+      #missBanner {
+        position: absolute;
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        max-width: calc(100% - 28px);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(30, 12, 14, 0.95);
+        border: 1px solid #7a2f33;
+        border-radius: 10px;
+        padding: 10px 12px 10px 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        z-index: 21;
+      }
+      #missBanner p {
+        font-size: 15.5px;
+        font-weight: 600;
+        line-height: 1.25;
+        color: #ffd9d9;
+      }
+      .btn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #06121c;
+        background: var(--glow);
+        border: 1px solid var(--glow);
+        border-radius: 8px;
+        padding: 10px 16px;
+        white-space: nowrap;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 0 14px rgba(127, 211, 255, 0.45);
+      }
+      .btn.ghost {
+        background: var(--panel2);
+        border-color: var(--line2);
+        color: var(--txt);
+      }
+      .btn.ghost:hover {
+        border-color: var(--glow);
+        box-shadow: none;
+      }
+
+      /* ---- FIRST-JUMP HINT ---- */
+      #startHint {
+        position: absolute;
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        max-width: calc(100% - 28px);
+        background: rgba(11, 20, 30, 0.92);
+        border: 1px solid var(--line2);
+        border-radius: 10px;
+        padding: 9px 16px;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--txt);
+        text-align: center;
+        pointer-events: none;
+        z-index: 19;
+      }
+      #startHint b {
+        color: var(--glow-gold);
+      }
+
+      /* ---- MINI-MAP: SUN AND ALL PLANETS AS DOTS, IN THE SELECTED SCALE ---- */
+      #minimap {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 8px 18px 10px;
+        background: var(--panel);
+        border-top: 1px solid var(--line);
+      }
+      .mm-label {
+        font-family: var(--head);
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--dim);
+        white-space: nowrap;
+      }
+      .mm-label b {
+        display: block;
+        font-size: 11px;
+        color: var(--glow);
+        margin-top: 2px;
+      }
+      #mmStrip {
+        flex: 1 1 auto;
+      }
+
+      /* A strip: the Sun on the left, Neptune on the right, planets placed by the scale. */
+      .strip {
+        position: relative;
+        height: 26px;
+        margin: 0 12px 0 14px;
+      }
+      .strip::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 50%;
+        height: 1px;
+        background: var(--line2);
+      }
+      .strip .s-sun,
+      .strip .s-dot,
+      .strip .s-you {
+        position: absolute;
+        top: 50%;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .strip .s-sun {
+        left: 0;
+        width: 16px;
+        height: 16px;
+        background: radial-gradient(circle at 40% 40%, #fff6c9, #ffc93c 55%, #ff8a1f);
+        box-shadow: 0 0 10px rgba(255, 190, 70, 0.8);
+      }
+      .strip .s-dot {
+        width: 9px;
+        height: 9px;
+        border: 1px solid rgba(3, 6, 12, 0.7);
+      }
+      .strip .s-dot.done {
+        box-shadow: 0 0 0 2px rgba(89, 217, 140, 0.75);
+      }
+      .strip .s-dot.next {
+        box-shadow: 0 0 0 2px var(--glow-gold), 0 0 10px rgba(255, 212, 92, 0.8);
+      }
+      .strip .s-you {
+        width: 0;
+        height: 0;
+        border-radius: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 7px solid #fff;
+        top: 2px;
+        transform: translateX(-50%);
+        filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+      }
+
+      /* ---- FULL-VIEW OVERLAYS: SCALE SELECTION, PAUSE MENU, END SCREEN ---- */
+      .overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 40;
+        display: none;
+        align-items: flex-start;
+        justify-content: center;
+        overflow-y: auto;
+        padding: 18px 16px;
+        background: rgba(3, 6, 12, 0.9);
+        backdrop-filter: blur(6px);
+      }
+      .overlay.show {
+        display: flex;
+      }
+      .ov-box {
+        width: 100%;
+        max-width: 940px;
+        margin: auto;
+      }
+      .ov-title {
+        font-family: var(--head);
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        text-align: center;
+        color: var(--txt);
+      }
+      .ov-sub {
+        font-size: 16.5px;
+        font-weight: 500;
+        line-height: 1.4;
+        text-align: center;
+        color: var(--mut);
+        max-width: 640px;
+        margin: 6px auto 16px;
+      }
+
+      /* ---- SCALE CARDS ---- */
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
+      .scale-card {
+        appearance: none;
+        cursor: pointer;
+        text-align: left;
+        font-family: var(--body);
+        color: var(--txt);
+        background: var(--panel);
+        border: 1px solid var(--line2);
+        border-radius: 12px;
+        padding: 14px 16px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+      .scale-card:hover,
+      .scale-card:focus-visible {
+        transform: translateY(-3px);
+        border-color: var(--glow);
+        box-shadow: 0 10px 30px rgba(127, 211, 255, 0.18);
+        outline: none;
+      }
+      .scale-card h2 {
+        font-family: var(--head);
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .scale-card h2 small {
+        font-family: var(--head);
+        font-size: 8.5px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        padding: 3px 7px;
+        border-radius: 4px;
+        white-space: nowrap;
+      }
+      .tag-easy {
+        color: #06121c;
+        background: var(--good);
+      }
+      .tag-hard {
+        color: #fff;
+        background: #c4472f;
+      }
+      .tag-rec {
+        color: #06121c;
+        background: var(--glow-gold);
+      }
+      .scale-card .strip {
+        margin: 2px 8px 2px 10px;
+        height: 22px;
+      }
+      .scale-card p {
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 1.35;
+        color: var(--mut);
+      }
+      .scale-card p.feel {
+        color: var(--txt);
+        font-weight: 600;
+      }
+      .scale-card .done-mark {
+        margin-top: auto;
+        font-family: var(--head);
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--good);
+      }
+      .scale-card .play-mark {
+        margin-top: auto;
+        font-family: var(--head);
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--glow);
+      }
+
+      /* ---- BADGES ---- */
+      .badges {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 16px;
+      }
+      .badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px 6px 8px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--panel);
+        opacity: 0.45;
+      }
+      .badge i {
+        font-style: normal;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        background: var(--panel2);
+        border: 1px solid var(--line2);
+        color: var(--dim);
+      }
+      .badge b {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--mut);
+        line-height: 1.1;
+      }
+      .badge b small {
+        display: block;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--dim);
+      }
+      .badge.earned {
+        opacity: 1;
+        border-color: rgba(255, 212, 92, 0.6);
+      }
+      .badge.earned i {
+        background: var(--glow-gold);
+        border-color: var(--glow-gold);
+        color: #2b1d00;
+      }
+      .badge.earned b {
+        color: var(--txt);
+      }
+      .badge.new {
+        box-shadow: 0 0 16px rgba(255, 212, 92, 0.45);
+      }
+
+      /* ---- PAUSE MENU ---- */
+      .menu-box {
+        max-width: 340px;
+        background: var(--panel);
+        border: 1px solid var(--line2);
+        border-radius: 12px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .menu-box .ov-title {
+        font-size: 18px;
+        margin-bottom: 6px;
+      }
+      .menu-box .btn {
+        padding: 12px 16px;
+      }
+
+      /* ---- END SCREEN: THE SAME SOLAR SYSTEM IN ALL THREE SCALES ---- */
+      .end-msg {
+        font-size: 17px;
+        font-weight: 600;
+        line-height: 1.35;
+        text-align: center;
+        color: var(--glow-gold);
+        max-width: 660px;
+        margin: 6px auto 12px;
+      }
+      .results {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      .compare {
+        background: var(--panel);
+        border: 1px solid var(--line2);
+        border-radius: 12px;
+        padding: 12px 16px;
+      }
+      .compare h3 {
+        font-family: var(--head);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--dim);
+        margin-bottom: 6px;
+      }
+      .cmp-row {
+        display: grid;
+        grid-template-columns: 190px 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 8px;
+        border-radius: 8px;
+      }
+      .cmp-row + .cmp-row {
+        border-top: 1px solid var(--line);
+      }
+      .cmp-row.played {
+        background: rgba(127, 211, 255, 0.07);
+      }
+      .cmp-row h4 {
+        font-family: var(--head);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--txt);
+      }
+      .cmp-row h4 small {
+        display: block;
+        font-size: 8.5px;
+        color: var(--glow);
+        letter-spacing: 0.1em;
+        margin: 1px 0 2px;
+      }
+      .cmp-row p {
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.3;
+        color: var(--mut);
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+        margin: 8px 8px 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--mut);
+      }
+      .legend span {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .legend i {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        display: block;
+      }
+      .closing {
+        font-size: 17px;
+        font-weight: 600;
+        line-height: 1.4;
+        text-align: center;
+        color: var(--txt);
+        max-width: 700px;
+        margin: 14px auto 0;
+      }
+      .ov-actions {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      @media (max-width: 760px) {
+        .cards {
+          grid-template-columns: 1fr;
+        }
+        .cmp-row {
+          grid-template-columns: 1fr;
+          gap: 4px;
+        }
+        .ov-title {
+          font-size: 18px;
+        }
+        #hud {
+          padding: 6px 8px;
+          gap: 6px;
+        }
+        .chip {
+          padding: 4px 8px;
+          min-width: 0;
+          flex: 1 1 auto;
+        }
+        .chip b {
+          font-size: 14px;
+        }
+        .chip.power {
+          order: 9;
+          flex: 1 1 100%;
+        }
+        #minimap {
+          padding: 6px 10px 8px;
+          gap: 8px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .toast,
+        .scale-card,
+        .btn,
+        .helpbtn {
+          transition: none;
+        }
+      }
+    </style>
+    <style id="lof-guide">
+    /* guide pop-up: tabs centred in the header, grip pinned left, close button pinned right */
+    .fw-head { position: relative; }
+    .fw-head-actions { flex: 1; justify-content: center; }
+    .fw-head .fw-title { position: absolute; left: 12px; }
+    .fw-head .fw-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+    /* when the window is dragged very narrow there is no room to centre: sit the tabs beside the grip */
+    .helpbar.floatwin { container-type: inline-size; }
+    @container (max-width: 340px) {
+      .fw-head-actions { justify-content: flex-start; min-width: 0; padding: 0 32px 0 20px; }
+    }
+  </style>
+</head>
+  <body>
+    <!-- ---- TOP HEADER ---- -->
+    <header class="top">
+      <div class="title">
+        <h1>Measuring the Cosmos</h1>
+      </div>
+
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">What You'll Learn</button>
+      </div>
+
+      <!-- Floating, Draggable & Resizable Guide System Container -->
+      <div class="helpbar" id="helpbar">
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li>
+              <b>Choose a scale</b> from the three cards: <b>Equal Spacing</b>,
+              <b>Real Distance</b> or <b>Log Scale</b>. The scale decides how
+              far apart the planet platforms are.
+            </li>
+            <li>
+              You begin on the <b>Sun</b>. Your first target is
+              <b>Mercury</b>, and the goal is to reach <b>Neptune</b>.
+            </li>
+            <li>
+              <b>Charge the jump:</b> hold the <b>spacebar</b>, the mouse
+              button, or your finger on the screen. The longer you hold, the
+              more the <b>Jump Power</b> bar fills and the farther you jump.
+            </li>
+            <li>
+              <b>Let go</b> to jump towards the next planet. The dotted arc
+              shows most of your path.
+            </li>
+            <li>
+              <b>Adjust your aim slightly</b> with the <b>left / right arrow
+              keys</b>, or drag up and down while you hold. The arrow shows
+              the direction.
+            </li>
+            <li>
+              <b>Land on the next planet</b> to carry on. Planets must be
+              visited in order, so flying past one counts as a miss.
+            </li>
+            <li>
+              If you fall short or overshoot, press <b>Retry</b> (or the
+              spacebar) to try again from the last planet you reached.
+            </li>
+            <li>
+              In <b>Real Distance</b>, some gaps are too wide for any jump.
+              Land on the glowing <b>booster pad</b> and it carries you the
+              rest of the way.
+            </li>
+            <li>
+              The <b>mini-map</b> at the bottom shows the Sun and all eight
+              planets in the scale you chose. The white marker is you.
+            </li>
+            <li>
+              The top panel shows your <b>scale</b>, the planet you are
+              <b>on</b>, your <b>next</b> target, your score and your retries.
+              Landing near the centre and landing on the first try score more.
+            </li>
+            <li>
+              Press <b>Pause</b> (or <b>P</b>) to restart the journey or
+              switch scale.
+            </li>
+            <li>
+              Reach Neptune to see the same solar system drawn in all three
+              scales, side by side. Try every scale to earn all three badges.
+            </li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <p>You should come away able to understand:</p>
+          <ul>
+            <li>that planets are <b>not equally spaced</b> from the Sun,</li>
+            <li>
+              that the <b>inner planets are much closer together</b> than the
+              outer planets,
+            </li>
+            <li>
+              and that <b>real solar system distances are difficult to show</b>
+              on a normal screen or classroom model.
+            </li>
+            <li>
+              You should also understand that <b>logarithmic scale is
+              useful</b> because it compresses very large distances while
+              still preserving the idea that outer planets are much farther
+              away than inner planets.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <!-- ---- MAIN APPLICATION VIEWPORT ---- -->
+    <div id="app">
+      <!-- TOP PANEL: SCALE MODE, CURRENT PLANET, NEXT TARGET, JUMP POWER BAR -->
+      <div id="hud">
+        <div class="chip mode"><span>Scale</span><b id="hudMode">—</b></div>
+        <div class="chip"><span>On</span><b id="hudOn">Sun</b></div>
+        <div class="chip next"><span>Next</span><b id="hudNext">Mercury</b></div>
+        <div class="chip power">
+          <span>Jump Power</span>
+          <div class="power-row">
+            <div class="pbar" role="progressbar" aria-label="Jump power" aria-valuemin="0" aria-valuemax="100" id="pbar"><i id="pfill"></i></div>
+            <em id="hudAim">0% · 45°</em>
+          </div>
+        </div>
+        <div class="chip num"><span>Score</span><b id="hudScore">0</b></div>
+        <div class="chip num"><span>Retries</span><b id="hudRetries">0</b></div>
+        <button type="button" class="hudbtn" id="pauseBtn" title="Pause (P)">❚❚ Pause</button>
+      </div>
+
+      <!-- MAIN VIEW: SIDE-SCROLLING SPACE SCENE -->
+      <div id="stage">
+        <canvas id="gameCanvas" aria-label="Space scene. Hold to charge a jump and let go to jump to the next planet."></canvas>
+
+        <!-- FEEDBACK POP-UP -->
+        <div class="toast" id="toast" role="status" aria-live="polite">
+          <h3 id="toastHead"></h3>
+          <p id="toastText"></p>
+        </div>
+
+        <!-- MISS BANNER -->
+        <div id="missBanner" hidden>
+          <p id="missText"></p>
+          <button type="button" class="btn" id="retryBtn">Retry</button>
+        </div>
+
+        <!-- FIRST-JUMP HINT -->
+        <div id="startHint" hidden>
+          <b>Hold</b> the spacebar or press and hold here to charge. <b>Let go</b> to jump.
+        </div>
+      </div>
+
+      <!-- MINI-MAP -->
+      <div id="minimap">
+        <div class="mm-label">Mini-map<b id="mmMode">—</b></div>
+        <div class="strip" id="mmStrip"></div>
+      </div>
+
+      <!-- SCALE SELECTION SCREEN -->
+      <div class="overlay show" id="selectScreen">
+        <div class="ov-box">
+          <h2 class="ov-title">Choose Your Scale</h2>
+          <p class="ov-sub">
+            Jump from the Sun to Neptune, one planet at a time. Each scale places the same eight
+            planets differently. Pick one to begin.
+          </p>
+          <div class="cards" id="cards"></div>
+          <div class="badges" id="selectBadges"></div>
+        </div>
+      </div>
+
+      <!-- PAUSE MENU -->
+      <div class="overlay" id="pauseMenu">
+        <div class="ov-box menu-box">
+          <h2 class="ov-title">Paused</h2>
+          <button type="button" class="btn" id="resumeBtn">Resume</button>
+          <button type="button" class="btn ghost" id="restartBtn">Restart Journey</button>
+          <button type="button" class="btn ghost" id="switchBtn">Switch Scale</button>
+        </div>
+      </div>
+
+      <!-- END SCREEN: FINAL SCALE COMPARISON -->
+      <div class="overlay" id="endScreen">
+        <div class="ov-box">
+          <h2 class="ov-title">You Reached Neptune!</h2>
+          <p class="end-msg" id="endMsg"></p>
+          <div class="results" id="endResults"></div>
+          <div class="compare">
+            <h3>The same solar system in three scales</h3>
+            <div id="compareRows"></div>
+            <div class="legend" id="legend"></div>
+          </div>
+          <p class="closing">
+            The solar system is not evenly spaced. Real distances are enormous, so scientists and
+            educators often use scale models to make space easier to study.
+          </p>
+          <div class="badges" id="endBadges"></div>
+          <div class="ov-actions">
+            <button type="button" class="btn" id="endSwitchBtn">Try Another Scale</button>
+            <button type="button" class="btn ghost" id="endAgainBtn">Play This Scale Again</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JAVASCRIPT SIMULATION SCRIPT -->
+    <script>
+      (function () {
+        "use strict";
+
+        /* ================= PLANETS (FROM DESIGN DOCUMENT) ================= */
+        // Always in order from the Sun. `au` is the approximate average distance from the Sun.
+        // `r` is the platform radius in world pixels: big enough to land on, not to scale.
+        const PLANETS = [
+          { id: "mercury", name: "Mercury", au: 0.39, r: 18, color: "#a9abae", dark: "#55575b" },
+          { id: "venus", name: "Venus", au: 0.72, r: 23, color: "#e8c77f", dark: "#8f6f35" },
+          { id: "earth", name: "Earth", au: 1.0, r: 24, color: "#4f9dff", dark: "#173f85" },
+          { id: "mars", name: "Mars", au: 1.52, r: 20, color: "#dd683f", dark: "#7c321b" },
+          { id: "jupiter", name: "Jupiter", au: 5.2, r: 38, color: "#deb083", dark: "#86603d" },
+          { id: "saturn", name: "Saturn", au: 9.58, r: 33, color: "#e6d298", dark: "#8f7a47" },
+          { id: "uranus", name: "Uranus", au: 19.2, r: 29, color: "#93e3e8", dark: "#3f8d93" },
+          { id: "neptune", name: "Neptune", au: 30.1, r: 28, color: "#5878f6", dark: "#25388f" }
+        ];
+        const LAST = PLANETS.length - 1;
+        const SUN_R = 50;
+
+        /* ================= SCALE MODES ================= */
+        // Each mode turns a planet into a world x position, with the Sun at x = 0.
+        // Jump physics are the same in every mode, so a longer gap really needs a stronger jump.
+        const EQUAL_GAP = 260;
+        const REAL_PX_PER_AU = 320;
+        const LOG_PX = 596;
+
+        const MODES = {
+          equal: {
+            name: "Equal Spacing",
+            tag: "Easy",
+            tagClass: "tag-easy",
+            feel: "Every jump feels almost the same and the game is easy to complete.",
+            note: "Easy to play, but not accurate to real planetary distances.",
+            strip: "Planets appear evenly spaced.",
+            end: "This version is easy to play, but real planets are not spaced this evenly.",
+            x: (p, i) => EQUAL_GAP * (i + 1)
+          },
+          real: {
+            name: "Real Distance",
+            tag: "Extreme",
+            tagClass: "tag-hard",
+            feel: "Inner planet jumps are short, but outer planet jumps become extremely long.",
+            note: "Planets sit at their real average distances from the Sun. Booster pads carry you across the widest gaps.",
+            strip: "Inner planets are crowded near the Sun, outer planets stretch far away.",
+            end: "Real space distances are huge and difficult to fit into a normal screen or classroom model.",
+            x: (p) => REAL_PX_PER_AU * p.au
+          },
+          log: {
+            name: "Log Scale",
+            tag: "Recommended",
+            tagClass: "tag-rec",
+            feel: "Outer jumps are longer than inner jumps, but they remain playable.",
+            note: "Huge distances are compressed so that every planet fits, like a solar system model in a classroom.",
+            strip: "All planets fit, and the outer planets are still farther apart than the inner planets.",
+            end: "Log scale keeps the solar system playable while still showing that the outer planets are much farther away.",
+            // log(1 + distance): a logarithmic scale that can still put the Sun at zero.
+            x: (p) => LOG_PX * Math.log(1 + p.au)
+          }
+        };
+        const MODE_IDS = ["equal", "real", "log"];
+
+        /* ================= FEEDBACK MESSAGES (ONE PER LANDING) ================= */
+        const FEEDBACK = {
+          equal: [
+            "Every gap in this model is the same size.",
+            "Equal spacing is easy, but it hides the real distance pattern.",
+            "This is the neat poster version of the solar system.",
+            "In real space, the next jump to Jupiter would be far bigger than this one.",
+            "That jump felt just like the others. In real space it would not.",
+            "Equal spacing is easy, but it hides the real distance pattern.",
+            "Real outer planets are spread across huge distances, not even steps.",
+            "This version is easy to play, but real planets are not spaced this evenly."
+          ],
+          real: [
+            "The inner planets are packed close to the Sun.",
+            "Another short hop. The inner planets are packed close to the Sun.",
+            "Earth and Mars are still part of the closer inner solar system.",
+            "The inner planets were close together. Now the distance to Jupiter is much larger.",
+            "The jump from Mars to Jupiter is much larger than the earlier jumps.",
+            "Outer planets are spread across huge distances.",
+            "Each outer gap is wider than the whole inner solar system.",
+            "Real distances are enormous. That is why they are hard to fit on a screen."
+          ],
+          log: [
+            "The inner planets are packed close to the Sun.",
+            "Log scale compresses huge distances so the full solar system can fit.",
+            "Earth and Mars are still part of the closer inner solar system.",
+            "The inner planets were close together. The outer planets need stronger jumps.",
+            "The jump from Mars to Jupiter is much larger than the earlier jumps.",
+            "Log scale keeps the solar system playable while still showing that the outer planets are much farther away.",
+            "Outer planets are spread across huge distances.",
+            "Log scale compresses huge distances so the full solar system can fit."
+          ]
+        };
+
+        /* ================= JUMP PHYSICS ================= */
+        const GRAVITY = 1400; // world px / s²
+        const RANGE_MIN = 40; // jump length at 0% power, at 45°
+        const RANGE_MAX = 620; // jump length at 100% power, at 45°
+        const CHARGE_SECONDS = 2; // time to fill the power bar
+        const ANGLE_DEFAULT = 45;
+        const ANGLE_MIN = 30;
+        const ANGLE_MAX = 60;
+        const LAND_ASSIST = 10; // extra landing margin around a planet
+        const FALL_Y = 320; // falling this far below the planets is a miss
+        const BOOST_GAP = 580; // gaps wider than this get a booster pad
+        const PAD_OFFSET = 300; // how far past the planet the pad floats
+        const PAD_W = 88;
+        const PAD_Y = -30;
+
+        // Power 0..1 maps to jump length in a straight line, so the bar reads as distance.
+        function launchSpeed(power) {
+          return Math.sqrt((RANGE_MIN + power * (RANGE_MAX - RANGE_MIN)) * GRAVITY);
+        }
+
+        /* ================= GAME STATE ================= */
+        const state = {
+          screen: "select", // select | play | end
+          mode: "log",
+          phase: "ready", // ready | charging | flight | boost | missed | finished
+          paused: false,
+          at: -1, // index of the planet the player stands on; -1 is the Sun
+          px: [], // world x of each planet in this mode
+          pads: [], // booster pads in this mode
+          player: { x: 0, y: -SUN_R, vx: 0, vy: 0, spin: 0 },
+          power: 0,
+          angle: ANGLE_DEFAULT,
+          chargeBy: null, // "key" or "pointer"
+          flightT: 0,
+          crossX: null,
+          boost: null,
+          score: 0,
+          retries: 0,
+          gapTries: 0,
+          accSum: 0,
+          firstJumpDone: false,
+          time: 0,
+          landPulse: null
+        };
+
+        const keys = { left: false, right: false };
+
+        /* ================= SAVED PROGRESS ================= */
+        const SAVE_KEY = "measuring-the-cosmos-progress";
+        const progress = { tried: {}, completed: {}, best: {} };
+
+        function saveProgress() {
+          try {
+            localStorage.setItem(SAVE_KEY, JSON.stringify(progress));
+          } catch (e) {}
+        }
+
+        function loadProgress() {
+          try {
+            const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || "null");
+            if (!saved) return;
+            MODE_IDS.forEach((m) => {
+              if (saved.tried && saved.tried[m]) progress.tried[m] = true;
+              if (saved.completed && saved.completed[m]) progress.completed[m] = true;
+              if (saved.best && typeof saved.best[m] === "number") progress.best[m] = saved.best[m];
+            });
+          } catch (e) {}
+        }
+
+        /* ================= BADGES ================= */
+        const BADGES = [
+          {
+            id: "neptune",
+            icon: "★",
+            name: "Neptune Finish",
+            how: "Reach Neptune",
+            earned: () => MODE_IDS.some((m) => progress.completed[m])
+          },
+          {
+            id: "log",
+            icon: "㏒",
+            name: "Log Scale Master",
+            how: "Finish in Log Scale",
+            earned: () => !!progress.completed.log
+          },
+          {
+            id: "explorer",
+            icon: "◎",
+            name: "Scale Explorer",
+            how: "Try all three scales",
+            earned: () => MODE_IDS.every((m) => progress.tried[m])
+          }
+        ];
+
+        function earnedBadgeIds() {
+          return BADGES.filter((b) => b.earned()).map((b) => b.id);
+        }
+
+        function renderBadges(el, newIds) {
+          el.innerHTML = BADGES.map((b) => {
+            const got = b.earned();
+            const isNew = newIds && newIds.includes(b.id);
+            return (
+              '<div class="badge' +
+              (got ? " earned" : "") +
+              (isNew ? " new" : "") +
+              '"><i>' +
+              b.icon +
+              "</i><b>" +
+              b.name +
+              "<small>" +
+              (isNew ? "New badge!" : got ? "Earned" : b.how) +
+              "</small></b></div>"
+            );
+          }).join("");
+        }
+
+        /* ================= DOM ELEMENTS ================= */
+        const stage = document.getElementById("stage");
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const hudMode = document.getElementById("hudMode");
+        const hudOn = document.getElementById("hudOn");
+        const hudNext = document.getElementById("hudNext");
+        const hudAim = document.getElementById("hudAim");
+        const hudScore = document.getElementById("hudScore");
+        const hudRetries = document.getElementById("hudRetries");
+        const pbar = document.getElementById("pbar");
+        const pfill = document.getElementById("pfill");
+        const pauseBtn = document.getElementById("pauseBtn");
+
+        const toast = document.getElementById("toast");
+        const toastHead = document.getElementById("toastHead");
+        const toastText = document.getElementById("toastText");
+        const missBanner = document.getElementById("missBanner");
+        const missText = document.getElementById("missText");
+        const retryBtn = document.getElementById("retryBtn");
+        const startHint = document.getElementById("startHint");
+
+        const mmMode = document.getElementById("mmMode");
+        const mmStrip = document.getElementById("mmStrip");
+
+        const selectScreen = document.getElementById("selectScreen");
+        const cards = document.getElementById("cards");
+        const selectBadges = document.getElementById("selectBadges");
+        const pauseMenu = document.getElementById("pauseMenu");
+        const resumeBtn = document.getElementById("resumeBtn");
+        const restartBtn = document.getElementById("restartBtn");
+        const switchBtn = document.getElementById("switchBtn");
+        const endScreen = document.getElementById("endScreen");
+        const endMsg = document.getElementById("endMsg");
+        const endResults = document.getElementById("endResults");
+        const compareRows = document.getElementById("compareRows");
+        const legend = document.getElementById("legend");
+        const endBadges = document.getElementById("endBadges");
+        const endSwitchBtn = document.getElementById("endSwitchBtn");
+        const endAgainBtn = document.getElementById("endAgainBtn");
+
+        const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        /* ================= AUDIO SYNTHESIZER ================= */
+        let audioCtx = null;
+        function getAudioContext() {
+          if (!audioCtx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) audioCtx = new AudioCtx();
+          }
+          if (audioCtx && audioCtx.state === "suspended") {
+            audioCtx.resume();
+          }
+          return audioCtx;
+        }
+
+        function playTone(freq, type = "sine", duration = 0.25, gainVal = 0.15, slideTo = 0) {
+          try {
+            const ac = getAudioContext();
+            if (!ac) return;
+            const osc = ac.createOscillator();
+            const gain = ac.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, ac.currentTime);
+            if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, ac.currentTime + duration);
+            gain.gain.setValueAtTime(gainVal, ac.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(ac.destination);
+            osc.start();
+            osc.stop(ac.currentTime + duration);
+          } catch (e) {}
+        }
+
+        function playChime(noteIndex) {
+          const notes = [523.25, 587.33, 659.25, 698.46, 783.99, 880.0, 987.77, 1046.5];
+          playTone(notes[noteIndex % notes.length], "sine", 0.3, 0.18);
+        }
+
+        function playFanfare() {
+          const melody = [
+            { f: 523.25, d: 0.2, t: 0 },
+            { f: 659.25, d: 0.2, t: 120 },
+            { f: 783.99, d: 0.3, t: 240 },
+            { f: 1046.5, d: 0.5, t: 380 }
+          ];
+          melody.forEach((m) => {
+            setTimeout(() => playTone(m.f, "triangle", m.d, 0.22), m.t);
+          });
+        }
+
+        /* ================= SCALE STRIPS (MINI-MAP, SCALE CARDS, END SCREEN) ================= */
+        function modePositions(mode) {
+          return PLANETS.map((p, i) => MODES[mode].x(p, i));
+        }
+
+        // Sun at the left end, Neptune at the right end, every planet placed by the mode's scale.
+        function stripHTML(mode) {
+          const xs = modePositions(mode);
+          const max = xs[LAST];
+          return (
+            '<i class="s-sun" title="Sun"></i>' +
+            PLANETS.map(
+              (p, i) =>
+                '<i class="s-dot" data-i="' +
+                i +
+                '" title="' +
+                p.name +
+                '" style="left:' +
+                ((xs[i] / max) * 100).toFixed(2) +
+                "%;background:" +
+                p.color +
+                '"></i>'
+            ).join("")
+          );
+        }
+
+        let mmYou = null;
+        let mmDots = [];
+
+        function buildMiniMap() {
+          mmStrip.innerHTML = stripHTML(state.mode) + '<b class="s-you" title="You"></b>';
+          mmYou = mmStrip.querySelector(".s-you");
+          mmDots = Array.from(mmStrip.querySelectorAll(".s-dot"));
+          mmMode.textContent = MODES[state.mode].name;
+        }
+
+        function updateMiniMapMarks() {
+          mmDots.forEach((dot, i) => {
+            dot.classList.toggle("done", i <= state.at);
+            dot.classList.toggle("next", i === state.at + 1);
+          });
+        }
+
+        /* ================= LEVEL SETUP ================= */
+        function standPos(idx) {
+          if (idx < 0) return { x: 0, y: -SUN_R };
+          return { x: state.px[idx], y: -PLANETS[idx].r };
+        }
+
+        function bodyName(idx) {
+          return idx < 0 ? "Sun" : PLANETS[idx].name;
+        }
+
+        // The booster pad in the gap ahead of the player, if that gap has one.
+        function padAhead() {
+          return state.pads.find((pad) => pad.to === state.at + 1) || null;
+        }
+
+        // World x of the thing the next jump has to land on: a booster pad or the next planet.
+        function nextLandingX() {
+          if (state.at >= LAST) return standPos(state.at).x + 300;
+          const pad = padAhead();
+          return pad ? pad.x : state.px[state.at + 1];
+        }
+
+        // close / far / very far follow the real distance between the two bodies,
+        // so the labels say the same thing in Real Distance and in Log Scale.
+        function gapLabel(i) {
+          if (state.mode === "equal") return "same gap";
+          const au = PLANETS[i].au - (i === 0 ? 0 : PLANETS[i - 1].au);
+          return au < 1 ? "close" : au < 5 ? "far" : "very far";
+        }
+
+        function startJourney(mode) {
+          // Start the sound engine on this click, so the first jump is not held up by it.
+          getAudioContext();
+          state.mode = mode;
+          state.screen = "play";
+          state.paused = false;
+          state.px = modePositions(mode);
+          state.pads = [];
+          PLANETS.forEach((p, i) => {
+            const fromX = i === 0 ? 0 : state.px[i - 1];
+            if (state.px[i] - fromX > BOOST_GAP) {
+              state.pads.push({ x: fromX + PAD_OFFSET, y: PAD_Y, to: i });
+            }
+          });
+
+          state.at = -1;
+          state.score = 0;
+          state.retries = 0;
+          state.gapTries = 0;
+          state.accSum = 0;
+          state.boost = null;
+          state.landPulse = null;
+          state.firstJumpDone = false;
+          resetToStand();
+
+          progress.tried[mode] = true;
+          saveProgress();
+
+          selectScreen.classList.remove("show");
+          pauseMenu.classList.remove("show");
+          endScreen.classList.remove("show");
+          missBanner.hidden = true;
+          startHint.hidden = false;
+          hideToast();
+          if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+
+          buildMiniMap();
+          updateMiniMapMarks();
+          updateHUD();
+
+          const here = standPos(-1);
+          cam.x = here.x;
+          cam.zoom = targetZoom();
+        }
+
+        function resetToStand() {
+          const here = standPos(state.at);
+          state.player.x = here.x;
+          state.player.y = here.y;
+          state.player.vx = 0;
+          state.player.vy = 0;
+          state.player.spin = 0;
+          state.power = 0;
+          state.angle = ANGLE_DEFAULT;
+          state.chargeBy = null;
+          state.phase = "ready";
+        }
+
+        /* ================= HUD ================= */
+        function updateHUD() {
+          hudMode.textContent = MODES[state.mode].name;
+          hudOn.textContent = bodyName(state.at);
+          hudNext.textContent = state.at >= LAST ? "Journey done" : PLANETS[state.at + 1].name;
+          hudScore.textContent = state.score;
+          hudRetries.textContent = state.retries;
+        }
+
+        function updatePowerBar() {
+          const pct = Math.round(state.power * 100);
+          pfill.style.width = pct + "%";
+          pbar.setAttribute("aria-valuenow", pct);
+          hudAim.textContent = pct + "% · " + Math.round(state.angle) + "°";
+        }
+
+        /* ================= FEEDBACK POP-UPS ================= */
+        let toastTimer = null;
+
+        function showToast(head, text, extra, kind, ms) {
+          toastHead.innerHTML = head + (extra ? "<small>" + extra + "</small>" : "");
+          toastText.textContent = text;
+          toast.classList.toggle("boost", kind === "boost");
+          toast.classList.add("show");
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(hideToast, ms || 4500);
+        }
+
+        function hideToast() {
+          clearTimeout(toastTimer);
+          toast.classList.remove("show");
+        }
+
+        /* ================= GAMEPLAY: CHARGE, JUMP, LAND, MISS ================= */
+        function beginCharge(by) {
+          if (state.screen !== "play" || state.paused || state.phase !== "ready") return;
+          state.phase = "charging";
+          state.chargeBy = by;
+          state.power = 0;
+        }
+
+        function releaseJump() {
+          if (state.phase !== "charging") return;
+          const v = launchSpeed(state.power);
+          const a = (state.angle * Math.PI) / 180;
+          state.player.vx = v * Math.cos(a);
+          state.player.vy = -v * Math.sin(a);
+          state.phase = "flight";
+          state.chargeBy = null;
+          state.flightT = 0;
+          state.crossX = null;
+          if (!state.firstJumpDone) {
+            state.firstJumpDone = true;
+            startHint.hidden = true;
+          }
+          playTone(260 + state.power * 260, "triangle", 0.22, 0.12, 620 + state.power * 400);
+        }
+
+        function landOnPlanet(j, offset, quality) {
+          const p = PLANETS[j];
+          const accuracy = quality !== undefined ? quality : Math.max(0, 1 - Math.abs(offset) / (p.r + LAND_ASSIST));
+          const accPts = Math.round(accuracy * 100);
+          const effPts = state.gapTries === 0 ? 50 : state.gapTries === 1 ? 25 : 10;
+          state.score += accPts + effPts;
+          state.accSum += accuracy;
+          state.gapTries = 0;
+          state.at = j;
+          resetToStand();
+          state.landPulse = { t0: state.time };
+
+          const grade = accuracy >= 0.75 ? "Centre landing" : accuracy >= 0.4 ? "Good landing" : "Edge landing";
+          showToast("Landed on " + p.name, FEEDBACK[state.mode][j], grade + " · +" + (accPts + effPts));
+          playChime(j);
+          updateHUD();
+          updateMiniMapMarks();
+
+          if (j === LAST) finishJourney();
+        }
+
+        // A hop that comes back down on the body it left: no progress, no penalty.
+        function hopBack() {
+          resetToStand();
+          showToast("Too soft", "Hold longer to charge more power.", "", "", 2200);
+        }
+
+        function landOnPad(pad, offset) {
+          const target = standPos(pad.to);
+          const gap = target.x - pad.x;
+          state.phase = "boost";
+          state.boost = {
+            t: 0,
+            T: Math.max(1.4, Math.min(6.5, gap / 620)),
+            x0: pad.x,
+            y0: pad.y,
+            x1: target.x,
+            y1: target.y,
+            lift: Math.min(240, gap * 0.1),
+            to: pad.to,
+            quality: Math.max(0, 1 - Math.abs(offset) / (PAD_W / 2 + LAND_ASSIST))
+          };
+          state.player.x = pad.x;
+          state.player.y = pad.y;
+          showToast(
+            "Booster pad",
+            "This gap is too wide for any jump. Watch how far " + PLANETS[pad.to].name + " really is.",
+            "",
+            "boost",
+            Math.max(3000, state.boost.T * 1000)
+          );
+          playTone(180, "sawtooth", Math.min(2.5, state.boost.T), 0.07, 900);
+        }
+
+        function miss(kind, skipped) {
+          state.phase = "missed";
+          state.retries++;
+          state.gapTries++;
+          const target = PLANETS[state.at + 1].name;
+          const pad = padAhead();
+          let text;
+          if (kind === "skip") {
+            text = "You flew past " + target + " and reached " + skipped + ". Planets must be visited in order.";
+          } else if (kind === "short") {
+            text = "Fell short of " + (pad ? "the booster pad" : target) + ". Charge a little longer.";
+          } else {
+            text = "Overshot " + (pad ? "the booster pad" : target) + ". Use less power.";
+          }
+          missText.textContent = text;
+          missBanner.hidden = false;
+          startHint.hidden = true;
+          hideToast();
+          playTone(220, "sine", 0.35, 0.12, 110);
+          updateHUD();
+        }
+
+        function retry() {
+          if (state.phase !== "missed") return;
+          missBanner.hidden = true;
+          resetToStand();
+        }
+
+        function finishJourney() {
+          state.phase = "finished";
+          const before = earnedBadgeIds();
+          progress.completed[state.mode] = true;
+          progress.best[state.mode] = Math.max(progress.best[state.mode] || 0, state.score);
+          saveProgress();
+          const newIds = earnedBadgeIds().filter((id) => !before.includes(id));
+          playFanfare();
+          setTimeout(() => {
+            if (state.phase === "finished") showEndScreen(newIds);
+          }, 1900);
+        }
+
+        /* ================= SIMULATION STEP ================= */
+        function stepFlight(dt) {
+          const pl = state.player;
+          const prevY = pl.y;
+          pl.vy += GRAVITY * dt;
+          pl.x += pl.vx * dt;
+          pl.y += pl.vy * dt;
+          pl.spin += dt * 2.2;
+          state.flightT += dt;
+
+          // Where the jump comes back down to planet height: used to tell short from overshot.
+          if (state.crossX === null && pl.vy > 0 && prevY < 0 && pl.y >= 0) state.crossX = pl.x;
+
+          if (pl.vy > 0) {
+            // The body just left can only be landed on again once the jump is properly under way.
+            const originFree = state.flightT > 0.12;
+
+            if (state.at === -1 && originFree && pl.y <= 4 && Math.hypot(pl.x, pl.y) < SUN_R + LAND_ASSIST) {
+              hopBack();
+              return;
+            }
+
+            for (let j = Math.max(0, state.at); j <= LAST; j++) {
+              if (j === state.at && !originFree) continue;
+              const p = PLANETS[j];
+              const dx = pl.x - state.px[j];
+              if (pl.y <= 4 && Math.hypot(dx, pl.y) < p.r + LAND_ASSIST) {
+                if (j === state.at) hopBack();
+                else if (j === state.at + 1) landOnPlanet(j, dx);
+                else miss("skip", p.name);
+                return;
+              }
+            }
+
+            const pad = padAhead();
+            if (pad && prevY <= pad.y && pl.y >= pad.y && Math.abs(pl.x - pad.x) <= PAD_W / 2 + LAND_ASSIST) {
+              landOnPad(pad, pl.x - pad.x);
+              return;
+            }
+          }
+
+          if (pl.y > FALL_Y) {
+            const x = state.crossX === null ? pl.x : state.crossX;
+            miss(x < nextLandingX() ? "short" : "over");
+          }
+        }
+
+        function stepBoost(dt) {
+          const b = state.boost;
+          b.t = Math.min(1, b.t + dt / b.T);
+          // Nearly constant speed, eased a little at each end, so travel time tracks distance.
+          const u = 0.65 * b.t + 0.35 * (b.t * b.t * (3 - 2 * b.t));
+          state.player.x = b.x0 + (b.x1 - b.x0) * u;
+          state.player.y = b.y0 + (b.y1 - b.y0) * u - Math.sin(Math.PI * u) * b.lift;
+          if (b.t >= 1) {
+            state.boost = null;
+            landOnPlanet(b.to, 0, b.quality);
+          }
+        }
+
+        function update(dt) {
+          state.time += dt;
+          if (state.screen !== "play" || state.paused) return;
+
+          if (state.phase === "ready" || state.phase === "charging") {
+            const tilt = (keys.left ? 1 : 0) - (keys.right ? 1 : 0);
+            if (tilt) state.angle = Math.max(ANGLE_MIN, Math.min(ANGLE_MAX, state.angle + tilt * 30 * dt));
+          }
+
+          if (state.phase === "charging") {
+            state.power = Math.min(1, state.power + dt / CHARGE_SECONDS);
+          } else if (state.phase === "flight") {
+            // Small fixed steps so a fast jump cannot pass through a planet between frames.
+            const steps = Math.max(1, Math.ceil(dt / 0.004));
+            for (let i = 0; i < steps && state.phase === "flight"; i++) stepFlight(dt / steps);
+          } else if (state.phase === "boost") {
+            stepBoost(dt);
+          }
+
+          updateCamera(dt);
+          updatePowerBar();
+          if (mmYou) {
+            const frac = Math.max(0, Math.min(1, state.player.x / state.px[LAST]));
+            mmYou.style.left = (frac * 100).toFixed(2) + "%";
+          }
+        }
+
+        /* ================= CANVAS & CAMERA ================= */
+        let width = 0;
+        let height = 0;
+        let baseY = 0; // screen y of the line the planets sit on
+        let anchorX = 0; // screen x where the camera's world x is drawn
+        const cam = { x: 0, zoom: 1 };
+
+        function resizeCanvas() {
+          const rect = stage.getBoundingClientRect();
+          width = rect.width;
+          height = rect.height;
+          baseY = height * 0.64;
+          anchorX = width * 0.22;
+          const dpr = window.devicePixelRatio || 1;
+          canvas.width = Math.round(width * dpr);
+          canvas.height = Math.round(height * dpr);
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        window.addEventListener("resize", resizeCanvas);
+
+        // Zoom out just enough to keep the next landing spot, and the top of a full jump, on screen.
+        function targetZoom() {
+          const here = standPos(state.at).x;
+          const fitGap = (width * 0.62) / Math.max(120, nextLandingX() - here);
+          const fitArc = (baseY - 24) / 215;
+          return Math.max(0.05, Math.min(1, fitGap, fitArc));
+        }
+
+        function updateCamera(dt) {
+          const here = standPos(state.at).x;
+          let tx = here;
+          let tz = targetZoom();
+
+          if (state.phase === "boost" && state.boost) {
+            // Pull right back to show the whole gap being crossed.
+            tz = Math.max(0.05, Math.min(tz, (width * 0.68) / (state.boost.x1 - here)));
+          } else if (state.phase === "flight" || state.phase === "missed") {
+            tx = Math.max(here, state.player.x - (width * 0.55) / cam.zoom);
+            if (state.phase === "missed") tx = here;
+          }
+
+          const k = reducedMotion ? 1 : Math.min(1, dt * 4);
+          cam.x += (tx - cam.x) * k;
+          cam.zoom += (tz - cam.zoom) * k;
+        }
+
+        function sx(wx) {
+          return anchorX + (wx - cam.x) * cam.zoom;
+        }
+        function sy(wy) {
+          return baseY + wy * cam.zoom;
+        }
+
+        /* ================= BACKGROUND: STARS, NEBULA, SUN GLOW ================= */
+        const STAR_TILE = 1600;
+        const stars = [];
+        (function makeStars() {
+          let seed = 7;
+          const rnd = () => {
+            seed = (seed * 16807) % 2147483647;
+            return seed / 2147483647;
+          };
+          for (let i = 0; i < 230; i++) {
+            stars.push({ x: rnd() * STAR_TILE, y: rnd(), r: 0.5 + rnd() * 1.3, a: 0.35 + rnd() * 0.6, tw: rnd() * 6.28, layer: rnd() < 0.5 ? 0.04 : 0.09 });
+          }
+        })();
+
+        const NEBULAE = [
+          { x: 300, y: 0.3, r: 380, c: "120, 90, 220" },
+          { x: 1250, y: 0.7, r: 460, c: "40, 150, 170" },
+          { x: 2100, y: 0.25, r: 420, c: "200, 80, 140" }
+        ];
+        const NEBULA_TILE = 2600;
+
+        function wrap(v, m) {
+          return ((v % m) + m) % m;
+        }
+
+        function drawBackground() {
+          ctx.fillStyle = "#03060c";
+          ctx.fillRect(0, 0, width, height);
+
+          const scroll = cam.x * cam.zoom;
+
+          // Faint nebula patterns
+          NEBULAE.forEach((n) => {
+            const nx = wrap(n.x - scroll * 0.12, NEBULA_TILE) - n.r;
+            for (let ox = nx - NEBULA_TILE; ox < width + n.r; ox += NEBULA_TILE) {
+              if (ox + n.r * 2 < 0) continue;
+              const cx = ox + n.r;
+              const cy = n.y * height;
+              const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, n.r);
+              g.addColorStop(0, "rgba(" + n.c + ", 0.13)");
+              g.addColorStop(1, "rgba(" + n.c + ", 0)");
+              ctx.fillStyle = g;
+              ctx.fillRect(cx - n.r, cy - n.r, n.r * 2, n.r * 2);
+            }
+          });
+
+          // Stars
+          ctx.fillStyle = "#e8f2ff";
+          stars.forEach((s) => {
+            const x0 = wrap(s.x - scroll * s.layer, STAR_TILE);
+            const tw = reducedMotion ? 1 : 0.8 + 0.2 * Math.sin(state.time * 2 + s.tw);
+            ctx.globalAlpha = s.a * tw;
+            for (let x = x0; x < width; x += STAR_TILE) {
+              ctx.beginPath();
+              ctx.arc(x, s.y * height, s.r, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          });
+          ctx.globalAlpha = 1;
+
+          // Soft glow near the Sun at the start of the level
+          const gx = sx(0);
+          const gr = Math.max(140, 520 * cam.zoom);
+          if (gx + gr > 0) {
+            const g = ctx.createRadialGradient(gx, baseY, 0, gx, baseY, gr);
+            g.addColorStop(0, "rgba(255, 190, 80, 0.32)");
+            g.addColorStop(0.4, "rgba(255, 140, 50, 0.1)");
+            g.addColorStop(1, "rgba(255, 140, 50, 0)");
+            ctx.fillStyle = g;
+            ctx.fillRect(gx - gr, baseY - gr, gr * 2, gr * 2);
+          }
+        }
+
+        /* ================= WORLD: SUN, PLANETS, BOOSTER PADS, MARKERS ================= */
+        // Drawn radius: never smaller than a few screen pixels, so planets stay visible zoomed out.
+        function drawnRadius(r) {
+          return Math.max(r * cam.zoom, 4.5);
+        }
+
+        function drawSun() {
+          const x = sx(0);
+          const r = drawnRadius(SUN_R);
+          if (x + r * 2 < 0) return;
+          const g = ctx.createRadialGradient(x - r * 0.3, baseY - r * 0.3, r * 0.1, x, baseY, r);
+          g.addColorStop(0, "#fff8d6");
+          g.addColorStop(0.5, "#ffc93c");
+          g.addColorStop(1, "#ff8a1f");
+          ctx.save();
+          ctx.shadowColor = "rgba(255, 180, 60, 0.9)";
+          ctx.shadowBlur = 26;
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(x, baseY, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          label("Sun", x, baseY + r + 16, "#ffd98a");
+        }
+
+        function label(text, x, y, color, font) {
+          ctx.font = font || "700 13px Rajdhani, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillStyle = color;
+          ctx.fillText(text, x, y);
+        }
+
+        function drawPlanet(i) {
+          const p = PLANETS[i];
+          const x = sx(state.px[i]);
+          const r = drawnRadius(p.r);
+          if (x + r * 2.2 < 0 || x - r * 2.2 > width) return;
+          const y = baseY;
+          const isNext = i === state.at + 1 && state.phase !== "finished";
+          const isDone = i <= state.at;
+
+          ctx.save();
+
+          // Saturn's ring, back half
+          if (p.id === "saturn") drawRing(x, y, r, Math.PI, Math.PI * 2);
+
+          const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r);
+          g.addColorStop(0, p.color);
+          g.addColorStop(1, p.dark);
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Simple surface detail so the planets look different from each other
+          if (r > 9) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.clip();
+            if (p.id === "earth") {
+              ctx.fillStyle = "rgba(96, 196, 120, 0.85)";
+              ctx.beginPath();
+              ctx.ellipse(x - r * 0.3, y - r * 0.2, r * 0.38, r * 0.5, 0.5, 0, Math.PI * 2);
+              ctx.ellipse(x + r * 0.45, y + r * 0.35, r * 0.3, r * 0.22, -0.4, 0, Math.PI * 2);
+              ctx.fill();
+            } else if (p.id === "jupiter" || p.id === "saturn") {
+              ctx.fillStyle = "rgba(120, 70, 40, 0.28)";
+              [-0.55, -0.15, 0.3, 0.65].forEach((k, n) => {
+                ctx.fillRect(x - r, y + r * k, r * 2, r * (n % 2 ? 0.1 : 0.17));
+              });
+            } else if (p.id === "mars") {
+              ctx.fillStyle = "rgba(90, 30, 15, 0.35)";
+              ctx.beginPath();
+              ctx.ellipse(x + r * 0.2, y + r * 0.1, r * 0.45, r * 0.2, 0.3, 0, Math.PI * 2);
+              ctx.fill();
+            } else if (p.id === "mercury") {
+              ctx.fillStyle = "rgba(40, 40, 44, 0.35)";
+              [[-0.3, -0.2, 0.2], [0.3, 0.25, 0.16], [0.1, -0.45, 0.12]].forEach((c) => {
+                ctx.beginPath();
+                ctx.arc(x + r * c[0], y + r * c[1], r * c[2], 0, Math.PI * 2);
+                ctx.fill();
+              });
+            }
+            ctx.restore();
+          }
+
+          if (p.id === "saturn") drawRing(x, y, r, 0, Math.PI);
+
+          // Gold ring pulses around the next target
+          if (isNext) {
+            const pulse = reducedMotion ? 0.5 : 0.5 + 0.5 * Math.sin(state.time * 4);
+            ctx.strokeStyle = "rgba(255, 212, 92, " + (0.55 + 0.4 * pulse).toFixed(2) + ")";
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.arc(x, y, r + 7 + pulse * 3, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+          ctx.restore();
+
+          label(p.name, x, y + r + 17, isNext ? "#ffd45c" : isDone ? "#7fd3ff" : "#8ba3b8");
+        }
+
+        function drawRing(x, y, r, a0, a1) {
+          ctx.strokeStyle = "rgba(230, 210, 160, 0.8)";
+          ctx.lineWidth = Math.max(1.5, r * 0.14);
+          ctx.beginPath();
+          ctx.ellipse(x, y, r * 1.65, r * 0.42, -0.25, a0, a1);
+          ctx.stroke();
+        }
+
+        function drawPads() {
+          state.pads.forEach((pad) => {
+            const x = sx(pad.x);
+            const w = Math.max(PAD_W * cam.zoom, 12);
+            if (x + w < 0 || x - w > width) return;
+            const y = sy(pad.y);
+            const h = Math.max(10 * cam.zoom, 4);
+            const active = pad.to === state.at + 1;
+            ctx.save();
+            ctx.globalAlpha = active ? 1 : 0.4;
+            ctx.shadowColor = "rgba(255, 138, 61, 0.9)";
+            ctx.shadowBlur = active ? 16 : 0;
+            ctx.fillStyle = "#ff8a3d";
+            ctx.beginPath();
+            ctx.roundRect(x - w / 2, y, w, h, h / 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            if (w > 40) {
+              ctx.fillStyle = "#2b1200";
+              ctx.font = "700 " + Math.round(h * 0.95) + "px Orbitron, sans-serif";
+              ctx.textAlign = "center";
+              ctx.fillText("»»»", x, y + h * 0.84);
+              label("Booster pad", x, y + h + 15, "#ffb27a", "700 12px Rajdhani, sans-serif");
+            }
+            ctx.restore();
+          });
+        }
+
+        // Dotted line and a short label across each gap between neighbouring bodies.
+        function drawDistanceMarkers() {
+          ctx.save();
+          for (let i = 0; i <= LAST; i++) {
+            const fromX = i === 0 ? 0 : state.px[i - 1];
+            const fromR = i === 0 ? SUN_R : PLANETS[i - 1].r;
+            const x1 = sx(fromX) + drawnRadius(fromR) + 5;
+            const x2 = sx(state.px[i]) - drawnRadius(PLANETS[i].r) - 5;
+            if (x2 < 0 || x1 > width || x2 - x1 < 6) continue;
+
+            ctx.strokeStyle = "rgba(127, 211, 255, 0.28)";
+            ctx.lineWidth = 1.2;
+            ctx.setLineDash([3, 6]);
+            ctx.beginPath();
+            ctx.moveTo(Math.max(x1, -10), baseY);
+            ctx.lineTo(Math.min(x2, width + 10), baseY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            if (x2 - x1 < 34) continue;
+            const text = gapLabel(i);
+            ctx.font = "600 11px 'IBM Plex Mono', monospace";
+            const half = ctx.measureText(text).width / 2 + 6;
+            const lo = Math.max(x1 + half, half + 6);
+            const hi = Math.min(x2 - half, width - half - 6);
+            if (hi < lo) continue;
+            const mx = Math.max(lo, Math.min(hi, (x1 + x2) / 2));
+            ctx.fillStyle = "rgba(3, 6, 12, 0.85)";
+            ctx.fillRect(mx - half, baseY - 8, half * 2, 16);
+            ctx.textAlign = "center";
+            ctx.fillStyle = text === "very far" ? "#ff8a3d" : text === "far" ? "#ffd45c" : "#7fd3ff";
+            ctx.fillText(text, mx, baseY + 4);
+          }
+          ctx.restore();
+        }
+
+        // Arrow chip at the right edge when the next planet is still off screen.
+        function drawOffscreenTarget() {
+          if (state.at >= LAST || state.phase === "finished") return;
+          const i = state.at + 1;
+          if (sx(state.px[i]) <= width - 12) return;
+          const text = PLANETS[i].name + "  ▶";
+          ctx.save();
+          ctx.font = "700 13px Rajdhani, sans-serif";
+          const w = ctx.measureText(text).width + 20;
+          const x = width - w - 10;
+          const y = baseY - 62;
+          ctx.fillStyle = "rgba(11, 20, 30, 0.92)";
+          ctx.strokeStyle = "rgba(255, 212, 92, 0.7)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.roundRect(x, y, w, 24, 6);
+          ctx.fill();
+          ctx.stroke();
+          ctx.textAlign = "left";
+          ctx.fillStyle = "#ffd45c";
+          ctx.fillText(text, x + 10, y + 16.5);
+          ctx.restore();
+        }
+
+        /* ================= PLAYER: ASTRONAUT, DIRECTION ARROW, PATH PREVIEW ================= */
+        function drawAimGuide() {
+          if (state.phase !== "ready" && state.phase !== "charging") return;
+          const pl = state.player;
+          const a = (state.angle * Math.PI) / 180;
+          const px = sx(pl.x);
+          const py = sy(pl.y) - 14;
+
+          ctx.save();
+
+          // Dotted preview of most of the jump; the last stretch is left for the player to judge
+          if (state.phase === "charging") {
+            const v = launchSpeed(state.power);
+            const vx = v * Math.cos(a);
+            const vy = -v * Math.sin(a);
+            const flight = (2 * v * Math.sin(a)) / GRAVITY;
+            ctx.fillStyle = "#ffd45c";
+            for (let n = 2; n <= 16; n++) {
+              const t = (n / 16) * flight * 0.8;
+              const wx = pl.x + vx * t;
+              const wy = pl.y + vy * t + 0.5 * GRAVITY * t * t;
+              ctx.globalAlpha = 0.95 - n * 0.035;
+              ctx.beginPath();
+              ctx.arc(sx(wx), sy(wy), 2.6, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+          }
+
+          // Direction arrow, growing with power
+          const len = 34 + state.power * 44;
+          const ex = px + Math.cos(a) * len;
+          const ey = py - Math.sin(a) * len;
+          ctx.strokeStyle = "#ffd45c";
+          ctx.fillStyle = "#ffd45c";
+          ctx.lineWidth = 3;
+          ctx.lineCap = "round";
+          ctx.shadowColor = "rgba(255, 212, 92, 0.7)";
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.moveTo(px + Math.cos(a) * 16, py - Math.sin(a) * 16);
+          ctx.lineTo(ex, ey);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(ex + Math.cos(a) * 9, ey - Math.sin(a) * 9);
+          ctx.lineTo(ex + Math.cos(a + 2.5) * 8, ey - Math.sin(a + 2.5) * 8);
+          ctx.lineTo(ex + Math.cos(a - 2.5) * 8, ey - Math.sin(a - 2.5) * 8);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function drawPlayer() {
+          const pl = state.player;
+          const x = sx(pl.x);
+          const y = sy(pl.y);
+          const s = Math.max(0.75, Math.min(1.1, cam.zoom * 1.1)); // stays readable when zoomed out
+          const squash = state.phase === "charging" ? 1 - state.power * 0.22 : 1;
+          const flying = state.phase === "flight" || state.phase === "boost";
+
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.scale(s, s);
+
+          // Booster flame
+          if (state.phase === "boost") {
+            const f = 14 + (reducedMotion ? 4 : Math.sin(state.time * 40) * 5);
+            const g = ctx.createLinearGradient(-10, -12, -10 - f * 2, -12);
+            g.addColorStop(0, "rgba(255, 220, 120, 0.95)");
+            g.addColorStop(1, "rgba(255, 110, 40, 0)");
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.moveTo(-8, -18);
+            ctx.lineTo(-10 - f * 2, -12);
+            ctx.lineTo(-8, -6);
+            ctx.closePath();
+            ctx.fill();
+          }
+
+          if (flying) ctx.rotate(state.phase === "boost" ? 0.5 : Math.sin(pl.spin) * 0.25);
+          ctx.scale(1, squash);
+
+          // Backpack
+          ctx.fillStyle = "#8ea3b5";
+          ctx.beginPath();
+          ctx.roundRect(-11, -22, 7, 14, 2);
+          ctx.fill();
+          // Legs
+          ctx.fillStyle = "#dfe8ef";
+          ctx.beginPath();
+          ctx.roundRect(-6, -8, 5, 8, 2);
+          ctx.roundRect(1, -8, 5, 8, 2);
+          ctx.fill();
+          // Body
+          ctx.fillStyle = "#f4f8fb";
+          ctx.beginPath();
+          ctx.roundRect(-7, -22, 14, 16, 5);
+          ctx.fill();
+          ctx.fillStyle = "#ff8a3d";
+          ctx.fillRect(-7, -14, 14, 2.5);
+          // Helmet and visor
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(0, -28, 8.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#16324f";
+          ctx.beginPath();
+          ctx.ellipse(2, -28, 5.5, 4.8, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "rgba(127, 211, 255, 0.8)";
+          ctx.beginPath();
+          ctx.ellipse(3.6, -29.6, 1.8, 1.2, -0.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+        }
+
+        function drawLandPulse() {
+          if (!state.landPulse) return;
+          const k = (state.time - state.landPulse.t0) / 0.6;
+          if (k >= 1) {
+            state.landPulse = null;
+            return;
+          }
+          const here = standPos(state.at);
+          ctx.save();
+          ctx.strokeStyle = "rgba(127, 211, 255, " + (1 - k).toFixed(2) + ")";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.ellipse(sx(here.x), sy(here.y), 10 + k * 26, 3 + k * 7, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        /* ================= RENDERING LOOP ================= */
+        let lastFrame = 0;
+
+        function render(now) {
+          const dt = Math.min(0.05, (now - lastFrame) / 1000 || 0);
+          lastFrame = now;
+          update(dt);
+
+          drawBackground();
+          if (state.px.length) {
+            drawDistanceMarkers();
+            drawSun();
+            for (let i = 0; i <= LAST; i++) drawPlanet(i);
+            drawPads();
+            drawLandPulse();
+            drawAimGuide();
+            drawPlayer();
+            drawOffscreenTarget();
+          }
+
+          requestAnimationFrame(render);
+        }
+
+        /* ================= INPUT: KEYBOARD, MOUSE AND TOUCH ================= */
+        function isPlaying() {
+          return state.screen === "play" && !state.paused;
+        }
+
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "p" || e.key === "P") {
+            if (state.screen === "play") setPaused(!state.paused);
+            return;
+          }
+          if (!isPlaying()) return;
+
+          if (e.code === "Space" || e.key === " ") {
+            e.preventDefault();
+            if (e.repeat) return;
+            if (state.phase === "missed") retry();
+            else beginCharge("key");
+          } else if (e.key === "Enter" && state.phase === "missed") {
+            e.preventDefault();
+            retry();
+          } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+            e.preventDefault();
+            keys.left = true;
+          } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+            e.preventDefault();
+            keys.right = true;
+          }
+        });
+
+        document.addEventListener("keyup", (e) => {
+          if (e.code === "Space" || e.key === " ") {
+            if (state.chargeBy === "key") releaseJump();
+          } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+            keys.left = false;
+          } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+            keys.right = false;
+          }
+        });
+
+        // Hold anywhere on the scene to charge; drag up or down while holding to tilt the aim.
+        let dragStart = null;
+
+        canvas.addEventListener("pointerdown", (e) => {
+          if (e.pointerType === "mouse" && e.button !== 0) return;
+          if (!isPlaying()) return;
+          e.preventDefault();
+          if (state.phase === "missed") {
+            retry();
+            return;
+          }
+          if (state.phase !== "ready") return;
+          try {
+            canvas.setPointerCapture(e.pointerId);
+          } catch (err) {}
+          dragStart = { id: e.pointerId, y: e.clientY, angle: state.angle };
+          beginCharge("pointer");
+        });
+
+        canvas.addEventListener("pointermove", (e) => {
+          if (!dragStart || e.pointerId !== dragStart.id || state.phase !== "charging") return;
+          const a = dragStart.angle + (dragStart.y - e.clientY) * 0.2;
+          state.angle = Math.max(ANGLE_MIN, Math.min(ANGLE_MAX, a));
+        });
+
+        function endPointer(e) {
+          if (!dragStart || e.pointerId !== dragStart.id) return;
+          dragStart = null;
+          if (state.chargeBy === "pointer") releaseJump();
+        }
+        canvas.addEventListener("pointerup", endPointer);
+        canvas.addEventListener("pointercancel", endPointer);
+        canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+
+        // Losing focus mid-charge must not leave the jump stuck charging.
+        window.addEventListener("blur", () => {
+          keys.left = keys.right = false;
+          if (state.phase === "charging") {
+            dragStart = null;
+            releaseJump();
+          }
+        });
+
+        retryBtn.addEventListener("click", retry);
+
+        /* ================= PAUSE MENU ================= */
+        function setPaused(on) {
+          if (state.screen !== "play") return;
+          if (on && state.phase === "charging") {
+            // Cancel the charge rather than jumping blind when the menu opens.
+            dragStart = null;
+            state.chargeBy = null;
+            state.power = 0;
+            state.phase = "ready";
+          }
+          state.paused = on;
+          pauseMenu.classList.toggle("show", on);
+          pauseBtn.textContent = on ? "▶ Resume" : "❚❚ Pause";
+        }
+
+        function showSelectScreen() {
+          state.screen = "select";
+          state.paused = false;
+          pauseBtn.textContent = "❚❚ Pause";
+          pauseMenu.classList.remove("show");
+          endScreen.classList.remove("show");
+          missBanner.hidden = true;
+          startHint.hidden = true;
+          hideToast();
+          buildScaleCards();
+          selectScreen.classList.add("show");
+        }
+
+        pauseBtn.addEventListener("click", () => setPaused(!state.paused));
+        resumeBtn.addEventListener("click", () => setPaused(false));
+        restartBtn.addEventListener("click", () => {
+          pauseBtn.textContent = "❚❚ Pause";
+          startJourney(state.mode);
+        });
+        switchBtn.addEventListener("click", showSelectScreen);
+
+        /* ================= SCALE SELECTION SCREEN ================= */
+        function buildScaleCards() {
+          cards.innerHTML = "";
+          MODE_IDS.forEach((id) => {
+            const m = MODES[id];
+            const card = document.createElement("button");
+            card.type = "button";
+            card.className = "scale-card";
+            const best = progress.best[id];
+            card.innerHTML =
+              "<h2>" +
+              m.name +
+              '<small class="' +
+              m.tagClass +
+              '">' +
+              m.tag +
+              "</small></h2>" +
+              '<div class="strip">' +
+              stripHTML(id) +
+              "</div>" +
+              '<p class="feel">' +
+              m.feel +
+              "</p><p>" +
+              m.note +
+              "</p>" +
+              (progress.completed[id]
+                ? '<span class="done-mark">✓ Completed · best score ' + best + "</span>"
+                : '<span class="play-mark">Play ▶</span>');
+            card.addEventListener("click", () => startJourney(id));
+            cards.appendChild(card);
+          });
+          renderBadges(selectBadges);
+        }
+
+        /* ================= END SCREEN: FINAL SCALE COMPARISON ================= */
+        function showEndScreen(newBadgeIds) {
+          state.screen = "end";
+          hideToast();
+
+          endMsg.textContent = MODES[state.mode].end;
+
+          const avg = Math.round((state.accSum / PLANETS.length) * 100);
+          const stars = state.retries <= 2 ? 3 : state.retries <= 6 ? 2 : 1;
+          endResults.innerHTML =
+            '<div class="chip mode"><span>Scale</span><b>' +
+            MODES[state.mode].name +
+            "</b></div>" +
+            '<div class="chip num"><span>Score</span><b>' +
+            state.score +
+            "</b></div>" +
+            '<div class="chip num"><span>Landing accuracy</span><b>' +
+            avg +
+            "%</b></div>" +
+            '<div class="chip num"><span>Retries</span><b>' +
+            state.retries +
+            "</b></div>" +
+            '<div class="chip next"><span>Result</span><b>' +
+            "★".repeat(stars) +
+            "☆".repeat(3 - stars) +
+            "</b></div>";
+
+          compareRows.innerHTML = MODE_IDS.map(
+            (id) =>
+              '<div class="cmp-row' +
+              (id === state.mode ? " played" : "") +
+              '"><div><h4>' +
+              MODES[id].name +
+              (id === state.mode ? "<small>You played</small>" : "") +
+              "</h4><p>" +
+              MODES[id].strip +
+              '</p></div><div class="strip">' +
+              stripHTML(id) +
+              "</div></div>"
+          ).join("");
+
+          legend.innerHTML =
+            '<span><i style="background:#ffc93c"></i>Sun</span>' +
+            PLANETS.map((p) => '<span><i style="background:' + p.color + '"></i>' + p.name + "</span>").join("");
+
+          renderBadges(endBadges, newBadgeIds);
+          endScreen.scrollTop = 0;
+          endScreen.classList.add("show");
+        }
+
+        endSwitchBtn.addEventListener("click", showSelectScreen);
+        endAgainBtn.addEventListener("click", () => startJourney(state.mode));
+
+        /* ================= INITIALIZATION ================= */
+        function init() {
+          resizeCanvas();
+          loadProgress();
+          buildScaleCards();
+          requestAnimationFrame(render);
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", init);
+        } else {
+          init();
+        }
+      })();
+    </script>
+
+    <!-- UNIVERSAL FLOATING, DRAGGABLE & RESIZABLE GUIDE WINDOW SYSTEM -->
+    <script>
+      (function initUniversalHelpFloatwin() {
+        var bar = document.getElementById("helpbar");
+        if (!bar) return;
+
+        if (!bar.classList.contains("floatwin")) {
+          bar.classList.add("floatwin");
+          bar.setAttribute("role", "dialog");
+          bar.setAttribute("aria-label", "Help Guide");
+
+          var head = document.createElement("div");
+          head.className = "fw-head";
+
+          var title = document.createElement("span");
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
+          head.appendChild(title);
+
+          var actions = document.createElement("div");
+          actions.className = "fw-head-actions";
+
+          var tabBtns = [];
+          var origPanels = bar.querySelectorAll(".tabpanel");
+          if (origPanels.length > 1) {
+            origPanels.forEach(function (p) {
+              var t = p.dataset.panel;
+              var b = document.createElement("button");
+              b.type = "button";
+              b.className = "fw-tab-btn";
+              b.dataset.tab = t;
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What You'll Learn" : t);
+              actions.appendChild(b);
+              tabBtns.push(b);
+            });
+          }
+
+          var closeBtn = document.createElement("button");
+          closeBtn.type = "button";
+          closeBtn.className = "fw-close";
+          closeBtn.title = "Close Guide";
+          closeBtn.setAttribute("aria-label", "Close");
+          closeBtn.textContent = "✕";
+          actions.appendChild(closeBtn);
+          head.appendChild(actions);
+
+          var body = document.createElement("div");
+          body.className = "fw-body";
+          while (bar.firstChild) {
+            body.appendChild(bar.firstChild);
+          }
+
+          var grip = document.createElement("div");
+          grip.className = "fw-grip";
+          grip.title = "Drag to resize";
+
+          bar.appendChild(head);
+          bar.appendChild(body);
+          bar.appendChild(grip);
+
+          document.body.appendChild(bar);
+        }
+
+        var btns = document.querySelectorAll(".helpbtn");
+        var tabBtns = bar.querySelectorAll(".fw-tab-btn");
+        var closeBtn = bar.querySelector(".fw-close");
+        var headEl = bar.querySelector(".fw-head");
+        var gripEl = bar.querySelector(".fw-grip");
+        var topZ = 10000;
+        var posInit = false;
+        var userSized = false;
+
+        function toFront() {
+          bar.style.zIndex = ++topZ;
+        }
+
+        function closeAll() {
+          bar.classList.remove("show");
+          btns.forEach(function (b) { b.classList.remove("on"); });
+          tabBtns.forEach(function (b) { b.classList.remove("on"); });
+        }
+
+        function openTab(tab) {
+          toFront();
+          if (!posInit) {
+            var w = Math.min(440, window.innerWidth - 32);
+            bar.style.width = w + "px";
+            bar.style.top = "65px";
+            bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
+            posInit = true;
+          }
+          bar.classList.add("show");
+          btns.forEach(function (b) {
+            b.classList.toggle("on", b.dataset.tab === tab);
+          });
+          tabBtns.forEach(function (b) {
+            b.classList.toggle("on", b.dataset.tab === tab);
+          });
+          var panels = bar.querySelectorAll(".tabpanel");
+          panels.forEach(function (p) {
+            p.classList.toggle("on", p.dataset.panel === tab);
+          });
+          fitHeight();
+        }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        // Rotating a phone or resizing the window: keep the guide on screen and re-fit it.
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
+
+        btns.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var tab = btn.dataset.tab || "use";
+            if (bar.classList.contains("show") && btn.classList.contains("on")) {
+              closeAll();
+            } else {
+              openTab(tab);
+            }
+          });
+        });
+
+        tabBtns.forEach(function (tb) {
+          tb.addEventListener("click", function (e) {
+            e.stopPropagation();
+            openTab(tb.dataset.tab);
+          });
+        });
+
+        if (closeBtn) closeBtn.addEventListener("click", closeAll);
+        bar.addEventListener("pointerdown", toFront);
+
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && bar.classList.contains("show")) closeAll();
+        });
+
+        // Dragging by header
+        if (headEl) {
+          headEl.addEventListener("pointerdown", function (e) {
+            if (e.target.closest(".fw-head-actions")) return;
+            e.preventDefault();
+            toFront();
+            headEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var dx = e.clientX - r.left;
+            var dy = e.clientY - r.top;
+            bar.classList.add("dragging");
+            function onMove(ev) {
+              var nx = Math.max(8, Math.min(window.innerWidth - bar.offsetWidth - 8, ev.clientX - dx));
+              var ny = Math.max(8, Math.min(window.innerHeight - 40, ev.clientY - dy));
+              bar.style.left = nx + "px";
+              bar.style.top = ny + "px";
+            }
+            function onUp(ev) {
+              bar.classList.remove("dragging");
+              headEl.removeEventListener("pointermove", onMove);
+              headEl.removeEventListener("pointerup", onUp);
+              headEl.removeEventListener("pointercancel", onUp);
+            }
+            headEl.addEventListener("pointermove", onMove);
+            headEl.addEventListener("pointerup", onUp);
+            headEl.addEventListener("pointercancel", onUp);
+          });
+        }
+
+        // Resizing by grip
+        if (gripEl) {
+          gripEl.addEventListener("pointerdown", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toFront();
+            gripEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var startX = e.clientX;
+            var startY = e.clientY;
+            var startW = r.width;
+            var startH = r.height;
+            function onMove(ev) {
+              var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
+              var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
+              bar.style.width = nw + "px";
+              userSized = true;
+              bar.style.height = nh + "px";
+            }
+            function onUp(ev) {
+              gripEl.removeEventListener("pointermove", onMove);
+              gripEl.removeEventListener("pointerup", onUp);
+              gripEl.removeEventListener("pointercancel", onUp);
+            }
+            gripEl.addEventListener("pointermove", onMove);
+            gripEl.addEventListener("pointerup", onUp);
+            gripEl.addEventListener("pointercancel", onUp);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
