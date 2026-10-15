@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Anti-Icing &amp; De-Icing · Wing Ice Protection</title>
+    <title>Anti-Icing &amp; De-Icing Systems</title>
     <link rel="icon" type="image/png" href="../../../assets/logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -805,6 +805,68 @@
       .card.controls .hint { margin-top: 4px; }
     }
   </style>
+  <style id="lof-icesafe">
+    /* mission tabs */
+    .mtabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin: 4px 0 10px; }
+    .mtabs button {
+      cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--mut);
+      border-radius: 8px; padding: 7px 0; font-family: var(--mono); font-size: 12px; font-weight: 600; transition: 0.15s;
+    }
+    .mtabs button.on { border-color: var(--sky); background: var(--sky-soft); color: var(--txt); }
+    .mtabs button.done::after { content: " ✓"; color: #0b4f0b; }
+
+    /* mission brief */
+    .brief { border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 8px; padding: 10px 12px; background: var(--panel2); }
+    .brief .code { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.06em; }
+    .brief .ttl { font-family: var(--head); font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; margin: 2px 0 6px; }
+    .brief p { margin: 0; font-size: 13px; line-height: 1.45; }
+    .brief .ask { margin-top: 6px; font-weight: 700; color: var(--sky); }
+
+    /* inspection readouts */
+    .inspect { margin-top: 10px; }
+    .inspect .irow { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px dashed var(--line); font-size: 12.5px; }
+    .inspect .irow .k { color: var(--mut); }
+    .inspect .irow .v { font-weight: 700; text-align: right; }
+    .inspect .irow .v.bad { color: #ff8a8a; }
+    .inspect .irow .v.warn { color: #ffcf7a; }
+    .inspect .irow .v.ok { color: #7df59a; }
+    .inspect .irow .v.hidden { color: var(--dim); font-weight: 500; font-style: italic; }
+
+    /* three large decision buttons */
+    .choices { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .choice {
+      cursor: pointer; text-align: left; border: 1.5px solid var(--line); background: var(--panel); color: var(--txt);
+      border-radius: 10px; padding: 10px 12px; transition: 0.15s; font-family: var(--body);
+    }
+    .choice b { display: block; font-family: var(--head); font-size: 13px; letter-spacing: 0.06em; }
+    .choice i { display: block; font-size: 12px; color: var(--mut); margin-top: 2px; }
+    .choice:hover:not(:disabled) { border-color: var(--sky); transform: translateY(-1px); }
+    .choice:disabled { cursor: not-allowed; opacity: 0.5; }
+    .choice.picked { border-color: var(--sky); background: var(--sky-soft); opacity: 1; }
+    .choice.right { border-color: #0b4f0b; background: #e9f7e9; opacity: 1; }
+    .choice.wrong { border-color: #7a1212; background: #fbe5e5; opacity: 1; }
+    .choice.right b::after { content: "  ✓ CORRECT"; color: #0b4f0b; }
+    .choice.wrong b::after { content: "  ✕ INCORRECT"; color: #7a1212; }
+    .choice.soft { border-color: #6b3200; background: #f6ecdf; opacity: 1; }
+    .choice.soft b::after { content: "  ! WASTEFUL"; color: #6b3200; }
+    .choice:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
+
+    .card.controls { gap: 0; }
+    .card.readings .pill-result.warn { background: #fff; color: #6b3200; border-color: #6b3200; }
+    .explain { margin-top: 10px; border-radius: 8px; padding: 10px 12px; font-size: 12.5px; line-height: 1.45; background: var(--panel2); border: 1px solid var(--line); }
+    .explain .eh { font-family: var(--head); font-size: 11.5px; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .explain.ok { background: #e9f7e9; border-color: #7fbf7f; color: #0b0f14; }
+    .explain.bad { background: #fbe5e5; border-color: #d58a8a; color: #0b0f14; }
+    .explain.warn { background: #f6ecdf; border-color: #c08a5c; color: #0b0f14; }
+    .explain.ok .eh { color: #0b4f0b; }
+    .explain.bad .eh { color: #7a1212; }
+    .explain.warn .eh { color: #6b3200; }
+    .btn.start:disabled { opacity: 0.55; cursor: not-allowed; }
+    .brief .note { margin-top: 4px; font-size: 11.5px; font-style: italic; color: var(--accent); }
+    .card.controls .ctrl.wx { flex: 0 0 auto; margin-top: 8px; }
+    .card.controls .seg.wxseg { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card.controls .seg.wxseg button:disabled { opacity: 0.5; cursor: not-allowed; }
+  </style>
 </head>
   <body>
     <div class="helpwrap">
@@ -815,68 +877,62 @@
       <div class="helpbar" id="helpbar">
         <div class="tabpanel" data-panel="use">
           <ol>
+            <li>Pick a mission (<b>01</b>–<b>05</b>) and read the <b>Mission Brief</b>. The aircraft is parked on the airport apron, waiting for take-off.</li>
             <li>
-              Choose the <b>Outside Temperature</b> — <b>Normal</b> (+8 °C), <b>Cold</b> (−5 °C) or
-              <b>Freezing</b> (−15 °C) — and the <b>Moisture Level</b> (<b>Low</b>, <b>Medium</b> or
-              <b>High</b>). Ice only forms when the air is below freezing <b>and</b> there is moisture.
+              Set the <b>Weather</b> if you want to try a different situation: <b>Clear</b>, <b>Cold &amp; Dry</b>,
+              <b>Snow</b>, <b>Freezing Fog</b> or <b>Freezing Rain</b>. Each mission starts with its own weather.
             </li>
             <li>
-              Pick the <b>System Mode</b>. <b>Anti-Icing</b> heats the wing as soon as the temperature
-              sensor detects icing conditions. <b>De-Icing</b> waits until a thin layer of ice (3 mm) has
-              built up, then heats it off in a timed cycle.
-            </li>
-            <li>Pick the <b>Heater Power</b> — <b>Low</b>, <b>Medium</b> or <b>High</b>.</li>
-            <li>
-              Use the <b>System Switch</b> to turn the ice protection <b>ON</b> or <b>OFF</b>. You can change
-              any control while the simulation is running.
+              Press <b>Inspect Aircraft</b>. A scanner checks the aircraft, and the <b>Inspection</b> list shows the ice on
+              the aircraft, the outside air and the moisture.
             </li>
             <li>
-              Press <b>Start</b>. Water droplets fly at the front edge of the wing. <b>White sparkles</b> mean
-              a droplet froze into ice; <b>blue drops running back</b> mean the wing is warm and the water
-              stays liquid.
+              Think, then choose: <b>De-Icing</b> (remove ice that has already formed), <b>Anti-Icing</b> (prevent ice
+              from forming) or <b>No Action / Monitor</b> (use when icing conditions are not present).
             </li>
             <li>
-              Watch the <b>ice layer</b>, the orange <b>heater glow</b>, the <b>thermometer</b> (wing
-              temperature, with a yellow marker for the outside air), the <b>lift arrow</b>, the
-              <b>warning indicator</b> and the 60-second graph at the bottom.
+              Watch the ground crew trucks spray <b>orange de-icing fluid</b> or <b>green anti-icing fluid</b>. Then the
+              engines start and the aircraft taxis to the runway.
             </li>
             <li>
-              Read the <b>Simulation Outputs</b>: <b>Wing Temperature</b>, <b>Ice Level</b>,
-              <b>Heater Status</b>, <b>Safety Status</b> and <b>Energy Use</b>. The coloured messages explain
-              what is happening.
+              Watch the <b>take-off and flight</b> to see what your decision does: a normal flight and a safe landing, a
+              <b>rejected take-off</b> with an iced wing, or ice building up in the cloud until the mission is
+              <b>aborted</b> and the aircraft returns. Press <b>Skip to result</b> to jump to the end.
             </li>
             <li>
-              Try <b>Cold</b> + <b>High</b> moisture with the switch <b>OFF</b> and watch ice build up. Then
-              choose <b>De-Icing</b>, switch <b>ON</b> and watch it melt.
+              If the ice is removed but icing weather continues, you will be asked to <b>choose again</b>.
             </li>
             <li>
-              Press <b>Reset</b>, choose <b>Anti-Icing</b>, switch <b>ON</b> <b>before</b> pressing Start, and
-              compare the ice level and the <b>Energy Used</b>.
+              Read the result — <b>Landed Safely</b>, <b>Take-off Not Safe</b>, <b>Mission Aborted</b> or <b>Unnecessary Energy Use</b> —
+              and the explanation. The <b>Wing Section</b> view shows whether the airflow is smooth or disturbed.
             </li>
-            <li>Press <b>Pause</b> to freeze the action, or <b>Reset</b> to clear the wing and start again.</li>
+            <li>If the decision was wrong, press <b>Try Again</b>. If it was right, press <b>Next Mission</b>.</li>
           </ol>
         </div>
         <div class="tabpanel" data-panel="learn">
           <ul>
             <li>
-              Students should understand how <b>temperature detection, ice formation, heater control, and
-              safety timing</b> help protect aircraft wings from icing.
+              Instead of directly telling you which system to use, the simulation gives you a <b>flight situation</b>.
+              You inspect the condition, think, and choose: <b>De-Icing / Anti-Icing / No Action</b>.
             </li>
             <li>
-              Students should understand the difference between:
+              <b>Flow:</b> Mission Brief &rarr; Inspect Aircraft/Weather &rarr; Choose Protection Method &rarr; See
+              System Action &rarr; Safe Mission or Failure &rarr; Explanation
+            </li>
+            <li>
+              <b>Core learning</b> — discover through the scenarios:
               <table>
-                <thead>
-                  <tr><th>System</th><th>Meaning</th></tr>
-                </thead>
                 <tbody>
-                  <tr><td><b>Anti-Icing</b></td><td>Prevents ice before it forms</td></tr>
-                  <tr><td><b>De-Icing</b></td><td>Removes ice after it forms</td></tr>
+                  <tr><td>Ice already exists</td><td><b>DE-ICE</b></td></tr>
+                  <tr><td>Ice may form soon</td><td><b>ANTI-ICE</b></td></tr>
+                  <tr><td>Ice removed but icing conditions continue</td><td><b>ANTI-ICE</b> afterwards</td></tr>
+                  <tr><td>Cold air alone does not always mean icing</td><td>moisture is also important</td></tr>
                 </tbody>
               </table>
             </li>
             <li>
-              <b>Main takeaway:</b> Ice on aircraft wings is dangerous because it affects airflow, lift, and
-              flight safety.
+              This makes the simulation a <b>decision-making mission</b>, rather than simply an ON/OFF heater
+              demonstration.
             </li>
           </ul>
         </div>
@@ -891,212 +947,226 @@
     </header>
 
     <div class="grid">
-      <!-- ============ CONTROLS ============ -->
-      <section class="card controls" aria-label="Ice protection controls">
-        <h3>Ice Protection Panel</h3>
-        <p class="sub">Set the weather and the heater, then press Start.</p>
+      <!-- ============ MISSION BRIEF & DECISION ============ -->
+      <section class="card controls" aria-label="Mission brief and decision">
+        <h3>Ice Safe Mission</h3>
+        <div class="mtabs" id="mtabs"></div>
 
-        <div class="ctrl">
-          <div class="row"><label>Outside Temperature</label><span class="val" id="vTemp">&mdash;</span></div>
-          <div class="seg" id="segTemp">
-            <button type="button" data-v="normal">Normal</button>
-            <button type="button" data-v="cold">Cold</button>
-            <button type="button" data-v="freezing">Freezing</button>
-          </div>
-          <div class="hint" id="hTemp"></div>
+        <div class="brief">
+          <div class="code" id="bCode">&mdash;</div>
+          <div class="ttl" id="bTitle">&mdash;</div>
+          <p id="bText"></p>
+          <p class="note" id="bNote"></p>
+          <p class="ask">What should you do?</p>
         </div>
 
-        <div class="ctrl">
-          <div class="row"><label>Moisture Level</label><span class="val" id="vMoist">&mdash;</span></div>
-          <div class="seg" id="segMoist">
-            <button type="button" data-v="low">Low</button>
-            <button type="button" data-v="medium">Medium</button>
-            <button type="button" data-v="high">High</button>
-          </div>
-          <div class="hint" id="hMoist"></div>
+        <div class="inspect">
+          <h3>Inspection</h3>
+          <div class="irow"><span class="k">Ice on aircraft</span><span class="v" id="iIce"></span></div>
+          <div class="irow"><span class="k">Outside air</span><span class="v" id="iAir"></span></div>
+          <div class="irow"><span class="k">Visible moisture</span><span class="v" id="iMoist"></span></div>
+          <div class="irow"><span class="k">Location</span><span class="v" id="iPhase"></span></div>
         </div>
 
-        <div class="ctrl">
-          <div class="row"><label>System Mode</label><span class="val" id="vMode">&mdash;</span></div>
-          <div class="seg" id="segMode">
-            <button type="button" data-v="anti">Anti-Icing</button>
-            <button type="button" data-v="de">De-Icing</button>
+        <div class="ctrl wx">
+          <div class="row"><label>Weather</label><span class="val" id="vWx">&mdash;</span></div>
+          <div class="seg wxseg" id="segWx">
+            <button type="button" data-v="clear">Clear</button>
+            <button type="button" data-v="dry">Cold &amp; Dry</button>
+            <button type="button" data-v="snow">Snow</button>
+            <button type="button" data-v="fog">Freezing Fog</button>
+            <button type="button" data-v="frain">Freezing Rain</button>
           </div>
-          <div class="hint" id="hMode"></div>
+          <div class="hint" id="hWx"></div>
         </div>
 
-        <div class="ctrl">
-          <div class="row"><label>Heater Power</label><span class="val" id="vPow">&mdash;</span></div>
-          <div class="seg" id="segPow">
-            <button type="button" data-v="low">Low</button>
-            <button type="button" data-v="medium">Medium</button>
-            <button type="button" data-v="high">High</button>
-          </div>
-          <div class="hint" id="hPow"></div>
-        </div>
-
-        <div class="ctrl">
-          <div class="row"><label>System Switch</label><span class="val" id="vSys">&mdash;</span></div>
-          <div class="seg switch" id="segSys">
-            <button type="button" data-v="off">OFF</button>
-            <button type="button" data-v="on">ON</button>
-          </div>
-          <div class="hint" id="hSys"></div>
+        <div class="choices" id="choices">
+          <button type="button" class="choice" data-v="de"><b>DE-ICING</b><i>Remove ice that has already formed</i></button>
+          <button type="button" class="choice" data-v="anti"><b>ANTI-ICING</b><i>Prevent ice from forming</i></button>
+          <button type="button" class="choice" data-v="none"><b>NO ACTION / MONITOR</b><i>Use when icing conditions are not present</i></button>
         </div>
       </section>
 
       <!-- ============ STAGE ============ -->
-      <section class="card stage" aria-label="Wing icing simulator">
+      <section class="card stage" aria-label="Aircraft on the airport apron">
         <div class="scene-wrap">
-          <canvas id="stage" role="img" aria-label="Cross-section of an aircraft wing flying through cloud, with an ice layer, heater mat, airflow, lift arrow, thermometer and a graph of ice and temperature"></canvas>
+          <canvas id="stage" role="img" aria-label="Front view of a commercial aircraft parked on the airport apron in the chosen weather, showing ice on the wings, tail and engines, de-icing or anti-icing trucks at work, and a wing section showing the take-off airflow"></canvas>
         </div>
         <div class="stage-foot">
-          <button type="button" class="btn start" id="btnStart">&#9654; Start</button>
-          <button type="button" class="btn reset" id="btnReset">&#8634; Reset</button>
-          <span class="modechip" id="chip">READY</span>
+          <button type="button" class="btn start" id="btnMain">&#128269; Inspect Aircraft</button>
+          <button type="button" class="btn reset" id="btnReset">&#8634; Reset Mission</button>
+          <span class="modechip" id="chip">MISSION BRIEF</span>
         </div>
       </section>
 
-      <!-- ============ READINGS ============ -->
-      <section class="card readings" aria-label="Simulation outputs">
-        <h3>Simulation Outputs</h3>
-        <p class="sub" id="outNote">Live system status panel.</p>
+      <!-- ============ MISSION STATUS ============ -->
+      <section class="card readings" aria-label="Mission status">
+        <h3>Mission Status</h3>
+        <p class="sub" id="outNote">Live aircraft status, on the ground and in the air.</p>
 
-        <div class="reading"><span class="k">Wing Temperature</span><span class="v" id="oWing">&mdash;</span></div>
-        <div class="reading"><span class="k">Outside Air</span><span class="v" id="oOat">&mdash;</span></div>
-        <div class="reading"><span class="k">Ice Level</span><span class="v" id="oIce">&mdash;</span></div>
-        <div class="reading"><span class="k">Heater Status</span><span class="v" id="oHeat">&mdash;</span></div>
-        <div class="reading"><span class="k">Energy Use</span><span class="v" id="oEnergy">&mdash;</span></div>
-        <div class="reading"><span class="k">Energy Used</span><span class="v" id="oTotal">&mdash;</span></div>
-        <div class="reading" style="border-bottom: 0"><span class="k">Wing Lift</span><span class="v" id="oLift">&mdash;</span></div>
+        <div class="reading"><span class="k">Mission</span><span class="v" id="oMission">&mdash;</span></div>
+        <div class="reading"><span class="k">Weather</span><span class="v" id="oSit">&mdash;</span></div>
+        <div class="reading"><span class="k">Flight</span><span class="v" id="oFlight">&mdash;</span></div>
+        <div class="reading"><span class="k">Ice on Aircraft</span><span class="v" id="oIce">&mdash;</span></div>
+        <div class="reading"><span class="k">Protection</span><span class="v" id="oProt">&mdash;</span></div>
+        <div class="reading"><span class="k">Airflow</span><span class="v" id="oFlow">&mdash;</span></div>
+        <div class="reading" style="border-bottom: 0"><span class="k">Lift</span><span class="v" id="oLift">&mdash;</span></div>
         <div class="liftbar"><i id="liftFill"></i></div>
-        <div class="reading"><span class="k">Sensor / Timing</span><span class="v" id="oCycle">&mdash;</span></div>
-        <div class="reading"><span class="k">Flight Time</span><span class="v" id="oTime">&mdash;</span></div>
-        <div class="reading result-row"><span class="k">Safety Status</span><span class="v" id="oSafety">&mdash;</span></div>
+        <div class="reading"><span class="k">Energy Used</span><span class="v" id="oEnergy">&mdash;</span></div>
+        <div class="reading result-row"><span class="k">Result</span><span class="v" id="oResult">&mdash;</span></div>
 
-        <div class="fbwrap" id="fbWrap"></div>
+        <div class="explain" id="explain"></div>
       </section>
     </div>
 
     <script>
       "use strict";
 
-      /* ---------------- configuration data ---------------- */
-      const TEMP = {
-        normal:   { name: "Normal",   c: 8,   note: "+8 °C — above freezing. Droplets stay liquid." },
-        cold:     { name: "Cold",     c: -5,  note: "−5 °C — supercooled droplets freeze when they hit the wing." },
-        freezing: { name: "Freezing", c: -15, note: "−15 °C — ice builds fast and needs more heat to stop." },
+      /* ---------------- weather (set by the mission, changeable by the student) ---------------- */
+      const WEATHER = {
+        clear: { name: "Clear", temp: "+5 °C", moist: "Dry · above freezing", icing: false, note: "Above freezing — ice cannot form.", sky: ["#5d9bd8", "#d6e9f7"] },
+        dry: { name: "Cold & Dry", temp: "−5 °C", moist: "Dry air · no visible moisture", icing: false, note: "Below freezing, but there is no moisture to freeze.", sky: ["#7fb3e6", "#e4f1fa"] },
+        snow: { name: "Snow", temp: "−3 °C", moist: "Snow falling", icing: true, note: "Snow lands on the cold wing and sticks as ice.", sky: ["#7d8894", "#c3cad1"] },
+        fog: { name: "Freezing Fog", temp: "−4 °C", moist: "Freezing fog · supercooled droplets", icing: true, note: "Tiny fog droplets freeze on contact as rime ice.", sky: ["#9aa4ad", "#d3d8dc"] },
+        frain: { name: "Freezing Rain", temp: "−2 °C", moist: "Freezing rain falling", icing: true, note: "Rain freezes on contact into clear glaze ice.", sky: ["#59636e", "#9aa3ab"] },
       };
-      const MOIST = {
-        low:    { name: "Low",    f: 0.25, note: "Thin cloud — only a few droplets hit the wing." },
-        medium: { name: "Medium", f: 0.6,  note: "Normal cloud — a steady stream of droplets." },
-        high:   { name: "High",   f: 1.0,  note: "Thick, wet cloud — lots of water to freeze." },
-      };
-      const MODE = {
-        anti: { name: "Anti-Icing", note: "Prevents ice before it forms — heats as soon as the sensor detects icing conditions." },
-        de:   { name: "De-Icing",   note: "Removes ice after it forms — waits for 3 mm of ice, then heats in a timed cycle." },
-      };
-      const POWER = {
-        low:    { name: "Low",    rise: 10, kw: 6,  note: "Warms the wing by about 10 °C · 6 kW" },
-        medium: { name: "Medium", rise: 20, kw: 12, note: "Warms the wing by about 20 °C · 12 kW" },
-        high:   { name: "High",   rise: 32, kw: 20, note: "Warms the wing by about 32 °C · 20 kW — fastest, most energy" },
-      };
-      const SYS = {
-        off: { name: "OFF", note: "Ice protection is off — the heater cannot switch on." },
-        on:  { name: "ON",  note: "Ice protection is armed — the system decides when to heat." },
-      };
+      const WX_ORDER = ["clear", "dry", "snow", "fog", "frain"];
 
-      const SENSOR_T = 2;     // °C — at or below this, with visible moisture, the sensor reports icing conditions
-      const GROW = 3.5;       // % of max ice per second at full moisture
-      const MELT = 0.35;      // % per second for every °C the heated wing would sit above 0 °C
-      const ANTI_MELT = 0.5;  // anti-icing heat is spread thin to keep the skin warm, so it sheds built-up ice slowly
-      const DE_TRIGGER = 12;  // % ice (3 mm) that starts a de-icing heat cycle
-      const HEAT_MIN = 2;     // s — shortest de-icing heat cycle (keeps heating briefly after the ice is gone)
-      const REST_MIN = 2;     // s — shortest rest between de-icing cycles
-      const LIGHT = 2;        // % ice — below this the wing counts as clear
-      const HEAVY = 40;       // % ice (10 mm) — heavy ice
-      const MM = 0.25;        // mm of ice per %
-      const HIST_S = 60;      // seconds of history in the graph
+      /* ---------------- missions: all on the airport apron, before take-off ---------------- */
+      const MISSIONS = [
+        { code: "RESCUE FLIGHT 01", title: "Frozen Before Flight", ice0: 0.8, weather: "dry", night: true,
+          brief: "Your aircraft is ready for a rescue mission, but frost and ice have formed on the wings and tail overnight. Prepare the aircraft for safe take-off." },
+        { code: "MISSION 02", title: "Icing Weather Arriving", ice0: 0, weather: "snow",
+          brief: "The aircraft is clean, but snow has started falling while it waits on the apron for take-off. Icing conditions are expected. Protect the aircraft before take-off." },
+        { code: "MISSION 03", title: "Ice Forming on the Apron", ice0: 0.45, weather: "fog",
+          brief: "While the aircraft waits for take-off, ice has started building on the wing leading edges in freezing fog. Airflow over the wing is becoming disturbed. Take action." },
+        { code: "MISSION 04", title: "Ice Removed but Risk Continues", ice0: 0, weather: "frain",
+          brief: "The wings have just been de-iced, but freezing rain is still falling and the aircraft must wait on the apron for its take-off slot." },
+        { code: "MISSION 05", title: "Cold but Dry", ice0: 0, weather: "dry",
+          brief: "Outside temperature is –5°C, but the air is dry and there is no visible moisture or ice on the aircraft." },
+      ];
+      const CHOICE = { de: "De-Icing", anti: "Anti-Icing", none: "No Action / Monitor" };
+      const STEPS = ["MISSION BRIEF", "INSPECT", "CHOOSE", "SYSTEM ACTION", "TAKE-OFF & FLIGHT", "RESULT"];
+      const T_INSPECT = 2.8, T_ACTION = 3.4, T_OUTCOME = 3, T_CHAIN = 3; // seconds
+      const POWER_KW = { de: 30, anti: 18 };
 
       /* ---------------- state ---------------- */
-      const S = {
-        temp: "cold", moist: "high", mode: "anti", pow: "medium", sys: "off",
-        running: false, started: false,
-        t: 0, ice: 0, tw: TEMP.cold.c, h: 0, cmd: false,
-        grow: 0, melt: 0, energy: 0,
-        cycle: "idle", cycleT: 0, cycles: 0,
-        hist: [], histT: 0,
-        drops: [], fx: [], clouds: [], spawn: 0,
-      };
+      const S = { m: 0, done: [false, false, false, false, false], t: 0, fan: 0, parts: [] };
+      function loadMission(i) {
+        const M = MISSIONS[i];
+        Object.assign(S, { m: i, phase: "brief", pt: 0, choice: null, out: null, step: 1, ice: M.ice0, weather: M.weather, wxChanged: false, prot: null, energy: 0, parts: [], snap: null, F: null });
+        refreshPanel();
+      }
 
+      const $ = (id) => document.getElementById(id);
       const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-      const fmtC = (v) => (v < -0.05 ? "−" : v > 0.05 ? "+" : "") + Math.abs(v).toFixed(1) + " °C";
-      const fmtCi = (v) => (v < 0 ? "−" : v > 0 ? "+" : "") + Math.abs(Math.round(v)) + " °C";
-      const outside = () => TEMP[S.temp].c;
-      const icingAir = () => outside() < 0;
-      const sensorIcing = () => outside() <= SENSOR_T;
-      const lift = () => 100 - 0.6 * S.ice;
-      function iceLevel() {
-        if (S.ice >= HEAVY) return "Heavy";
-        if (S.ice >= LIGHT) return "Light";
-        return "None";
+      const lerp = (a, b, k) => a + (b - a) * k;
+      const ease = (k) => 1 - Math.pow(1 - clamp(k, 0, 1), 3);
+      const easeIO = (k) => {
+        k = clamp(k, 0, 1);
+        return k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      };
+      function rng(seed) {
+        let a = seed >>> 0;
+        return () => {
+          a = (a + 0x6d2b79f5) >>> 0;
+          let t = a;
+          t = Math.imul(t ^ (t >>> 15), t | 1);
+          t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
       }
-      function safety() {
-        if (S.ice >= HEAVY) return "critical";
-        if (S.ice >= LIGHT || (icingAir() && S.tw < 0)) return "risk";
-        return "safe";
-      }
+      const mission = () => MISSIONS[S.m];
+      const wx = () => WEATHER[S.weather];
 
-      /* ---------------- physics ---------------- */
-      function step(dt) {
-        const To = outside(), m = MOIST[S.moist].f, P = POWER[S.pow];
-        S.t += dt;
-
-        // controller: what the ice protection system asks the heater to do
-        let cmd = false;
-        if (S.sys === "on") {
-          if (S.mode === "anti") {
-            cmd = sensorIcing();
-            S.cycle = cmd ? "heat" : "idle";
-          } else {
-            S.cycleT += dt;
-            if (S.cycle === "heat") {
-              cmd = true;
-              if (S.ice <= 0 && S.cycleT >= HEAT_MIN) { S.cycle = "rest"; S.cycleT = 0; cmd = false; }
-            } else if (S.ice >= DE_TRIGGER && (S.cycle !== "rest" || S.cycleT >= REST_MIN)) {
-              S.cycle = "heat"; S.cycleT = 0; S.cycles++; cmd = true;
-            }
+      /* ---------------- the decision: ice already there? could ice form? ---------------- */
+      // ending: ok (normal flight, safe landing) · waste (same, but power wasted) · reject (take-off rejected)
+      //         icing (ice builds in the climb, mission aborted, return) · chain (ice removed, icing continues: decide again)
+      const RES = { ok: "LANDED SAFELY · MISSION COMPLETE", waste: "LANDED SAFELY · UNNECESSARY ENERGY USE", reject: "TAKE-OFF NOT SAFE · TAKE-OFF REJECTED", icing: "MISSION ABORTED – EXIT ICING CONDITIONS" };
+      const R = (ending, groundIce, text) => ({
+        ok: ending === "ok", soft: ending === "waste", ending, groundIce, text, result: RES[ending],
+        cls: ending === "ok" ? "safe" : ending === "waste" ? "warn" : "fail",
+      });
+      function judge(ch) {
+        const W = wx(), hasIce = S.ice > 0.08, icing = W.icing, wn = W.name.toLowerCase();
+        if (hasIce) {
+          if (ch === "de") {
+            if (!icing) return R("ok", 0, "Existing ice was removed → clean wing → smooth take-off. The flight was not affected by ice and the aircraft landed safely. Ice already exists → DE-ICE.");
+            return { chain: true, ending: "chain", groundIce: 0, result: "ICE REMOVED · " + W.name.toUpperCase() + " CONTINUES", cls: "warn",
+              text: `Existing ice removed ✓ — but the ${wn} continues, so new ice will form before and during take-off. What should you do now?` };
           }
-        } else {
-          S.cycle = "idle";
+          if (ch === "anti") return R("reject", Math.min(1, S.ice + (icing ? 0.1 : 0.05)),
+            "Anti-Icing helps prevent new ice formation, but ice was already present. At take-off speed the iced wing could not make enough lift, the stall warning sounded and the take-off had to be rejected. Remove the existing ice before take-off.");
+          return R("reject", Math.min(1, S.ice + (icing ? 0.2 : 0.05)),
+            "No action with existing ice: the ice stayed on the wings and tail and disturbed the airflow. At take-off speed the contaminated wing could not make enough lift, so the take-off was rejected. Take-off with a contaminated wing is not safe — remove the ice with De-Icing.");
         }
-        S.cmd = cmd;
-        S.h += ((cmd ? 1 : 0) - S.h) * (1 - Math.exp(-dt / 0.6));
-
-        // the temperature the heated skin would reach; while ice is melting the skin is held near 0 °C
-        const eq = To + P.rise * S.h;
-        const target = S.ice > 0.2 && eq > 0 ? Math.min(eq, 0.5) : eq;
-        S.tw += (target - S.tw) * (1 - Math.exp(-dt / 1.6));
-
-        let grow = 0, melt = 0;
-        if (To < 0 && S.tw < 0) grow = GROW * m * clamp(0.35 - S.tw / 12, 0, 1.3);
-        if (S.ice > 0 && eq > 0) melt = MELT * eq * (S.mode === "anti" && S.h > 0.05 ? ANTI_MELT : 1);
-        S.grow = grow;
-        S.melt = melt;
-        S.ice = clamp(S.ice + (grow - melt) * dt, 0, 100);
-        S.energy += P.kw * S.h * dt;
-
-        S.histT += dt;
-        if (S.histT >= 0.25) {
-          S.histT = 0;
-          S.hist.push({ t: S.t, ice: S.ice, tw: S.tw, h: S.h });
-          while (S.hist.length && S.hist[0].t < S.t - HIST_S - 1) S.hist.shift();
+        if (icing) {
+          if (ch === "anti") return R("ok", 0, S.step === 2
+            ? "The clean wing stayed protected → normal take-off, a safe climb through the icing cloud with the wing anti-ice on, and a safe landing. Ice removed but icing conditions continue → ANTI-ICE afterwards."
+            : `Protection was applied before ice formed → the wing stayed clean in the ${wn} → normal take-off. In the icing cloud the wing anti-ice kept the wing clean, so the flight was not affected and the aircraft landed safely. Ice may form soon → ANTI-ICE.`);
+          if (ch === "de") return R("icing", 0.1, S.step === 2
+            ? "There was no ice left to remove, and De-Icing does not stop new ice from forming. After take-off, ice built up again in the icing cloud, the airflow became disturbed and lift dropped — the mission was aborted and the aircraft returned. After de-icing, use Anti-Icing while icing conditions continue."
+            : "There was no existing ice to remove, so the aircraft took off unprotected. In the icing cloud ice built up on the wing, the airflow became disturbed and lift dropped — the crew had to exit the icing conditions and return. When ice may form soon, use Anti-Icing.");
+          return R("icing", 0.1, S.step === 2
+            ? "The wing was clean, but icing conditions continued. With no protection, ice built up again during the climb and the mission was aborted. Use Anti-Icing to keep the clean wing protected."
+            : `With no protection, the aircraft took off into the ${wn} and the icing cloud. Ice built up on the wing, the airflow became disturbed and lift dropped — mission aborted, and the aircraft returned. Use Anti-Icing before ice forms.`);
         }
+        if (ch === "none") return R("ok", 0, S.weather === "clear"
+          ? "Above freezing with no ice on the aircraft — no protection was needed. The flight was normal and the aircraft landed safely, with no power wasted."
+          : "Correct — cold air alone does not always mean icing; moisture is also important. The wing stayed clean, the flight was normal and the aircraft landed safely, with no unnecessary power use.");
+        return R("waste", 0, `The flight was normal and the aircraft landed safely — but there was no ice and no moisture to freeze, so ${CHOICE[ch]} used fluid and power for nothing. Cold air alone does not always mean icing — moisture is also important.`);
       }
 
-      /* ---------------- geometry ---------------- */
-      const cv = document.getElementById("stage");
-      const ctx = cv.getContext("2d");
+      /* ---------------- what the aircraft and apron look like right now ---------------- */
+      function view() {
+        if (S.F) {
+          const F = S.F;
+          return { ice: F.ice, prot: F.antiOn ? "anti" : null, spin: 1, dz: 0, spray: null, banner: null, warn: null, kA: F.antiOn ? 1 : 0, kO: 1, lift: Math.round(100 - F.ice * 58) };
+        }
+        const O = S.out, ph = S.phase, pt = S.pt;
+        const kA = ph === "action" ? clamp(pt / T_ACTION, 0, 1) : ph === "outcome" || ph === "result" ? 1 : 0;
+        const kO = ph === "outcome" ? clamp(pt / (O && O.chain ? T_CHAIN : T_OUTCOME), 0, 1) : ph === "result" ? 1 : 0;
+        const V = { ice: S.ice, prot: S.prot, spin: 0, dz: 0, spray: null, banner: null, warn: null, kA, kO };
+        if (S.choice && (ph === "action" || ph === "outcome" || ph === "result")) {
+          if (S.choice === "de") {
+            if (ph === "action") {
+              V.prot = "de";
+              V.spray = "de";
+              V.ice = lerp(S.ice, 0, ease((kA - 0.15) / 0.8));
+            } else V.ice = 0;
+          } else if (S.choice === "anti") {
+            V.prot = "anti";
+            if (ph === "action") V.spray = "anti";
+          } else if (ph !== "result") V.prot = V.prot === "anti" ? "anti" : "monitor";
+        }
+        if (O && kO > 0) {
+          const start = S.choice === "de" ? 0 : S.ice;
+          if (O.ending === "chain") {
+            V.ice = 0;
+            if (kO > 0.2) V.banner = O;
+          } else {
+            // engines start and the aircraft taxis out to the runway
+            V.spin = clamp(kO * 2, 0, 1);
+            V.dz = easeIO((kO - 0.3) / 0.7) * 0.12;
+            V.ice = lerp(start, O.groundIce, clamp(kO / 0.7, 0, 1));
+            if (O.ending === "reject" && kO > 0.3) V.warn = "TAXIING OUT WITH ICE ON THE WING";
+            if (O.ending === "icing" && kO > 0.4) V.warn = "UNPROTECTED · ICE STARTING TO FORM";
+          }
+        }
+        V.lift = Math.round(100 - V.ice * 58);
+        return V;
+      }
+      const iceLabel = (ice) => (ice < 0.08 ? "None" : ice < 0.5 ? "Light" : "Heavy");
+      const flowLabel = (ice) => (ice < 0.12 ? "Smooth" : ice < 0.55 ? "Disturbed" : "Severely disturbed");
+      function iceText() {
+        if (S.ice < 0.08) return [S.m === 3 && S.step === 1 ? "None — wings just de-iced" : "None — the aircraft is clean", "ok"];
+        if (S.m === 0 && S.ice > 0.6) return ["Frost & ice on wings and tail", "bad"];
+        return S.ice < 0.5 ? ["Ice building on the leading edges", "bad"] : ["Heavy ice on wings and tail", "bad"];
+      }
+
+      /* ---------------- canvas ---------------- */
+      const cv = $("stage");
+      const c = cv.getContext("2d");
       function fit() {
         const dpr = window.devicePixelRatio || 1;
         const w = cv.clientWidth, h = cv.clientHeight;
@@ -1104,762 +1174,1776 @@
           cv.width = Math.round(w * dpr);
           cv.height = Math.round(h * dpr);
         }
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        c.setTransform(dpr, 0, 0, dpr, 0, 0);
         return { W: w, H: h };
       }
-
-      // NACA 2414-style section in chord units (x back, y up), cosine spaced from the leading edge
-      function airfoil() {
-        const N = 110, t = 0.14, m = 0.025, p = 0.4, up = [], lo = [];
-        for (let i = 0; i <= N; i++) {
-          const x = (1 - Math.cos((Math.PI * i) / N)) / 2;
-          const yt = 5 * t * (0.2969 * Math.sqrt(x) - 0.126 * x - 0.3516 * x * x + 0.2843 * x ** 3 - 0.1036 * x ** 4);
-          let yc, dy;
-          if (x < p) { yc = (m / (p * p)) * (2 * p * x - x * x); dy = ((2 * m) / (p * p)) * (p - x); }
-          else { yc = (m / (1 - p) ** 2) * (1 - 2 * p + 2 * p * x - x * x); dy = ((2 * m) / (1 - p) ** 2) * (p - x); }
-          const th = Math.atan(dy);
-          up.push([x - yt * Math.sin(th), yc + yt * Math.cos(th)]);
-          lo.push([x + yt * Math.sin(th), yc - yt * Math.cos(th)]);
-        }
-        return { up, lo };
+      const F_HEAD = (s) => `700 ${s}px Orbitron, sans-serif`;
+      function rr(x, y, w, h, r) {
+        r = Math.max(0, Math.min(r, w / 2, h / 2));
+        c.beginPath();
+        c.moveTo(x + r, y);
+        c.arcTo(x + w, y, x + w, y + h, r);
+        c.arcTo(x + w, y + h, x, y + h, r);
+        c.arcTo(x, y + h, x, y, r);
+        c.arcTo(x, y, x + w, y, r);
+        c.closePath();
       }
-      const FOIL = airfoil();
+      function tag(x, y, text, col, bg, size) {
+        size = size || 8.5;
+        c.font = F_HEAD(size);
+        const w = c.measureText(text).width + 12, h = size + 8;
+        const x0 = clamp(x - w / 2, 6, c.canvas.clientWidth - w - 6);
+        rr(x0, y - h / 2, w, h, 4);
+        c.fillStyle = bg || "rgba(5,10,16,0.78)";
+        c.fill();
+        c.fillStyle = col || "#eef3f6";
+        c.textAlign = "center";
+        c.textBaseline = "middle";
+        c.fillText(text, x0 + w / 2, y + 0.5);
+      }
 
-      let G = null;
-      function geom(W, H) {
-        const key = W + "x" + H;
-        if (G && G.key === key) return G;
-        const sceneH = Math.round(H * 0.72);
-        const avail = W - 90;
-        const c = Math.max(140, Math.min(avail * 0.62, sceneH * 1.25));
-        const lex = Math.max(36, (avail - c) * 0.42);
-        const cy = sceneH * 0.56;
-        const qx = lex + 0.25 * c;
-        const A = (4 * Math.PI) / 180, ca = Math.cos(A), sa = Math.sin(A);
-        const toC = ([x, y]) => [qx + ((x - 0.25) * ca + y * sa) * c, cy - (-(x - 0.25) * sa + y * ca) * c];
+      // tracker strip on top, the apron below; the aircraft sits large and centred
+      function layout(W, H) {
+        const T = { x: 8, y: 8, w: W - 16, h: 24 };
+        const A = { x: 8, y: 40, w: W - 16, h: H - 48 };
+        const s = Math.min(A.w * 0.86, (A.h - 70) / 0.52);
+        const horizon = A.y + A.h * 0.42, groundY = A.y + A.h * 0.8;
+        return { T, A, s, cx: A.x + A.w / 2, cy: groundY - 0.19 * s, horizon, groundY };
+      }
 
-        // arc length from the leading edge, + along the upper surface, − along the lower surface
-        const side = (arr, sign) => {
-          let s = 0;
-          return arr.map((p, i) => {
-            if (i) s += Math.hypot(p[0] - arr[i - 1][0], p[1] - arr[i - 1][1]);
-            const q = toC(p);
-            return { x: q[0], y: q[1], s: sign * s };
+      function drawTracker(T) {
+        const n = STEPS.length, gap = 4, cw = (T.w - gap * (n - 1)) / n;
+        const idx = { brief: 0, inspect: 1, choose: 2, action: 3, outcome: 3, flight: 4, result: 5 }[S.phase];
+        c.font = F_HEAD(8.5);
+        const widest = Math.max(...STEPS.map((s) => c.measureText(s).width));
+        const fs = widest > cw - 8 ? Math.max(5, (8.5 * (cw - 8)) / widest) : 8.5;
+        const pulse = 0.5 + 0.5 * Math.sin(S.t * 5);
+        STEPS.forEach((label, i) => {
+          const x = T.x + i * (cw + gap);
+          let fill = "rgba(255,255,255,0.03)", stroke = "rgba(255,255,255,0.14)", col = "rgba(238,243,246,0.45)";
+          if (i < idx || S.phase === "result") { fill = "rgba(12,163,12,0.22)"; stroke = "rgba(95,217,122,0.7)"; col = "#d2f7da"; }
+          else if (i === idx) { fill = `rgba(255,143,85,${0.12 + 0.12 * pulse})`; stroke = "#ff8f55"; col = "#fff"; }
+          rr(x, T.y, cw, T.h, 5);
+          c.fillStyle = fill;
+          c.fill();
+          c.strokeStyle = stroke;
+          c.lineWidth = 1;
+          c.stroke();
+          c.font = F_HEAD(fs);
+          c.fillStyle = col;
+          c.textAlign = "center";
+          c.textBaseline = "middle";
+          c.fillText(label, x + cw / 2, T.y + T.h / 2 + 0.5);
+        });
+      }
+
+      /* ================= 3D SCENE: one camera for the apron, the taxi, the take-off and the flight ================= */
+      // World: X to the right, Y away from the camera, Z up (metres). A single pinhole camera looks along +Y,
+      // so the whole mission is one continuous shot: the camera only moves, it never cuts.
+      const STARS = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random() * 0.4, r: Math.random() * 1.2 + 0.3 }));
+      const FLAKES = Array.from({ length: 220 }, () => ({ x: Math.random(), y: Math.random(), s: 0.4 + Math.random() * 0.9, z: Math.random() }));
+      const CB = 200, CT = 450, CRUISE = 560; // icing cloud base, cloud top, cruise altitude (m)
+      const YR = -45, D0 = 60, SPAN = 34; // runway centreline, camera distance on the apron, wingspan
+      const DEP = [-300, 2700]; // departure runway
+      const GP = { X: 0, Y: 0, Z: 0, h: 0, pitch: 0, bank: 0 }; // aircraft parked on the apron, facing the camera
+      const hash = (i) => {
+        const v = Math.sin(i * 127.1 + 311.7) * 43758.5453;
+        return v - Math.floor(v);
+      };
+      const approach = (cur, tgt, rate, dt) => cur + (tgt - cur) * Math.min(1, rate * dt);
+      const flashOn = (rate) => (S.t * rate) % 1 < 0.15;
+      const mixC = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)];
+      function mixHex(a, b, k) {
+        const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+        const ch = (s) => Math.round(lerp((pa >> s) & 255, (pb >> s) & 255, k));
+        return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
+      }
+      const jag = (seed, n) => {
+        const r = rng(seed);
+        return Array.from({ length: n }, () => 0.55 + r() * 0.9);
+      };
+      const JAG = jag(11, 40), JAG2 = jag(23, 40);
+
+      /* ---------------- camera ---------------- */
+      let CAM = { x: 0, y: -D0, z: 15, f: 1000, hy: 0, cxS: 0 };
+      function setCamera(L) {
+        const A = L.A, f = (L.s * D0) / SPAN, z0 = ((L.groundY - L.horizon) * D0) / f, cxS = A.x + A.w / 2;
+        CAM = { f, hy: L.horizon, cxS, x: 0, y: -D0, z: z0, w: A.w };
+        const F = S.F;
+        if (F) {
+          // follow the aircraft: pull back while it taxis, keep space ahead of the nose
+          const aim = A.x + A.w * (0.5 - 0.12 * Math.sin(F.h) * F.lead);
+          CAM.x = F.P.X - ((aim - cxS) * F.dist) / f;
+          CAM.y = F.P.Y - F.dist;
+          CAM.z = F.P.Z + lerp(z0, 22, F.camK) - 14 * clamp(F.P.Z / 250, 0, 1);
+        }
+      }
+      function P3(X, Y, Z) {
+        const d = Math.max(0.5, Y - CAM.y);
+        return { x: CAM.cxS + (CAM.f * (X - CAM.x)) / d, y: CAM.hy + (CAM.f * (CAM.z - Z)) / d, d };
+      }
+
+      /* ---------------- aircraft pose: body (x forward, y starboard, z up) to world ---------------- */
+      function poseT(p) {
+        const ch = Math.cos(p.h), sh = Math.sin(p.h), cp = Math.cos(p.pitch), sp = Math.sin(p.pitch), cb = Math.cos(p.bank), sb = Math.sin(p.bank);
+        const Fx = sh, Fy = -ch, Rx = Fy, Ry = -Fx;
+        return (x, y, z) => {
+          const yy = y * cb + (z - 4) * sb, z1 = (z - 4) * cb - y * sb + 4; // bank about the fuselage axis
+          const x1 = x + 1, xx = x1 * cp - z1 * sp - 1, zz = x1 * sp + z1 * cp; // pitch about the main gear
+          return [p.X + Fx * xx + Rx * yy, p.Y + Fy * xx + Ry * yy, p.Z + zz];
+        };
+      }
+
+      /* ---------------- the aircraft model (metres) ---------------- */
+      const C_WHITE = [244, 246, 248], C_BLUE = [31, 78, 140], C_ORANGE = [232, 89, 12], C_WTOP = [222, 228, 233], C_WBOT = [160, 170, 180];
+      const C_STAB = [208, 214, 220], C_NAC = [216, 222, 228], C_DARK = [24, 36, 50], C_ICE = [242, 249, 255];
+      const C_GREEN = [70, 196, 106], C_ORANGEF = [255, 157, 46];
+      const wingAt = (e) => {
+        const ch = lerp(7.2, 2.0, e), xle = lerp(3.2, -6.2, e);
+        return { y: 1.9 + 15.1 * e, xle, xte: xle - ch, x25: xle - ch * 0.28, zc: lerp(2.6, 3.92, e), t: lerp(0.9, 0.22, e) };
+      };
+      function fusProf(x) {
+        if (x >= 12) {
+          const k = Math.min(1, (x - 12) / 6.6);
+          return [2 * Math.pow(Math.max(0, 1 - Math.pow(k, 2.4)), 0.55), 4 - 0.6 * Math.pow(k, 1.8)];
+        }
+        if (x >= -9) return [2, 4];
+        const k = Math.min(1, (-9 - x) / 10.6);
+        return [2 * (1 - 0.78 * k), 4 + 1.35 * Math.pow(k, 1.2)];
+      }
+      const fusPt = (x, th, sc) => {
+        const [r, zc] = fusProf(x), rr2 = r * (sc || 1);
+        return [x, rr2 * Math.sin(th), zc + rr2 * Math.cos(th)];
+      };
+      const MODEL = (() => {
+        const P = [], add = (pts, col, part, inside) => P.push({ pts, col, part, inside });
+        const XS = [18.6, 18.45, 18.15, 17.75, 17.2, 16.5, 15.7, 14.8, 13.8, 12.6, 10, 6, 2, -2, -6, -9, -11, -13, -15, -17, -18.6, -19.6], N = 24;
+        for (let i = 0; i < XS.length - 1; i++) {
+          const xm = (XS[i] + XS[i + 1]) / 2, ins = [xm, 0, fusProf(xm)[1]];
+          for (let j = 0; j < N; j++) {
+            const a = (j / N) * Math.PI * 2, b = ((j + 1) / N) * Math.PI * 2, cm = Math.cos((a + b) / 2);
+            const col = cm < -0.45 ? C_BLUE : cm < -0.25 ? C_ORANGE : C_WHITE;
+            add([fusPt(XS[i], a), fusPt(XS[i + 1], a), fusPt(XS[i + 1], b), fusPt(XS[i], b)], col, cm > 0.45 ? "bodyTop" : "body", ins);
+          }
+        }
+        add(Array.from({ length: N }, (_, j) => fusPt(-19.6, (j / N) * Math.PI * 2)), C_STAB, "cap", [-17, 0, fusProf(-17)[1]]);
+        // belly fairing where the wings meet the fuselage
+        const bf = [-1, 0, 3];
+        add([[4.5, 1.4, 2.05], [-7, 1.4, 2.05], [-7, -1.4, 2.05], [4.5, -1.4, 2.05]], C_BLUE, "body", bf);
+        [1, -1].forEach((sg) => add([[4.5, sg * 1.4, 2.05], [-7, sg * 1.4, 2.05], [-7, sg * 1.95, 2.95], [4.5, sg * 1.95, 2.95]], C_BLUE, "body", bf));
+        add([[6.2, 0.9, 2.6], [4.5, 1.4, 2.05], [4.5, -1.4, 2.05], [6.2, -0.9, 2.6]], C_BLUE, "body", bf);
+        add([[-7, 1.4, 2.05], [-9.2, 0.8, 2.6], [-9.2, -0.8, 2.6], [-7, -1.4, 2.05]], C_BLUE, "body", bf);
+        [1, -1].forEach((sg) => {
+          // cabin windows and cockpit
+          for (let x = -10.4; x <= 11.4; x += 0.92) {
+            const th = sg * 1.25, d = sg * 0.1;
+            add([fusPt(x - 0.15, th - d, 1.004), fusPt(x + 0.15, th - d, 1.004), fusPt(x + 0.15, th + d, 1.004), fusPt(x - 0.15, th + d, 1.004)], [46, 66, 90], "win", [x, 0, 4]);
+          }
+          // windshield: front, side and rear cockpit panes on the upper nose
+          [[16.95, 16.3, 0.06, 0.5], [16.7, 15.85, 0.56, 0.98], [16.25, 15.6, 1.04, 1.28]].forEach(([xf, xb, a, b]) => {
+            add([fusPt(xf, sg * a, 1.008), fusPt(xf, sg * b, 1.008), fusPt(xb, sg * b, 1.008), fusPt(xb, sg * a, 1.008)], [34, 50, 68], "win", [15.5, 0, 3.6]);
+          });
+          // wing: 4 spanwise panels, upper and lower surfaces
+          for (let i = 0; i < 4; i++) {
+            const a = wingAt(i / 4), b = wingAt((i + 1) / 4), ya = sg * a.y, yb = sg * b.y;
+            add([[a.xle, ya, a.zc], [a.x25, ya, a.zc + a.t / 2], [b.x25, yb, b.zc + b.t / 2], [b.xle, yb, b.zc]], C_WTOP, "wingTop");
+            add([[a.x25, ya, a.zc + a.t / 2], [a.xte, ya, a.zc + 0.05], [b.xte, yb, b.zc + 0.05], [b.x25, yb, b.zc + b.t / 2]], C_WTOP, "wingTop");
+            add([[a.xle, ya, a.zc], [a.x25, ya, a.zc - a.t / 2], [b.x25, yb, b.zc - b.t / 2], [b.xle, yb, b.zc]], C_WBOT, "wingBot");
+            add([[a.x25, ya, a.zc - a.t / 2], [a.xte, ya, a.zc - 0.05], [b.xte, yb, b.zc - 0.05], [b.x25, yb, b.zc - b.t / 2]], C_WBOT, "wingBot");
+          }
+          add([[-6.2, sg * 17, 3.92], [-8.2, sg * 17, 3.95], [-9.3, sg * 17.3, 6.3], [-8.3, sg * 17.3, 6.3]], C_BLUE, "winglet");
+          // engine nacelle, pylon
+          const EX = [5.9, 5.6, 4.0, 2.0, 1.0, -0.6], ER = [1.0, 1.15, 1.18, 1.05, 0.8, 0.42], ey = sg * 5.8, ez = 1.6;
+          for (let j = 0; j < 12; j++) {
+            const a = (j / 12) * Math.PI * 2, b = ((j + 1) / 12) * Math.PI * 2;
+            const q = (x, r, t) => [x, ey + r * Math.sin(t), ez + r * Math.cos(t)];
+            add([q(5.9, 1.0, a), q(6.05, 0.9, a), q(6.05, 0.9, b), q(5.9, 1.0, b)], [232, 236, 240], "nac", [5, ey, ez]); // silver intake lip
+          }
+          for (let i = 0; i < EX.length - 1; i++) {
+            for (let j = 0; j < 12; j++) {
+              const a = (j / 12) * Math.PI * 2, b = ((j + 1) / 12) * Math.PI * 2;
+              const q = (x, r, t) => [x, ey + r * Math.sin(t), ez + r * Math.cos(t)];
+              add([q(EX[i], ER[i], a), q(EX[i + 1], ER[i + 1], a), q(EX[i + 1], ER[i + 1], b), q(EX[i], ER[i], b)], C_NAC, "nac", [(EX[i] + EX[i + 1]) / 2, ey, ez]);
+            }
+          }
+          add([[4.5, ey, 2.72], [0.6, ey, 2.4], [0.6, ey, 3.0], [4.0, ey, 2.95]], C_NAC, "pylon");
+          // horizontal stabiliser
+          add([[-14.0, sg * 0.6, 5.22], [-18.6, sg * 0.6, 5.2], [-19.7, sg * 6.9, 5.66], [-17.5, sg * 6.9, 5.66]], C_STAB, "stabTop");
+          add([[-14.0, sg * 0.6, 4.98], [-18.6, sg * 0.6, 4.98], [-19.7, sg * 6.9, 5.5], [-17.5, sg * 6.9, 5.5]], C_WBOT, "stabBot");
+          // fin faces and its orange band
+          const fx = (z, a, b, za, zb) => lerp(a, b, (z - za) / (zb - za));
+          add([[-12.3, sg * 0.18, 5.9], [-18.6, sg * 0.18, 5.8], [-20.2, sg * 0.18, 12.3], [-17.3, sg * 0.18, 12.3]], C_BLUE, "fin", [-17, 0, 9]);
+          add([[fx(9.4, -12.3, -17.3, 5.9, 12.3), sg * 0.2, 9.4], [fx(9.4, -18.6, -20.2, 5.8, 12.3), sg * 0.2, 9.4], [fx(10.2, -18.6, -20.2, 5.8, 12.3), sg * 0.2, 10.2], [fx(10.2, -12.3, -17.3, 5.9, 12.3), sg * 0.2, 10.2]], C_ORANGE, "finBand", [-17, 0, 9]);
+        });
+        add([[-12.3, 0.18, 5.9], [-17.3, 0.18, 12.3], [-17.3, -0.18, 12.3], [-12.3, -0.18, 5.9]], C_BLUE, "fin", [-17, 0, 9]);
+        return P;
+      })();
+      const LGT = (() => {
+        const v = [-0.35, -0.55, 0.76], n = Math.hypot(...v);
+        return v.map((a) => a / n);
+      })();
+
+      // o: ice, frost, fluid, fluidCol, glow ("heat" | "green" | "orange"), glowA, spin, gear, spoiler, brake, thrust, lights, dist, v, overClouds
+      function renderAircraft(pose, o) {
+        const T = poseT(pose), prims = [], cam = [CAM.x, CAM.y, CAM.z], f = CAM.f;
+        const far = clamp((o.dist - D0) / 130, 0, 1);
+        const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+        const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+        const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+        const proj = (w) => P3(w[0], w[1], w[2]);
+        const rgba = (col, b, a) => `rgba(${Math.round(col[0] * b)},${Math.round(col[1] * b)},${Math.round(col[2] * b)},${a == null ? 1 : a})`;
+        const fn = (d, draw) => prims.push({ d, draw });
+        function poly(wp, col, opt) {
+          opt = opt || {};
+          const sp = wp.map(proj);
+          if (sp.some((p) => p.d < 1.5)) return;
+          let n = cross(sub(wp[1], wp[0]), sub(wp[2], wp[0]));
+          if (Math.hypot(...n) < 1e-6 && wp.length > 3) n = cross(sub(wp[2], wp[0]), sub(wp[3], wp[0]));
+          const nl = Math.hypot(...n) || 1;
+          n = n.map((v) => v / nl);
+          const ctr = [0, 0, 0];
+          wp.forEach((p) => {
+            ctr[0] += p[0] / wp.length;
+            ctr[1] += p[1] / wp.length;
+            ctr[2] += p[2] / wp.length;
+          });
+          const toCam = sub(cam, ctr);
+          if (opt.inside) {
+            if (dot(n, sub(ctr, opt.inside)) < 0) n = n.map((v) => -v);
+            if (dot(n, toCam) < 0) return;
+          } else if (dot(n, toCam) < 0) n = n.map((v) => -v);
+          const tl = Math.hypot(...toCam) || 1, hv = [LGT[0] + toCam[0] / tl, LGT[1] + toCam[1] / tl, LGT[2] + toCam[2] / tl], hl = Math.hypot(...hv) || 1;
+          const spec = Math.pow(Math.max(0, (n[0] * hv[0] + n[1] * hv[1] + n[2] * hv[2]) / hl), 28) * 0.35;
+          const b = 0.5 + 0.45 * Math.max(0, dot(n, LGT));
+          const d = sp.reduce((s, p) => s + p.d, 0) / sp.length - (opt.bias || 0);
+          const ch = (v) => Math.min(255, Math.round(v * b + 255 * spec));
+          prims.push({ d, sp, fill: `rgb(${ch(col[0])},${ch(col[1])},${ch(col[2])})` });
+        }
+        function iceShape(wp, te, bias) {
+          const sp = wp.map(proj);
+          if (sp.some((p) => p.d < 1.5)) return;
+          const d = sp.reduce((s, p) => s + p.d, 0) / sp.length;
+          prims.push({ d: d - bias, sp, fill: S.weather === "frain" ? "rgba(205,232,255,0.9)" : "rgba(242,249,255,0.97)", stroke: "rgba(70,130,190,0.85)", lw: Math.max(0.8, (f * te * 0.15) / d) });
+        }
+        function disk(cB, uB, vB, bias, drawFn) {
+          const p0 = proj(T(...cB)), pu = proj(T(cB[0] + uB[0], cB[1] + uB[1], cB[2] + uB[2])), pv = proj(T(cB[0] + vB[0], cB[1] + vB[1], cB[2] + vB[2]));
+          if (p0.d < 1.5) return;
+          fn(p0.d - bias, () => {
+            c.save();
+            c.transform(pu.x - p0.x, pu.y - p0.y, pv.x - p0.x, pv.y - p0.y, p0.x, p0.y);
+            drawFn();
+            c.restore();
+          });
+        }
+        const facing = (aB, bB) => {
+          const a = T(...aB), b = T(...bB);
+          return dot(sub(b, a), sub(cam, b)) > 0;
+        };
+
+        // shadow on the ground
+        if (pose.Z < 35 && !o.overClouds) {
+          const ch = Math.cos(pose.h), sh = Math.sin(pose.h);
+          const g = (x, y) => P3(pose.X + sh * x - ch * y, pose.Y - ch * x - sh * y, 0);
+          const pts = [[18, 0], [-6.2, 17], [-8.2, 17], [-17.5, 6.9], [-19.7, 6.9], [-19.5, 0], [-19.7, -6.9], [-17.5, -6.9], [-8.2, -17], [-6.2, -17]].map(([x, y]) => g(x, y));
+          if (pts.every((p) => p.d > 1.5)) {
+            c.save();
+            c.filter = "blur(3px)";
+            c.fillStyle = `rgba(0,0,0,${0.2 * (1 - pose.Z / 35)})`;
+            c.beginPath();
+            pts.forEach((p, i) => (i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y)));
+            c.closePath();
+            c.fill();
+            c.restore();
+          }
+        }
+        // landing-light beam
+        if (o.lights && o.gear > 0.5) {
+          const p0 = proj(T(14, 0, 1.4)), p1 = proj(T(90, -10, -2)), p2 = proj(T(90, 10, -2));
+          if (p0.d > 1.5 && p1.d > 1.5 && p2.d > 1.5) {
+            const g = c.createLinearGradient(p0.x, p0.y, (p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+            g.addColorStop(0, "rgba(255,248,220,0.32)");
+            g.addColorStop(1, "rgba(255,248,220,0)");
+            c.fillStyle = g;
+            c.beginPath();
+            c.moveTo(p0.x, p0.y);
+            c.lineTo(p1.x, p1.y);
+            c.lineTo(p2.x, p2.y);
+            c.closePath();
+            c.fill();
+          }
+        }
+
+        // static model with frost / fluid tints
+        const fl = o.fluid > 0.02 && o.fluidCol ? o.fluidCol : null;
+        MODEL.forEach((m) => {
+          let col = m.col;
+          if (o.frost > 0.02) {
+            if (m.part === "wingTop" || m.part === "stabTop") col = mixC(col, C_ICE, o.frost * 0.85);
+            else if (m.part === "bodyTop" || m.part === "fin" || m.part === "nac") col = mixC(col, C_ICE, o.frost * 0.45);
+          }
+          if (fl && m.part === "wingTop") col = mixC(col, fl, 0.45 * o.fluid);
+          const opt = m.inside ? { inside: T(...m.inside), bias: m.part === "win" ? 0.3 : m.part === "finBand" ? 0.1 : 0 } : null;
+          poly(m.pts.map((p) => T(...p)), col, opt);
+        });
+
+        // ice crusts on the leading edges (thicker when seen from far away, so it stays visible)
+        if (o.ice > 0.02) {
+          const te = o.ice * (0.5 + 1.8 * far);
+          [1, -1].forEach((sg) => {
+            const top = [], bot = [];
+            for (let i = 0; i <= 14; i++) {
+              const w = wingAt(i / 14), j = JAG[(i + (sg > 0 ? 0 : 9)) % 40], j2 = JAG2[i % 40];
+              top.push(T(w.xle + te * 0.85 * j, sg * w.y, w.zc + te * 0.55 * j));
+              bot.push(T(w.xle + te * 0.4 * j2, sg * w.y, w.zc - te * 0.45 * j2));
+            }
+            iceShape(top.concat(bot.reverse()), te, 0.8);
+            const st = [], sb = [];
+            for (let i = 0; i <= 6; i++) {
+              const k = i / 6, x = lerp(-14, -17.5, k), y = sg * lerp(0.6, 6.9, k), z = lerp(5.22, 5.66, k), j = JAG2[(i + 3) % 40];
+              st.push(T(x + te * 0.6 * j, y, z + te * 0.4 * j));
+              sb.push(T(x + te * 0.3, y, z - te * 0.3));
+            }
+            iceShape(st.concat(sb.reverse()), te, 0.6);
+          });
+          const fa = [], fb = [];
+          for (let i = 0; i <= 6; i++) {
+            const k = i / 6, x = lerp(-12.3, -17.3, k), z = lerp(5.9, 12.3, k), j = JAG[(i + 5) % 40];
+            fa.push(T(x + te * 0.6 * j, 0.2 + te * 0.35, z));
+            fb.push(T(x + te * 0.6 * j, -0.2 - te * 0.35, z));
+          }
+          iceShape(fa.concat(fb.reverse()), te, 0.6);
+        }
+        // icicles hanging under heavy ground ice
+        if (o.frost > 0.45) {
+          [1, -1].forEach((sg) => {
+            for (let i = 0; i < 9; i++) {
+              const w = wingAt(0.08 + hash(i + (sg > 0 ? 0 : 20)) * 0.85), x = w.xle - 0.3, y = sg * w.y, z = w.zc - w.t / 2;
+              const len = (0.3 + hash(i + 40) * 0.8) * (o.frost - 0.4) * 2.5 * (1 + far * 2);
+              iceShape([T(x - 0.15, y, z), T(x + 0.15, y, z), T(x, y, z - len)], 0.3, 0.5);
+            }
+          });
+        }
+        // glow along the wing leading edges: hot de-icing fluid, green anti-icing coat, or the heated (thermal) anti-ice
+        if (o.glow) {
+          const a = o.glowA == null ? 1 : o.glowA;
+          const col = o.glow === "heat" ? `rgba(255,140,60,${(0.6 + 0.25 * Math.sin(S.t * 5)) * a})` : o.glow === "green" ? `rgba(70,196,106,${0.8 * a})` : `rgba(255,157,46,${(0.45 + 0.3 * Math.sin(S.t * 7)) * a})`;
+          [1, -1].forEach((sg) => {
+            const pts = [];
+            for (let i = 0; i <= 10; i++) {
+              const w = wingAt(i / 10);
+              pts.push(proj(T(w.xle + 0.05, sg * w.y, w.zc + 0.05)));
+            }
+            if (pts.some((p) => p.d < 1.5)) return;
+            const d = pts.reduce((s, p) => s + p.d, 0) / pts.length;
+            fn(d - 0.9, () => {
+              c.save();
+              c.strokeStyle = col;
+              c.shadowColor = col;
+              c.shadowBlur = 10;
+              c.lineCap = "round";
+              c.lineWidth = Math.max(2, (f * 0.35) / d);
+              c.beginPath();
+              pts.forEach((p, i) => (i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y)));
+              c.stroke();
+              c.restore();
+            });
+          });
+        }
+
+        // engine fans (spinning), nozzles, exhaust, reverse thrust
+        [1, -1].forEach((sg) => {
+          const ey = sg * 5.8;
+          if (facing([4, ey, 1.6], [5.95, ey, 1.6])) {
+            disk([5.95, ey, 1.6], [0, 0.98, 0], [0, 0, 0.98], 0.2, () => {
+              c.fillStyle = "#1a2129";
+              c.beginPath();
+              c.arc(0, 0, 1, 0, Math.PI * 2);
+              c.fill();
+              const a0 = S.fan * sg;
+              c.strokeStyle = "rgba(150,165,180,0.9)";
+              c.lineWidth = 0.05;
+              c.beginPath();
+              for (let i = 0; i < 18; i++) {
+                const a = a0 + (i * Math.PI * 2) / 18;
+                c.moveTo(Math.cos(a) * 0.22, Math.sin(a) * 0.22);
+                c.lineTo(Math.cos(a + 0.25) * 0.82, Math.sin(a + 0.25) * 0.82);
+              }
+              c.stroke();
+              c.fillStyle = "#e8ecef";
+              c.beginPath();
+              c.arc(0, 0, 0.22, 0, Math.PI * 2);
+              c.fill();
+              c.strokeStyle = "#1a2129";
+              c.lineWidth = 0.04;
+              c.beginPath();
+              c.arc(0, 0, 0.12, a0, a0 + 2.4);
+              c.stroke();
+              if (o.ice > 0.05) {
+                c.strokeStyle = `rgba(235,247,255,${clamp(o.ice * 1.4, 0, 0.95)})`;
+                c.lineWidth = 0.06 + o.ice * 0.25 * (1 + far * 2);
+                c.beginPath();
+                c.arc(0, 0, 1.02, 0.05 * Math.PI, 0.95 * Math.PI);
+                c.stroke();
+              }
+              if (o.glow === "heat") {
+                c.strokeStyle = "rgba(255,140,60,0.7)";
+                c.lineWidth = 0.08;
+                c.beginPath();
+                c.arc(0, 0, 1.03, 0, Math.PI * 2);
+                c.stroke();
+              }
+            });
+          } else if (facing([0, ey, 1.6], [-0.65, ey, 1.6])) {
+            disk([-0.65, ey, 1.6], [0, 0.42, 0], [0, 0, 0.42], 0.2, () => {
+              c.fillStyle = "#2b3138";
+              c.beginPath();
+              c.arc(0, 0, 1, 0, Math.PI * 2);
+              c.fill();
+            });
+          }
+          const r0 = proj(T(-0.8, ey, 1.6)), r1 = proj(T(-16, ey, 1.6));
+          if (o.thrust > 0.2 && r0.d > 1.5 && r1.d > 1.5) {
+            fn(r0.d + 1, () => {
+              const dx = (r1.x - r0.x) * o.thrust, dy = (r1.y - r0.y) * o.thrust, nx = -dy, ny = dx, nl = Math.hypot(nx, ny) || 1;
+              c.strokeStyle = `rgba(255,255,255,${0.16 * o.thrust})`;
+              c.lineWidth = 1;
+              for (let j = -1; j <= 1; j++) {
+                c.beginPath();
+                for (let i = 0; i <= 10; i++) {
+                  const k = i / 10, w = Math.sin(i * 1.7 + S.t * 30 + j) * 2 + j * 3;
+                  const x = r0.x + dx * k + (nx / nl) * w, y = r0.y + dy * k + (ny / nl) * w;
+                  if (i === 0) c.moveTo(x, y);
+                  else c.lineTo(x, y);
+                }
+                c.stroke();
+              }
+            });
+          } else if (o.thrust < -0.1) {
+            [1, -1].forEach((side) => {
+              const p = proj(T(2.6, ey + side * 1.5, 1.6));
+              if (p.d < 1.5) return;
+              fn(p.d - 0.5, () => {
+                c.fillStyle = `rgba(230,236,240,${0.3 * -o.thrust})`;
+                for (let i = 0; i < 3; i++) {
+                  c.beginPath();
+                  c.arc(p.x, p.y - i * 3, ((f * 0.8) / p.d) * (1 + i * 0.4), 0, Math.PI * 2);
+                  c.fill();
+                }
+              });
+            });
+          }
+        });
+
+        // landing gear
+        if (o.gear > 0.03) {
+          const g = o.gear;
+          const strut = (a, b) => {
+            const p = proj(T(...a)), q = proj(T(...b));
+            if (p.d < 1.5) return;
+            fn((p.d + q.d) / 2 - 0.1, () => {
+              c.strokeStyle = "#5b6570";
+              c.lineWidth = Math.max(1.2, (f * 0.28) / p.d);
+              c.beginPath();
+              c.moveTo(p.x, p.y);
+              c.lineTo(q.x, q.y);
+              c.stroke();
+            });
+          };
+          const wheel = (cB, r) =>
+            disk(cB, [r, 0, 0], [0, 0, r], 0.15, () => {
+              c.fillStyle = "#1a1f26";
+              c.beginPath();
+              c.arc(0, 0, 1, 0, Math.PI * 2);
+              c.fill();
+              c.fillStyle = "#8a949d";
+              c.beginPath();
+              c.arc(0, 0, 0.4, 0, Math.PI * 2);
+              c.fill();
+            });
+          const nz = 2.1 - 1.5 * g;
+          strut([13.2, 0, 2.2], [13.2, 0, nz]);
+          wheel([13.2, 0.3, nz], 0.55);
+          wheel([13.2, -0.3, nz], 0.55);
+          [1, -1].forEach((sg) => {
+            const mz = 2.6 - 2.0 * g;
+            strut([-0.8, sg * 3.6, 2.6], [-1, sg * 3.6, mz]);
+            wheel([-1, sg * 3.25, mz], 0.62);
+            wheel([-1, sg * 3.95, mz], 0.62);
+            if (o.brake > 0 && o.v > 3) {
+              const p = proj(T(-1, sg * 3.6, mz));
+              if (p.d > 1.5)
+                fn(p.d - 0.5, () => {
+                  c.fillStyle = `rgba(255,90,40,${0.5 + 0.3 * Math.sin(S.t * 20)})`;
+                  c.beginPath();
+                  c.arc(p.x, p.y, Math.max(1.5, (f * 0.35) / p.d), 0, Math.PI * 2);
+                  c.fill();
+                });
+            }
+          });
+        }
+        // spoilers raised after landing / rejecting
+        if (o.spoiler > 0.02) {
+          [1, -1].forEach((sg) => {
+            [0.1, 0.2, 0.3, 0.45].forEach((e) => {
+              const a = wingAt(e), b = wingAt(e + 0.09), ang = 0.8 * o.spoiler;
+              const ha = lerp(a.xle, a.xte, 0.6), hb = lerp(b.xle, b.xte, 0.6), la = 1.6, za = a.zc + a.t * 0.3, zb = b.zc + b.t * 0.3;
+              poly([T(ha, sg * a.y, za), T(hb, sg * b.y, zb), T(hb - la * Math.cos(ang), sg * b.y, zb + la * Math.sin(ang)), T(ha - la * Math.cos(ang), sg * a.y, za + la * Math.sin(ang))], [190, 198, 206], { bias: 0.4 });
+            });
+          });
+        }
+        // lights: beacon, red / green navigation lights, white strobes
+        const light = (pB, col, on, size) => {
+          const p = proj(T(...pB));
+          if (p.d < 1.5) return;
+          fn(p.d - 2, () => {
+            if (on) {
+              const g = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, size * 4);
+              g.addColorStop(0, col);
+              g.addColorStop(1, "rgba(0,0,0,0)");
+              c.fillStyle = g;
+              c.beginPath();
+              c.arc(p.x, p.y, size * 4, 0, Math.PI * 2);
+              c.fill();
+            }
+            c.fillStyle = on ? col : "rgba(90,40,40,0.8)";
+            c.beginPath();
+            c.arc(p.x, p.y, size, 0, Math.PI * 2);
+            c.fill();
           });
         };
-        const upC = side(FOIL.up, 1), loC = side(FOIL.lo, -1);
-        const loop = upC.slice().reverse().concat(loC.slice(1));
-        let mx = 0, my = 0;
-        loop.forEach((p) => { mx += p.x; my += p.y; });
-        mx /= loop.length; my /= loop.length;
-        loop.forEach((p, i) => {
-          const a = loop[Math.max(0, i - 1)], b = loop[Math.min(loop.length - 1, i + 1)];
-          let nx = b.y - a.y, ny = -(b.x - a.x);
-          const l = Math.hypot(nx, ny) || 1;
-          nx /= l; ny /= l;
-          if (nx * (p.x - mx) + ny * (p.y - my) < 0) { nx = -nx; ny = -ny; }
-          p.nx = nx; p.ny = ny;
-          p.rough = 0.8 + 0.4 * (((Math.sin(i * 91.7) * 43758.5453) % 1 + 1) % 1);
-        });
-        const le = upC[0];
-        const te = upC[upC.length - 1];
+        light([-1, 0, 6.08], "#ff3b3b", flashOn(1.1), 2.2);
+        light([-6.4, 17.06, 3.95], "#39d353", true, 1.8);
+        light([-6.4, -17.06, 3.95], "#ff3b3b", true, 1.8);
+        light([-7.0, 17.06, 3.95], "#ffffff", flashOn(1.25), 1.6);
+        light([-7.0, -17.06, 3.95], "#ffffff", flashOn(1.25), 1.6);
 
-        // smoothed thickness envelope above / below the stagnation line, used to bend the airflow round the wing
-        const gx0 = le.x - 0.6 * c, gx1 = W + 10, GN = 260, gdx = (gx1 - gx0) / GN;
-        const yAt = (arr, X) => {
-          if (X < arr[0].x || X > arr[arr.length - 1].x) return null;
-          for (let i = 1; i < arr.length; i++) {
-            if (arr[i].x >= X) {
-              const a = arr[i - 1], b = arr[i], f = (X - a.x) / (b.x - a.x || 1);
-              return a.y + (b.y - a.y) * f;
-            }
-          }
-          return null;
-        };
-        const rawU = [], rawL = [];
-        for (let i = 0; i <= GN; i++) {
-          const X = gx0 + i * gdx;
-          const yu = yAt(upC, X), yl = yAt(loC, X);
-          rawU.push(yu == null ? null : le.y - yu);
-          rawL.push(yl == null ? null : yl - le.y);
-        }
-        const sig = (0.06 * c) / gdx;
-        const blur = (raw) => {
-          const out = [];
-          const R = Math.ceil(sig * 3);
-          for (let i = 0; i <= GN; i++) {
-            let s = 0, ws = 0;
-            for (let k = -R; k <= R; k++) {
-              const j = i + k;
-              if (j < 0 || j > GN) continue;
-              const w = Math.exp(-(k * k) / (2 * sig * sig));
-              s += (raw[j] == null ? 0 : raw[j]) * w;
-              ws += w;
-            }
-            const b = s / ws;
-            out.push(raw[i] == null ? b : Math.max(b, raw[i]));
-          }
-          return out;
-        };
-        const envU = blur(rawU), envL = blur(rawL);
-
-        G = { key, W, H, sceneH, c, cy, qx, toC, upC, loC, loop, le, te, gx0, gdx, GN, envU, envL, yAt };
-        return G;
-      }
-      function envAt(arr, X) {
-        const f = (X - G.gx0) / G.gdx;
-        if (f <= 0) return arr[0];
-        if (f >= G.GN) return arr[G.GN];
-        const i = Math.floor(f);
-        return arr[i] + (arr[i + 1] - arr[i]) * (f - i);
-      }
-      // a path in the free stream at offset d from the stagnation line (− above, + below)
-      function pathY(d, X) {
-        const L = 0.45 * G.c;
-        if (d < 0) return G.le.y + d - envAt(G.envU, X) * Math.exp(d / L);
-        return G.le.y + d + envAt(G.envL, X) * Math.exp(-d / L);
-      }
-      // ice thickness (px) at signed arc position s on the surface
-      function iceAt(s, rough) {
-        if (S.ice <= 0.05) return 0;
-        const f = S.ice / 100;
-        const T = f * 0.17 * G.c;
-        const w = 0.05 + 0.07 * f;
-        const lower = s < 0 ? 0.85 : 1;
-        let th = T * Math.exp(-((s / w) ** 2)) * lower;
-        if (f > 0.3) {
-          // heavy ice grows "horns" either side of the leading edge
-          const hA = (f - 0.3) * 1.3 * G.c * 0.17;
-          th += hA * Math.exp(-(((Math.abs(s) - 0.04) / 0.014) ** 2)) * lower;
-        }
-        return th * (0.75 + 0.25 * rough);
-      }
-
-      /* ---------------- particles ---------------- */
-      function spawnDrops(dt) {
-        const m = MOIST[S.moist].f;
-        S.spawn += dt * 34 * m;
-        while (S.spawn >= 1) {
-          S.spawn -= 1;
-          const band = 0.05 * G.c;
-          const hit = Math.random() < 0.38;
-          const d = hit ? (Math.random() * 2 - 1) * band : (Math.random() < 0.5 ? -1 : 1) * (band + Math.random() * 0.5 * G.c);
-          S.drops.push({ x: -6 - Math.random() * 30, d, hit, v: G.c * (0.85 + Math.random() * 0.25) });
-        }
-      }
-      function updateParticles(dt) {
-        const band = 0.05 * G.c;
-        const cold = icingAir() && S.tw < 0;
-        const iceLE = iceAt(0, 1);
-        for (let i = S.drops.length - 1; i >= 0; i--) {
-          const p = S.drops[i];
-          p.x += p.v * dt;
-          if (p.hit) {
-            p.y = G.le.y + p.d;
-            const hitX = G.le.x - iceLE * 0.9 + (p.d / band) ** 2 * 0.03 * G.c;
-            if (p.x >= hitX) {
-              S.drops.splice(i, 1);
-              if (cold) S.fx.push({ k: "spark", x: p.x, y: p.y, life: 0.35 });
-              else S.fx.push({ k: "run", s: 0.005, up: p.d <= 0, sp: 0.18 + Math.random() * 0.1 });
-            }
-          } else {
-            p.y = pathY(p.d, p.x);
-            if (p.x > G.W + 10) S.drops.splice(i, 1);
-          }
-        }
-        // melt water dripping from the ice
-        if (S.melt > 0 && S.ice > 0.5 && Math.random() < dt * 8) {
-          const s = -Math.random() * 0.06;
-          const pt = surfAt(s);
-          const th = iceAt(s, 1);
-          S.fx.push({ k: "drip", x: pt.x + pt.nx * th, y: pt.y + pt.ny * th, vx: G.c * 0.5, vy: 10 });
-        }
-        for (let i = S.fx.length - 1; i >= 0; i--) {
-          const f = S.fx[i];
-          if (f.k === "spark") {
-            f.life -= dt;
-            if (f.life <= 0) S.fx.splice(i, 1);
-          } else if (f.k === "run") {
-            f.s += f.sp * dt;
-            if (f.s >= 0.98) {
-              const pt = surfAt(f.up ? 0.98 : -0.98);
-              S.fx[i] = { k: "drip", x: pt.x, y: pt.y, vx: G.c * 0.55, vy: 0 };
-            }
-          } else {
-            f.vy += 320 * dt;
-            f.x += f.vx * dt;
-            f.y += f.vy * dt;
-            if (f.y > G.sceneH || f.x > G.W) S.fx.splice(i, 1);
-          }
-        }
-      }
-      // surface point at signed arc position s
-      function surfAt(s) {
-        const arr = s >= 0 ? G.upC : G.loC;
-        const a = Math.abs(s);
-        for (let i = 1; i < arr.length; i++) {
-          if (Math.abs(arr[i].s) >= a) {
-            const p = arr[i], q = arr[i - 1];
-            const nx = -(p.y - q.y), ny = p.x - q.x, l = Math.hypot(nx, ny) || 1;
-            const sgn = s >= 0 ? -1 : 1; // outward: up for the upper surface, down for the lower
-            return { x: p.x, y: p.y, nx: (sgn * nx) / l, ny: (sgn * ny) / l };
-          }
-        }
-        const p = arr[arr.length - 1];
-        return { x: p.x, y: p.y, nx: 0, ny: s >= 0 ? -1 : 1 };
-      }
-
-      /* ---------------- drawing ---------------- */
-      const SKY = {
-        normal: ["#5fa8e6", "#cfe7f8"],
-        cold: ["#6f8ea9", "#cbd8e3"],
-        freezing: ["#5d6f83", "#dde6ee"],
-      };
-      function initClouds() {
-        S.clouds = [];
-        for (let i = 0; i < 9; i++) S.clouds.push({ x: Math.random(), y: Math.random(), r: 0.6 + Math.random() * 0.8 });
-      }
-
-      function draw() {
-        const { W, H } = fit();
-        if (W < 10 || H < 10) return;
-        geom(W, H);
-        const c = ctx, Hs = G.sceneH;
-
-        // sky + cloud
-        const sk = c.createLinearGradient(0, 0, 0, Hs);
-        sk.addColorStop(0, SKY[S.temp][0]);
-        sk.addColorStop(1, SKY[S.temp][1]);
-        c.fillStyle = sk;
-        c.fillRect(0, 0, W, H);
-        const m = MOIST[S.moist].f;
-        const nC = Math.round(3 + m * 6);
-        for (let i = 0; i < nC; i++) {
-          const cl = S.clouds[i];
-          const x = (((cl.x * (W + 300) + S.t * 40 * (0.6 + cl.r * 0.4)) % (W + 300)) + W + 300) % (W + 300) - 150;
-          const y = 24 + cl.y * (Hs - 60);
-          c.fillStyle = `rgba(255,255,255,${0.16 + m * 0.3})`;
+        prims.sort((a, b) => b.d - a.d);
+        c.lineJoin = "round";
+        prims.forEach((p) => {
+          if (p.draw) return p.draw();
           c.beginPath();
-          c.ellipse(x, y, 80 * cl.r, 22 * cl.r, 0, 0, 7);
-          c.ellipse(x + 46 * cl.r, y + 8, 56 * cl.r, 18 * cl.r, 0, 0, 7);
-          c.ellipse(x - 40 * cl.r, y + 6, 46 * cl.r, 15 * cl.r, 0, 0, 7);
+          p.sp.forEach((q, i) => (i ? c.lineTo(q.x, q.y) : c.moveTo(q.x, q.y)));
+          c.closePath();
+          c.fillStyle = p.fill;
           c.fill();
-        }
-        // whole-scene haze for thick cloud
-        c.fillStyle = `rgba(235,242,248,${m * 0.18})`;
-        c.fillRect(0, 0, W, Hs);
-
-        drawStreamlines(c);
-        drawWing(c);
-        drawParticles(c);
-        drawLift(c);
-        drawHud(c, W);
-        drawWarning(c, W);
-        drawThermo(c, W - 46, 58, Hs - 70);
-        drawChart(c, 8, Hs + 4, W - 16, H - Hs - 12);
-      }
-
-      function drawStreamlines(c) {
-        const D = [-0.44, -0.31, -0.2, -0.11, -0.05, 0.06, 0.13, 0.23, 0.36];
-        const sep = clamp((S.ice - 10) / 60, 0, 1);
-        const xEnd = G.W - 92;
-        c.lineWidth = 1.4;
-        c.setLineDash([10, 9]);
-        c.lineDashOffset = -S.t * 110;
-        D.forEach((dd) => {
-          const d = dd * G.c;
-          c.strokeStyle = "rgba(255,255,255,0.55)";
-          c.beginPath();
-          for (let X = 0; X <= xEnd; X += 5) {
-            let y = pathY(d, X);
-            // ice on the leading edge trips the upper-surface flow into a turbulent wake
-            if (sep > 0 && d < 0 && d > -0.25 * G.c) {
-              const start = G.qx + 0.05 * G.c;
-              const k = clamp((X - start) / (0.3 * G.c), 0, 1);
-              y += Math.sin(X * 0.07 - S.t * 9 + dd * 20) * sep * 0.05 * G.c * Math.exp(d / (0.25 * G.c)) * k;
-            }
-            X ? c.lineTo(X, y) : c.moveTo(X, y);
-          }
+          c.strokeStyle = p.stroke || p.fill;
+          c.lineWidth = p.lw || 0.6;
           c.stroke();
         });
-        c.setLineDash([]);
-        c.lineDashOffset = 0;
-        // swirls behind the wing when the flow has separated
-        if (sep > 0.05) {
-          c.strokeStyle = `rgba(255,255,255,${0.35 + 0.4 * sep})`;
-          c.lineWidth = 1.6;
-          for (let k = 0; k < 4; k++) {
-            const x = G.qx + (0.25 + k * 0.17) * G.c;
-            const y = pathY(-0.04 * G.c, x) - (6 + k * 3) * (0.6 + sep);
-            const r = (5 + k * 2) * (0.5 + sep);
-            const a = S.t * 6 + k;
-            c.beginPath();
-            c.arc(x, y, r, a, a + 4.6);
-            c.stroke();
-          }
-        }
-        c.font = "700 9px 'Orbitron', sans-serif";
-        pill(c, "AIRFLOW  →", 54, G.le.y - 0.5 * G.c);
+        return T;
       }
 
-      function drawWing(c) {
-        const L = G.loop;
-        // wing skin
-        const g = c.createLinearGradient(0, G.le.y - 0.12 * G.c, 0, G.le.y + 0.12 * G.c);
-        g.addColorStop(0, "#e7edf2");
-        g.addColorStop(1, "#97a6b3");
-        c.fillStyle = g;
+      const PATCH = Array.from({ length: 300 }, (_, i) =>
+        i < 70
+          ? { X: -200 + hash(i) * 400, Y: 8 + hash(i + 500) * 290, r: 2 + hash(i + 900) * 10, near: true }
+          : { X: -1500 + hash(i) * 16000, Y: 60 + hash(i + 500) * 2600, r: 10 + hash(i + 900) * 45, near: false });
+      function groundPoly(pts, fill) {
+        const sp = pts.map(([X, Y]) => P3(X, Math.max(Y, CAM.y + 3), 0));
         c.beginPath();
-        L.forEach((p, i) => (i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y)));
+        sp.forEach((p, i) => (i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y)));
+        c.closePath();
+        c.fillStyle = fill;
+        c.fill();
+      }
+      function groundLine(pts, w, col) {
+        const sp = pts.map(([X, Y]) => P3(X, Math.max(Y, CAM.y + 3), 0));
+        const d = sp.reduce((s, p) => s + p.d, 0) / sp.length;
+        c.strokeStyle = col;
+        c.lineWidth = Math.max(0.8, (CAM.f * w) / d);
+        c.beginPath();
+        sp.forEach((p, i) => (i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y)));
+        c.stroke();
+      }
+      // visible X range at a given world depth
+      const xRange = (Y, m) => {
+        const d = Math.max(1, Y - CAM.y), half = ((CAM.w / 2) * d) / CAM.f + (m || 0);
+        return [CAM.x - half, CAM.x + half];
+      };
+      function box(x0, x1, y0, y1, z0, z1, col, side, roof) {
+        const q = (pts, fill) => {
+          const sp = pts.map((p) => P3(...p));
+          if (sp.some((p) => p.d < 2)) return;
+          c.beginPath();
+          sp.forEach((p, i) => (i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y)));
+          c.closePath();
+          c.fillStyle = fill;
+          c.fill();
+        };
+        if (CAM.z > z1) q([[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]], roof);
+        if (CAM.x < x0) q([[x0, y0, z0], [x0, y1, z0], [x0, y1, z1], [x0, y0, z1]], side);
+        if (CAM.x > x1) q([[x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [x1, y0, z1]], side);
+        q([[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]], col);
+      }
+
+      /* ---------------- scenery: sky, atmosphere, clouds, terrain, airports ---------------- */
+      // soft cloud sprites, painted once and stamped wherever a cloud is needed
+      function makeCloud(seed, top, shade) {
+        const cv2 = document.createElement("canvas");
+        cv2.width = 320;
+        cv2.height = 170;
+        const g = cv2.getContext("2d"), r = rng(seed);
+        for (let i = 0; i < 30; i++) {
+          const x = 40 + r() * 240, k = Math.sin(((x - 30) / 260) * Math.PI);
+          const y = 92 - r() * 58 * k, rad = 16 + r() * 34 * (0.4 + 0.6 * k);
+          const gr = g.createRadialGradient(x, y, rad * 0.15, x, y, rad);
+          gr.addColorStop(0, `rgba(${top},0.95)`);
+          gr.addColorStop(0.65, `rgba(${top},0.55)`);
+          gr.addColorStop(1, `rgba(${top},0)`);
+          g.fillStyle = gr;
+          g.beginPath();
+          g.arc(x, y, rad, 0, Math.PI * 2);
+          g.fill();
+        }
+        g.globalCompositeOperation = "source-atop"; // shaded underside
+        const sh = g.createLinearGradient(0, 45, 0, 125);
+        sh.addColorStop(0, "rgba(0,0,0,0)");
+        sh.addColorStop(1, `rgba(${shade},0.6)`);
+        g.fillStyle = sh;
+        g.fillRect(0, 0, 320, 170);
+        g.globalCompositeOperation = "destination-out"; // flat cloud base
+        const cut = g.createLinearGradient(0, 100, 0, 128);
+        cut.addColorStop(0, "rgba(0,0,0,0)");
+        cut.addColorStop(1, "rgba(0,0,0,1)");
+        g.fillStyle = cut;
+        g.fillRect(0, 100, 320, 70);
+        return cv2;
+      }
+      const CLOUDS = {
+        day: [1, 2, 3, 4].map((s) => makeCloud(s * 17, "255,255,255", "128,140,158")),
+        grey: [1, 2, 3, 4].map((s) => makeCloud(s * 29, "150,160,172", "82,90,102")),
+        night: [1, 2, 3, 4].map((s) => makeCloud(s * 41, "92,104,124", "32,40,54")),
+      };
+      function cloudAt(X, Y, Z, size, set, i, alpha, flat) {
+        const p = P3(X, Y, Z);
+        if (p.d < 30) return;
+        const w = (CAM.f * size) / p.d, h = w * 0.53 * (flat || 1);
+        if (p.x + w / 2 < CAM.cxS - CAM.w / 2 || p.x - w / 2 > CAM.cxS + CAM.w / 2) return;
+        c.globalAlpha = alpha;
+        c.drawImage(set[Math.abs(i) % 4], p.x - w / 2, p.y - h * 0.7, w, h);
+        c.globalAlpha = 1;
+      }
+      const ridgeN = (x) => 0.5 + 0.28 * Math.sin(x * 1.3 + 1.1) + 0.14 * Math.sin(x * 2.9 + 4.2) + 0.08 * Math.sin(x * 6.7 + 2.3);
+      function ridge(Y, base, amp, scale, col) {
+        const d = Y - CAM.y, A = { x: CAM.cxS - CAM.w / 2, w: CAM.w };
+        if (d <= 50) return;
+        const top = [], bot = [];
+        for (let sx = A.x - 12; sx <= A.x + A.w + 12; sx += 10) {
+          const X = CAM.x + ((sx - CAM.cxS) * d) / CAM.f;
+          top.push([sx, P3(X, Y, base + amp * ridgeN(X / scale)).y]);
+          bot.push([sx, P3(X, Y, 0).y + 2]);
+        }
+        c.fillStyle = col;
+        c.beginPath();
+        top.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
+        bot.reverse().forEach(([x, y]) => c.lineTo(x, y));
         c.closePath();
         c.fill();
-        c.strokeStyle = "#4f5f6d";
-        c.lineWidth = 1.5;
-        c.stroke();
-        // spars
-        c.strokeStyle = "rgba(79,95,109,0.45)";
-        c.lineWidth = 2;
-        [0.25, 0.62].forEach((x) => {
-          const i = Math.round(Math.acos(1 - 2 * x) / Math.PI * (FOIL.up.length - 1));
-          c.beginPath();
-          c.moveTo(G.upC[i].x, G.upC[i].y + 2);
-          c.lineTo(G.loC[i].x, G.loC[i].y - 2);
-          c.stroke();
-        });
-
-        // heater mat along the leading edge
-        const heat = L.filter((p) => p.s < 0.17 && p.s > -0.13);
-        c.lineCap = "round";
-        c.lineWidth = 4;
-        c.strokeStyle = "#6a4a3a";
-        c.beginPath();
-        heat.forEach((p, i) => (i ? c.lineTo(p.x - p.nx * 2, p.y - p.ny * 2) : c.moveTo(p.x - p.nx * 2, p.y - p.ny * 2)));
-        c.stroke();
-        if (S.h > 0.02) {
-          c.save();
-          c.shadowColor = "rgba(255,110,30,0.95)";
-          c.shadowBlur = 18 * S.h;
-          c.strokeStyle = `rgba(255,122,47,${0.25 + 0.75 * S.h})`;
-          c.lineWidth = 4 + 3 * S.h;
-          c.beginPath();
-          heat.forEach((p, i) => (i ? c.lineTo(p.x - p.nx * 2, p.y - p.ny * 2) : c.moveTo(p.x - p.nx * 2, p.y - p.ny * 2)));
-          c.stroke();
-          c.restore();
-          // warm glow just outside the skin
-          const gr = c.createRadialGradient(G.le.x, G.le.y, 2, G.le.x, G.le.y, 0.22 * G.c);
-          gr.addColorStop(0, `rgba(255,140,60,${0.35 * S.h})`);
-          gr.addColorStop(1, "rgba(255,140,60,0)");
-          c.fillStyle = gr;
-          c.beginPath();
-          c.arc(G.le.x, G.le.y, 0.22 * G.c, 0, 7);
-          c.fill();
-        }
-        c.lineCap = "butt";
-
-        // ice layer
-        if (S.ice > 0.3) {
-          const seg = L.filter((p) => Math.abs(p.s) < 0.3);
-          const melting = S.melt > S.grow && S.melt > 0;
-          const ig = c.createLinearGradient(G.le.x - 0.1 * G.c, 0, G.le.x + 0.15 * G.c, 0);
-          ig.addColorStop(0, melting ? "rgba(214,238,255,0.8)" : "rgba(246,251,255,0.97)");
-          ig.addColorStop(1, melting ? "rgba(160,205,240,0.7)" : "rgba(200,228,250,0.92)");
-          c.fillStyle = ig;
-          c.beginPath();
-          seg.forEach((p, i) => {
-            const th = iceAt(p.s, p.rough);
-            const x = p.x + p.nx * th, y = p.y + p.ny * th;
-            i ? c.lineTo(x, y) : c.moveTo(x, y);
-          });
-          for (let i = seg.length - 1; i >= 0; i--) c.lineTo(seg[i].x, seg[i].y);
-          c.closePath();
-          c.fill();
-          c.strokeStyle = melting ? "rgba(120,180,230,0.9)" : "rgba(255,255,255,0.95)";
-          c.lineWidth = 1.2;
-          c.stroke();
-          if (S.ice >= LIGHT) {
-            const p0 = surfAt(0.02), th = iceAt(0, 1);
-            pill(c, (melting ? "ICE MELTING · " : "ICE · ") + (S.ice * MM).toFixed(1) + " mm", p0.x - th - 34, G.le.y + 0.2 * G.c);
-          }
-        }
-
-        pill(c, "HEATER MAT · " + (S.h > 0.5 ? "ON" : "OFF"), G.le.x + 0.1 * G.c, G.le.y - 0.2 * G.c);
-        pill(c, "WING CROSS-SECTION", G.qx + 0.35 * G.c, G.le.y + 0.24 * G.c);
       }
 
-      function drawParticles(c) {
-        const supercooled = icingAir();
-        c.fillStyle = supercooled ? "rgba(225,245,255,0.95)" : "rgba(70,140,230,0.9)";
-        S.drops.forEach((p) => {
-          if (p.y == null) return;
-          c.beginPath();
-          c.arc(p.x, p.y, 1.8, 0, 7);
-          c.fill();
-        });
-        S.fx.forEach((f) => {
-          if (f.k === "spark") {
-            const a = f.life / 0.35, r = 3 + (1 - a) * 4;
-            c.strokeStyle = `rgba(255,255,255,${a})`;
-            c.lineWidth = 1.4;
-            c.beginPath();
-            c.moveTo(f.x - r, f.y); c.lineTo(f.x + r, f.y);
-            c.moveTo(f.x, f.y - r); c.lineTo(f.x, f.y + r);
-            c.stroke();
-          } else {
-            let x = f.x, y = f.y;
-            if (f.k === "run") {
-              const p = surfAt(f.up ? f.s : -f.s);
-              x = p.x + p.nx * 2.5;
-              y = p.y + p.ny * 2.5;
+      // terrain palettes by weather
+      function terrainPal(night) {
+        const w = S.weather;
+        if (night) return { base: "#232c38", fields: ["#2c3644", "#323d4c", "#283240", "#36404f"], grass: "#28323e", tree: "#1b2430", snowCap: false };
+        if (["snow", "fog", "frain"].includes(w)) return { base: "#c4ccd4", fields: ["#e4e9ee", "#d8dfe6", "#eef2f5", "#cfd7de", "#e8ecf0"], grass: "#d6dde3", tree: "#3d4f45", snowCap: true };
+        if (w === "dry") return { base: "#76786a", fields: ["#8d8a72", "#9a9479", "#7f8466", "#a59d82", "#888d70"], grass: "#878a72", tree: "#3f4a35", snowCap: false };
+        return { base: "#5d7a45", fields: ["#6f8f4e", "#7c9a57", "#8aa25e", "#9a9a5c", "#6a8448", "#a19366"], grass: "#6f9052", tree: "#2f4a2a", snowCap: false };
+      }
+      function skyPal(night) {
+        const W = wx(), cz = CAM.z;
+        if (night) return ["#040a16", "#14213a", "#2c3f60"];
+        if (W.icing && cz < CB) return [W.sky[0], mixHex(W.sky[0], W.sky[1], 0.55), W.sky[1]];
+        const k = W.icing ? 1 : clamp(cz / CRUISE, 0, 1);
+        return [mixHex("#3f7fcf", "#1f5bb0", k), mixHex("#79afe2", "#5d9ade", k), S.weather === "dry" ? "#e3eff8" : "#d4e7f5"];
+      }
+      const inAirport = (X, Y) => (Y < 420 && X > DEP[0] - 500 && X < DEP[0] + 3500) || (S.F && S.F.rwLand && S.F.rwLand[0] !== DEP[0] && Y < 420 && X > S.F.rwLand[0] - 500 && X < S.F.rwLand[0] + 3500);
+
+      function drawScene(L) {
+        const A = L.A, W = wx(), night = !!mission().night, hy = CAM.hy, f = CAM.f, cz = CAM.z, t = S.t;
+        const above = W.icing && cz > CT, under = W.icing && cz < CB;
+        const sk = skyPal(night), horizon = above ? "#c9dbea" : sk[2];
+        // sky: zenith → horizon
+        const sky = c.createLinearGradient(0, A.y, 0, hy);
+        sky.addColorStop(0, sk[0]);
+        sky.addColorStop(0.6, sk[1]);
+        sky.addColorStop(1, horizon);
+        c.fillStyle = sky;
+        c.fillRect(A.x, A.y, A.w, hy - A.y + 1);
+        if (night) {
+          c.fillStyle = "#fff";
+          STARS.forEach((st) => {
+            c.globalAlpha = (under ? 0.08 : 0.9) * (0.4 + 0.6 * Math.abs(Math.sin(t * 1.3 + st.x * 30)));
+            c.fillRect(A.x + st.x * A.w, A.y + st.y * (hy - A.y), st.r, st.r);
+          });
+          c.globalAlpha = 1;
+        } else if (!under) {
+          const sx = A.x + A.w * 0.8, sy = A.y + A.h * 0.12;
+          const g = c.createRadialGradient(sx, sy, 2, sx, sy, A.h * 0.32);
+          g.addColorStop(0, "rgba(255,252,235,1)");
+          g.addColorStop(0.06, "rgba(255,248,220,0.95)");
+          g.addColorStop(0.25, "rgba(255,240,200,0.25)");
+          g.addColorStop(1, "rgba(255,240,200,0)");
+          c.fillStyle = g;
+          c.fillRect(A.x, A.y, A.w, hy - A.y);
+        }
+        // the underside of the icing cloud deck, seen from below
+        if (under) {
+          const set = night ? CLOUDS.night : CLOUDS.grey;
+          [5000, 2600, 1400, 800, 450].forEach((dr) => {
+            const Y = CAM.y + dr, size = dr * 0.9, [x0, x1] = xRange(Y, size);
+            for (let i = Math.floor(x0 / (size * 0.55)); i <= Math.ceil(x1 / (size * 0.55)); i++) {
+              cloudAt(i * size * 0.55 + hash(i * 7 + dr) * size * 0.3, Y, CB + 30, size, set, i, 0.35, -0.55);
             }
-            c.fillStyle = "rgba(40,120,220,0.95)";
+          });
+        }
+        // fair-weather cumulus
+        if (!W.icing) {
+          const set = night ? CLOUDS.night : CLOUDS.day;
+          [6000, 3600, 2200, 1300].forEach((Yw) => {
+            const sp = Yw * 0.6, [x0, x1] = xRange(Yw, sp);
+            for (let i = Math.floor(x0 / sp); i <= Math.ceil(x1 / sp); i++) {
+              if (hash(i * 13 + Yw) < 0.4) continue;
+              cloudAt(i * sp + hash(i * 7 + Yw) * sp * 0.5, Yw, 650 + hash(i + Yw) * 500, 420 + hash(i * 3 + Yw) * 380, set, i, night ? 0.35 : 0.95);
+            }
+          });
+        }
+
+        // above the deck: a sea of cloud tops down to the horizon
+        if (above) {
+          const g = c.createLinearGradient(0, hy, 0, A.y + A.h);
+          g.addColorStop(0, night ? "#3b4658" : "#d3dde7");
+          g.addColorStop(1, night ? "#4a5669" : "#f4f7fa");
+          c.fillStyle = g;
+          c.fillRect(A.x, hy, A.w, A.y + A.h - hy);
+          const set = night ? CLOUDS.night : CLOUDS.day;
+          [6000, 3500, 2000, 1100, 600, 330].forEach((dr) => {
+            const Y = CAM.y + dr, size = dr * 0.75, [x0, x1] = xRange(Y, size);
+            for (let i = Math.floor(x0 / (size * 0.45)); i <= Math.ceil(x1 / (size * 0.45)); i++) {
+              cloudAt(i * size * 0.45 + hash(i * 5 + dr) * size * 0.25, Y, CT - 40 + hash(i + dr) * 30, size, set, i, 0.9);
+            }
+          });
+          haze(A, hy, horizon, 0.25, 0.6);
+          return;
+        }
+
+        // ground, distant ridges, fields, roads and trees
+        const tp = terrainPal(night);
+        const gg = c.createLinearGradient(0, hy, 0, A.y + A.h);
+        gg.addColorStop(0, mixHex(tp.base, horizon, 0.5));
+        gg.addColorStop(1, tp.base);
+        c.fillStyle = gg;
+        c.fillRect(A.x, hy, A.w, A.y + A.h - hy);
+        const vis = under ? (S.weather === "fog" ? 0.15 : 0.45) : 1; // how far you can see
+        ridge(9000, 120, 520, 2600, mixHex(horizon, tp.snowCap ? "#d9e0e6" : night ? "#1a2230" : "#6f7f95", 0.35 * vis));
+        ridge(4200, 40, 260, 1300, mixHex(horizon, tp.snowCap ? "#c7cfd6" : night ? "#1d2633" : "#5f7059", 0.6 * vis));
+        const bands = [[40, 130, 110], [130, 260, 160], [260, 480, 240], [480, 850, 340], [850, 1500, 480], [1500, 2600, 700], [2600, 4000, 1000]];
+        bands.forEach(([y0, y1, cw], bi) => {
+          const [x0, x1] = xRange(y1, cw);
+          for (let i = Math.floor(x0 / cw); i <= Math.ceil(x1 / cw); i++) {
+            const X0 = i * cw, X1 = X0 + cw;
+            if (inAirport(X0 + cw / 2, y0) || inAirport(X0, y0) || inAirport(X1, y0)) continue;
+            const hsh = hash(i * 31 + bi * 977);
+            const ix = cw * 0.03, iy = (y1 - y0) * 0.04;
+            groundPoly([[X0 + ix, y0 + iy], [X1 - ix, y0 + iy], [X1 - ix, y1 - iy], [X0 + ix, y1 - iy]], tp.fields[Math.floor(hsh * tp.fields.length)]);
+            // a row of trees along some field edges
+            if (hsh > 0.55 && y0 < 1600) {
+              for (let k = 0; k < 6; k++) {
+                const tx = X0 + cw * (0.1 + 0.15 * k + hash(i + k * 7) * 0.05), ty = y0 + iy, p = P3(tx, ty, 6), r = (f * 4.5) / p.d;
+                if (r < 0.6 || p.d < 20) continue;
+                c.fillStyle = tp.tree;
+                c.beginPath();
+                c.arc(p.x, p.y, r, 0, Math.PI * 2);
+                c.fill();
+                if (tp.snowCap) {
+                  c.fillStyle = "rgba(240,246,250,0.85)";
+                  c.beginPath();
+                  c.arc(p.x, p.y - r * 0.35, r * 0.7, Math.PI, 0);
+                  c.fill();
+                }
+              }
+            }
+            // village lights at night
+            if (night && hsh > 0.82) {
+              for (let k = 0; k < 8; k++) {
+                const p = P3(X0 + cw * hash(i * 3 + k), y0 + (y1 - y0) * hash(i * 5 + k), 2);
+                c.fillStyle = "rgba(255,214,140,0.9)";
+                c.fillRect(p.x, p.y, 1.6, 1.6);
+              }
+            }
+          }
+        });
+        // country roads
+        [720, 1700].forEach((Y) => {
+          const [x0, x1] = xRange(Y, 100);
+          groundLine([[x0, Y], [x1, Y]], 9, night ? "#30363f" : tp.snowCap ? "#9aa3ab" : "#7c7a70");
+        });
+        drawAirport(DEP[0], true, night, tp);
+        if (S.F && S.F.rwLand && S.F.rwLand[0] !== DEP[0]) drawAirport(S.F.rwLand[0], false, night, tp);
+        // aerial perspective: the ground fades into the sky towards the horizon
+        haze(A, hy, horizon, under ? 0.5 : 0.32, under ? 0.95 : 0.75);
+      }
+      function haze(A, hy, col, depth, alpha) {
+        const n = parseInt(col.slice(1), 16), rgb = `${n >> 16},${(n >> 8) & 255},${n & 255}`;
+        const h = (A.y + A.h - hy) * depth;
+        const g = c.createLinearGradient(0, hy - 40, 0, hy + h);
+        g.addColorStop(0, `rgba(${rgb},0)`);
+        g.addColorStop(0.25, `rgba(${rgb},${alpha})`);
+        g.addColorStop(1, `rgba(${rgb},0)`);
+        c.fillStyle = g;
+        c.fillRect(A.x, hy - 40, A.w, h + 40);
+      }
+
+      // a runway with shoulders, markings and lights, taxiway, apron, terminal, tower and hangar
+      function drawAirport(a0, dep, night, tp) {
+        const o = a0 + 300, snowy = tp.snowCap, lit = night || wx().icing;
+        const asphalt = night ? "#23272d" : "#34383e", shoulder = night ? "#2d3239" : snowy ? "#8e969e" : "#5b6168";
+        const concrete = night ? "#3b4451" : snowy ? "#b9c1c8" : "#a7afb6", white = night ? "#c9cfd4" : "#eef1f3";
+        groundPoly([[a0 - 450, -150], [a0 + 3450, -150], [a0 + 3450, 400], [a0 - 450, 400]], tp.grass);
+        // parallel taxiway with yellow centreline and blue edge lights
+        groundPoly([[a0 - 120, 52], [a0 + 3120, 52], [a0 + 3120, 72], [a0 - 120, 72]], asphalt);
+        groundLine([[a0 - 120, 62], [a0 + 3120, 62]], 0.4, "#e4b52a");
+        // apron in front of the terminal, with expansion joints and stand lines
+        groundPoly([[o - 280, 72], [o + 320, 72], [o + 320, 300], [o - 280, 300]], concrete);
+        const jt = night ? "rgba(255,255,255,0.06)" : "rgba(40,50,60,0.12)";
+        for (let x = o - 270; x <= o + 310; x += 20) groundLine([[x, 76], [x, 298]], 0.25, jt);
+        [110, 150, 190, 230, 270].forEach((y) => groundLine([[o - 280, y], [o + 320, y]], 0.25, jt));
+        [-120, -75, -30, 15].forEach((gx) => groundLine([[o + gx + 1.75, 262], [o + gx + 1.75, 120]], 0.35, "#e4b52a"));
+        // runway: shoulders, surface, markings
+        groundPoly([[a0 - 60, YR - 30], [a0 + 3060, YR - 30], [a0 + 3060, YR + 30], [a0 - 60, YR + 30]], shoulder);
+        groundPoly([[a0, YR - 22.5], [a0 + 3000, YR - 22.5], [a0 + 3000, YR + 22.5], [a0, YR + 22.5]], asphalt);
+        groundLine([[a0, YR - 21.6], [a0 + 3000, YR - 21.6]], 0.9, white);
+        groundLine([[a0, YR + 21.6], [a0 + 3000, YR + 21.6]], 0.9, white);
+        const [vx0, vx1] = xRange(YR, 80);
+        for (let x = Math.max(a0 + 120, Math.floor(vx0 / 50) * 50); x < Math.min(a0 + 2880, vx1); x += 50) groundLine([[x, YR], [x + 30, YR]], 0.9, white);
+        [[a0, 1], [a0 + 3000, -1]].forEach(([e, s]) => {
+          if (e < vx0 - 500 || e > vx1 + 500) return;
+          for (let i = 0; i < 6; i++) [1, -1].forEach((sd) => groundLine([[e + s * 8, YR + sd * (3 + 2.8 * i)], [e + s * 40, YR + sd * (3 + 2.8 * i)]], 1.8, white));
+          [1, -1].forEach((sd) => groundPoly([[e + s * 400, YR + sd * 4], [e + s * 445, YR + sd * 4], [e + s * 445, YR + sd * 12], [e + s * 400, YR + sd * 12]], white));
+        });
+        // de-icing pad beside the runway (departure airport)
+        if (dep) {
+          groundPoly([[-48, -22], [48, -22], [48, 52], [-48, 52]], concrete);
+          c.lineCap = "round";
+          groundLine([[-46, -20], [46, -20], [46, 50], [-46, 50], [-46, -20]], 0.5, "#e4b52a");
+          groundLine([[0, 52], [0, -20]], 0.45, "#e4b52a");
+          const arc = [];
+          for (let i = 0; i <= 14; i++) {
+            const a = Math.PI + (i / 14) * Math.PI * 0.5;
+            arc.push([25 + 25 * Math.cos(a), -20 + 25 * Math.sin(a)]);
+          }
+          groundLine(arc, 0.45, "#e4b52a");
+          groundLine([[-4, 2], [4, 2]], 0.8, "#e4b52a");
+          if (snowy || night) {
+            c.fillStyle = S.weather === "snow" ? "rgba(245,250,255,0.6)" : "rgba(235,245,255,0.35)";
+            PATCH.forEach((p, i) => {
+              if (!p.near || i % 2) return;
+              const q = P3(p.X * 0.3, 60 + p.Y * 0.8, 0);
+              if (q.d < 4) return;
+              const rx = (CAM.f * p.r * 0.3) / q.d;
+              c.beginPath();
+              c.ellipse(q.x, q.y, rx, Math.max(0.5, (rx * CAM.z) / q.d), 0, 0, Math.PI * 2);
+              c.fill();
+            });
+          }
+        }
+        // lights: runway edge, threshold / end, approach lights, taxiway edge
+        const dot = (X, Y, Z, col, glow) => {
+          const p = P3(X, Math.max(Y, CAM.y + 3), Z), r = Math.max(0.9, (CAM.f * 0.3) / p.d);
+          if (p.x < CAM.cxS - CAM.w / 2 - 5 || p.x > CAM.cxS + CAM.w / 2 + 5) return;
+          if (glow) {
+            const g = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 5);
+            g.addColorStop(0, col);
+            g.addColorStop(1, "rgba(0,0,0,0)");
+            c.fillStyle = g;
             c.beginPath();
-            c.ellipse(x, y, 2.2, 2.8, 0, 0, 7);
+            c.arc(p.x, p.y, r * 5, 0, Math.PI * 2);
+            c.fill();
+          }
+          c.fillStyle = col;
+          c.beginPath();
+          c.arc(p.x, p.y, r, 0, Math.PI * 2);
+          c.fill();
+        };
+        for (let x = Math.max(a0, Math.floor(vx0 / 60) * 60); x <= Math.min(a0 + 3000, vx1); x += 60) [YR - 23.5, YR + 23.5].forEach((y) => dot(x, y, 0.4, "#ffeab0", lit));
+        for (let y = -20; y <= 20; y += 5) {
+          dot(a0, YR + y, 0.4, "#5dff8a", lit);
+          dot(a0 + 3000, YR + y, 0.4, "#ff5a5a", lit);
+        }
+        if (lit) {
+          [[a0, -1], [a0 + 3000, 1]].forEach(([e, s]) => {
+            for (let k = 1; k <= 10; k++) {
+              dot(e + s * 30 * k, YR, 1, "#ffffff", true);
+              if (k === 5 || k === 10) for (let y = -15; y <= 15; y += 5) if (y) dot(e + s * 30 * k, YR + y, 1, "#ffffff", true);
+            }
+          });
+          const [tx0, tx1] = xRange(60, 60);
+          for (let x = Math.max(a0 - 120, Math.floor(tx0 / 40) * 40); x <= Math.min(a0 + 3120, tx1); x += 40) [52.5, 71.5].forEach((y) => dot(x, y, 0.3, "#5a8cff", night));
+        }
+        // buildings: terminal with glass facade and canopy, jet bridges, control tower, hangar, light masts
+        const roof = night ? "#3a4555" : "#c9cfd5", side = night ? "#212b39" : "#8c98a4";
+        const glass = night ? "#22324a" : "#5f748a";
+        box(o - 140, o + 40, 300, 336, 0, 18, glass, side, roof);
+        for (let x = o - 134; x < o + 40; x += 6) {
+          const a = P3(x, 299.8, 17.5), b = P3(x, 299.8, 0.5);
+          if (a.d < 2) continue;
+          c.strokeStyle = night ? "rgba(255,214,140,0.5)" : "rgba(220,228,236,0.55)";
+          c.lineWidth = 1;
+          c.beginPath();
+          c.moveTo(a.x, a.y);
+          c.lineTo(b.x, b.y);
+          c.stroke();
+        }
+        const fl1 = P3(o - 140, 299.8, 9), fl2 = P3(o + 40, 299.8, 9);
+        c.strokeStyle = night ? "rgba(255,214,140,0.6)" : "rgba(220,228,236,0.7)";
+        c.beginPath();
+        c.moveTo(fl1.x, fl1.y);
+        c.lineTo(fl2.x, fl2.y);
+        c.stroke();
+        if (night) {
+          c.fillStyle = "rgba(255,210,130,0.35)";
+          const a = P3(o - 138, 299.7, 17), b = P3(o + 38, 299.7, 1);
+          c.fillRect(a.x, a.y, b.x - a.x, b.y - a.y);
+        }
+        box(o - 146, o + 46, 294, 340, 18, 19.6, roof, side, roof);
+        [-120, -75, -30, 15].forEach((gx) => {
+          box(o + gx, o + gx + 3.5, 262, 300, 4.5, 7.5, night ? "#4a5565" : "#c3c9cf", side, roof);
+          const lg = P3(o + gx + 1.75, 266, 4.5), lb = P3(o + gx + 1.75, 266, 0);
+          c.strokeStyle = "#6b7580";
+          c.lineWidth = Math.max(1, (CAM.f * 0.6) / lg.d);
+          c.beginPath();
+          c.moveTo(lg.x, lg.y);
+          c.lineTo(lb.x, lb.y);
+          c.stroke();
+        });
+        box(o + 73, o + 77, 316, 320, 0, 42, night ? "#3a4555" : "#d4d9de", side, roof);
+        box(o + 68, o + 82, 310, 324, 42, 49, night ? "#2d4a66" : "#7fa6c4", side, roof);
+        box(o + 67, o + 83, 309, 325, 49, 50.6, roof, side, roof);
+        const m0 = P3(o + 75, 317, 50.6), m1 = P3(o + 75, 317, 60);
+        c.strokeStyle = "#7c8794";
+        c.lineWidth = 1.2;
+        c.beginPath();
+        c.moveTo(m0.x, m0.y);
+        c.lineTo(m1.x, m1.y);
+        c.stroke();
+        c.fillStyle = flashOn(0.8) ? "#ff3b3b" : "#6a1e1e";
+        c.beginPath();
+        c.arc(m1.x, m1.y, 2, 0, Math.PI * 2);
+        c.fill();
+        // hangar with an arched roof
+        const hx0 = o + 150, hx1 = o + 270, hy0 = 330;
+        const arch = [];
+        for (let i = 0; i <= 16; i++) {
+          const k = i / 16;
+          arch.push(P3(lerp(hx0, hx1, k), hy0, 14 + 10 * Math.sin(k * Math.PI)));
+        }
+        const hb0 = P3(hx0, hy0, 0), hb1 = P3(hx1, hy0, 0);
+        if (hb0.d > 2) {
+          c.fillStyle = night ? "#2b3543" : "#d6dade";
+          c.beginPath();
+          c.moveTo(hb0.x, hb0.y);
+          arch.forEach((p) => c.lineTo(p.x, p.y));
+          c.lineTo(hb1.x, hb1.y);
+          c.closePath();
+          c.fill();
+          c.strokeStyle = night ? "rgba(255,255,255,0.08)" : "rgba(80,90,100,0.35)";
+          c.lineWidth = 1;
+          for (let x = hx0 + 10; x < hx1; x += 10) {
+            const a = P3(x, hy0 - 0.1, 0), b = P3(x, hy0 - 0.1, 12);
+            c.beginPath();
+            c.moveTo(a.x, a.y);
+            c.lineTo(b.x, b.y);
+            c.stroke();
+          }
+        }
+        [-200, -60, 90].forEach((x) => {
+          const b = P3(o + x, 200, 0), t = P3(o + x, 200, 25);
+          if (b.d < 2) return;
+          c.strokeStyle = night ? "#4a5566" : "#8a949e";
+          c.lineWidth = Math.max(1, (CAM.f * 0.6) / b.d);
+          c.beginPath();
+          c.moveTo(b.x, b.y);
+          c.lineTo(t.x, t.y);
+          c.stroke();
+          c.fillStyle = night ? "#fff2c8" : "#c9cfd5";
+          c.fillRect(t.x - (CAM.f * 2.5) / t.d, t.y - 1.5, (CAM.f * 5) / t.d, 3);
+          if (night) {
+            const r = (CAM.f * 90) / t.d, g = c.createRadialGradient(t.x, t.y, 2, t.x, t.y, r);
+            g.addColorStop(0, "rgba(255,236,190,0.35)");
+            g.addColorStop(1, "rgba(255,236,190,0)");
+            c.fillStyle = g;
+            c.beginPath();
+            c.arc(t.x, t.y, r, 0, Math.PI * 2);
             c.fill();
           }
         });
-      }
-
-      function drawLift(c) {
-        const Lf = lift();
-        const p = surfAt(0.32);
-        const len = 0.5 * G.c * (Lf / 100);
-        const col = Lf >= 85 ? "#2fbf71" : Lf >= 70 ? "#fab219" : "#ff5d5d";
-        c.strokeStyle = col;
-        c.fillStyle = col;
-        c.lineWidth = 5;
-        c.beginPath();
-        c.moveTo(p.x, p.y - 4);
-        c.lineTo(p.x, p.y - len + 10);
-        c.stroke();
-        c.beginPath();
-        c.moveTo(p.x, p.y - len);
-        c.lineTo(p.x - 9, p.y - len + 14);
-        c.lineTo(p.x + 9, p.y - len + 14);
-        c.closePath();
-        c.fill();
-        pill(c, "LIFT " + Math.round(Lf) + "%", p.x, p.y - len - 14);
-      }
-
-      function drawHud(c) {
-        c.font = "700 9px 'Orbitron', sans-serif";
-        const lines = [
-          "OUTSIDE AIR " + fmtCi(outside()) + " · MOISTURE " + MOIST[S.moist].name.toUpperCase(),
-          MODE[S.mode].name.toUpperCase() + " · SYSTEM " + SYS[S.sys].name + " · " + POWER[S.pow].name.toUpperCase() + " POWER",
-        ];
-        lines.forEach((s, i) => {
-          c.font = "700 8.5px 'Orbitron', sans-serif";
-          const w = c.measureText(s).width;
-          pill(c, s, 12 + (w + 12) / 2, 18 + i * 20);
-        });
-      }
-
-      function drawWarning(c, W) {
-        const st = safety();
-        const txt = st === "critical" ? "CRITICAL · HEAVY ICE" : st === "risk" ? "ICING RISK" : "SAFE";
-        const col = st === "critical" ? "#ff5d5d" : st === "risk" ? "#fab219" : "#2fbf71";
-        const blink = st === "critical" ? 0.45 + 0.55 * Math.abs(Math.sin(performance.now() / 260)) : 1;
-        // narrow screens: drop the lamp below the HUD lines so they don't overlap
-        const x = W - 104, y = W < 700 ? 64 : 18;
-        c.font = "700 10px 'Orbitron', sans-serif";
-        const w = c.measureText(txt).width + 40;
-        c.globalAlpha = blink;
-        c.fillStyle = "rgba(15,22,27,0.85)";
-        c.beginPath(); c.roundRect(x - w, y - 12, w, 26, 8); c.fill();
-        c.strokeStyle = col; c.lineWidth = 1.5; c.stroke();
-        // indicator lamp / warning triangle
-        c.fillStyle = col;
-        if (st === "safe") {
-          c.beginPath(); c.arc(x - w + 15, y + 1, 6, 0, 7); c.fill();
-        } else {
-          c.beginPath(); c.moveTo(x - w + 15, y - 6); c.lineTo(x - w + 23, y + 8); c.lineTo(x - w + 7, y + 8); c.closePath(); c.fill();
-          c.fillStyle = "#111"; c.font = "700 9px 'Orbitron', sans-serif"; c.textAlign = "center";
-          c.fillText("!", x - w + 15, y + 7);
+        // windsock
+        const ws = P3(a0 + 420, YR - 60, 0), wt = P3(a0 + 420, YR - 60, 7);
+        if (ws.d > 2) {
+          c.strokeStyle = "#cfd6dc";
+          c.lineWidth = Math.max(1, (CAM.f * 0.2) / ws.d);
+          c.beginPath();
+          c.moveTo(ws.x, ws.y);
+          c.lineTo(wt.x, wt.y);
+          c.stroke();
+          const L2 = (CAM.f * 4) / wt.d, sway = Math.sin(S.t * 2.5) * 0.12;
+          for (let i = 0; i < 4; i++) {
+            c.fillStyle = i % 2 ? "#ffffff" : "#e8590c";
+            const x0 = wt.x + (L2 * i) / 4, w2 = (L2 * (1 - i * 0.15)) / 5;
+            c.fillRect(x0, wt.y + sway * L2 * i * 0.3 - w2 / 2, L2 / 4, w2);
+          }
         }
-        c.fillStyle = col; c.font = "700 10px 'Orbitron', sans-serif"; c.textAlign = "left";
-        c.fillText(txt, x - w + 30, y + 5);
+      }
+
+      // snow, freezing rain or fog below the cloud base; fog inside the cloud
+      function drawPrecip(L, pass) {
+        const A = L.A, w = S.weather, t = S.t, W = wx(), cz = CAM.z, F = S.F, drift = F ? F.drift : 0;
+        const inC = W.icing ? clamp(Math.min(cz - CB, CT - cz) / 40, 0, 1) : 0;
+        if (pass === "pre") {
+          if (inC > 0) {
+            c.fillStyle = `rgba(165,175,186,${0.8 * inC})`;
+            c.fillRect(A.x, A.y, A.w, A.h);
+          }
+          return;
+        }
+        if (inC > 0) {
+          c.fillStyle = `rgba(165,175,186,${0.15 * inC})`;
+          c.fillRect(A.x, A.y, A.w, A.h);
+          c.strokeStyle = `rgba(235,245,255,${0.7 * inC})`;
+          c.lineWidth = 1;
+          c.beginPath();
+          const dir = F ? Math.sign(Math.sin(F.h)) || 1 : 1;
+          for (let i = 0; i < 70; i++) {
+            const fl = FLAKES[i], x = (((fl.x - drift * 3 * (0.5 + fl.z)) % 1) + 1) % 1;
+            c.moveTo(A.x + x * A.w, A.y + fl.y * A.h);
+            c.lineTo(A.x + x * A.w + dir * 14, A.y + fl.y * A.h);
+          }
+          c.stroke();
+        }
+        if (W.icing && cz >= CB) return;
+        if (w === "snow" || (mission().night && w === "dry")) {
+          const n = w === "snow" ? 220 : 50;
+          c.fillStyle = "rgba(255,255,255,0.85)";
+          for (let i = 0; i < n; i++) {
+            const fl = FLAKES[i], y = (fl.y + t * 0.06 * (0.6 + fl.z)) % 1;
+            const x = (((fl.x + Math.sin(t * 0.7 + fl.y * 9) * 0.012 - drift * (0.5 + fl.z)) % 1) + 1) % 1;
+            c.beginPath();
+            c.arc(A.x + x * A.w, A.y + y * A.h, fl.s * (1 + fl.z * 1.6), 0, Math.PI * 2);
+            c.fill();
+          }
+        } else if (w === "frain") {
+          const slant = F ? -Math.sin(F.h) * F.v * 0.08 : 0;
+          c.strokeStyle = "rgba(200,225,250,0.55)";
+          c.lineWidth = 1.2;
+          c.beginPath();
+          for (let i = 0; i < 160; i++) {
+            const fl = FLAKES[i], y = (fl.y + t * 0.9 * (0.6 + fl.z)) % 1, x = (((fl.x + y * 0.04 - drift * (0.5 + fl.z)) % 1) + 1) % 1;
+            const px = A.x + x * A.w, py = A.y + y * A.h;
+            c.moveTo(px, py);
+            c.lineTo(px - 2 + slant, py + 10 + fl.z * 8);
+          }
+          c.stroke();
+        } else if (w === "fog") {
+          const k = 1 - clamp(cz / 150, 0, 1);
+          const g = c.createLinearGradient(0, A.y, 0, A.y + A.h);
+          g.addColorStop(0, `rgba(215,222,228,${0.75 * k})`);
+          g.addColorStop(0.5, `rgba(215,222,228,${0.35 * k})`);
+          g.addColorStop(1, `rgba(215,222,228,${0.55 * k})`);
+          c.fillStyle = g;
+          c.fillRect(A.x, A.y, A.w, A.h);
+        }
+      }
+
+      /* ---------------- how the aircraft looks right now ---------------- */
+      function aircraftLook(V) {
+        const F = S.F, W = wx();
+        if (F) {
+          return {
+            ice: F.ice, frost: F.frost, fluid: F.fluid, fluidCol: F.fluidCol,
+            glow: F.antiOn ? "heat" : S.choice === "anti" && F.fluid > 0.05 ? "green" : null, glowA: F.antiOn ? 1 : F.fluid,
+            spin: 1, gear: F.gear, spoiler: F.spoiler, brake: F.brake, thrust: F.thrust,
+            lights: !!mission().night || W.icing, dist: F.dist, v: F.v, overClouds: W.icing && CAM.z > CT,
+          };
+        }
+        const anti = V.prot === "anti" && V.kA > 0.4, de = S.choice === "de" && (S.phase === "action" || S.phase === "outcome");
+        return {
+          ice: V.ice, frost: V.ice,
+          fluid: anti ? clamp((V.kA - 0.4) / 0.4, 0, 1) : de ? (S.phase === "action" ? 0.6 * V.kA : 0.35) : 0,
+          fluidCol: anti ? C_GREEN : C_ORANGEF, glow: anti ? "green" : V.prot === "de" ? "orange" : null, glowA: 1,
+          spin: V.spin, gear: 1, spoiler: 0, brake: 0, thrust: V.spin * 0.35, lights: false, dist: D0, v: 0,
+        };
+      }
+      const groundScreen = (x, y, z) => P3(...poseT(GP)(x, y, z));
+
+      /* ---------------- de-icing trucks spraying fluid onto the wings ---------------- */
+      function drawTrucks(L, V) {
+        if (!V.spray) return;
+        const k = clamp(S.pt / 0.8, 0, 1), out = S.pt > T_ACTION - 0.6 ? clamp((S.pt - (T_ACTION - 0.6)) / 0.6, 0, 1) : 0;
+        const fluid = V.spray === "de" ? "#ff9d2e" : "#46c46a";
+        [1, -1].forEach((sd) => {
+          // sd: screen side; the wing on the screen's right is the aircraft's left (port) wing
+          const g = P3(sd * lerp(52, 25, ease(k) - ease(out) * 0.6), -6, 0), s = CAM.f / g.d;
+          const tx = g.x, gy = g.y, w = 8 * s, h = 2.8 * s;
+          c.fillStyle = "#e9edf0";
+          rr(tx - w / 2, gy - h, w, h, 3);
+          c.fill();
+          c.fillStyle = V.spray === "de" ? "#e8590c" : "#2f9e57";
+          c.fillRect(tx - w / 2, gy - h * 0.45, w, h * 0.12);
+          c.fillStyle = "#2a78d6";
+          rr(tx + sd * w * 0.32 - w * 0.12, gy - h * 1.35, w * 0.24, h * 0.9, 3);
+          c.fill();
+          c.fillStyle = "#1a1f26";
+          [-0.3, 0.3].forEach((fq) => {
+            c.beginPath();
+            c.arc(tx + fq * w, gy, h * 0.28, 0, Math.PI * 2);
+            c.fill();
+          });
+          const wa = wingAt(0.42), tgt = groundScreen(wa.xle - 1, -sd * wa.y, wa.zc - 1.6);
+          const bx = lerp(tx, tgt.x, 0.95), by = lerp(gy - h, tgt.y, ease(k));
+          c.strokeStyle = "#f2c230";
+          c.lineWidth = Math.max(2, 0.35 * s);
+          c.beginPath();
+          c.moveTo(tx - sd * w * 0.2, gy - h);
+          c.lineTo(bx, by + 10);
+          c.stroke();
+          c.fillStyle = "#f2c230";
+          c.fillRect(bx - 8, by, 16, 10);
+          c.fillStyle = "#e8590c";
+          c.beginPath();
+          c.arc(bx, by - 4, 3.5, 0, Math.PI * 2);
+          c.fill();
+          if (k >= 1 && out < 0.2) {
+            for (let i = 0; i < 3; i++) {
+              const wq = wingAt(0.1 + Math.random() * 0.75), dst = groundScreen(wq.xle, -sd * wq.y, wq.zc + 0.3);
+              S.parts.push({ x: bx, y: by - 4, vx: (dst.x - bx) / 0.45 + (Math.random() - 0.5) * 30, vy: (dst.y - by) / 0.45 - 60, life: 0.55, col: fluid, r: 2 + Math.random() * 2, g: 260 });
+            }
+          }
+        });
+        tag(L.cx, L.groundY + 22, V.spray === "de" ? "DE-ICING FLUID (HOT) · REMOVING ICE" : "ANTI-ICING FLUID · PROTECTIVE COAT", "#fff", V.spray === "de" ? "rgba(180,80,10,0.9)" : "rgba(30,120,60,0.9)", 8);
+      }
+
+      /* ---------------- particles: spray, melting ice, weather hitting a protected wing ---------------- */
+      function updateParticles(dt, L, V) {
+        if (V.prot === "de" && V.ice > 0.03 && S.phase === "action") {
+          const sd = Math.random() < 0.5 ? 1 : -1, w = wingAt(0.1 + Math.random() * 0.8), p = groundScreen(w.xle - 1, sd * w.y, w.zc - w.t / 2);
+          S.parts.push({ x: p.x, y: p.y, vx: (Math.random() - 0.5) * 20, vy: 10, life: 0.9, col: "rgba(255,190,120,0.9)", r: 2, g: 380 });
+        }
+        if (V.prot === "anti" && wx().icing && V.kA > 0.6 && Math.random() < 0.5) {
+          const sd = Math.random() < 0.5 ? 1 : -1, w = wingAt(0.1 + Math.random() * 0.85), p = groundScreen(w.xle, sd * w.y, w.zc);
+          S.parts.push({ x: p.x, y: p.y - 3, vx: 0, vy: 25, life: 0.6, col: "rgba(120,220,150,0.85)", r: 1.6, g: 240 });
+        }
+        S.parts.forEach((p) => {
+          p.vy += p.g * dt;
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.life -= dt;
+        });
+        S.parts = S.parts.filter((p) => p.life > 0);
+      }
+      function drawParticles() {
+        S.parts.forEach((p) => {
+          c.globalAlpha = clamp(p.life * 2, 0, 1);
+          c.fillStyle = p.col;
+          c.beginPath();
+          c.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          c.fill();
+        });
         c.globalAlpha = 1;
       }
 
-      function drawThermo(c, x, top, bot) {
-        const MIN = -30, MAX = 30;
-        const yOf = (v) => bot - ((clamp(v, MIN, MAX) - MIN) / (MAX - MIN)) * (bot - top);
-        c.fillStyle = "rgba(15,22,27,0.8)";
-        c.beginPath(); c.roundRect(x - 34, top - 28, 72, bot - top + 82, 10); c.fill();
-        c.font = "700 8.5px 'Orbitron', sans-serif"; c.textAlign = "center"; c.fillStyle = "rgba(238,243,246,0.85)";
-        c.fillText("WING °C", x + 2, top - 13);
-        // tube + bulb
-        c.fillStyle = "#e9eef2";
-        c.beginPath(); c.roundRect(x - 5, top - 4, 10, bot - top + 8, 5); c.fill();
-        c.beginPath(); c.arc(x, bot + 12, 10, 0, 7); c.fill();
-        const col = S.tw < 0 ? "#4da3ff" : "#ff7a2f";
-        c.fillStyle = col;
-        const yv = yOf(S.tw);
-        c.fillRect(x - 3, yv, 6, bot - yv + 6);
-        c.beginPath(); c.arc(x, bot + 12, 7.5, 0, 7); c.fill();
-        // scale
-        c.font = "500 8.5px 'IBM Plex Mono', monospace"; c.textAlign = "right";
-        for (let v = MIN; v <= MAX; v += 10) {
-          const y = yOf(v);
-          c.strokeStyle = "rgba(238,243,246,0.6)"; c.lineWidth = 1;
-          c.beginPath(); c.moveTo(x - 9, y); c.lineTo(x - 5, y); c.stroke();
-          c.fillStyle = v === 0 ? "#9fe3ff" : "rgba(238,243,246,0.7)";
-          c.fillText((v < 0 ? "−" : "") + Math.abs(v), x - 11, y + 3);
-        }
-        // freezing line
-        c.strokeStyle = "#9fe3ff"; c.setLineDash([3, 3]);
-        c.beginPath(); c.moveTo(x - 7, yOf(0)); c.lineTo(x + 7, yOf(0)); c.stroke();
-        c.setLineDash([]);
-        // outside-air marker
-        const yo = yOf(outside());
-        c.fillStyle = "#fab219";
-        c.beginPath(); c.moveTo(x + 7, yo); c.lineTo(x + 15, yo - 5); c.lineTo(x + 15, yo + 5); c.closePath(); c.fill();
-        c.font = "700 7px 'Orbitron', sans-serif"; c.textAlign = "left";
-        c.fillText("OAT", x + 17, yo + 3);
-        // value
-        c.font = "600 11px 'IBM Plex Mono', monospace"; c.textAlign = "center"; c.fillStyle = col;
-        c.fillText(fmtC(S.tw).replace(" °C", "°"), x + 2, bot + 38);
-      }
-
-      function drawChart(c, x, y, w, h) {
-        if (h < 50) return;
-        c.fillStyle = "rgba(15,22,27,0.82)";
-        c.beginPath(); c.roundRect(x, y, w, h, 8); c.fill();
-        const px = x + 34, py = y + 20, pw = w - 34 - 38, ph = h - 30;
-        c.font = "700 8.5px 'Orbitron', sans-serif"; c.textAlign = "left"; c.fillStyle = "rgba(238,243,246,0.75)";
-        c.fillText("LAST 60 s", x + 10, y + 13);
-        c.font = "600 10.5px 'Rajdhani', sans-serif"; c.textAlign = "right";
-        c.fillStyle = "#ff7a2f"; c.fillText("▮ heater on", x + w - 10, y + 13);
-        c.fillStyle = "#ffd28a"; c.fillText("— wing °C", x + w - 78, y + 13);
-        c.fillStyle = "#cfe9ff"; c.fillText("■ ice %", x + w - 140, y + 13);
-
-        const t1 = Math.max(HIST_S, S.t), t0 = t1 - HIST_S;
-        const tx = (t) => px + ((t - t0) / HIST_S) * pw;
-        const iy = (v) => py + ph - (v / 100) * ph;
-        const ty = (v) => py + ph - ((clamp(v, -30, 30) + 30) / 60) * ph;
-        // grid + axes
-        c.strokeStyle = "rgba(238,243,246,0.12)"; c.lineWidth = 1;
-        c.strokeRect(px, py, pw, ph);
-        c.font = "500 8.5px 'IBM Plex Mono', monospace";
-        c.fillStyle = "rgba(207,233,255,0.75)"; c.textAlign = "right";
-        [0, 50, 100].forEach((v) => c.fillText(v + "%", px - 4, iy(v) + 3));
-        c.fillStyle = "rgba(255,210,138,0.8)"; c.textAlign = "left";
-        [-30, 0, 30].forEach((v) => c.fillText((v < 0 ? "−" : v > 0 ? "+" : "") + Math.abs(v) + "°", px + pw + 4, ty(v) + 3));
-        // heavy-ice line and freezing line
-        c.setLineDash([4, 4]);
-        c.strokeStyle = "rgba(255,93,93,0.6)";
-        c.beginPath(); c.moveTo(px, iy(HEAVY)); c.lineTo(px + pw, iy(HEAVY)); c.stroke();
-        c.strokeStyle = "rgba(159,227,255,0.45)";
-        c.beginPath(); c.moveTo(px, ty(0)); c.lineTo(px + pw, ty(0)); c.stroke();
-        c.setLineDash([]);
-        c.font = "700 7px 'Orbitron', sans-serif"; c.fillStyle = "rgba(255,93,93,0.85)"; c.textAlign = "left";
-        c.fillText("HEAVY ICE", px + 4, iy(HEAVY) - 3);
-        const H_ = S.hist;
-        if (H_.length > 1) {
-          // heater on bands
-          c.fillStyle = "rgba(255,122,47,0.16)";
-          for (let i = 1; i < H_.length; i++) if (H_[i].h > 0.5) c.fillRect(tx(H_[i - 1].t), py, tx(H_[i].t) - tx(H_[i - 1].t) + 0.5, ph);
-          c.fillStyle = "#ff7a2f";
-          for (let i = 1; i < H_.length; i++) if (H_[i].h > 0.5) c.fillRect(tx(H_[i - 1].t), py + ph - 3, tx(H_[i].t) - tx(H_[i - 1].t) + 0.5, 3);
-          // ice area
-          c.save();
-          c.beginPath(); c.rect(px, py, pw, ph); c.clip();
-          c.fillStyle = "rgba(207,233,255,0.55)";
-          c.beginPath();
-          c.moveTo(tx(H_[0].t), iy(0));
-          H_.forEach((s) => c.lineTo(tx(s.t), iy(s.ice)));
-          c.lineTo(tx(H_[H_.length - 1].t), iy(0));
-          c.closePath(); c.fill();
-          // wing temperature
-          c.strokeStyle = "#ffd28a"; c.lineWidth = 1.8;
-          c.beginPath();
-          H_.forEach((s, i) => (i ? c.lineTo(tx(s.t), ty(s.tw)) : c.moveTo(tx(s.t), ty(s.tw))));
+      /* ---------------- wing section: airflow and take-off lift ---------------- */
+      function drawWingSection(L, V) {
+        const A = L.A, w = Math.min(220, A.w * 0.32), h = 102, x = A.x + 10, y = A.y + A.h - h - 8;
+        rr(x, y, w, h, 8);
+        c.fillStyle = "rgba(6,12,20,0.85)";
+        c.fill();
+        c.strokeStyle = "rgba(255,255,255,0.15)";
+        c.lineWidth = 1;
+        c.stroke();
+        c.font = F_HEAD(8);
+        c.fillStyle = "rgba(238,243,246,0.85)";
+        c.textAlign = "left";
+        c.textBaseline = "middle";
+        c.fillText("WING SECTION · AIRFLOW", x + 9, y + 11);
+        const ax = x + 22, ay = y + 60, ch = w * 0.55, th = ch * 0.13;
+        const pt = (t, up) => {
+          const yt = 5 * 0.13 * (0.2969 * Math.sqrt(t) - 0.126 * t - 0.3516 * t * t + 0.2843 * t ** 3 - 0.1015 * t ** 4);
+          return [ax + t * ch, ay - (up ? yt : -yt * 0.55) * ch - 0.04 * ch * Math.sin(Math.PI * t)];
+        };
+        c.beginPath();
+        for (let i = 0; i <= 30; i++) c.lineTo(...pt(i / 30, true));
+        for (let i = 30; i >= 0; i--) c.lineTo(...pt(i / 30, false));
+        c.closePath();
+        c.fillStyle = "#c9d1d8";
+        c.fill();
+        if (V.prot === "anti" && V.kA > 0.4) {
+          c.strokeStyle = "rgba(70,196,106,0.9)";
+          c.lineWidth = 2;
           c.stroke();
-          c.restore();
-        } else {
-          c.font = "600 11px 'Rajdhani', sans-serif"; c.fillStyle = "rgba(238,243,246,0.55)"; c.textAlign = "center";
-          c.fillText("Press Start to record ice and wing temperature.", px + pw / 2, py + ph / 2 + 4);
         }
-      }
-
-      // small readable label on a dark pill, centred on (x, y)
-      function pill(c, s, x, y) {
-        c.font = "700 8.5px 'Orbitron', sans-serif";
-        const w = c.measureText(s).width + 12;
-        x = clamp(x, w / 2 + 4, c.canvas.clientWidth - w / 2 - 4);
-        c.fillStyle = "rgba(15,22,27,0.8)";
-        c.beginPath(); c.roundRect(x - w / 2, y - 8, w, 15, 7); c.fill();
-        c.fillStyle = "rgba(238,243,246,0.92)"; c.textAlign = "center";
-        c.fillText(s, x, y + 3);
-      }
-
-      /* ---------------- outputs + feedback ---------------- */
-      const $ = (id) => document.getElementById(id);
-      function refreshOutputs() {
-        const P = POWER[S.pow];
-        $("oWing").innerHTML = fmtC(S.tw) + (S.tw < 0 ? "<small>below freezing</small>" : "<small>above freezing</small>");
-        $("oOat").innerHTML = fmtCi(outside()) + "<small>" + TEMP[S.temp].name + "</small>";
-        const lvl = iceLevel();
-        $("oIce").innerHTML = `<span class="pill ${lvl === "Heavy" ? "fail" : lvl === "Light" ? "hard" : "safe"}">${lvl}</span><small>${(S.ice * MM).toFixed(1)} mm</small>`;
-        const on = S.h > 0.5;
-        $("oHeat").innerHTML = `<span class="pill ${on ? "heat" : "off"}">${on ? "ON" : "OFF"}</span>`;
-        const use = on ? P.name : "Low";
-        $("oEnergy").innerHTML = `<span class="pill ${use === "High" ? "fail" : use === "Medium" ? "hard" : "safe"}">${use}</span><small>${(P.kw * S.h).toFixed(1)} kW</small>`;
-        $("oTotal").textContent = Math.round(S.energy).toLocaleString() + " kJ";
-        const Lf = lift();
-        $("oLift").innerHTML = Math.round(Lf) + " %<small>" + (Lf >= 85 ? "safe" : Lf >= 70 ? "reduced" : "unsafe") + "</small>";
-        const fill = $("liftFill");
-        fill.style.width = Lf + "%";
-        fill.style.background = Lf >= 85 ? "var(--ok)" : Lf >= 70 ? "var(--warn)" : "var(--danger)";
-        $("oCycle").textContent = timingText();
-        $("oTime").textContent = S.t.toFixed(1) + " s";
-        const st = safety();
-        $("oSafety").innerHTML = `<span class="pill-result ${st === "critical" ? "fail" : st === "risk" ? "hard" : "safe"}">${st === "critical" ? "Critical" : st === "risk" ? "Icing Risk" : "Safe"}</span>`;
-        $("outNote").textContent = !S.started ? "Live system status panel — press Start to fly." : S.running ? "Live readings while flying." : "Paused — readings are frozen.";
-        setChip();
-        renderFeedback();
-      }
-      function timingText() {
-        if (S.sys === "off") return "System off";
-        if (S.mode === "anti") return sensorIcing() ? "Icing detected · heating" : "No icing · standby";
-        if (S.cycle === "heat") return "De-ice cycle " + S.cycleT.toFixed(1) + " s";
-        if (S.cycle === "rest" && S.cycleT < REST_MIN) return "Rest " + (REST_MIN - S.cycleT).toFixed(1) + " s";
-        return "Waiting for 3 mm ice";
-      }
-      function setChip() {
-        const el = $("chip");
-        const st = safety();
-        if (!S.started) { el.textContent = "READY"; el.className = "modechip"; return; }
-        if (!S.running) { el.textContent = "PAUSED"; el.className = "modechip"; return; }
-        if (st === "critical") { el.textContent = "CRITICAL · HEAVY ICE"; el.className = "modechip fail"; }
-        else if (st === "risk") { el.textContent = "ICING RISK"; el.className = "modechip hard"; }
-        else { el.textContent = "FLYING · WING CLEAR"; el.className = "modechip run"; }
-      }
-
-      function feedback() {
-        const out = [];
-        const on = S.sys === "on", heating = S.h > 0.5;
-        const growing = S.grow > S.melt && S.grow > 0;
-        const melting = S.melt > S.grow && S.ice > 0;
-        if (!S.started) {
-          if (icingAir()) out.push(["warn", "!", "Cold + moisture ahead — ice will start forming. Should you turn on anti-icing before ice forms?"]);
-          else out.push(["ok", "✓", "Outside air is above freezing — water stays liquid, so no ice can form."]);
-          return out;
+        if (V.ice > 0.05) {
+          const s = V.ice * 13;
+          c.fillStyle = "rgba(235,247,255,0.95)";
+          c.beginPath();
+          c.moveTo(ax + 6, ay - th * 0.7);
+          c.lineTo(ax - s * 0.6, ay - th * 0.7 - s * 0.7);
+          c.lineTo(ax - s, ay);
+          c.lineTo(ax - s * 0.6, ay + s * 0.5);
+          c.lineTo(ax + 6, ay + th * 0.3);
+          c.closePath();
+          c.fill();
         }
-        if (S.ice >= HEAVY) out.push(["bad", "✕", "Ice too heavy — flight safety risk increases. Activate de-icing on high power before lift becomes unsafe."]);
-        else if (lift() < 85) out.push(["warn", "!", "Lift drops — ice is disturbing airflow. Remove it quickly."]);
-
-        if (!icingAir()) {
-          if (S.ice > 0) out.push(["ok", "✓", "Warm air is melting the leftover ice."]);
-          else out.push(["ok", "✓", "Outside air is above freezing — no ice forms, so the heater is not needed."]);
-          if (on && S.mode === "anti" && !sensorIcing()) out.push(["ok", "✓", "The temperature sensor reads no icing risk — the heater stays OFF to save energy."]);
-        } else if (!on) {
-          if (S.ice < 10) out.push(["warn", "!", "Cold + moisture — ice starts forming. Use anti-icing before entering icy clouds."]);
-          else out.push(["bad", "✕", "Heater OFF in freezing condition — ice increases. Use de-icing to remove the ice."]);
-        } else if (S.mode === "anti") {
-          if (growing && S.tw < 0 && heating) out.push(["bad", "✕", "Heater power is too low for this cold — the wing is still below 0 °C, so ice keeps forming. Raise the heater power."]);
-          else if (S.ice >= 10) out.push(["warn", "!", "Anti-icing prevents ice before it forms. Ice is already on the wing — use de-icing to remove the ice."]);
-          else if (S.ice < LIGHT && heating) out.push(["ok", "✓", "Anti-icing ON before ice — ice formation is prevented."]);
-        } else {
-          if (S.cycle === "heat" && melting) out.push(["ok", "✓", "De-icing ON after ice forms — ice slowly melts."]);
-          else if (S.cycle === "heat" && growing) out.push(["bad", "✕", "Heater power is too low to melt the ice in this cold. Raise the heater power."]);
-          else if (S.ice > 0 && S.cycle !== "heat") out.push(["warn", "!", "De-icing lets a thin layer of ice form first, then heats it off in a timed cycle. This saves energy."]);
+        const dist = clamp((V.ice - 0.1) / 0.8, 0, 1);
+        c.strokeStyle = dist > 0.05 ? "rgba(255,160,120,0.85)" : "rgba(143,227,255,0.85)";
+        c.lineWidth = 1.2;
+        for (let j = 0; j < 5; j++) {
+          const off = (j - 1.6) * 11;
+          c.beginPath();
+          for (let i = 0; i <= 40; i++) {
+            const t = i / 40, xx = x + 8 + t * (w * 0.68), rel = (xx - ax) / ch;
+            let yy = ay + off - (rel > 0 && rel < 1 ? Math.sin(Math.PI * rel) * (off < 0 ? 9 : 3) : 0);
+            if (rel > 0.2 && off < 0) yy += Math.sin(t * 40 + S.t * 9 + j) * 4 * dist * rel;
+            if (i === 0) c.moveTo(xx, yy);
+            else c.lineTo(xx, yy);
+          }
+          c.stroke();
         }
-        if (heating && S.pow === "high") out.push(["warn", "!", "High heater power — faster melting but more energy use."]);
-        if (S.t > 10 && S.ice < LIGHT && icingAir() && on && lift() >= 99) out.push(["ok", "✓", "Good control! Wing stayed clear and lift remained safe."]);
-        return out.slice(0, 3);
-      }
-      let lastFb = "";
-      function renderFeedback() {
-        const items = feedback();
-        const key = items.map((i) => i[2]).join("|");
-        if (key === lastFb) return;
-        lastFb = key;
-        const wrap = $("fbWrap");
-        wrap.innerHTML = "";
-        items.forEach(([cls, ic, txt]) => {
-          const d = document.createElement("div");
-          d.className = "fb " + cls;
-          const a = document.createElement("span");
-          a.className = "ic";
-          a.textContent = ic;
-          const b = document.createElement("span");
-          b.textContent = txt;
-          d.append(a, b);
-          wrap.appendChild(d);
-        });
+        if (dist > 0.05) {
+          c.strokeStyle = `rgba(255,160,120,${0.8 * dist})`;
+          for (let i = 0; i < 3; i++) {
+            const ex = ax + ch * (0.55 + i * 0.18), ey = ay - th * 1.8 - i * 2;
+            c.beginPath();
+            c.arc(ex, ey, 4 + i * 2, S.t * 6 + i, S.t * 6 + i + 4.2);
+            c.stroke();
+          }
+        }
+        const lift = clamp(V.lift / 100, 0, 1), lx = x + w - 30, ly = y + h - 14, len = 58 * lift;
+        c.strokeStyle = lift > 0.8 ? "#5fd97a" : lift > 0.6 ? "#fab219" : "#ff6b6b";
+        c.fillStyle = c.strokeStyle;
+        c.lineWidth = 4;
+        c.beginPath();
+        c.moveTo(lx, ly);
+        c.lineTo(lx, ly - len);
+        c.stroke();
+        c.beginPath();
+        c.moveTo(lx - 7, ly - len + 2);
+        c.lineTo(lx + 7, ly - len + 2);
+        c.lineTo(lx, ly - len - 8);
+        c.closePath();
+        c.fill();
+        c.font = F_HEAD(7.5);
+        c.textAlign = "center";
+        c.fillText("LIFT " + V.lift + "%", lx, ly + 7);
+        c.textAlign = "left";
+        c.fillStyle = dist > 0.05 ? "#ffb3a0" : "#a6ecff";
+        c.fillText(dist > 0.05 ? "AIRFLOW DISTURBED" : "SMOOTH AIRFLOW", x + 9, y + h - 9);
       }
 
-      /* ---------------- control wiring ---------------- */
-      const SEGS = [
-        ["segTemp", "temp", "vTemp", "hTemp", TEMP, (d) => (d.c > 0 ? "+" : "−") + Math.abs(d.c) + " °C"],
-        ["segMoist", "moist", "vMoist", "hMoist", MOIST, (d) => d.name],
-        ["segMode", "mode", "vMode", "hMode", MODE, (d) => d.name],
-        ["segPow", "pow", "vPow", "hPow", POWER, (d) => d.kw + " kW"],
-        ["segSys", "sys", "vSys", "hSys", SYS, (d) => d.name],
-      ];
-      function syncSeg([id, key, valEl, hintEl, map, fn]) {
-        $(id).querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.v === S[key]));
-        $(valEl).textContent = fn(map[S[key]]);
-        $(hintEl).textContent = map[S[key]].note;
-      }
-      SEGS.forEach((cfg) => {
-        const [id, key] = cfg;
-        $(id).querySelectorAll("button").forEach((b) => {
-          b.addEventListener("click", () => {
-            if (S[key] === b.dataset.v) return;
-            S[key] = b.dataset.v;
-            if (key === "mode" || key === "sys") { S.cycle = "idle"; S.cycleT = 0; }
-            // before the flight starts, the wing simply sits at the outside temperature
-            if (key === "temp" && !S.started) S.tw = outside();
-            syncSeg(cfg);
-            refreshOutputs();
+      /* ---------------- labels ---------------- */
+      function drawLabels(L, V) {
+        const M = mission(), W = wx();
+        if (S.phase === "outcome" && S.out && !S.out.chain) tag(L.cx, L.A.y + 44, "ENGINES STARTING", "#fff", "rgba(5,10,16,0.82)", 9);
+        if (S.phase === "inspect") {
+          const k = clamp(S.pt / T_INSPECT, 0, 1), x = L.cx + (k * 2 - 1) * L.s * 0.55;
+          const g = c.createLinearGradient(x - 40, 0, x + 4, 0);
+          g.addColorStop(0, "rgba(143,227,255,0)");
+          g.addColorStop(1, "rgba(143,227,255,0.35)");
+          c.fillStyle = g;
+          c.fillRect(x - 40, L.A.y, 44, L.A.h);
+          c.fillStyle = "rgba(143,227,255,0.9)";
+          c.fillRect(x, L.A.y, 2, L.A.h);
+        }
+        if ((S.phase === "inspect" && S.pt > T_INSPECT * 0.45) || S.phase === "choose") {
+          const w = wingAt(0.55), wing = groundScreen(w.xle, -w.y, w.zc);
+          const spots = S.ice > 0.08
+            ? [["ICE ON WINGS", wing], ["ICE ON TAIL", groundScreen(-16.8, 0, 11.4)], ["ICE ON ENGINE INLET", groundScreen(5.9, 5.8, 2.75)]]
+            : [["WING CLEAN", wing]];
+          spots.push([W.name.toUpperCase() + " · " + W.temp, P3(-14, 0, 17)]);
+          spots.forEach(([text, p], i) => {
+            const ty = p.y - 26 - (i % 2) * 6;
+            c.strokeStyle = "rgba(255,212,92,0.9)";
+            c.lineWidth = 1.2;
+            c.beginPath();
+            c.arc(p.x, p.y, 6, 0, Math.PI * 2);
+            c.moveTo(p.x, p.y - 6);
+            c.lineTo(p.x, ty + 8);
+            c.stroke();
+            tag(p.x, ty, text, "#1a1200", "#ffd45c", 7.5);
           });
-        });
-      });
-
-      /* ---------------- start / reset ---------------- */
-      const btnStart = $("btnStart");
-      function syncStart() {
-        btnStart.innerHTML = S.running ? "&#10074;&#10074; Pause" : S.started ? "&#9654; Resume" : "&#9654; Start";
-        btnStart.classList.toggle("running", S.running);
+        }
+        if (V.warn && Math.sin(S.t * 8) > -0.2) tag(L.cx, L.A.y + 16, "⚠ " + V.warn, "#fff", "rgba(176,30,30,0.92)", 9);
+        if (V.banner) {
+          const B = V.banner, col = B.cls === "safe" ? "rgba(11,79,11,0.92)" : B.cls === "warn" ? "rgba(122,60,0,0.92)" : "rgba(122,18,18,0.94)";
+          tag(L.cx, L.A.y + 44, (B.cls === "safe" ? "✓ " : B.cls === "warn" ? "! " : "✕ ") + B.result, "#fff", col, 12);
+        }
+        if (S.phase === "brief") tag(L.cx, L.A.y + 16, M.code + " · " + M.title.toUpperCase(), "#fff", "rgba(5,10,16,0.82)", 9);
+        if (S.phase === "choose" && S.step === 2) tag(L.cx, L.A.y + 16, "ICE REMOVED ✓ · " + W.name.toUpperCase() + " CONTINUES · CHOOSE AGAIN", "#1a1200", "#ffd45c", 8.5);
       }
-      btnStart.addEventListener("click", () => {
-        S.running = !S.running;
-        if (S.running) S.started = true;
-        syncStart();
-        refreshOutputs();
-      });
-      $("btnReset").addEventListener("click", () => {
-        Object.assign(S, {
-          running: false, started: false, t: 0, ice: 0, tw: outside(), h: 0, cmd: false,
-          grow: 0, melt: 0, energy: 0, cycle: "idle", cycleT: 0, cycles: 0,
-          hist: [], histT: 0, drops: [], fx: [], spawn: 0,
-        });
-        syncStart();
-        refreshOutputs();
-      });
 
-      /* ---------------- loop ---------------- */
+      /* ================= TAKE-OFF & FLIGHT (same world, same camera) ================= */
+      const KT = 1.944, VR = 72, FLIGHT_WARP = 1.2; // VR: rotation speed, 72 m/s = 140 kt
+      const SEG_NAME = {
+        taxi: "Taxiing", lineup: "Lined up", spool: "Take-off power", roll: "Take-off roll", rotate: "Lift-off", climb: "Climbing",
+        cruise: "Cruising", descent: "Approach", rollout: "Landing roll", rotateFail: "Stall warning", reject: "Rejected take-off",
+        abort: "Exiting icing cloud", turn: "Turning back", ret: "Rolling out", stopped: "Stopped",
+      };
+
+      function startFlight() {
+        S.F = {
+          kind: S.out.ending, seg: "taxi", st: 0, P: { X: 0, Y: 0, Z: 0 }, h: 0, v: 0, vz: 0, pitch: 0, bank: 0, gear: 1,
+          thrust: 0.35, brake: 0, spoiler: 0, ice: S.ice, frost: S.ice, antiOn: false, warn: null, label: "", shake: 0, drift: 0,
+          fluid: S.choice === "anti" ? 1 : S.choice === "de" ? 0.35 : 0, fluidCol: S.choice === "anti" ? C_GREEN : C_ORANGEF,
+          dist: D0, camK: 0, lead: 0, warp: 1, TD: null, rwLand: null, done: false,
+        };
+        setPhase("flight");
+      }
+      function setSeg(n) {
+        S.F.seg = n;
+        S.F.st = 0;
+      }
+      function beginApproach(td, rw) {
+        S.F.TD = td;
+        S.F.rwLand = rw;
+        setSeg("descent");
+      }
+      function flightPose() {
+        const F = S.F, sh = F.shake, t = S.t;
+        return {
+          X: F.P.X, Y: F.P.Y, Z: F.P.Z, h: F.h,
+          pitch: F.pitch + (sh ? Math.sin(t * 9) * 0.025 * sh : 0),
+          bank: F.bank + (sh ? Math.sin(t * 6.3) * 0.09 * sh : 0), // an iced wing rocks
+        };
+      }
+
+      function updateFlight(dt) {
+        const F = S.F, k = F.kind, icingKind = k === "icing", W = wx();
+        F.st += dt;
+        F.warn = null;
+        let shake = 0;
+        const Z = F.P.Z, inCloud = W.icing && Z > CB && Z < CT + 15;
+        switch (F.seg) {
+          case "taxi": {
+            // straight off the de-icing pad, then a 90° turn onto the runway; the camera pulls back alongside
+            F.v = Math.min(9, F.v + 3 * dt);
+            F.taxiS = (F.taxiS || 0) + F.v * dt;
+            if (F.h < Math.PI / 2 && (F.P.Y <= -20 || F.h > 0)) {
+              F.h = Math.min(Math.PI / 2, F.h + (F.v / 25) * dt);
+              if (F.h >= Math.PI / 2) F.P.Y = YR;
+            }
+            const kk = easeIO(F.taxiS / 66);
+            F.dist = lerp(D0, 190, kk);
+            F.camK = kk;
+            F.lead = kk;
+            F.label = "TAXIING ONTO THE RUNWAY";
+            if (F.h >= Math.PI / 2 && F.taxiS >= 66) setSeg("lineup");
+            break;
+          }
+          case "lineup":
+            F.v = Math.max(0, F.v - 6 * dt);
+            F.label = "LINED UP ON THE RUNWAY";
+            if (F.st > 0.9) setSeg("spool");
+            break;
+          case "spool":
+            F.thrust = approach(F.thrust, 1, 2, dt);
+            F.label = "TAKE-OFF POWER SET";
+            if (F.st > 1.3) setSeg("roll");
+            break;
+          case "roll":
+            F.thrust = 1;
+            F.v += (k === "reject" ? 9 : 14) * dt;
+            F.label = k === "reject" ? "TAKE-OFF ROLL · ICE ON THE WING ADDS DRAG" : "TAKE-OFF ROLL";
+            if (F.v >= VR) setSeg(k === "reject" ? "rotateFail" : "rotate");
+            break;
+          case "rotate":
+            F.v += 6 * dt;
+            F.pitch = approach(F.pitch, 0.17, 2.5, dt);
+            if (F.st > 0.5) F.vz = Math.min(14, F.vz + 18 * dt);
+            F.label = Z > 0.5 ? "LIFT-OFF · CLEAN WING MAKES FULL LIFT" : "ROTATE";
+            if (Z > 10) setSeg("climb");
+            break;
+          case "climb":
+            if (inCloud && icingKind) F.ice = Math.min(0.75, F.ice + 0.15 * dt);
+            F.antiOn = !icingKind && W.icing && S.choice === "anti" && Z > CB - 30 && Z < CT + 40;
+            F.vz = approach(F.vz, 40 * (1 - F.ice * 1.2), 1.2, dt);
+            F.v = approach(F.v, icingKind ? 100 - F.ice * 35 : 105, 0.5, dt);
+            F.pitch = approach(F.pitch, 0.12 + F.ice * 0.14, 1.5, dt);
+            if (Z > 25) F.gear = Math.max(0, F.gear - dt / 1.5);
+            if (icingKind && F.ice > 0.28) {
+              F.warn = "ICING WARNING";
+              shake = F.ice;
+            }
+            if (inCloud) F.label = icingKind
+              ? (F.ice > 0.28 ? "ICE BUILDING ON THE WING · AIRFLOW DISTURBED · LIFT REDUCING" : "CLIMBING INTO ICING CLOUD · NO PROTECTION")
+              : "IN ICING CLOUD · WING ANTI-ICE ON · WING STAYS CLEAN";
+            else F.label = Z < CB || !W.icing ? "CLIMBING" : "ABOVE THE CLOUDS · WING CLEAN";
+            if (icingKind && F.ice >= 0.6) setSeg("abort");
+            else if (!icingKind && Z >= CRUISE) setSeg("cruise");
+            break;
+          case "cruise":
+            F.antiOn = false;
+            F.vz = approach(F.vz, 0, 2, dt);
+            F.pitch = approach(F.pitch, 0.03, 2, dt);
+            F.v = approach(F.v, 115, 1, dt);
+            F.gear = Math.max(0, F.gear - dt / 1.5);
+            F.label = "CRUISING · FLIGHT NOT AFFECTED BY ICE";
+            if (F.st > 2.6) {
+              const td = F.P.X + Z * 4;
+              beginApproach(td, [td - 300, td + 2700]);
+            }
+            break;
+          case "descent": {
+            const sx = Math.sin(F.h) >= 0 ? 1 : -1, dx = (F.TD - F.P.X) * sx;
+            F.antiOn = !icingKind && W.icing && S.choice === "anti" && Z > CB - 30 && Z < CT + 40;
+            F.v = approach(F.v, icingKind ? 82 : 74, 0.5, dt);
+            F.gear = Math.min(1, F.gear + dt / 2);
+            F.bank = approach(F.bank, 0, 2, dt);
+            F.P.Y += (YR - F.P.Y) * Math.min(1, dt * 0.7);
+            if (Z > 10) {
+              F.vz = (-Z * F.v) / Math.max(dx, 60);
+              F.pitch = approach(F.pitch, 0.02, 1.5, dt);
+            } else {
+              F.vz = approach(F.vz, -3, 3, dt);
+              F.pitch = approach(F.pitch, 0.07, 3, dt);
+            }
+            F.label = Z > 40 ? (icingKind ? "EMERGENCY RETURN · APPROACH WITH ICE ON THE WING" : "DESCENDING TO THE DESTINATION AIRPORT") : "LANDING";
+            if (icingKind && F.ice > 0.28) {
+              F.warn = "ICE ON WING · HIGHER APPROACH SPEED";
+              shake = F.ice * 0.4;
+            }
+            if (Z <= 0.05 && F.st > 0.5) {
+              F.P.Z = 0;
+              F.vz = 0;
+              setSeg("rollout");
+            }
+            break;
+          }
+          case "rollout":
+            F.antiOn = false;
+            F.spoiler = approach(F.spoiler, 1, 4, dt);
+            F.brake = 1;
+            F.thrust = approach(F.thrust, -0.6, 2, dt);
+            F.pitch = approach(F.pitch, 0, 2.5, dt);
+            F.v = Math.max(0, F.v - 14 * dt);
+            F.label = "TOUCHDOWN · BRAKING";
+            if (F.v <= 0) setSeg("stopped");
+            break;
+          case "rotateFail":
+            F.v += 2 * dt;
+            F.pitch = approach(F.pitch, 0.1, 3, dt);
+            F.warn = "STALL WARNING";
+            shake = 0.7;
+            F.label = "ROTATE… THE ICED WING CANNOT MAKE ENOUGH LIFT";
+            if (F.st > 1.3) setSeg("reject");
+            break;
+          case "reject":
+            F.pitch = approach(F.pitch, 0, 3, dt);
+            F.thrust = approach(F.thrust, -0.6, 3, dt);
+            F.spoiler = approach(F.spoiler, 1, 4, dt);
+            F.brake = 1;
+            F.v = Math.max(0, F.v - 14 * dt);
+            if (F.st < 1.5) F.warn = "REJECT TAKE-OFF";
+            F.label = "TAKE-OFF REJECTED · FULL BRAKING";
+            if (F.v <= 0) setSeg("stopped");
+            break;
+          case "abort":
+            F.warn = "ICING WARNING";
+            shake = F.ice * 0.8;
+            F.label = "MISSION ABORTED – EXIT ICING CONDITIONS";
+            F.pitch = approach(F.pitch, -0.04, 1.5, dt);
+            F.vz = approach(F.vz, Z > CB - 50 ? -25 : 0, 1.5, dt);
+            F.v = approach(F.v, 100, 0.5, dt);
+            if (Z <= CB - 40 && F.st > 1.5) setSeg("turn");
+            break;
+          case "turn": {
+            // a banked 180° turn back towards the airport (right turn: right wing down)
+            const rem = F.h + Math.PI / 2;
+            F.vz = approach(F.vz, 0, 2, dt);
+            F.pitch = approach(F.pitch, 0.03, 2, dt);
+            F.bank = approach(F.bank, rem > 0.5 ? 0.55 : 0.55 * Math.max(0, rem / 0.5), 2.2, dt);
+            F.h -= 0.9 * (F.bank / 0.55) * dt;
+            F.label = "OUT OF THE ICING CLOUD · TURNING BACK TO THE AIRPORT";
+            if (F.ice > 0.28) F.warn = "ICE ON WING";
+            if (F.h <= -Math.PI / 2 + 0.005) {
+              F.h = -Math.PI / 2;
+              setSeg("ret");
+            }
+            break;
+          }
+          case "ret":
+            F.bank = approach(F.bank, 0, 3, dt);
+            F.label = "LINING UP WITH THE DEPARTURE RUNWAY";
+            if (F.ice > 0.28) F.warn = "ICE ON WING";
+            if (F.st > 0.6) beginApproach(clamp(F.P.X - Z * 4 - 150, 250, 2400), DEP);
+            break;
+          case "stopped":
+            F.v = 0;
+            F.thrust = approach(F.thrust, 0.15, 2, dt);
+            F.brake = 0.5;
+            F.spoiler = approach(F.spoiler, 0, 1, dt);
+            F.label = k === "reject" ? "AIRCRAFT STOPPED ON THE RUNWAY · TAKE-OFF NOT SAFE"
+              : icingKind ? "LANDED SAFELY AFTER RETURNING · MISSION ABORTED" : "LANDED SAFELY · MISSION COMPLETE";
+            if (F.st > 1.8) F.done = true;
+            break;
+        }
+        F.P.X += F.v * Math.sin(F.h) * dt;
+        F.P.Y += -F.v * Math.cos(F.h) * dt;
+        F.P.Z = Math.max(0, F.P.Z + F.vz * dt);
+        F.drift += F.v * Math.sin(F.h) * dt * 0.0011;
+        // de-/anti-icing fluid shears off the wing during the take-off roll
+        if (F.v > 30 && F.P.Z < 40) F.fluid = Math.max(0, F.fluid - dt * 0.35);
+        F.shake = shake;
+        if (F.antiOn) S.energy += POWER_KW.anti * dt;
+      }
+
+      function drawFlightLabels(L) {
+        const F = S.F, A = L.A, t = S.t, T = poseT(flightPose());
+        const top = P3(...T(0, 0, 9)), kt = Math.round(F.v * KT), ft = Math.round((F.P.Z * 20) / 10) * 10;
+        tag(top.x, top.y - 16, kt + " kt · " + (ft < 20 ? "ON THE GROUND" : ft.toLocaleString() + " ft"), "#cfefff", "rgba(5,10,16,0.75)", 7.5);
+        // call out ice on the wing (or the working anti-ice) on the wing facing the camera
+        if (F.ice > 0.25 || F.antiOn) {
+          const sg = -Math.sin(F.h) <= 0 ? 1 : -1, w = wingAt(0.4), p = P3(...T(w.xle, sg * w.y, w.zc));
+          const lx = p.x, ly = p.y + 46;
+          c.strokeStyle = F.antiOn ? "rgba(255,160,90,0.95)" : "rgba(170,215,255,0.95)";
+          c.lineWidth = 1.5;
+          c.beginPath();
+          c.arc(p.x, p.y, 9, 0, Math.PI * 2);
+          c.moveTo(p.x, p.y + 9);
+          c.lineTo(lx, ly - 8);
+          c.stroke();
+          tag(lx, ly, F.antiOn ? "WING ANTI-ICE ON · NO ICE" : "ICE ON WING · " + Math.round(F.ice * 100) + "%", F.antiOn ? "#1a0b00" : "#03141c", F.antiOn ? "#ffb070" : "#bfe3ff", 7.5);
+        }
+        const bad = (F.kind === "reject" || F.kind === "icing") && !["taxi", "lineup", "spool", "roll"].includes(F.seg);
+        tag(L.cx, A.y + 16, F.label, "#fff", bad ? "rgba(90,20,20,0.88)" : "rgba(5,10,16,0.82)", 8.5);
+        if (S.phase === "result") {
+          const O = S.out, col = O.cls === "safe" ? "rgba(11,79,11,0.92)" : O.cls === "warn" ? "rgba(122,60,0,0.92)" : "rgba(122,18,18,0.94)";
+          tag(L.cx, A.y + 46, (O.cls === "safe" ? "✓ " : O.cls === "warn" ? "! " : "✕ ") + O.result, "#fff", col, 12);
+        } else if (F.warn && Math.sin(t * 8) > -0.2) tag(L.cx, A.y + 44, "⚠ " + F.warn, "#fff", "rgba(176,30,30,0.92)", 9.5);
+      }
+
+      /* ---------------- frame ---------------- */
+      function draw() {
+        const { W, H } = fit();
+        if (W < 10 || H < 10) return;
+        const L = layout(W, H), V = view();
+        S.V = V;
+        c.fillStyle = "#0b1020";
+        c.fillRect(0, 0, W, H);
+        drawTracker(L.T);
+        c.save();
+        rr(L.A.x, L.A.y, L.A.w, L.A.h, 8);
+        c.clip();
+        setCamera(L);
+        drawScene(L);
+        drawPrecip(L, "pre");
+        renderAircraft(S.F ? flightPose() : GP, aircraftLook(V));
+        if (!S.F) {
+          drawTrucks(L, V);
+          drawParticles();
+        }
+        drawPrecip(L, "post");
+        drawWingSection(L, V);
+        if (S.F) drawFlightLabels(L);
+        else drawLabels(L, V);
+        c.restore();
+        S.L = L;
+      }
+
+      function update(dt) {
+        S.t += dt;
+        S.pt += dt;
+        const V = S.V || view();
+        S.fan = (S.fan || 0) + dt * 22 * (V.spin || 0);
+        if (S.phase === "inspect" && S.pt >= T_INSPECT) setPhase("choose");
+        else if (S.phase === "action" && S.pt >= T_ACTION) setPhase("outcome");
+        else if (S.phase === "outcome" && S.pt >= (S.out.chain ? T_CHAIN : T_OUTCOME)) {
+          if (S.out.chain) {
+            // de-icing done, but icing weather continues: decide again
+            S.ice = 0;
+            S.step = 2;
+            S.choice = null;
+            S.out = null;
+            setPhase("choose");
+          } else {
+            S.ice = S.out.groundIce;
+            startFlight();
+          }
+        }
+        if (S.choice && S.choice !== "none" && (S.phase === "action" || (S.phase === "outcome" && V.prot === "anti"))) S.energy += POWER_KW[S.choice] * dt;
+        if (S.phase === "flight") {
+          // long, uneventful stretches (cruise, high descent) run faster, smoothly
+          const F = S.F;
+          const tgt = F.seg === "cruise" || (F.seg === "descent" && F.P.Z > 120) ? 2.5 : F.seg === "climb" && F.kind !== "icing" && F.P.Z > CT + 20 ? 2 : 1;
+          F.warp = approach(F.warp, tgt, 2, dt);
+          updateFlight(dt * FLIGHT_WARP * F.warp);
+          if (F.done) setPhase("result");
+        } else if (S.L && !S.F) updateParticles(dt, S.L, V);
+      }
+
+      /* ---------------- flow ---------------- */
+      function setPhase(p) {
+        S.phase = p;
+        S.pt = 0;
+        if (p === "result" && S.out.ok) S.done[S.m] = true;
+        refreshPanel();
+      }
+      function choose(v) {
+        if (S.phase !== "choose") return;
+        S.snap = { ice: S.ice, step: S.step, energy: S.energy };
+        S.choice = v;
+        S.out = judge(v);
+        if (v === "anti") S.prot = "anti";
+        setPhase("action");
+      }
+      function setWeather(w) {
+        if (!["brief", "choose"].includes(S.phase) || S.weather === w) return;
+        S.weather = w;
+        S.wxChanged = w !== mission().weather;
+        refreshPanel();
+      }
+
+      /* ---------------- panels ---------------- */
+      function refreshPanel() {
+        const M = mission(), W = wx();
+        $("bCode").textContent = M.code;
+        $("bTitle").textContent = M.title;
+        $("bText").textContent = "“" + M.brief + "”";
+        $("bNote").textContent = S.wxChanged ? "You changed the weather to " + W.name + " (" + W.temp + ")." : "";
+        const rows = [iceText(), [W.temp, W.icing ? "warn" : S.weather === "clear" ? "ok" : "warn"], [W.moist, W.icing ? "bad" : "ok"], ["Apron · waiting for take-off", ""]];
+        ["iIce", "iAir", "iMoist", "iPhase"].forEach((id, i) => {
+          const el = $(id);
+          const reveal = S.phase !== "brief" && (S.phase !== "inspect" || i <= Math.floor((S.pt / T_INSPECT) * 4));
+          el.textContent = reveal ? rows[i][0] : S.phase === "brief" ? "Inspect to find out" : "Checking…";
+          el.className = "v " + (reveal ? rows[i][1] : "hidden");
+        });
+        // weather control
+        const wxOpen = ["brief", "choose"].includes(S.phase);
+        $("segWx").querySelectorAll("button").forEach((b) => {
+          b.classList.toggle("on", b.dataset.v === S.weather);
+          b.disabled = !wxOpen;
+        });
+        $("vWx").textContent = W.name + " · " + W.temp;
+        $("hWx").textContent = wxOpen ? W.note : "Weather is locked while the system is working.";
+        // mission tabs
+        const tabs = $("mtabs");
+        if (!tabs.children.length) {
+          MISSIONS.forEach((m, i) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.textContent = String(i + 1).padStart(2, "0");
+            b.title = m.code + " — " + m.title;
+            b.addEventListener("click", () => loadMission(i));
+            tabs.appendChild(b);
+          });
+        }
+        [...tabs.children].forEach((b, i) => {
+          b.classList.toggle("on", i === S.m);
+          b.classList.toggle("done", S.done[i]);
+        });
+        // choices
+        const O = S.phase === "result" ? S.out : null;
+        document.querySelectorAll(".choice").forEach((b) => {
+          const v = b.dataset.v, mine = S.choice === v;
+          b.disabled = S.phase !== "choose";
+          b.classList.toggle("picked", mine && S.phase !== "result");
+          b.classList.toggle("right", !!O && mine && O.ok);
+          b.classList.toggle("wrong", !!O && mine && !O.ok && !O.soft);
+          b.classList.toggle("soft", !!O && mine && !!O.soft);
+        });
+        // main button
+        const btn = $("btnMain");
+        btn.disabled = ["inspect", "choose", "action", "outcome"].includes(S.phase);
+        if (S.phase === "brief") btn.innerHTML = "&#128269; Inspect Aircraft";
+        else if (S.phase === "inspect") btn.innerHTML = "Inspecting…";
+        else if (S.phase === "choose") btn.innerHTML = "Choose a method &larr;";
+        else if (S.phase === "action" || S.phase === "outcome") btn.innerHTML = "System working…";
+        else if (S.phase === "flight") btn.innerHTML = "&#9193; Skip to result";
+        else if (O && O.ok) btn.innerHTML = S.done.every(Boolean) ? "&#10003; All missions complete · Play again" : "Next Mission &#9654;";
+        else btn.innerHTML = "&#8634; Try Again";
+        // explanation
+        const ex = $("explain");
+        if (S.phase === "result") {
+          ex.className = "explain " + (O.ok ? "ok" : O.soft ? "warn" : "bad");
+          ex.innerHTML = `<div class="eh">${O.ok ? "✅ CORRECT DECISION" : O.soft ? "⚠ NOT WRONG — BUT WASTEFUL" : "❌ INCORRECT DECISION"} · ${CHOICE[S.choice].toUpperCase()}</div>${O.text}` +
+            (S.done.every(Boolean) && O.ok ? "<br><br><b>All five missions complete!</b> Ice already exists → DE-ICE. Ice may form soon → ANTI-ICE. Ice removed but icing conditions continue → ANTI-ICE afterwards. Cold air alone does not always mean icing — moisture is also important." : "");
+        } else if (S.phase === "choose" && S.step === 2) {
+          ex.className = "explain warn";
+          ex.innerHTML = `<div class="eh">STEP 1 DONE · ICE REMOVED ✓</div>The existing ice is gone — but the ${W.name.toLowerCase()} continues, so new ice will form while the aircraft waits for take-off. What should you do now?`;
+        } else {
+          ex.className = "explain";
+          ex.innerHTML = {
+            brief: "<div class=\"eh\">STEP 1 · MISSION BRIEF</div>Read the brief. You can change the <b>Weather</b>, then press <b>Inspect Aircraft</b> to check the aircraft.",
+            inspect: "<div class=\"eh\">STEP 2 · INSPECTING</div>Look at where ice is — or could form — and what the weather is doing.",
+            choose: "<div class=\"eh\">STEP 3 · YOUR DECISION</div>Think: is there ice on the aircraft now? Could ice form before take-off? Then choose a protection method.",
+            action: "<div class=\"eh\">STEP 4 · SYSTEM ACTION</div>The ground crew is treating the aircraft…",
+            outcome: "<div class=\"eh\">STEP 4 · SYSTEM ACTION</div>Engines started — the aircraft taxis to the runway…",
+            flight: "<div class=\"eh\">STEP 5 · TAKE-OFF &amp; FLIGHT</div>Watch how your decision affects the take-off, the flight and the landing…",
+          }[S.phase];
+        }
+      }
+
+      function refreshOutputs() {
+        const V = S.V || view(), W = wx(), O = S.out;
+        $("oMission").innerHTML = String(S.m + 1).padStart(2, "0") + " / 05<small>" + S.done.filter(Boolean).length + " done</small>";
+        $("oSit").innerHTML = W.name + "<small>" + W.temp + "</small>";
+        const lab = iceLabel(V.ice);
+        $("oIce").innerHTML = `<span class="pill ${lab === "Heavy" ? "fail" : lab === "Light" ? "hard" : "safe"}">${lab}</span><small>${Math.round(V.ice * 100)}%</small>`;
+        let prot = { de: ["De-Icing fluid", "heat"], anti: ["Anti-Icing coat", "heat"], monitor: ["Monitoring", "off"] }[V.prot] || ["Off", "off"];
+        if (S.F) prot = S.F.antiOn ? ["Wing anti-ice ON", "heat"] : S.F.fluid > 0.05 ? [S.choice === "anti" ? "Anti-Icing coat" : "De-Icing fluid", "heat"] : ["Off", "off"];
+        if (S.F) {
+          const F = S.F, ft = Math.round((F.P.Z * 20) / 10) * 10;
+          $("oFlight").innerHTML = (F.done ? (F.kind === "reject" ? "Stopped" : "Landed") : SEG_NAME[F.seg]) + "<small>" + Math.round(F.v * KT) + " kt · " + ft.toLocaleString() + " ft</small>";
+        } else $("oFlight").innerHTML = S.phase === "outcome" && S.out && !S.out.chain ? "Engines starting" : "On the apron";
+        $("oProt").innerHTML = `<span class="pill ${prot[1]}">${prot[0]}</span>`;
+        const fl = flowLabel(V.ice);
+        $("oFlow").innerHTML = `<span class="pill ${fl === "Smooth" ? "safe" : fl === "Disturbed" ? "hard" : "fail"}">${fl}</span>`;
+        $("oLift").innerHTML = V.lift + " %<small>" + (V.lift >= 90 ? "full" : V.lift >= 75 ? "reduced" : "unsafe") + "</small>";
+        const f = $("liftFill");
+        f.style.width = V.lift + "%";
+        f.style.background = V.lift >= 90 ? "var(--ok)" : V.lift >= 75 ? "var(--warn)" : "var(--danger)";
+        $("oEnergy").innerHTML = Math.round(S.energy).toLocaleString() + " kJ";
+        $("oResult").innerHTML = S.phase === "result"
+          ? `<span class="pill-result ${O.cls === "safe" ? "safe" : O.cls === "warn" ? "warn" : "fail"}">${O.ok ? "Safe" : O.soft ? "Wasteful" : "Failed"}</span>`
+          : "&mdash;";
+        const chip = $("chip");
+        chip.textContent = { brief: "MISSION BRIEF", inspect: "INSPECTING…", choose: S.step === 2 ? "CHOOSE AGAIN" : "CHOOSE A METHOD", action: "SYSTEM ACTION", outcome: "TAXIING", flight: "TAKE-OFF & FLIGHT", result: O ? O.result : "" }[S.phase];
+        chip.className = "modechip" + (S.phase === "result" ? " " + (O.cls === "safe" ? "safe" : O.cls === "warn" ? "hard" : "fail") : ["action", "outcome", "inspect", "flight"].includes(S.phase) ? " run" : "");
+        if (S.phase === "inspect") refreshPanel();
+      }
+
+      /* ---------------- controls ---------------- */
+      document.querySelectorAll(".choice").forEach((b) => b.addEventListener("click", () => choose(b.dataset.v)));
+      $("segWx").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => setWeather(b.dataset.v)));
+      $("btnMain").addEventListener("click", () => {
+        if (S.phase === "brief") return setPhase("inspect");
+        if (S.phase === "flight") {
+          for (let i = 0; i < 8000 && S.phase === "flight"; i++) update(0.05);
+          return;
+        }
+        if (S.phase !== "result") return;
+        if (!S.out.ok) {
+          // try again from the moment of the decision
+          Object.assign(S, { ice: S.snap.ice, step: S.snap.step, energy: S.snap.energy, choice: null, out: null, prot: null, parts: [], F: null });
+          setPhase("choose");
+        } else if (S.done.every(Boolean)) {
+          S.done = [false, false, false, false, false];
+          loadMission(0);
+        } else {
+          let n = (S.m + 1) % MISSIONS.length;
+          for (let i = 0; i < MISSIONS.length && S.done[n]; i++) n = (n + 1) % MISSIONS.length;
+          loadMission(n);
+        }
+      });
+      $("btnReset").addEventListener("click", () => loadMission(S.m));
+
       let last = performance.now();
       function frame(now) {
         const dt = Math.min(0.05, (now - last) / 1000);
         last = now;
-        if (G) {
-          if (S.running) {
-            step(dt);
-            spawnDrops(dt);
-            updateParticles(dt);
-          }
-        }
+        update(dt);
         draw();
         refreshOutputs();
         requestAnimationFrame(frame);
       }
-
-      /* ---------------- boot ---------------- */
-      initClouds();
-      SEGS.forEach(syncSeg);
-      syncStart();
+      loadMission(0);
+      draw();
       refreshOutputs();
       requestAnimationFrame(frame);
     </script>
