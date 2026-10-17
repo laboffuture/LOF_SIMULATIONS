@@ -114,7 +114,7 @@
       /* ---------- layout ---------- */
       .grid {
         display: grid;
-        grid-template-columns: 280px minmax(0, 1fr) 300px;
+        grid-template-columns: 280px minmax(0, 1fr) 420px;
         gap: 14px;
         flex: 1 1 auto;
         min-height: 0;
@@ -396,9 +396,52 @@
       }
       .convert .step {
         font-family: var(--mono);
-        font-size: 12.5px;
-        line-height: 1.6;
+        font-size: 12px;
+        letter-spacing: -0.02em;
+        line-height: 1.7;
         color: var(--txt);
+        white-space: nowrap; /* every formula stays on a single line */
+      }
+      .arm-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--line);
+        font-size: 12.5px;
+        color: var(--mut);
+      }
+      .arm-row .lbl {
+        flex: 1;
+      }
+      .arm-row button {
+        width: 28px;
+        height: 28px;
+        cursor: pointer;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel);
+        color: var(--txt);
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1;
+      }
+      .arm-row button:hover:not(:disabled) {
+        border-color: var(--meas);
+        color: var(--meas);
+      }
+      .arm-row button:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+      .arm-row .val {
+        min-width: 62px;
+        text-align: center;
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--meas);
       }
       .convert .step b {
         color: var(--meas);
@@ -729,9 +772,15 @@
 
         <div class="convert" aria-live="off">
           <h4>Rotation → Wind Speed</h4>
-          <div class="step" id="cv1">Cup speed = 2π × 0.08 m × <b>0</b> RPM ÷ 60 = <b>0.00</b> m/s</div>
+          <div class="step">Cup speed = 2π × <b id="cvArm">0.08</b> m × <b id="cvRpm">0</b> RPM ÷ 60 = <b id="cvCup">0.00</b> m/s</div>
           <div class="step" id="cv2">Wind ≈ 3 × <b>0.00</b> + <b>1.0</b> = <b>0.0</b> m/s</div>
           <div class="why">Cups move about ⅓ as fast as the wind. The small extra is the wind used up turning the bearings.</div>
+          <div class="arm-row">
+            <span class="lbl">Arm radius (hub → cup)</span>
+            <button type="button" id="armDown" aria-label="Shorter arm">−</button>
+            <span class="val" id="armVal" aria-live="polite">0.08 m</span>
+            <button type="button" id="armUp" aria-label="Longer arm">+</button>
+          </div>
         </div>
 
         <div class="mini">
@@ -762,7 +811,9 @@
           medium: { cup: 0.05, vth: 1.0, tau: 0.9, label: "Medium", hint: "50 mm cups — a good all-round rotor." },
           large: { cup: 0.065, vth: 0.5, tau: 0.6, label: "Large", hint: "65 mm cups catch more wind — they start in a light breeze and react to gusts fastest." },
         };
-        const ARM = 0.08; // metres, hub to cup centre
+        const ARM_DEFAULT = 0.08; // metres, hub to cup centre
+        const ARM_MIN = 0.05, ARM_MAX = 0.12;
+        let ARM = ARM_DEFAULT; // editable from the cup-speed formula
         const K = 3; // cup factor: wind ≈ 3 × cup speed
         const VIEW_SLOW = 0.25; // on-screen rotation is slowed so the cups stay readable
         const HIST_SECONDS = 30;
@@ -1039,7 +1090,7 @@
           drawVane(c, base.x, hub.y + (base.y - hub.y) * 0.32);
 
           // rotor
-          drawRotor(c, hub.x, hub.y, Math.min(W, H) * 0.15);
+          drawRotor(c, hub.x, hub.y, Math.min(W, H) * 0.15 * (ARM / ARM_DEFAULT));
 
           // direction indicator (top view)
           drawCompass(c, 78, 92, 46);
@@ -1310,7 +1361,8 @@
           const cb = $("condBadge"); cb.textContent = cl; cb.style.color = cc;
           $("condNote").textContent = cn;
           const vth = ROTORS[st.size].vth;
-          $("cv1").innerHTML = "Cup speed = 2π × 0.08 m × <b>" + Math.round(r) + "</b> RPM ÷ 60 = <b>" + st.cup.toFixed(2) + "</b> m/s";
+          $("cvRpm").textContent = Math.round(r);
+          $("cvCup").textContent = st.cup.toFixed(2);
           $("cv2").innerHTML = st.cup > 0.005
             ? "Wind ≈ 3 × <b>" + st.cup.toFixed(2) + "</b> + <b>" + vth.toFixed(1) + "</b> = <b>" + (K * st.cup + vth).toFixed(1) + "</b> m/s"
             : "Rotor stopped → wind below <b>" + vth.toFixed(1) + "</b> m/s";
@@ -1346,6 +1398,18 @@
         bindToggle("gustToggle", "gust", () => { syncHints(); if (st.gust) st.nextGust = st.t + 1.2; });
         bindToggle("sizeToggle", "size", syncHints);
 
+        // arm radius: changes RPM, spin rate and the drawn arm length (cup speed itself depends only on the wind)
+        function setArm(v) {
+          ARM = Math.round(Math.min(ARM_MAX, Math.max(ARM_MIN, v)) * 100) / 100;
+          $("armVal").textContent = ARM.toFixed(2) + " m";
+          $("cvArm").textContent = ARM.toFixed(2);
+          $("armDown").disabled = ARM <= ARM_MIN;
+          $("armUp").disabled = ARM >= ARM_MAX;
+        }
+        $("armDown").addEventListener("click", () => setArm(ARM - 0.01));
+        $("armUp").addEventListener("click", () => setArm(ARM + 0.01));
+        setArm(ARM_DEFAULT);
+
         const startBtn = $("startBtn");
         function syncStart() {
           startBtn.textContent = st.running ? "❚❚ Pause" : "▶ Start";
@@ -1363,6 +1427,7 @@
           Object.assign(st, { wind: "off", dir: "front", gust: false, size: "medium", running: false, started: false, t: 0, cup: 0, angle: 0, revs: 0, site: 0, eff: 0, meas: 0, gustEv: null, nextGust: 1.2, gustNow: 0, hist: [], sampleT: 0, vane: Math.PI / 2 });
           const defaults = { windToggle: "off", dirToggle: "front", gustToggle: "off", sizeToggle: "medium" };
           for (const [id, v] of Object.entries(defaults)) $(id).querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
+          setArm(ARM_DEFAULT);
           parts.forEach((p) => spawn(p, true));
           syncHints();
           syncStart();
