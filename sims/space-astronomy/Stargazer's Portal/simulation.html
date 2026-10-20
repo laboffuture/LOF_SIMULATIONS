@@ -1701,6 +1701,7 @@
         <div id="cornerControl">
           <button type="button" class="corner-btn" id="hintBtn">Hint</button>
           <button type="button" class="corner-btn" id="gridBtn" aria-pressed="false">Grid</button>
+          <button type="button" class="corner-btn" id="resetBtn" title="Clear the scrapbook and start again from Round 1">&#8634; Reset</button>
           <div class="grid-prompt" id="gridPrompt" hidden>Try the <b>Grid</b>: it draws the address lines of the sky.</div>
         </div>
 
@@ -3719,6 +3720,27 @@
 
         gridBtn.addEventListener("click", () => setGrid(!state.showGrid));
         gridPrompt.addEventListener("click", dismissGridPrompt);
+
+        // Reset: the first tap asks to confirm, a second tap within 3 s wipes saved progress and restarts.
+        const resetBtn = document.getElementById("resetBtn");
+        let resetArmTimer = null;
+        resetBtn.addEventListener("click", () => {
+          if (!resetArmTimer) {
+            resetBtn.textContent = "Tap again to reset";
+            resetBtn.classList.add("on");
+            resetArmTimer = setTimeout(() => {
+              resetArmTimer = null;
+              resetBtn.innerHTML = "&#8634; Reset";
+              resetBtn.classList.remove("on");
+            }, 3000);
+            return;
+          }
+          clearTimeout(resetArmTimer);
+          try {
+            localStorage.removeItem(SAVE_KEY);
+          } catch (e) {}
+          location.reload();
+        });
 
         /* ================= MAGNITUDE LEGEND ================= */
         const LEGEND_MAGS = [-1, 0, 1, 2, 3, 4, 5];
