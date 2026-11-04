@@ -39,9 +39,10 @@ const PROJECTS = [
   { id: "hydraulic-landing-gear", title: "Hydraulic Landing Gear", category: "aerospace", status: "live", url: "../sims/aerospace/HydraulicLandingGear/HydraulicLandingGear.html", description: "Use hydraulic pressure to extend and retract an aircraft's landing gear, watch the fluid push the piston, and lock it safely for landing." },
   { id: "anti-icing-system", title: "Anti-Icing System", category: "aerospace", status: "live", url: "../sims/aerospace/Anti-IcingSystem/simulation.html", description: "Inspect an aircraft on the apron, pick De-Icing, Anti-Icing or No Action for the weather, then watch the take-off and flight show the consequence of your decision." },
   { id: "emergency-messenger-system", title: "Emergency Messenger System", category: "aerospace", status: "live", url: "../sims/aerospace/EmergencyMessengerSystem/simulation.html", description: "When a storm knocks out the mobile network, power up the EMS, send SOS, Medical Help or Food & Water by radio, and watch the rescue team respond." },
-  ...Array.from({ length: 19 }, (_, i) => ({
-    id: `aerospace-coming-soon-${i + 12}`,
-    title: `Aerospace Project ${String(i + 12).padStart(2, "0")}`,
+  { id: "hydraulic-landing-gear-mission", title: "Hydraulic Landing Gear · Flight Mission", category: "aerospace", status: "live", url: "../sims/aerospace/HydraulicLandingGear/HydraulicLandingGearMission.html", description: "Fly a full take-off and landing in three aircraft: retract and extend the hydraulic gear inside each time window, and see the firm, hard, collapse or belly-landing consequence when you are late." },
+  ...Array.from({ length: 18 }, (_, i) => ({
+    id: `aerospace-coming-soon-${i + 13}`,
+    title: `Aerospace Project ${String(i + 13).padStart(2, "0")}`,
     category: "aerospace",
     status: "coming-soon",
     description: "Coming soon.",
