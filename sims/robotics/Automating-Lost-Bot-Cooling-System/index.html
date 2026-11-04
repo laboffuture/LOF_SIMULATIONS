@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cooling Control Deck · Lost Bot Cooling System</title>
+    <title>Rover Cooling · Lost Bot Cooling System</title>
     <link rel="icon" type="image/png" href="../../../assets/logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -931,8 +931,18 @@
         <div class="tabpanel" data-panel="use">
           <ol>
             <li>
-              Press <b>Start</b> under the cooler view to switch the controller
-              on. <b>Pause</b> freezes it.
+              Press <b>Start</b> under the view to switch the controller on.
+              <b>Pause</b> freezes it.
+            </li>
+            <li>
+              The view is a <b>cutaway of the Lost Bot</b>: its side panel is
+              removed so you can see the cooling system inside it: the
+              <b>battery</b>, the <b>fan controller</b>, the <b>main
+              electronics</b> with their <b>heatsink</b> and <b>temperature
+              sensor</b>, the <b>smoke sensor</b>, and the <b>cooling fan</b>.
+              Air comes in through the front <b>intake</b>, passes the fan and
+              the heatsink, and leaves through the <b>exhaust</b> on the roof.
+              The <b>status screen</b> on the roof shows the controller's output.
             </li>
             <li>
               Set the <b>Internal Temperature Sensor</b>. The quick buttons —
@@ -978,13 +988,35 @@
               danger.
             </li>
             <li>
+              Watch the <b>consequences</b>. Above 40°C the rover
+              <b>throttles</b> its processor and motors to make less heat, so it
+              drives slower. At 45°C it does a <b>thermal shutdown</b>: its
+              systems switch off one by one (motors, processor, screen, fan,
+              lights), the view dims and the rover stops until it cools below 41°C on its own. Smoke above <b>75%</b>
+              causes a <b>smoke shutdown</b> the same way; it ends once the smoke
+              has seeped out below 50%. Time
+              above 40°C builds <b>heat stress</b>: at 100% the electronics are
+              damaged and performance is limited to 50% until you reset. The fan
+              costs battery power, and a flat battery switches off both the fan
+              and the electronics. See <b>Rover Effects</b> on the right.
+            </li>
+            <li>
               Read <b>System Feedback</b> for a short message about what just
               happened.
             </li>
             <li>
-              Press <b>Reset System</b> to return to a safe start, or
-              <b>Run Guided Mission</b> for a step-by-step walk through the
-              whole cooling sequence.
+              Use <b>Rover Conditions</b> (left panel) to put the rover straight into one
+              condition at a time: cool, mild heat, rising heat, overheating,
+              thermal shutdown, smoke inside, heat + smoke, intake blocked, heat
+              damage, battery flat and heavy smoke. The rover <b>stays</b> in that condition (its
+              surroundings keep heating it, or smoke keeps coming in) so you can
+              watch the cooling system work against it. The note under the
+              buttons explains what is happening. Moving a control by hand ends
+              the condition.
+            </li>
+            <li>
+              Press <b>Reset System</b> (under the view) to put everything back to how it was when
+              the page opened (controller off, press Start again).
             </li>
           </ol>
         </div>
@@ -1023,6 +1055,18 @@
               sensor inputs to choose exactly one safety response.
             </li>
             <li>
+              <b>Cooling keeps a robot working:</b> without enough cooling, a
+              robot must slow down or shut down to protect its electronics.
+            </li>
+            <li>
+              <b>Heat damage adds up:</b> running hot for a long time wears out
+              electronics, even after they cool down again.
+            </li>
+            <li>
+              <b>Cooling has a cost:</b> a faster fan uses more battery power, so
+              the controller runs it only as fast as it needs to.
+            </li>
+            <li>
               <b>Airflow matters:</b> a blocked air path slows recovery even
               with the fan running.
             </li>
@@ -1036,8 +1080,7 @@
       <section class="card">
         <h3>Sensor &amp; Safety Controls</h3>
         <p class="sub">
-          Change the bot's condition. The controller only ever reacts to what its two
-          sensors report.
+          Set what the rover's two sensors report.
         </p>
 
         <div class="cmdgroup">
@@ -1055,8 +1098,7 @@
             <input type="range" id="r_temp" min="15" max="48" step="0.5" value="24" />
           </div>
           <div class="hint">
-            Quick buttons jump straight into a zone to test it; the slider gives
-            continuous control across the same 15°C – 48°C range.
+            Quick buttons jump into a zone; the slider sets 15°C – 48°C.
           </div>
         </div>
 
@@ -1079,9 +1121,8 @@
             <input type="range" id="r_thresh" min="1" max="50" step="1" value="3" />
           </div>
           <div class="hint">
-            Smoke safety overrides temperature control the instant it's detected — even in
-            a cold, otherwise-safe bot. Raise the threshold to make the sensor less
-            twitchy; lower it to catch fainter traces.
+            Smoke overrides the temperature rule the moment it is detected. A higher
+            threshold makes the sensor less twitchy.
           </div>
         </div>
 
@@ -1092,15 +1133,26 @@
             <button data-vent="clear" class="on">Clear</button>
           </div>
           <div class="hint">
-            A blocked duct doesn't stop the fan — it just can't move air, so cooling and
-            smoke clearing both slow down.
+            Blocked: the fan spins but moves little air.
           </div>
         </div>
 
         <div class="cmdgroup">
-          <h4>System</h4>
-          <button type="button" class="btn reset" id="btnReset">↺ Reset System</button>
-          <button type="button" class="btn mission" id="btnMission">▶ Run Guided Mission</button>
+          <h4>Rover Conditions</h4>
+          <div class="seg" id="conds">
+            <button data-cond="cool">Cool · fan off</button>
+            <button data-cond="mild">Mild heat · LOW</button>
+            <button data-cond="rising">Rising heat · MED</button>
+            <button data-cond="hot">Overheating · HIGH</button>
+            <button data-cond="shutdown">Thermal shutdown</button>
+            <button data-cond="smoke">Smoke inside</button>
+            <button data-cond="emergency">Heat + smoke</button>
+            <button data-cond="blocked">Intake blocked</button>
+            <button data-cond="damage">Heat damage</button>
+            <button data-cond="flat">Battery flat</button>
+            <button data-cond="heavysmoke" style="grid-column: 1 / -1">Heavy smoke · shutdown</button>
+          </div>
+          <div class="hint" id="condNote">Pick a condition to see how the cooling system affects the rover.</div>
         </div>
       </section>
 
@@ -1121,7 +1173,7 @@
         <div class="stage-foot">
           <button type="button" class="btn start" id="btnStart">▶ Start</button>
           <button type="button" class="btn pause" id="btnPause">Pause</button>
-          <span class="missionNote" id="missionNote"></span>
+          <button type="button" class="btn pause" id="btnReset">↺ Reset System</button>
         </div>
       </section>
 
@@ -1157,6 +1209,30 @@
           </div>
         </div>
 
+        <h3 style="margin-top: 14px">Rover Effects</h3>
+        <div class="statusgrid">
+          <div class="stat">
+            <div class="k">Rover State</div>
+            <div class="v n" id="s_rstate">Standby</div>
+          </div>
+          <div class="stat">
+            <div class="k">Performance</div>
+            <div class="v n" id="s_rspeed">0%</div>
+          </div>
+          <div class="stat">
+            <div class="k">Internal Airflow</div>
+            <div class="v c" id="s_air">0%</div>
+          </div>
+          <div class="stat">
+            <div class="k">Fan Power</div>
+            <div class="v c" id="s_power">0 W</div>
+          </div>
+        </div>
+        <div class="reading">
+          <span class="k">Heat stress on electronics</span><span class="v" id="s_stress">0%</span>
+        </div>
+        <div class="hbar"><div class="fill" id="stressFill"></div></div>
+
         <h3 style="margin-top: 14px">Power &amp; Airflow</h3>
         <div class="reading">
           <span class="k">Battery</span><span class="v" id="s_batt">100%</span>
@@ -1168,13 +1244,11 @@
         <div class="hbar">
           <div class="fill" id="gasFill"></div>
           <div class="mark" id="gasThreshMark" style="left: 3%" title="Detection threshold: 3%"></div>
+          <div class="mark" style="left: 75%; background: var(--danger)" title="Smoke shutdown: above 75%"></div>
         </div>
 
         <div class="reading">
           <span class="k">Heat trend</span><span class="v" id="s_trend">stable</span>
-        </div>
-        <div class="reading">
-          <span class="k">Fan speed changes</span><span class="v" id="s_changes">0</span>
         </div>
         <div class="reading">
           <span class="k">Peak temperature (session)</span
@@ -1189,6 +1263,10 @@
       </section>
     </div>
 
+    <style>
+      #conds button { padding: 4px 5px; }
+      #conds { gap: 4px; }
+    </style>
     <script>
       (() => {
         "use strict";
@@ -1219,6 +1297,26 @@
         const BATT_DRAIN = { OFF: 0.006, LOW: 0.02, MEDIUM: 0.04, HIGH: 0.07, VENT: 0.05, EMERGENCY: 0.095 };
         const MODE_COLOR = { OFF: "c-off", LOW: "c-low", MEDIUM: "c-med", HIGH: "c-high", VENT: "c-vent", EMERGENCY: "c-emg" };
         const TEMP_MIN = 15, TEMP_MAX = 48;
+        // consequences of heat for the rover
+        const SHUTDOWN_T = 45, RESTART_T = 41; // thermal shutdown at 45°C, restart once below 41°C
+        const SMOKE_SHUTDOWN = 75, SMOKE_RESTART = 50; // smoke shutdown above 75%, restart once below 50%
+        function shutdownMsg() {
+          return S.shutWhy === "smoke"
+            ? "Smoke shutdown! Smoke passed 75%, so the rover switches its systems off one by one: motors, processor, screen, fan, lights. With the fan off the smoke only seeps out slowly."
+            : "Thermal shutdown! The rover switches its systems off one by one to protect them: motors, processor, screen, fan, lights. Then it cools down on its own.";
+        }
+        const FAN_RPM = { OFF: 0, LOW: 1200, MEDIUM: 2400, HIGH: 3600, VENT: 3000, EMERGENCY: 4000 };
+        const FAN_W = { OFF: 0, LOW: 2, MEDIUM: 5, HIGH: 9, VENT: 7, EMERGENCY: 11 };
+        const powered = () => S.battery > 0;
+        const running = () => powered() && !S.shutdown; // a shutdown switches every system off, the fan included
+        // a shutdown is gradual: motors wind down (0 s), processor off (1.5 s), screen off (3 s),
+        // fan loses power and spins down (4 s), lights out (5 s), everything dark by SHUT_SEQ
+        const SHUT_SEQ = 6.5, SHUT_CPU = 1.5, SHUT_SCREEN = 3, SHUT_FAN = 4, SHUT_LIGHTS = 5;
+        const fanOn = () => powered() && (!S.shutdown || S.shutT < SHUT_FAN);
+        const fanLevel = () => (fanOn() ? { OFF: 0, LOW: 0.25, MEDIUM: 0.55, HIGH: 1, VENT: 0.8, EMERGENCY: 1 }[S.mode] : 0);
+        const fanRpm = () => (S.started && fanOn() ? FAN_RPM[S.mode] : 0);
+        const fanWatts = () => (S.started && fanOn() ? FAN_W[S.mode] : 0);
+        const DRIVE_SPEED = 0.6; // m/s at full performance
 
         const RULES = {
           OFF: "Temperature below 30°C, no smoke → fan OFF",
@@ -1253,11 +1351,41 @@
           changeCount: 0,
           peakTemp: 24,
           dangerTime: 0,
-          missionRunning: false,
-          missionIdx: 0,
-          missionElapsed: 0,
-          missionStepStarted: false,
+          perf: 0, // processor + motor performance, 0 … 1 (throttled when hot)
+          heatLoad: 0, // extra heat from the surroundings or the workload (°C/s), set by a Rover Condition
+          smokeSrc: 0, // smoke coming in (%/s), set by a Rover Condition
+          dT: 0, // how fast the temperature is changing (°C/s)
+          power: 0, // 0 … 1: how far the rover's systems are powered up (dims down in a shutdown)
+          fanSpin: 0, // fan speed shown on screen (spins down when switched off)
+          dist: 0, // metres driven (moves the ground under the rover)
+          stress: 0, // heat stress on the electronics, 0 … 100%
+          shutdown: false,
+          shutWhy: "heat", // what the shutdown is waiting for: "heat", "smoke" or "both"
+          shutT: 0, // seconds since the shutdown began (drives the step-by-step switch-off)
+          fault: false,
+          why: "standby",
         };
+        // how hard the rover's electronics may work right now, and why
+        function perfTarget() {
+          if (!S.started) return [0, "standby"];
+          if (!powered()) return [0, "flat"];
+          if (S.shutdown) return [0, "shutdown"];
+          let v = 1,
+            why = "ok";
+          if (S.temp >= 40) {
+            v = clamp(1 - ((S.temp - 40) / 5) * 0.6, 0.4, 1); // throttle the processor and motors to make less heat
+            why = "hot";
+          }
+          if (S.gasDetected) {
+            v *= 0.6; // smoke: safe mode while the controller vents
+            if (why === "ok") why = "smoke";
+          }
+          if (S.fault) {
+            v = Math.min(v, 0.5);
+            if (why === "ok") why = "fault";
+          }
+          return [v, why];
+        }
 
         // Pure, instant classification — used only for one-off UI sync right after the
         // learner manually sets a temperature (slider/quick button), no hysteresis needed.
@@ -1302,7 +1430,8 @@
         function onModeChange(oldMode, newMode) {
           S.changeCount++;
           const [msg, cls] = FEEDBACK[newMode];
-          setFeedback(msg, cls);
+          if (S.shutdown) setFeedback(shutdownMsg(), "bad");
+          else setFeedback(msg, cls);
         }
 
         /* =================== CONTROLS WIRING =================== */
@@ -1347,7 +1476,7 @@
           refreshGasUI();
         }
         function setGas(on) {
-          setGasLevel(on ? 85 : 0);
+          setGasLevel(on ? 60 : 0);
         }
         function setSmokeThreshold(val) {
           S.smokeThreshold = clamp(val, 1, 50);
@@ -1388,16 +1517,44 @@
           S.peakTemp = S.temp;
           S.changeCount = 0;
           S.dangerTime = 0;
+          S.perf = 0;
+          S.heatLoad = 0;
+          S.smokeSrc = 0;
+          S.stress = 0;
+          S.shutdown = false;
+          S.shutWhy = "heat";
+          S.shutT = 0;
+          S.fault = false;
+          S.why = S.started ? "ok" : "standby";
           $("r_temp").value = S.temp;
           refreshTempUI();
           setSmokeThreshold(3); // also re-syncs gas detection + refreshGasUI()
           setSegOn($("tgVent"), "vent", "clear");
           setFeedback("Lost bot cooling system started. Monitoring restarts.", "ok");
         }
-        $("btnReset").addEventListener("click", () => {
+        function fullReset() {
+          S.started = false;
+          S.paused = false;
           resetSystem();
-          if (S.missionRunning) stopMission();
-        });
+          S.temp = 24; // the same starting temperature as when the page opens
+          S.peakTemp = S.temp;
+          S.fanAngle = 0;
+          S.fanSpin = 0;
+          S.power = 0;
+          S.dist = 0;
+          S.why = "standby";
+          S.mode = computeMode();
+          $("r_temp").value = S.temp;
+          refreshTempUI();
+          air = [];
+          smoke = [];
+          $("btnStart").disabled = false;
+          $("btnPause").classList.remove("on");
+          $("btnPause").textContent = "Pause";
+          setFeedback("Lost bot cooling system on standby. Press Start to begin.", "ok");
+          showCondition(null);
+        }
+        $("btnReset").addEventListener("click", fullReset);
 
         $("btnPause").addEventListener("click", (e) => {
           S.paused = !S.paused;
@@ -1410,70 +1567,62 @@
           if (S.started) return;
           S.started = true;
           $("btnStart").disabled = true;
+          setFeedback("Cooling system switched on. The controller is watching the temperature and smoke sensors.", "ok");
         }
         $("btnStart").addEventListener("click", beginSimulation);
 
-        /* =================== GUIDED MISSION =================== */
-        const MISSION = [
-          { label: "Starting from a safe baseline (below 30°C).", action: () => resetSystem(), hold: 2200 },
-          { label: "Temperature rises to 32°C — mild heat.", action: () => quickTemp("mild"), hold: 4200 },
-          { label: "Temperature rises further to 38°C — rising heat.", action: () => quickTemp("rising"), hold: 4200 },
-          { label: "Critical heat! Temperature crosses 40°C.", action: () => quickTemp("critical"), hold: 4200 },
-          {
-            label: "Smoke detected during critical heat — combined emergency.",
-            action: () => setGas(true),
-            hold: 0,
-            until: () => S.temp < 31 && !S.gasDetected,
-            timeout: 26000,
-          },
-          { label: "Heat and smoke cleared. System stabilising back to monitoring.", action: () => {}, hold: 2600 },
-        ];
-        function startMission() {
-          S.missionRunning = true;
-          S.missionIdx = 0;
-          S.missionElapsed = 0;
-          S.missionStepStarted = false;
-          $("btnMission").classList.add("on");
-          $("btnMission").textContent = "■ Stop Mission";
+        /* =================== ROVER CONDITIONS =================== */
+        // One click puts the rover into one condition, so each effect of the cooling system can be seen on its own.
+        const CONDITIONS = {
+          cool: ["Cool", "Cold surroundings: below 30°C the fan stays OFF to save battery. Full performance.", () => { setTempTo(26); S.heatLoad = HL.cool; }],
+          mild: ["Mild heat", "Light work: 30–35°C. The fan runs LOW and the rover keeps full performance.", () => { setTempTo(32); S.heatLoad = HL.mild; }],
+          rising: ["Rising heat", "Hard work: 35–40°C. The fan runs MEDIUM to carry heat off the heatsink. Full performance.", () => { setTempTo(37.5); S.heatLoad = HL.rising; }],
+          hot: ["Overheating", "Hot sun and hard work: above 40°C even on HIGH, so the rover throttles. Heat stress builds.", () => { setTempTo(42.5); S.heatLoad = HL.hot; }],
+          shutdown: ["Thermal shutdown", "More heat than the fan can remove: past 45°C every system switches off and the rover stops.", () => { setTempTo(46); S.heatLoad = HL.shutdown; }],
+          smoke: ["Smoke inside", "Smoke keeps coming in: the fan vents it out through the roof. The rover runs in safe mode.", () => { setTempTo(26); S.heatLoad = HL.cool; S.smokeSrc = 20; setGas(true); }],
+          emergency: ["Heat + smoke", "Smoke and critical heat: emergency mode. The fan runs flat out and the rover is throttled hard.", () => { setTempTo(42.5); S.heatLoad = HL.emergency; S.smokeSrc = 20; setGas(true); }],
+          blocked: ["Intake blocked", "Dust blocks the intake: only 35% airflow, so it overheats and shuts down. Press Clear to fix it.", () => { setTempTo(43); S.heatLoad = HL.blocked; setVentBlocked(true); }],
+          damage: ["Heat damage", "Ran too hot for too long: electronics damaged, performance capped at 50% until Reset.", () => { setTempTo(32); S.heatLoad = HL.mild; S.stress = 100; }],
+          heavysmoke: ["Heavy smoke", "Smoke pours in faster than the fan can clear it: above 75% every system switches off.", () => { setTempTo(30); S.heatLoad = 0; S.smokeSrc = 60; setGas(true); }],
+          flat: ["Battery flat", "No battery power: the fan and electronics stop, and the rover keeps heating up.", () => { setTempTo(34); S.heatLoad = HL.flat; S.battery = 0.03; }],
+        };
+        // extra heat each condition keeps adding (°C/s), chosen so the rover settles inside that condition's zone
+        const HL = { cool: -0.47, mild: 0.03, rising: 0.84, hot: 2.6, shutdown: 3.6, emergency: 3.2, blocked: 1.3, flat: 0.4 };
+        function setTempTo(v) {
+          S.temp = v;
+          S.peakTemp = Math.max(S.peakTemp, v);
+          $("r_temp").value = v;
+          refreshTempUI();
         }
-        function stopMission() {
-          S.missionRunning = false;
-          $("btnMission").classList.remove("on");
-          $("btnMission").textContent = "▶ Run Guided Mission";
-          $("missionNote").textContent = "";
+        function showCondition(key) {
+          setSegOn($("conds"), "cond", key);
+          $("condNote").innerHTML = key ? "<b>" + CONDITIONS[key][0] + ":</b> " + CONDITIONS[key][1] : "Pick a condition to see how the cooling system affects the rover.";
         }
-        $("btnMission").addEventListener("click", () => {
+        function applyCondition(key) {
           beginSimulation();
-          if (S.missionRunning) stopMission();
-          else startMission();
-        });
-
-        function tickMission(dtMs) {
-          if (!S.started || !S.missionRunning) return;
-          const step = MISSION[S.missionIdx];
-          if (!step) {
-            stopMission();
-            return;
-          }
-          if (!S.missionStepStarted) {
-            step.action();
-            S.missionStepStarted = true;
-            S.missionElapsed = 0;
-          }
-          $("missionNote").textContent = "Mission " + (S.missionIdx + 1) + "/" + MISSION.length + " — " + step.label;
-          S.missionElapsed += dtMs;
-          let done;
-          if (step.until) done = step.until() || S.missionElapsed > step.timeout;
-          else done = S.missionElapsed >= step.hold;
-          if (done) {
-            S.missionIdx++;
-            S.missionStepStarted = false;
-            if (S.missionIdx >= MISSION.length) {
-              setFeedback("Mission complete. Lost bot protected successfully.", "ok");
-              stopMission();
-            }
-          }
+          resetSystem(); // a clean, running start for each condition
+          S.paused = false;
+          $("btnPause").classList.remove("on");
+          $("btnPause").textContent = "Pause";
+          air = [];
+          smoke = [];
+          CONDITIONS[key][2]();
+          showCondition(key);
         }
+        // moving a control by hand ends the condition (its heat load and smoke source stop)
+        function endCondition() {
+          if (!$("conds").querySelector(".on")) return;
+          S.heatLoad = 0;
+          S.smokeSrc = 0;
+          showCondition(null);
+          $("condNote").textContent = "Condition ended: you took manual control.";
+        }
+        ["segTemp", "tgGas", "tgVent"].forEach((id) => $(id).addEventListener("click", (e) => { if (e.target.closest("button")) endCondition(); }));
+        ["r_temp", "r_gas"].forEach((id) => $(id).addEventListener("input", endCondition));
+        $("conds").addEventListener("click", (e) => {
+          const btn = e.target.closest("button");
+          if (btn) applyCondition(btn.dataset.cond);
+        });
 
         /* =================== PHYSICS =================== */
         function step(dt) {
@@ -1488,17 +1637,55 @@
           }
 
           const blockMult = S.ventBlocked ? 0.35 : 1;
-          const coolRate = COOL[S.mode] * blockMult;
-          S.temp += (HEAT_GEN - coolRate) * dt;
-          S.temp += (AMBIENT - S.temp) * 0.006 * dt;
+          // the electronics work as hard as temperature, smoke and battery allow
+          const [target, why] = perfTarget();
+          S.why = why;
+          S.perf = approach(S.perf, target, S.shutdown ? 1.1 : 0.6, dt); // in a shutdown the motors wind down
+          // systems dim down step by step in a shutdown, and power up again when it ends
+          S.power = S.shutdown ? Math.min(S.power, clamp(1 - S.shutT / SHUT_SEQ, 0, 1)) : approach(S.power, running() ? 1 : 0, 0.45, dt);
+          S.dist += S.perf * DRIVE_SPEED * dt; // the rover drives as fast as its performance allows
+          // working electronics make heat (throttled ones make less); the fan needs battery power to cool
+          const heatGen = S.shutdown ? HEAT_GEN * 0.65 * S.perf : HEAT_GEN * (0.35 + 0.65 * S.perf); // only the winding-down motors still make heat
+          // a fan cools harder the hotter the rover is compared with the outside air (rated 15°C above ambient)
+          const coolRate = ((fanOn() ? COOL[S.mode] : 0) * blockMult * Math.max(0, S.temp - AMBIENT)) / 15;
+          const T0 = S.temp;
+          S.temp += (heatGen + S.heatLoad - coolRate) * dt;
+          S.temp += (AMBIENT - S.temp) * (S.shutdown ? 0.036 : 0.006) * dt; // switched off, it cools on its own through the shell
           S.temp = clamp(S.temp, TEMP_MIN, TEMP_MAX);
+          S.dT = dt > 0 ? (S.temp - T0) / dt : 0;
+          // consequences: thermal shutdown, and heat stress that builds while it runs hot
+          if (!S.shutdown && (S.temp >= SHUTDOWN_T || S.gasLevel > SMOKE_SHUTDOWN)) {
+            S.shutdown = true;
+            S.shutWhy = S.temp >= SHUTDOWN_T ? "heat" : "smoke";
+            setFeedback(shutdownMsg(), "bad");
+          } else if (S.shutdown && S.shutT >= SHUT_SEQ + 1.5 && S.temp < RESTART_T && S.gasLevel < SMOKE_RESTART) { // a shutdown always runs to the end and stays dark a moment
+            S.shutdown = false;
+            setFeedback("Safe again: below 41°C and smoke under 50%. All systems power back up and the rover drives on.", "ok");
+          }
+          // while shut down, keep track of what it is still waiting for
+          S.shutT = S.shutdown ? S.shutT + dt : 0;
+          if (S.shutdown) {
+            const hot = S.temp >= RESTART_T,
+              smoky = S.gasLevel >= SMOKE_RESTART;
+            S.shutWhy = hot && smoky ? "both" : smoky ? "smoke" : "heat";
+          }
+          if (S.temp > 40) S.stress = Math.min(100, S.stress + (S.temp - 40) * 0.6 * dt);
+          if (!S.fault && S.stress >= 100) {
+            S.fault = true;
+            setFeedback("Heat damage! Running hot too long hurt the electronics: performance is limited to 50%. Reset to repair.", "bad");
+          }
           S.peakTemp = Math.max(S.peakTemp, S.temp);
           if (S.temp >= 40 || (S.gasDetected && S.mode === "EMERGENCY")) S.dangerTime += dt;
 
+          S.gasLevel = Math.min(100, S.gasLevel + S.smokeSrc * dt);
+          if (!S.gasDetected && S.gasLevel > S.smokeThreshold) {
+            S.gasDetected = true;
+            refreshGasUI();
+          }
           if (S.gasDetected) {
-            const venting = S.mode === "VENT" || S.mode === "EMERGENCY";
-            const decay = (venting ? 16 : 1.2) * blockMult;
-            S.gasLevel = Math.max(0, S.gasLevel - decay * dt);
+            const venting = (S.mode === "VENT" || S.mode === "EMERGENCY") && fanOn();
+            const share = (venting ? 0.44 * fanLevel() : S.shutdown ? 0.05 : 0.03) * blockMult; // fraction of the smoke pushed out per second
+            S.gasLevel = Math.max(0, S.gasLevel - share * S.gasLevel * dt);
             // clears once it drops back under the threshold (with a little hysteresis
             // so it doesn't flicker right at the line)
             if (S.gasLevel <= S.smokeThreshold * 0.6) {
@@ -1506,16 +1693,20 @@
               S.gasDetected = false;
               refreshGasUI();
             }
-          } else {
+          } else if (!S.smokeSrc) {
             S.gasLevel = Math.max(0, S.gasLevel - 30 * dt);
           }
 
-          const battDrain = S.battery > 0 ? BATT_DRAIN[S.mode] : 0;
+          const battDrain = S.battery > 0 && fanOn() ? BATT_DRAIN[S.mode] : 0;
+          const hadPower = S.battery > 0;
           S.battery = clamp(S.battery - battDrain * dt, 0, 100);
+          if (hadPower && S.battery <= 0) setFeedback("Battery flat! The fan and the electronics have no power, so the rover shuts down and heats up.", "bad");
 
           if (!S.paused) {
             const rpm = { OFF: 0, LOW: 55, MEDIUM: 130, HIGH: 230, VENT: 190, EMERGENCY: 260 }[S.mode];
-            S.fanAngle += ((rpm * TAU) / 60) * dt;
+            // the fan spins up when switched on and slowly spins down when everything is switched off
+            S.fanSpin = approach(S.fanSpin, fanOn() ? rpm : 0, fanOn() ? 0.4 : 1.6, dt);
+            S.fanAngle += ((S.fanSpin * TAU) / 60) * dt;
           }
         }
 
@@ -1538,8 +1729,12 @@
 
           $("s_fan").textContent = S.mode === "VENT" ? "VENTILATION" : S.mode === "EMERGENCY" ? "EMERGENCY" : S.mode;
           $("s_fan").className = "v " + modeClass[S.mode];
+          if (S.started && !powered()) {
+            $("s_fan").textContent = "NO POWER";
+            $("s_fan").className = "v d";
+          }
 
-          const health = S.mode === "EMERGENCY" || S.battery < 15 ? ["Danger", "d"] : S.mode === "HIGH" || S.mode === "VENT" ? ["Warning", "w"] : ["Safe", "g"];
+          const health = S.mode === "EMERGENCY" || S.battery < 15 || S.shutdown || S.fault ? ["Danger", "d"] : S.mode === "HIGH" || S.mode === "VENT" || S.stress >= 50 ? ["Warning", "w"] : ["Safe", "g"];
           $("s_health").textContent = health[0];
           $("s_health").className = "v " + health[1];
 
@@ -1551,8 +1746,20 @@
           $("gasFill").style.width = S.gasLevel + "%";
           $("gasFill").style.background = S.gasLevel > 40 ? "var(--danger)" : "var(--gas)";
 
-          $("s_trend").textContent = S.mode === "OFF" && zone === "SAFE" ? "stable" : COOL[S.mode] > HEAT_GEN ? "falling" : "rising";
-          $("s_changes").textContent = S.changeCount;
+          $("s_trend").textContent = S.dT > 0.03 ? "rising" : S.dT < -0.03 ? "falling" : "steady";
+          // rover effects: what the cooling (or the lack of it) does to the rover
+          const RS = { standby: ["Standby", "n"], flat: ["Battery flat", "d"], shutdown: ["Shutdown", "d"], hot: ["Throttled", "w"], smoke: ["Safe mode", "w"], fault: ["Damaged", "d"], ok: ["Driving", "g"] }[S.why];
+          $("s_rstate").textContent = S.why === "shutdown" && S.shutT < SHUT_SEQ ? "Shutting down" : RS[0];
+          $("s_rstate").className = "v " + RS[1];
+          $("s_rspeed").textContent = Math.round(S.perf * 100) + "%";
+          $("s_rspeed").className = "v " + (!S.started ? "n" : S.perf >= 0.95 ? "g" : S.perf > 0.02 ? "w" : "d");
+          $("s_air").textContent = airflowPct() + "%";
+          $("s_air").className = "v " + (!S.started ? "n" : S.ventBlocked && fanLevel() > 0 ? "w" : "c");
+          $("s_power").textContent = fanWatts() + " W";
+          $("s_power").className = "v " + (fanWatts() >= 9 ? "w" : "c");
+          $("s_stress").textContent = Math.round(S.stress) + "%";
+          $("stressFill").style.width = S.stress + "%";
+          $("stressFill").style.background = S.stress >= 70 ? "var(--danger)" : S.stress >= 30 ? "var(--warn)" : "var(--gas)";
           $("s_peak").textContent = S.peakTemp.toFixed(1) + "°C";
           $("s_danger").textContent = Math.round(S.dangerTime) + "s";
 
@@ -1560,9 +1767,31 @@
           const chip = $("bannerChip");
           chip.className = "chip " + MODE_COLOR[S.mode];
           chip.textContent = S.mode === "VENT" ? "VENTILATION" : S.mode === "EMERGENCY" ? "EMERGENCY" : S.mode;
+          if (!S.started) {
+            ["s_zone", "s_gas", "s_vent", "s_health"].forEach((id) => {
+              $(id).textContent = "Standby";
+              $(id).className = "v n";
+            });
+            $("s_fan").textContent = "OFF";
+            $("s_fan").className = "v n";
+            $("s_trend").textContent = "—";
+            $("bannerTxt").textContent = "Controller switched off. Press Start to begin monitoring.";
+            chip.className = "chip c-off";
+            chip.textContent = "OFF";
+          } else if (S.shutdown) {
+            $("s_fan").textContent = S.shutT < SHUT_FAN ? "STOPPING" : "OFF · SHUTDOWN";
+            $("s_fan").className = "v d";
+            $("bannerTxt").textContent = S.shutWhy === "smoke" ? "Smoke shutdown: every system is off until the smoke drops below 50%." : S.shutWhy === "both" ? "Shutdown: every system is off until the rover cools below 41°C and the smoke drops below 50%." : "Thermal shutdown: every system is off until the rover cools below 41°C.";
+            chip.className = "chip c-emg";
+            chip.textContent = "SHUTDOWN";
+          }
         }
 
-        /* =================== CANVAS SCENE =================== */
+        /* =================== CANVAS SCENE: inside the Lost Bot (cutaway) =================== */
+        // The rover stands still. Its side panel is cut away to show the cooling system inside it:
+        // battery, fan controller, main electronics with heatsink and temperature sensor, smoke sensor,
+        // and the cooling fan between the intake vent (front) and the exhaust vent (roof).
+        // The status screen on the roof shows the controller's output.
         const cv = $("core"),
           ctx = cv.getContext("2d");
         let CW = 900,
@@ -1579,13 +1808,10 @@
         }
         window.addEventListener("resize", fit);
 
-        const gasDots = Array.from({ length: 22 }, (_, i) => ({
-          a: (i / 22) * TAU + i * 0.7,
-          r: 18 + (i % 5) * 6,
-          bob: Math.random() * 10,
-        }));
-        let airflow = [];
-
+        const hash = (n) => {
+          const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+          return x - Math.floor(x);
+        };
         function heatColor(t) {
           const p = clamp((t - 22) / (44 - 22), 0, 1);
           const c1 = [8, 145, 178]; // cool
@@ -1596,361 +1822,656 @@
           else mix = c2.map((v, i) => lerp(v, c3[i], (p - 0.55) / 0.45));
           return `rgb(${mix[0] | 0},${mix[1] | 0},${mix[2] | 0})`;
         }
+        // how strongly to show the heat (nothing shows until Start: the rover is switched off)
+        const heatA = (lo, hi, max) => (S.started ? clamp((S.temp - lo) / (hi - lo), 0, 1) * max : 0);
+        // a rounded label (no leader lines: every label sits right next to its part)
+        function tag(text, x, y, bg, fg, size) {
+          ctx.font = `700 ${size || 10.5}px 'Orbitron', sans-serif`;
+          const w = ctx.measureText(text).width + 18,
+            h = (size || 10.5) + 11;
+          ctx.fillStyle = bg;
+          rr(ctx, x, y, w, h, h / 2);
+          ctx.fill();
+          ctx.fillStyle = fg;
+          ctx.textAlign = "left";
+          ctx.textBaseline = "middle";
+          ctx.fillText(text, x + 9, y + h / 2 + 0.5);
+          ctx.textBaseline = "alphabetic";
+          return w;
+        }
+        const RED = "#c8202a",
+          RED_D = "#8e141b",
+          RED_L = "#e2434b",
+          BLK = "#26292d";
 
-        function drawScene(t) {
-          ctx.clearRect(0, 0, CW, CH);
-          // motherboard background
-          const g = ctx.createLinearGradient(0, 0, 0, CH);
-          g.addColorStop(0, "#0c1f16");
-          g.addColorStop(1, "#081712");
-          ctx.fillStyle = g;
-          ctx.fillRect(0, 0, CW, CH);
+        const venting = () => S.mode === "VENT" || S.mode === "EMERGENCY";
+        const flow = () => (S.ventBlocked ? 0.35 : 1); // a blocked intake lets through only a little air
+        const live = () => S.started && !S.paused; // no new particles while stopped or paused
+        const airflowPct = () => Math.round(fanLevel() * flow() * (S.started ? 100 : 0));
 
-          const pad = 16;
-          ctx.strokeStyle = "rgba(120,220,160,0.22)";
-          ctx.lineWidth = 2;
-          rr(ctx, pad, pad, CW - pad * 2, CH - pad * 2 - 34, 18);
-          ctx.stroke();
+        // the path the cooling air takes, in rover units: intake (front wall) → fan → heatsink → exhaust (roof) → out
+        const AIR_PATH = [[215, -126], [165, -126], [124, -126], [86, -124], [46, -122], [4, -138], [-45, -170], [-45, -192], [-45, -250]];
+        const HEATSINK_AT = 4; // index of the heatsink point: the air is warm after it
+        const segLen = AIR_PATH.slice(1).map((p, i) => Math.hypot(p[0] - AIR_PATH[i][0], p[1] - AIR_PATH[i][1]));
+        const pathLen = segLen.reduce((a, b) => a + b, 0);
+        function alongPath(d) {
+          for (let i = 0; i < segLen.length; i++) {
+            if (d <= segLen[i]) {
+              const f = d / segLen[i],
+                [ax, ay] = AIR_PATH[i],
+                [bx, by] = AIR_PATH[i + 1];
+              return [ax + (bx - ax) * f, ay + (by - ay) * f, i];
+            }
+            d -= segLen[i];
+          }
+          return [...AIR_PATH[AIR_PATH.length - 1], AIR_PATH.length - 1];
+        }
+        let air = [],
+          smoke = [];
 
-          // ---- faint motherboard atmosphere: PCB traces + RAM slots, far right margin ----
-          ctx.strokeStyle = "rgba(120,220,160,0.12)";
-          ctx.lineWidth = 1.5;
-          [0.24, 0.32, 0.42].forEach((f) => {
+        /* ---------- what the rover is doing right now, in words ---------- */
+        function roverStatus() {
+          const pct = Math.round(S.perf * 100) + "%";
+          switch (S.why) {
+            case "standby":
+              return ["STANDBY · PRESS START", "#334155", "#e2e8f0"];
+            case "flat":
+              return ["BATTERY FLAT · ALL SYSTEMS OFF", "#7f1d1d", "#fecaca"];
+            case "shutdown":
+              if (S.shutT < SHUT_SEQ) {
+                const stage = S.shutT < SHUT_CPU ? "MOTORS STOPPING" : S.shutT < SHUT_SCREEN ? "PROCESSOR OFF" : S.shutT < SHUT_FAN ? "SCREEN OFF" : S.shutT < SHUT_LIGHTS ? "FAN SPINNING DOWN" : "LIGHTS OUT";
+                return ["SHUTTING DOWN · " + stage, "#b45309", "#fff7ed"];
+              }
+              return [(S.shutWhy === "smoke" ? "SMOKE" : S.shutWhy === "both" ? "HEAT + SMOKE" : "THERMAL") + " SHUTDOWN · ALL SYSTEMS OFF", "#b91c1c", "#ffffff"];
+            case "hot":
+              return ["TOO HOT · THROTTLED TO " + pct, "#b45309", "#fff7ed"];
+            case "smoke":
+              return ["SMOKE · SAFE MODE " + pct, "#475569", "#f1f5f9"];
+            case "fault":
+              return ["HEAT DAMAGE · MAX 50% · " + pct, "#9a3412", "#ffedd5"];
+            default:
+              return ["DRIVING · " + pct + " PERFORMANCE", "#15803d", "#ecfdf5"];
+          }
+        }
+
+        function fanBlades(cx, cy, R, n) {
+          const lvl = fanLevel();
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(S.fanAngle);
+          if (lvl > 0.2) {
             ctx.beginPath();
-            ctx.moveTo(pad + 10, CH * f);
-            ctx.lineTo(CW * 0.9, CH * f);
-            ctx.lineTo(CW * 0.9, CH * (f + 0.05));
+            ctx.arc(0, 0, R * 0.95, 0, TAU);
+            ctx.fillStyle = `rgba(70,76,84,${0.25 + lvl * 0.35})`; // blades blur into a disc at speed
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1 - lvl * 0.45;
+          for (let b = 0; b < n; b++) {
+            ctx.save();
+            ctx.rotate((b * TAU) / n);
+            ctx.beginPath();
+            ctx.moveTo(R * 0.22, -R * 0.08);
+            ctx.quadraticCurveTo(R * 0.62, -R * 0.42, R * 0.95, -R * 0.12);
+            ctx.lineTo(R * 0.95, R * 0.14);
+            ctx.quadraticCurveTo(R * 0.6, -R * 0.02, R * 0.22, R * 0.1);
+            ctx.closePath();
+            ctx.fillStyle = "#3a3f46";
+            ctx.fill();
+            ctx.strokeStyle = "#5b636d";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.restore();
+          }
+          ctx.globalAlpha = 1;
+          ctx.beginPath();
+          ctx.arc(0, 0, R * 0.24, 0, TAU);
+          ctx.fillStyle = "#1c1f23";
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function drawRover(x0, y0, w, h, t) {
+          ctx.save();
+          rr(ctx, x0, y0, w, h, 14);
+          ctx.clip();
+          // static backdrop: dusk sky over the desert where the bot is stranded
+          const gyr = y0 + h * 0.84;
+          const sky = ctx.createLinearGradient(0, y0, 0, gyr);
+          sky.addColorStop(0, "#0f1830");
+          sky.addColorStop(0.65, "#2c2645");
+          sky.addColorStop(1, "#7a4632");
+          ctx.fillStyle = sky;
+          ctx.fillRect(x0, y0, w, gyr - y0);
+          ctx.fillStyle = "rgba(255,255,255,0.6)";
+          for (let i = 0; i < 30; i++) ctx.fillRect(x0 + hash(i) * w, y0 + hash(i + 40) * (gyr - y0) * 0.6, 1.3, 1.3);
+          const gr = ctx.createLinearGradient(0, gyr, 0, y0 + h);
+          gr.addColorStop(0, "#6b3d2a");
+          gr.addColorStop(1, "#3f2418");
+          ctx.fillStyle = gr;
+          ctx.fillRect(x0, gyr, w, y0 + h - gyr);
+
+          // rover units: ground at y = 0, body from x -165 to 165
+          const k = clamp(Math.min(w / 400, h / 330), 0.45, 2.2);
+          const ox = x0 + w * 0.5 - 8 * k,
+            oy = Math.min(gyr + 6 * k, y0 + h * 0.5 + 125 * k);
+          const X = (u) => ox + u * k,
+            Y = (v) => oy + v * k;
+          const box = (x, y, bw, bh, r) => rr(ctx, X(x), Y(y), bw * k, bh * k, (r || 0) * k);
+          const label = (txt, x, y, col, size) => {
+            ctx.font = `700 ${Math.max(8, (size || 6.2) * k)}px 'Orbitron', sans-serif`;
+            ctx.fillStyle = col || "rgba(226,232,240,0.88)";
+            ctx.textAlign = "center";
+            ctx.fillText(txt, X(x), Y(y));
+          };
+          const lvl = fanLevel();
+          const off = S.why === "shutdown" || S.why === "flat";
+
+          // the ground slides past as the rover drives: far dunes slowly, rocks at full speed
+          const scroll = S.dist * 90 * k;
+          ctx.fillStyle = "#5a3324";
+          ctx.beginPath();
+          ctx.moveTo(x0, gyr);
+          for (let x = 0; x <= w + 10; x += 10) {
+            const wx = x + scroll * 0.15;
+            ctx.lineTo(x0 + x, gyr - (10 + 8 * Math.sin(wx * 0.012) + 5 * Math.sin(wx * 0.031 + 1)) * k * 0.6);
+          }
+          ctx.lineTo(x0 + w, gyr);
+          ctx.closePath();
+          ctx.fill();
+          const sp = 60 * k;
+          for (let i = Math.floor((scroll - 80) / sp); i * sp - scroll < w + 80; i++) {
+            const rx = x0 + i * sp - scroll + hash(i) * sp * 0.8,
+              ry = gyr + 4 * k + hash(i + 11) * (y0 + h - gyr - 8 * k),
+              rs = (2 + hash(i + 5) * 6) * k * (0.6 + (ry - gyr) / Math.max(1, y0 + h - gyr));
+            ctx.fillStyle = hash(i + 2) > 0.5 ? "#52301f" : "#83503a";
+            ctx.beginPath();
+            ctx.ellipse(rx, ry, rs * 1.5, rs, 0, 0, TAU);
+            ctx.fill();
+          }
+
+          // shadow
+          ctx.fillStyle = "rgba(0,0,0,0.35)";
+          ctx.beginPath();
+          ctx.ellipse(X(0), Y(2), 190 * k, 9 * k, 0, 0, TAU);
+          ctx.fill();
+
+          // a very hot rover glows
+          const glowA = heatA(34, 47, 0.5);
+          if (glowA > 0.02) {
+            const g = ctx.createRadialGradient(X(30), Y(-120), 20 * k, X(30), Y(-120), 230 * k);
+            g.addColorStop(0, heatColor(S.temp));
+            g.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.globalAlpha = glowA * (S.shutdown ? 0.8 + 0.2 * Math.sin(t * 8) : 1);
+            ctx.fillStyle = g;
+            ctx.fillRect(X(-260), Y(-330), 520 * k, 360 * k);
+            ctx.globalAlpha = 1;
+          }
+
+          // wheels and rocker-bogie suspension (parked)
+          ctx.strokeStyle = "#16181b";
+          ctx.lineWidth = 7 * k;
+          ctx.lineCap = "round";
+          const poly = (pts) => {
+            ctx.beginPath();
+            pts.forEach(([x, y], i) => (i ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y))));
+            ctx.stroke();
+          };
+          poly([[120, -24], [40, -62], [-60, -44], [-120, -24]]);
+          poly([[-60, -44], [0, -24]]);
+          ctx.lineCap = "butt";
+          [-120, 0, 120].forEach((wx) => {
+            ctx.beginPath();
+            ctx.arc(X(wx), Y(-24), 24 * k, 0, TAU);
+            ctx.fillStyle = "#151617";
+            ctx.fill();
+            ctx.strokeStyle = "#33373c";
+            ctx.lineWidth = 4 * k;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(X(wx), Y(-24), 13 * k, 0, TAU);
+            ctx.fillStyle = "#9aa3ad";
+            ctx.fill();
+            ctx.strokeStyle = "#e5e7eb";
+            ctx.lineWidth = 2.2 * k;
+            const wa = S.dist / 0.24;
+            for (let sIdx = 0; sIdx < 3; sIdx++) {
+              const a = wa + (sIdx * TAU) / 3;
+              ctx.beginPath();
+              ctx.moveTo(X(wx), Y(-24));
+              ctx.lineTo(X(wx) + Math.cos(a) * 12 * k, Y(-24) + Math.sin(a) * 12 * k);
+              ctx.stroke();
+            }
+          });
+
+          // ---- shell: red roof and floor bands, black walls; the side panel is cut away ----
+          box(-165, -190, 330, 128, 10);
+          ctx.fillStyle = BLK;
+          ctx.fill();
+          box(-165, -190, 330, 11, 6);
+          ctx.fillStyle = RED;
+          ctx.fill();
+          box(-165, -73, 330, 11, 4);
+          ctx.fill();
+          ctx.fillStyle = RED_D;
+          ctx.fillRect(X(-165), Y(-65), 330 * k, 3 * k);
+          // exhaust slots through the roof
+          for (let i = 0; i < 4; i++) {
+            box(-62 + i * 11, -190, 6, 11, 1);
+            ctx.fillStyle = "#0b0c0e";
+            ctx.fill();
+          }
+          // intake slots through the front wall
+          for (let i = 0; i < 5; i++) {
+            box(158, -148 + i * 10, 7, 5, 1);
+            ctx.fillStyle = "#0b0c0e";
+            ctx.fill();
+          }
+
+          // interior (cutaway window)
+          const IX = -158,
+            IY = -179,
+            IW = 316,
+            IH = 106;
+          box(IX, IY, IW, IH, 4);
+          ctx.fillStyle = "#0c1115";
+          ctx.fill();
+          ctx.save();
+          box(IX, IY, IW, IH, 4);
+          ctx.clip();
+          // the air inside warms up: a heat cloud spreading from the electronics
+          const hA = heatA(25, 46, 0.6);
+          if (hA > 0.01) {
+            const g = ctx.createRadialGradient(X(46), Y(-95), 6 * k, X(46), Y(-95), (120 + heatA(25, 46, 120)) * k);
+            g.addColorStop(0, heatColor(S.temp));
+            g.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.globalAlpha = hA;
+            ctx.fillStyle = g;
+            ctx.fillRect(X(IX), Y(IY), IW * k, IH * k);
+            ctx.globalAlpha = 1;
+          }
+          // panel ribs on the inner wall
+          ctx.strokeStyle = "rgba(255,255,255,0.04)";
+          ctx.lineWidth = 1;
+          for (let x = IX + 40; x < IX + IW; x += 40) {
+            ctx.beginPath();
+            ctx.moveTo(X(x), Y(IY));
+            ctx.lineTo(X(x), Y(IY + IH));
+            ctx.stroke();
+          }
+
+          // smoke sensor (ceiling, rear)
+          box(-150, -179, 40, 15, 3);
+          ctx.fillStyle = "#1f2a33";
+          ctx.fill();
+          ctx.strokeStyle = !S.started ? "#475569" : S.gasDetected ? "#ef4444" : "#67e8f9";
+          ctx.lineWidth = 1.5 * k;
+          ctx.stroke();
+          for (let i = 0; i < 4; i++) {
+            box(-144 + i * 8, -175, 4, 6, 1);
+            ctx.fillStyle = "#0b0f13";
+            ctx.fill();
+          }
+          ctx.beginPath();
+          ctx.arc(X(-114), Y(-171), 2.4 * k, 0, TAU);
+          ctx.fillStyle = !S.started ? "#1f2937" : S.gasDetected ? (Math.sin(t * 10) > 0 ? "#ef4444" : "#7f1d1d") : "#22c55e";
+          ctx.fill();
+          label("SMOKE SENSOR", -114, -154);
+
+          // battery pack (rear, floor)
+          box(-152, -124, 60, 50, 4);
+          ctx.fillStyle = "#1d2b24";
+          ctx.fill();
+          ctx.strokeStyle = S.started && S.temp >= 42 ? "#f97316" : "#3f6b55";
+          ctx.lineWidth = 2 * k;
+          ctx.stroke();
+          const cells = 4,
+            chg = S.battery / 100;
+          for (let i = 0; i < cells; i++) {
+            const lit = chg > i / cells;
+            box(-146 + i * 13.5, -116, 10, 34, 2);
+            ctx.fillStyle = lit ? (S.battery < 15 ? "#dc2626" : S.battery < 40 ? "#f59e0b" : "#22c55e") : "#13201a";
+            ctx.fill();
+          }
+          label(`BATTERY ${Math.round(S.battery)}%`, -122, -130);
+
+          // fan controller board: one LED per temperature zone + a smoke LED
+          box(-84, -106, 72, 32, 3);
+          ctx.fillStyle = "#14532d";
+          ctx.fill();
+          box(-70, -100, 22, 16, 2);
+          ctx.fillStyle = "#0b0c0e";
+          ctx.fill();
+          ["SAFE", "MILD", "RISING", "CRITICAL"].forEach((z, i) => {
+            ctx.beginPath();
+            ctx.arc(X(-40 + i * 8), Y(-96), 2.6 * k, 0, TAU);
+            ctx.fillStyle = S.started && z === S.zone ? heatColor(S.temp) : "#0f2a1c";
+            ctx.fill();
+          });
+          ctx.beginPath();
+          ctx.arc(X(-40), Y(-84), 2.6 * k, 0, TAU);
+          ctx.fillStyle = S.started && S.gasDetected ? "#ef4444" : "#0f2a1c";
+          ctx.fill();
+          label("FAN CONTROLLER", -48, -112);
+
+          // main electronics: processor + motor driver on a board, with a heatsink on top
+          box(-2, -84, 100, 10, 2);
+          ctx.fillStyle = "#14532d";
+          ctx.fill();
+          box(26, -96, 40, 12, 2);
+          const cpuOff = !S.started || S.why === "flat" || (S.shutdown && S.shutT >= SHUT_CPU);
+          ctx.fillStyle = cpuOff ? "#3f3f46" : "#9ca3af";
+          ctx.fill();
+          ctx.save();
+          box(26, -96, 40, 12, 2);
+          ctx.clip();
+          ctx.globalAlpha = cpuOff ? 0 : heatA(24, 46, 0.85);
+          ctx.fillStyle = heatColor(S.temp);
+          ctx.fillRect(X(26), Y(-96), 40 * k, 12 * k);
+          ctx.globalAlpha = 1;
+          ctx.restore();
+          ctx.font = `700 ${Math.max(7, 4.6 * k)}px 'Orbitron', sans-serif`;
+          ctx.fillStyle = "#0b0c0e";
+          ctx.textAlign = "center";
+          ctx.fillText(cpuOff ? "OFF" : `CPU ${Math.round(S.perf * 100)}%`, X(46), Y(-88));
+          // heatsink fins: hot at the base, cooler at the top — hotter overall as the rover heats up
+          for (let i = 0; i < 7; i++) {
+            const fx = 24 + i * 7;
+            const g = ctx.createLinearGradient(0, Y(-96), 0, Y(-150));
+            g.addColorStop(0, heatColor(S.temp));
+            g.addColorStop(1, heatColor(Math.max(22, S.temp - 10 * flow() * Math.max(0.3, fanLevel()))));
+            box(fx, -150, 3.5, 54, 1);
+            ctx.fillStyle = S.started ? g : "#6b7280";
+            ctx.fill();
+          }
+          label("HEATSINK", 46, -156);
+          // temperature sensor clipped to the processor
+          box(68, -95, 9, 7, 1.5);
+          ctx.fillStyle = "#e5e7eb";
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(X(72.5), Y(-91.5), 2 * k, 0, TAU);
+          ctx.fillStyle = S.started ? heatColor(S.temp) : "#6b7280";
+          ctx.fill();
+          label("TEMP", 88, -106, null, 5.6);
+          label("SENSOR", 88, -98, null, 5.6);
+
+          // cooling fan (front): the red octagonal shroud with a black fan
+          const fcx = X(124),
+            fcy = Y(-126),
+            R = 28 * k;
+          const oct = (r, dx, dy) => {
+            ctx.beginPath();
+            for (let i = 0; i < 8; i++) {
+              const a = (i / 8) * TAU + TAU / 16;
+              const px = fcx + dx + Math.cos(a) * r,
+                py = fcy + dy + Math.sin(a) * r;
+              i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+            }
+            ctx.closePath();
+          };
+          oct(R, 3 * k, -1.5 * k);
+          ctx.fillStyle = RED_D;
+          ctx.fill();
+          oct(R, 0, 0);
+          ctx.fillStyle = RED;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(fcx, fcy, R * 0.78, 0, TAU);
+          ctx.fillStyle = "#08090b";
+          ctx.fill();
+          fanBlades(fcx, fcy, R * 0.74, 7);
+          label("COOLING FAN", 124, -160);
+
+          // smoke inside the compartment: haze, plus puffs that the fan drags to the exhaust
+          if (S.started && S.gasLevel > 1) {
+            ctx.fillStyle = `rgba(140,140,148,${(S.gasLevel / 100) * 0.35})`;
+            ctx.fillRect(X(IX), Y(IY), IW * k, IH * k);
+          }
+          if (S.power < 0.99) {
+            ctx.fillStyle = `rgba(2,4,8,${0.66 * (1 - S.power)})`;
+            ctx.fillRect(X(IX), Y(IY), IW * k, IH * k);
+          }
+          ctx.restore(); // end of the interior clip
+
+          // cutaway edge
+          box(IX, IY, IW, IH, 4);
+          ctx.strokeStyle = "rgba(226,232,240,0.35)";
+          ctx.setLineDash([6 * k, 4 * k]);
+          ctx.lineWidth = 1.2 * k;
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // ---- moving air: cool air in through the front, across the fan and heatsink, out of the roof ----
+          if (live() && lvl > 0 && Math.random() < (0.35 + lvl * 1.1) * flow()) air.push({ d: 0, jx: (Math.random() - 0.5) * 16, jy: (Math.random() - 0.5) * 14 });
+          if (live() && lvl > 0 && Math.random() < (0.35 + lvl * 1.1) * flow() * 0.6) air.push({ d: 0, jx: (Math.random() - 0.5) * 16, jy: (Math.random() - 0.5) * 14 });
+          const v = (30 + lvl * 120) * flow();
+          air = air.filter((p) => p.d < pathLen);
+          air.forEach((p) => {
+            if (live()) p.d += v / 60;
+            const [ux, uy, seg] = alongPath(p.d);
+            const [ux2, uy2] = alongPath(Math.max(0, p.d - 9));
+            const warm = seg >= HEATSINK_AT;
+            const fade = p.d > pathLen - 50 ? (pathLen - p.d) / 50 : 1;
+            ctx.strokeStyle = warm ? heatColor(Math.max(26, S.temp - 2)) : "#67e8f9";
+            ctx.globalAlpha = 0.75 * fade;
+            ctx.lineWidth = 2.2 * k;
+            ctx.beginPath();
+            ctx.moveTo(X(ux2 + p.jx), Y(uy2 + p.jy));
+            ctx.lineTo(X(ux + p.jx), Y(uy + p.jy));
             ctx.stroke();
           });
-          const ramX = CW * 0.95;
-          for (let s = 0; s < 2; s++) {
-            const rx = ramX - s * 14;
-            ctx.fillStyle = "rgba(120,220,160,0.14)";
-            ctx.fillRect(rx, pad + 14, 6, CH * 0.34);
-            ctx.strokeStyle = "rgba(120,220,160,0.25)";
-            ctx.lineWidth = 1;
-            for (let n = 0; n < 8; n++) {
-              const ny = pad + 20 + n * (CH * 0.34 - 14) / 7;
+          ctx.globalAlpha = 1;
+
+          if (live() && S.gasLevel > 1 && Math.random() < (S.gasLevel / 100) * 0.7) {
+            smoke.push({ x: IX + 10 + Math.random() * (IW - 20), y: IY + 10 + Math.random() * (IH - 20), r: 6, life: 3, out: false });
+          }
+          smoke = smoke.filter((p) => p.life > 0);
+          const EX = -45,
+            EY = -192;
+          smoke.forEach((p) => {
+            if (live()) {
+              p.life -= 1 / 60;
+              if (p.out) {
+                p.y -= 22 / 60;
+                p.r += 8 / 60;
+              } else if (venting() && lvl > 0) {
+                // the fan pulls the smoke towards the exhaust vent
+                const dx = EX - p.x,
+                  dy = EY - p.y,
+                  dd = Math.hypot(dx, dy) || 1,
+                  sp = 70 * lvl * flow();
+                p.x += (dx / dd) * sp / 60;
+                p.y += (dy / dd) * sp / 60;
+                if (dd < 8) p.out = true;
+                p.life = Math.max(p.life, 1);
+              } else {
+                p.x += Math.sin(t + p.r) * 4 / 60;
+                p.y -= 3 / 60;
+              }
+            }
+            ctx.save();
+            if (!p.out) {
+              box(IX, IY, IW, IH, 4);
+              ctx.clip();
+            }
+            ctx.fillStyle = `rgba(165,165,172,${Math.min(0.45, p.life * 0.3)})`;
+            ctx.beginPath();
+            ctx.arc(X(p.x), Y(p.y), p.r * k, 0, TAU);
+            ctx.fill();
+            ctx.restore();
+          });
+
+          // message over the cutaway (drawn after the smoke so it stays readable)
+          if (!S.started || (S.shutdown && S.shutT >= SHUT_LIGHTS)) {
+            ctx.font = `800 ${Math.max(11, 8.5 * k)}px 'Orbitron', sans-serif`;
+            const ready = S.temp < RESTART_T && S.gasLevel < SMOKE_RESTART; // safe again, only waiting out the dark pause
+            const msg = !S.started ? "SYSTEM OFF · PRESS START" : ready ? "ALL SYSTEMS OFF · RESTARTING…" : S.shutWhy === "smoke" ? "ALL SYSTEMS OFF · SMOKE MUST DROP BELOW 50%" : S.shutWhy === "both" ? "ALL SYSTEMS OFF · COOLING + CLEARING SMOKE" : "ALL SYSTEMS OFF · COOLING TO 41°C";
+            const mw = ctx.measureText(msg).width + 30 * k;
+            ctx.fillStyle = !S.started ? "rgba(8,12,24,0.82)" : `rgba(127,29,29,${0.6 + 0.3 * Math.sin(t * 5)})`;
+            rr(ctx, X(0) - mw / 2, Y(-140), mw, 22 * k, 11 * k);
+            ctx.fill();
+            ctx.fillStyle = "#e2e8f0";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(msg, X(0), Y(-129));
+            ctx.textBaseline = "alphabetic";
+          }
+
+          // blocked intake: dust and debris packed over the front vent
+          if (S.ventBlocked) {
+            ctx.save();
+            box(156, -154, 22, 56, 6);
+            ctx.clip();
+            ctx.fillStyle = "rgba(120,86,52,0.92)";
+            ctx.fillRect(X(150), Y(-160), 34 * k, 70 * k);
+            for (let i = 0; i < 10; i++) {
+              ctx.fillStyle = i % 2 ? "rgba(86,60,36,0.9)" : "rgba(170,128,84,0.85)";
               ctx.beginPath();
-              ctx.moveTo(rx, ny);
-              ctx.lineTo(rx + 6, ny);
+              ctx.arc(X(158 + hash(i) * 18), Y(-152 + hash(i + 5) * 50), (3 + hash(i + 9) * 5) * k, 0, TAU);
+              ctx.fill();
+            }
+            ctx.restore();
+            ctx.textAlign = "left";
+            tag("INTAKE BLOCKED", X(150), Y(-182), "#b91c1c", "#fff", Math.max(8.5, 5.6 * k));
+          }
+          label("INTAKE", 190, -94, "rgba(103,232,249,0.9)", 5.6);
+          label("EXHAUST", -10, -200, "rgba(253,186,116,0.95)", 5.6);
+
+          // heat shimmer rising off the roof
+          const shA = heatA(34, 46, 0.55);
+          if (shA > 0.03) {
+            ctx.strokeStyle = `rgba(255,170,110,${shA})`;
+            ctx.lineWidth = 1.6 * k;
+            for (let i = 0; i < 4; i++) {
+              const sx = 10 + i * 26;
+              ctx.beginPath();
+              for (let s = 0; s <= 10; s++) {
+                const yy = -194 - s * 4 - ((t * 22) % 8);
+                const xx = sx + Math.sin(s * 0.9 + t * 4 + i) * 3;
+                s ? ctx.lineTo(X(xx), Y(yy)) : ctx.moveTo(X(xx), Y(yy));
+              }
               ctx.stroke();
             }
           }
 
-          // ---- layout: processor die + tower heatsink (left) -> side fan -> fan-control IC (lower right) ----
-          const cx1 = CW * 0.17,
-            cy1 = CH * 0.52; // processor die / socket
-          const finCX = cx1,
-            finBottomY = cy1 - 14,
-            finTopY = CH * 0.14,
-            finW = 62,
-            nFins = 9;
-          const cx3 = cx1 + 118,
-            cy3 = (finBottomY + finTopY) / 2; // side-mounted tower fan
-          const cx2 = CW * 0.56,
-            cy2 = CH * 0.68; // fan-control IC
-
-          // ---- processor die heat glow ----
-          const hc = heatColor(S.temp);
-          const pulse = S.mode === "EMERGENCY" || S.zone === "CRITICAL" ? 1 + 0.08 * Math.sin(t * 6) : 1;
-          const glowR = (44 + clamp((S.temp - 22) * 2.4, 0, 66)) * pulse;
-          const rad = ctx.createRadialGradient(cx1, cy1, 4, cx1, cy1, glowR);
-          rad.addColorStop(0, hc);
-          rad.addColorStop(1, "rgba(0,0,0,0)");
-          ctx.globalAlpha = 0.55;
-          ctx.fillStyle = rad;
-          ctx.beginPath();
-          ctx.arc(cx1, cy1, glowR, 0, TAU);
+          // ---- outside: status screen on the roof (the controller's output) + camera mast ----
+          ctx.fillStyle = RED_D;
+          ctx.fillRect(X(-142), Y(-200), 4 * k, 10 * k);
+          ctx.fillRect(X(-96), Y(-200), 4 * k, 10 * k);
+          box(-154, -240, 74, 40, 4);
+          ctx.fillStyle = RED;
           ctx.fill();
+          ctx.fillStyle = "#4b5563";
+          [[-150, -236], [-84, -236], [-150, -204], [-84, -204]].forEach(([sx, sy]) => {
+            ctx.beginPath();
+            ctx.arc(X(sx), Y(sy), 1.6 * k, 0, TAU);
+            ctx.fill();
+          });
+          box(-147, -235, 60, 30, 2);
+          ctx.fillStyle = "#04080c";
+          ctx.fill();
+          ctx.fillStyle = S.started && powered() ? "#5eead4" : "rgba(94,234,212,0.3)";
+          ctx.font = `700 ${Math.max(7, 5.6 * k)}px 'Courier New', monospace`;
+          ctx.textAlign = "left";
+          const fanTxt = { OFF: "OFF", LOW: "LOW", MEDIUM: "MED", HIGH: "HIGH", VENT: "VENT", EMERGENCY: "EMRG" }[S.mode];
+          const lines = !S.started ? ["LOST BOT", "COOLING", "STANDBY", ""] : !powered() ? ["", "NO POWER", "", ""] : [`TEMP ${S.temp.toFixed(1)}C`, `FAN  ${fanTxt}`, `SMK  ${Math.round(S.gasLevel)}%`, `BAT  ${Math.round(S.battery)}%`];
+          ctx.globalAlpha = !S.started ? 1 : S.shutdown ? clamp(1 - (S.shutT - SHUT_SCREEN) / 1, 0, 1) : clamp(S.power, 0, 1);
+          lines.forEach((ln, i) => ctx.fillText(ln, X(-144), Y(-227 + i * 6.6)));
           ctx.globalAlpha = 1;
-
-          // socket retention frame (ILM) + lever, like a real LGA processor socket
-          ctx.fillStyle = "#2b2f2a";
-          ctx.strokeStyle = "#5b6158";
-          ctx.lineWidth = 2;
-          rr(ctx, cx1 - 34, cy1 - 16, 68, 48, 5);
-          ctx.fill();
-          ctx.stroke();
-          ctx.save();
-          ctx.translate(cx1 + 34, cy1 - 8);
-          ctx.rotate(-0.2);
-          ctx.fillStyle = "#5b6158";
-          ctx.fillRect(-2, -11, 4, 22);
-          ctx.restore();
-          // socket pins peeking out from either side of the die
-          ctx.fillStyle = "#c9b880";
-          for (let i = -4; i <= 4; i++) {
-            ctx.fillRect(cx1 - 31, cy1 - 9 + i * 3.2, 7, 1.1);
-            ctx.fillRect(cx1 + 24, cy1 - 9 + i * 3.2, 7, 1.1);
+          if (S.started && (S.shutdown || S.mode === "EMERGENCY") && Math.sin(t * 8) > 0) {
+            box(-147, -235, 60, 30, 2);
+            ctx.strokeStyle = "#ef4444";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
           }
-          // processor IHS (integrated heat spreader) — brushed metal, tinted hotter as it heats up
-          rr(ctx, cx1 - 26, cy1 - 12, 52, 30, 4);
-          ctx.fillStyle = "#c3cbd1";
+          label("STATUS SCREEN", -117, -246, null, 5.6);
+          // mast + camera head; the eye shows the rover's state
+          ctx.fillStyle = "#3a3f45";
+          ctx.fillRect(X(138), Y(-226), 5 * k, 36 * k);
+          box(124, -244, 34, 18, 4);
+          ctx.fillStyle = BLK;
           ctx.fill();
-          ctx.save();
-          ctx.clip();
-          ctx.globalAlpha = clamp((S.temp - 24) / 22, 0, 0.8);
-          ctx.fillStyle = hc;
-          ctx.fillRect(cx1 - 26, cy1 - 12, 52, 30);
-          ctx.globalAlpha = 1;
-          ctx.restore();
-          ctx.strokeStyle = "#8b96a3";
-          ctx.lineWidth = 1.5;
-          rr(ctx, cx1 - 26, cy1 - 12, 52, 30, 4);
-          ctx.stroke();
-          // pin-1 corner notch
-          ctx.fillStyle = "#5b6158";
+          ctx.fillStyle = RED;
+          ctx.fillRect(X(124), Y(-244), 34 * k, 4 * k);
           ctx.beginPath();
-          ctx.moveTo(cx1 - 26, cy1 - 12);
-          ctx.lineTo(cx1 - 19, cy1 - 12);
-          ctx.lineTo(cx1 - 26, cy1 - 5);
-          ctx.closePath();
+          ctx.arc(X(150), Y(-234), 4 * k, 0, TAU);
+          ctx.fillStyle = "#1f2937";
           ctx.fill();
-          ctx.textAlign = "center";
-
-          ctx.fillStyle = hc;
-          ctx.font = "700 15px 'Orbitron', sans-serif";
-          ctx.fillText(S.temp.toFixed(1) + "°C", cx1, cy1 + 52);
-          ctx.fillStyle = "#dff7f0";
-          ctx.font = "700 10px 'Rajdhani', sans-serif";
-          ctx.fillText("INTERNAL TEMP SENSOR", cx1, cy1 + 66);
-
-          // ---- tower heatsink: fins carrying heat up from the die, cooling toward the top ----
-          ctx.strokeStyle = "rgba(220,150,90,0.55)";
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.moveTo(cx1 - 10, finBottomY);
-          ctx.lineTo(cx1 - 10, finTopY);
-          ctx.moveTo(cx1 + 10, finBottomY);
-          ctx.lineTo(cx1 + 10, finTopY);
-          ctx.stroke(); // heat pipes
-          for (let i = 0; i < nFins; i++) {
-            const fy = lerp(finBottomY, finTopY, i / (nFins - 1));
-            const heatT = clamp(1 - i / (nFins - 1) + 0.15, 0, 1); // hottest near the die, cools toward the top
-            const [r1, g1, b1] = [
-              lerp(203, 40, 1 - heatT),
-              lerp(213, 26, 1 - heatT),
-              lerp(201, 15, 1 - heatT),
-            ];
-            const base = heatColor(S.temp);
-            ctx.fillStyle = heatT > 0.6 ? base : `rgb(${r1 | 0},${g1 | 0},${b1 | 0})`;
-            ctx.globalAlpha = heatT > 0.6 ? 0.35 + heatT * 0.4 : 0.85;
-            rr(ctx, finCX - finW / 2, fy - 3, finW, 6, 2);
+          const eyeA = S.shutdown ? clamp(1 - (S.shutT - SHUT_LIGHTS) / 1.5, 0, 1) : off || S.why === "standby" ? 0 : 1;
+          if (eyeA > 0) {
+            ctx.globalAlpha = eyeA;
+            ctx.fillStyle = S.why === "ok" ? "#4ade80" : "#fbbf24";
             ctx.fill();
             ctx.globalAlpha = 1;
           }
-          ctx.fillStyle = "#bfe9ff";
-          ctx.font = "700 10px 'Rajdhani', sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText("HEATSINK", finCX, finTopY - 10);
 
-          // smoke sensor + cloud, upper right of the board
-          const gx = CW * 0.62,
-            gy = CH * 0.16;
-          ctx.strokeStyle = S.gasDetected ? "#dc2626" : "#67e8f9";
-          ctx.lineWidth = 2.5;
-          rr(ctx, gx - 21, gy - 12, 42, 24, 6);
-          ctx.fillStyle = "#0f2a28";
-          ctx.fill();
-          ctx.stroke();
-          ctx.fillStyle = "#bfe9ff";
-          ctx.font = "700 9px 'Rajdhani', sans-serif";
-          ctx.fillText("SMOKE", gx, gy + 3);
-          if (S.gasLevel > 1) {
-            const n = Math.round((S.gasLevel / 100) * gasDots.length);
-            ctx.fillStyle = "rgba(134,239,172,0.55)";
-            for (let i = 0; i < n; i++) {
-              const d = gasDots[i];
-              const bob = Math.sin(t * 1.4 + d.bob) * 4;
-              const px = gx + Math.cos(d.a + t * 0.15) * d.r * 0.5;
-              const py = gy + Math.sin(d.a + t * 0.15) * d.r * 0.28 - 6 + bob;
-              ctx.beginPath();
-              ctx.arc(px, py, 3.2, 0, TAU);
-              ctx.fill();
-            }
-          }
-          // wire smoke sensor -> fan-control IC
-          ctx.strokeStyle = "rgba(150,200,190,0.3)";
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.moveTo(gx, gy + 12);
-          ctx.lineTo(cx2, cy2 - 30);
-          ctx.stroke();
-          // wire processor temp sensor -> fan-control IC
-          ctx.beginPath();
-          ctx.moveTo(cx1 + 26, cy1 + 30);
-          ctx.lineTo(cx2 - 34, cy2 - 4);
-          ctx.stroke();
-
-          // ---- fan-control IC ----
-          ctx.fillStyle = "#0f2422";
-          ctx.strokeStyle = "#3fd7b5";
-          ctx.lineWidth = 2;
-          rr(ctx, cx2 - 42, cy2 - 34, 84, 68, 10);
-          ctx.fill();
-          ctx.stroke();
-          ctx.fillStyle = "#bdf5e6";
-          ctx.font = "700 10px 'Rajdhani', sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText("FAN CONTROLLER", cx2, cy2 - 40);
-          const zone = S.zone;
-          const leds = ["SAFE", "MILD", "RISING", "CRITICAL"];
-          leds.forEach((z, i) => {
-            const lx = cx2 - 28 + i * 19;
-            const ly = cy2 - 14;
-            ctx.beginPath();
-            ctx.arc(lx, ly, 5, 0, TAU);
-            ctx.fillStyle = z === zone ? heatColor(S.temp) : "#173430";
-            ctx.fill();
-            if (z === zone) {
-              ctx.strokeStyle = "rgba(255,255,255,0.6)";
-              ctx.lineWidth = 1.2;
-              ctx.stroke();
-            }
-          });
-          ctx.beginPath();
-          ctx.arc(cx2, cy2 + 10, 6, 0, TAU);
-          ctx.fillStyle = S.gasDetected ? "#dc2626" : "#16a34a";
-          ctx.fill();
-          ctx.fillStyle = "#8fd8c8";
-          ctx.font = "700 9px 'Rajdhani', sans-serif";
-          ctx.fillText("SMOKE", cx2, cy2 + 26);
-
-          // wire fan-control IC -> fan
-          ctx.strokeStyle = "rgba(150,200,190,0.3)";
-          ctx.beginPath();
-          ctx.moveTo(cx2, cy2 - 34);
-          ctx.lineTo(cx3, cy3 + 40);
-          ctx.stroke();
-
-          // ---- tower fan, mounted on the side of the heatsink ----
-          const speedFactor = { OFF: 0, LOW: 0.25, MEDIUM: 0.55, HIGH: 1, VENT: 0.8, EMERGENCY: 1 }[S.mode];
-          if (!S.ventBlocked && speedFactor > 0 && Math.random() < speedFactor * 0.9) {
-            airflow.push({ x: cx3 + 44, y: cy3 + (Math.random() * 30 - 15), v: 60 + speedFactor * 120, life: 0 });
-          }
-          airflow.forEach((p) => {
-            p.x += p.v * (1 / 60);
-            p.life += 1 / 60;
-          });
-          airflow = airflow.filter((p) => p.x < CW - 24 && p.life < 1.6);
-          ctx.strokeStyle = "rgba(103,232,249,0.55)";
-          ctx.lineWidth = 2;
-          airflow.forEach((p) => {
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p.x + 14, p.y);
-            ctx.stroke();
-          });
-
-          // square fan frame with corner mounting screws, like a real PC fan
-          ctx.fillStyle = "#12211d";
-          ctx.strokeStyle = "#33443d";
-          ctx.lineWidth = 2;
-          rr(ctx, cx3 - 40, cy3 - 40, 80, 80, 8);
-          ctx.fill();
-          ctx.stroke();
-          [
-            [-32, -32],
-            [32, -32],
-            [-32, 32],
-            [32, 32],
-          ].forEach(([dx, dy]) => {
-            ctx.beginPath();
-            ctx.arc(cx3 + dx, cy3 + dy, 3.5, 0, TAU);
-            ctx.fillStyle = "#556862";
-            ctx.fill();
-          });
-
-          ctx.beginPath();
-          ctx.arc(cx3, cy3, 34, 0, TAU);
-          ctx.fillStyle = "#0f2a28";
-          ctx.fill();
-          ctx.strokeStyle = S.mode === "EMERGENCY" ? "#dc2626" : S.mode === "VENT" ? "#16a34a" : "#3fd7b5";
-          ctx.lineWidth = 3;
-          ctx.stroke();
-          ctx.save();
-          ctx.translate(cx3, cy3);
-          ctx.rotate(S.fanAngle);
-          ctx.fillStyle = "rgba(191,245,230,0.85)";
-          for (let b = 0; b < 4; b++) {
-            ctx.save();
-            ctx.rotate((b * TAU) / 4);
-            ctx.beginPath();
-            ctx.ellipse(14, 0, 16, 6, 0, 0, TAU);
-            ctx.fill();
-            ctx.restore();
-          }
+          // view labels
+          tag("LOST BOT · INSIDE VIEW", x0 + 10, y0 + 10, "rgba(8,12,24,0.75)", "#cbd5e1", 9.5);
+          const [st, sbg, sfg] = roverStatus();
+          ctx.globalAlpha = off && S.started ? 0.75 + 0.25 * Math.sin(t * 8) : 1;
+          tag(st, x0 + 10, y0 + 36, sbg, sfg, 10);
+          ctx.globalAlpha = 1;
+          ctx.textAlign = "right";
+          ctx.font = "700 10px 'Orbitron', sans-serif";
+          ctx.fillStyle = "rgba(226,232,240,0.7)";
+          ctx.fillText("CORE TEMP", x0 + w - 12, y0 + 22);
+          ctx.font = "800 20px 'Orbitron', sans-serif";
+          ctx.fillStyle = heatColor(S.temp);
+          ctx.fillText(S.temp.toFixed(1) + "°C", x0 + w - 12, y0 + 46);
+          ctx.font = "700 11px 'Orbitron', sans-serif";
+          ctx.fillStyle = "rgba(255,255,255,0.85)";
+          ctx.textAlign = "left";
+          ctx.fillText(`AIRFLOW ${airflowPct()}%   ·   DRIVE ${(S.perf * DRIVE_SPEED).toFixed(2)} m/s`, x0 + 12, y0 + h - 14);
+          ctx.textAlign = "right";
+          ctx.fillText(`FAN ${fanRpm().toLocaleString("en-US")} RPM · ${fanWatts()} W`, x0 + w - 12, y0 + h - 14);
           ctx.restore();
-          ctx.beginPath();
-          ctx.arc(cx3, cy3, 5, 0, TAU);
-          ctx.fillStyle = "#556862";
-          ctx.fill();
-          ctx.fillStyle = "#dff7f0";
-          ctx.font = "700 10px 'Rajdhani', sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText("COOLING FAN", cx3, cy3 + 55);
+        }
 
-          if (S.ventBlocked) {
-            ctx.strokeStyle = "#dc2626";
-            ctx.lineWidth = 4;
-            const bx = cx3 + 66,
-              by = cy3;
-            ctx.beginPath();
-            ctx.moveTo(bx - 10, by - 16);
-            ctx.lineTo(bx + 10, by + 16);
-            ctx.moveTo(bx + 10, by - 16);
-            ctx.lineTo(bx - 10, by + 16);
-            ctx.stroke();
-            ctx.fillStyle = "#dc2626";
-            ctx.font = "700 9px 'Rajdhani', sans-serif";
-            ctx.fillText("BLOCKED", bx, by + 32);
-          }
+        let ladderX = null; // where the ladder arrow is drawn (eased)
+        function drawScene(t) {
+          ctx.clearRect(0, 0, CW, CH);
+          ctx.fillStyle = "#0a1220";
+          ctx.fillRect(0, 0, CW, CH);
+          const pad = 10,
+            ladderH = 40;
+          drawRover(pad, pad, CW - pad * 2, CH - pad * 2 - ladderH, t);
 
-          // ---- battery ----
-          const bx = CW * 0.87,
-            by = CH * 0.68;
-          ctx.strokeStyle = "#3fd7b5";
-          ctx.lineWidth = 2;
-          rr(ctx, bx - 20, by - 12, 40, 24, 4);
-          ctx.stroke();
-          ctx.fillStyle = "#3fd7b5";
-          ctx.fillRect(bx + 20, by - 5, 3, 10);
-          const bw = 36 * (S.battery / 100);
-          ctx.fillStyle = S.battery < 15 ? "#dc2626" : S.battery < 40 ? "#f59e0b" : "#16a34a";
-          ctx.fillRect(bx - 18, by - 10, bw, 20);
-          ctx.fillStyle = "#8fd8c8";
-          ctx.font = "700 10px 'Rajdhani', sans-serif";
-          ctx.fillText("BATTERY " + Math.round(S.battery) + "%", bx, by + 26);
-
-          // ---- threshold ladder along the bottom ----
-          const ly0 = CH - 34,
-            lx0 = pad + 10,
-            lw = CW - pad * 2 - 20,
-            lh = 14;
+          // fan-rule ladder along the bottom: which zone the temperature is in
+          const ly0 = CH - ladderH + 6,
+            lx0 = pad + 4,
+            lw2 = CW - pad * 2 - 8,
+            lh = 12;
           const zones = [
             { k: "OFF", from: TEMP_MIN, to: 30, c: "#0891b2" },
             { k: "LOW", from: 30, to: 35, c: "#65a30d" },
             { k: "MEDIUM", from: 35, to: 40, c: "#ea580c" },
-            { k: "HIGH", from: 40, to: TEMP_MAX, c: "#dc2626" },
+            { k: "HIGH", from: 40, to: SHUTDOWN_T, c: "#dc2626" },
+            { k: "SHUTDOWN", from: SHUTDOWN_T, to: TEMP_MAX, c: "#7f1d1d" },
           ];
           zones.forEach((z) => {
-            const x0 = lx0 + ((z.from - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)) * lw;
-            const x1 = lx0 + ((z.to - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)) * lw;
+            const xa = lx0 + ((z.from - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)) * lw2;
+            const xb = lx0 + ((z.to - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)) * lw2;
             ctx.fillStyle = z.c;
-            ctx.globalAlpha = ZONE_TO_FAN[zone] === z.k ? 0.95 : 0.35;
-            ctx.fillRect(x0, ly0, x1 - x0, lh);
+            // in a shutdown (heat or smoke) only SHUTDOWN is lit; otherwise the fan zone the controller is in
+            const on = S.started && (z.k === "SHUTDOWN" ? S.shutdown : !S.shutdown && ZONE_TO_FAN[S.zone] === z.k);
+            ctx.globalAlpha = on ? (z.k === "SHUTDOWN" ? 0.7 + 0.3 * Math.sin(Date.now() / 120) : 0.95) : 0.35;
+            if (z.k === "SHUTDOWN" && on) ctx.fillStyle = "#ef4444";
+            ctx.fillRect(xa, ly0, xb - xa, lh);
             ctx.globalAlpha = 1;
             ctx.fillStyle = "#dff7f0";
-            ctx.font = "700 9px 'Rajdhani', sans-serif";
+            ctx.font = "700 9px 'Orbitron', sans-serif";
             ctx.textAlign = "center";
-            ctx.fillText(z.k, (x0 + x1) / 2, ly0 + lh + 11);
+            ctx.fillText(z.k, (xa + xb) / 2, ly0 + lh + 12);
           });
-          const mx = lx0 + ((clamp(S.temp, TEMP_MIN, TEMP_MAX) - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)) * lw;
+          // the arrow shows the temperature, but points at SHUTDOWN whenever the rover is shut down (heat or smoke)
+          const toX = (v) => lx0 + ((clamp(v, TEMP_MIN, TEMP_MAX) - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)) * lw2;
+          const target = S.started && S.shutdown ? toX((SHUTDOWN_T + TEMP_MAX) / 2) : toX(S.temp);
+          ladderX = ladderX == null ? target : ladderX + (target - ladderX) * 0.15; // glides to its new spot
+          const mx = ladderX;
           ctx.beginPath();
-          ctx.moveTo(mx, ly0 - 4);
-          ctx.lineTo(mx - 5, ly0 - 12);
-          ctx.lineTo(mx + 5, ly0 - 12);
+          ctx.moveTo(mx, ly0 - 2);
+          ctx.lineTo(mx - 5, ly0 - 9);
+          ctx.lineTo(mx + 5, ly0 - 9);
           ctx.closePath();
           ctx.fillStyle = "#fff";
           ctx.fill();
@@ -1962,7 +2483,6 @@
           const dt = clamp((now - last) / 1000, 0, 0.1);
           last = now;
           step(dt);
-          tickMission(dt * 1000);
           updateDashboard();
           drawScene(now / 1000);
           requestAnimationFrame(loop);
