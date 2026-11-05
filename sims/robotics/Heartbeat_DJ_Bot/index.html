@@ -467,7 +467,7 @@
       }
       .gcard canvas {
         width: 100%;
-        height: clamp(52px, 7.4vh, 78px);
+        height: clamp(60px, 9vh, 96px);
         border-radius: 7px;
         display: block;
       }
@@ -532,6 +532,24 @@
       .btn:hover {
         transform: translateY(-2px);
         border-color: var(--accent2);
+      }
+      .btn.startstop {
+        background: linear-gradient(145deg, #4ade80, #16a34a);
+        border-color: transparent;
+        color: #fff;
+        font-weight: 800;
+        min-width: 150px;
+        box-shadow: 0 8px 18px rgba(22, 163, 74, 0.3);
+      }
+      .btn.startstop.on {
+        background: linear-gradient(145deg, #f87171, #dc2626);
+        box-shadow: 0 8px 18px rgba(220, 38, 38, 0.3);
+      }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none;
+        border-color: var(--line);
       }
       .btn.pause.on {
         background: linear-gradient(145deg, #93c5fd, var(--accent));
@@ -1153,6 +1171,349 @@
       .fw-head-actions { justify-content: flex-start; min-width: 0; padding: 0 32px 0 20px; }
     }
   </style>
+  <style id="lof-revamp">
+    /* ---------- dark controls: buttons sit on the glass cards ---------- */
+    .card .seg button,
+    .card .toggle button,
+    .card .btn:not(.startstop) {
+      background: rgba(10, 14, 38, 0.55) !important;
+      border: 1.5px solid rgba(140, 160, 255, 0.28) !important;
+      color: rgba(226, 232, 255, 0.86) !important;
+      box-shadow: none !important;
+    }
+    .card .seg button:hover,
+    .card .toggle button:hover,
+    .card .btn:not(.startstop):not(:disabled):hover {
+      border-color: rgba(170, 190, 255, 0.65) !important;
+      color: #fff !important;
+    }
+    .card .seg button.on {
+      background: linear-gradient(145deg, #3b82f6, #1d4ed8) !important;
+      border-color: transparent !important;
+      color: #fff !important;
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35) !important;
+    }
+    .card .seg.mu button.on {
+      background: linear-gradient(145deg, #8b5cf6, #6d28d9) !important;
+      box-shadow: 0 6px 16px rgba(139, 92, 246, 0.35) !important;
+    }
+    .card .toggle button.on {
+      background: linear-gradient(145deg, #2fae6e, #1f8a55) !important;
+      border-color: transparent !important;
+      color: #fff !important;
+      box-shadow: 0 6px 16px rgba(84, 196, 138, 0.3) !important;
+    }
+    .card .btn.pause.on {
+      background: linear-gradient(145deg, #3b82f6, #1d4ed8) !important;
+      border-color: transparent !important;
+      color: #fff !important;
+    }
+    .card .btn:disabled { opacity: 0.4; }
+    .card button:focus-visible,
+    .card .btn:focus-visible,
+    .rp button:focus-visible,
+    .ov button:focus-visible {
+      outline: 2px solid #9db8ff;
+      outline-offset: 2px;
+    }
+
+    /* ---------- readable type ---------- */
+    .card .sub { font-size: 13.5px; }
+    .hint { font-size: 12.5px; color: var(--mut); }
+    .ctrl label { font-size: 14px; }
+    .quad .qm { font-size: 13px; }
+    .quad .qd { font-size: 11.5px; }
+    .mx-h, .mx-v { font-size: 9.5px; }
+    .glab { font-size: 10px; }
+    .stat .k { font-size: 11px; }
+    .reading, .reading .v { font-size: 13.5px; }
+    .stat .v, .reading .v, .ctrl .val, .module .mv, .frame {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ---------- log + banner on the dark theme ---------- */
+    .logline {
+      background: rgba(8, 10, 30, 0.5) !important;
+      color: #e8ecff !important;
+      border-top-color: rgba(140, 160, 255, 0.2) !important;
+      border-right-color: rgba(140, 160, 255, 0.2) !important;
+      border-bottom-color: rgba(140, 160, 255, 0.2) !important;
+      font-size: 13px;
+    }
+    .logline.ok { background: rgba(34, 197, 94, 0.13) !important; }
+    .logline.warn { background: rgba(247, 162, 59, 0.13) !important; }
+    .logline.bad { background: rgba(255, 84, 112, 0.14) !important; }
+    .logline.mus { background: rgba(139, 92, 246, 0.14) !important; }
+    .logline .t { color: rgba(220, 228, 255, 0.55) !important; }
+    #banner { background-color: rgba(10, 14, 38, 0.6) !important; }
+    #banner .txt { color: #eef2ff !important; }
+    #banner .lab { color: #c4b5fd !important; }
+
+
+    /* ---------- start / stopped overlay on the pod ---------- */
+    .stagewrap { position: relative; }
+    .ov {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 50%, rgba(6, 9, 24, 0.55), rgba(6, 9, 24, 0.82));
+      backdrop-filter: blur(1.5px);
+      border-radius: 14px;
+      z-index: 5;
+      padding: 16px;
+    }
+    .ov.show { display: flex; }
+    .ov .ovbox { text-align: center; max-width: 420px; }
+    .ov h2 {
+      font-family: var(--head);
+      font-size: clamp(14px, 2vw, 19px);
+      letter-spacing: 1.5px;
+      margin: 0 0 6px;
+      color: #eef2ff;
+    }
+    .ov p {
+      margin: 0 0 14px;
+      color: rgba(220, 228, 255, 0.85);
+      font-size: 14.5px;
+      line-height: 1.4;
+    }
+    .ov .ovgo {
+      font-family: var(--head);
+      font-size: 14px;
+      letter-spacing: 1px;
+      font-weight: 800;
+      color: #fff;
+      cursor: pointer;
+      border: none;
+      border-radius: 14px;
+      padding: 13px 26px;
+      background: linear-gradient(145deg, #4ade80, #16a34a);
+      box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.5), 0 10px 26px rgba(22, 163, 74, 0.4);
+      animation: ovpulse 2s infinite;
+    }
+    .ov .ovgo:hover { transform: translateY(-2px); }
+    .ov .ovlink[hidden] { display: none; }
+    .ov .ovlink {
+      display: block;
+      margin: 10px auto 0;
+      background: none;
+      border: none;
+      color: #9db8ff;
+      font-family: var(--body);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    @keyframes ovpulse {
+      0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.55), 0 10px 26px rgba(22, 163, 74, 0.4); }
+      70% { box-shadow: 0 0 0 16px rgba(74, 222, 128, 0), 0 10px 26px rgba(22, 163, 74, 0.4); }
+      100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0), 0 10px 26px rgba(22, 163, 74, 0.4); }
+    }
+
+    /* ---------- run report ---------- */
+    .rpback {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(4, 6, 18, 0.66);
+      padding: 16px;
+    }
+    .rpback.show { display: flex; }
+    .rp {
+      width: min(780px, 100%);
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      background: linear-gradient(160deg, #161d44, #0b1030);
+      border: 1px solid rgba(140, 160, 255, 0.32);
+      border-radius: 18px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+      padding: 18px 20px 16px;
+      color: #e8ecff;
+      font-family: var(--body);
+    }
+    .rp-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .rp h2 {
+      font-family: var(--head);
+      font-size: 17px;
+      letter-spacing: 1.4px;
+      margin: 0;
+    }
+    .rp .rp-sit { color: rgba(220, 228, 255, 0.7); font-size: 14px; margin-top: 2px; }
+    .rp-stars { font-size: 30px; letter-spacing: 3px; line-height: 1; white-space: nowrap; }
+    .rp-stars .on { color: #ffd166; text-shadow: 0 0 12px rgba(255, 209, 102, 0.55); }
+    .rp-stars .off { color: rgba(220, 228, 255, 0.18); }
+    .rp-verdict { font-size: 16px; font-weight: 700; margin: 10px 0 12px; }
+    .rp-tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 8px;
+    }
+    .rp-tile {
+      background: rgba(8, 10, 30, 0.5);
+      border: 1px solid rgba(140, 160, 255, 0.22);
+      border-radius: 12px;
+      padding: 8px 10px;
+    }
+    .rp-tile .k {
+      font-family: var(--head);
+      font-size: 9.5px;
+      letter-spacing: 0.6px;
+      color: rgba(220, 228, 255, 0.6);
+      text-transform: uppercase;
+    }
+    .rp-tile .v {
+      font-size: 18px;
+      font-weight: 700;
+      margin-top: 3px;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    .rp-tile .v small { font-size: 13px; font-weight: 600; }
+    .up { color: #ff7a93; }
+    .dn { color: #4ade80; }
+    .good { color: #4ade80; }
+    .bad { color: #ff7a93; }
+    .rp-chartwrap {
+      margin-top: 12px;
+      background: #080e1c;
+      border: 1px solid #24314e;
+      border-radius: 12px;
+      padding: 6px 8px 4px;
+    }
+    .rp-chartwrap .glab { margin-bottom: 4px; }
+    #rpChart { width: 100%; height: 130px; display: block; }
+    .rp-legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12.5px; margin: 5px 2px 2px; color: rgba(220, 228, 255, 0.8); }
+    .rp-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+    .rp-note {
+      margin-top: 10px;
+      padding: 9px 12px;
+      border-radius: 11px;
+      font-size: 14px;
+      line-height: 1.4;
+      background: rgba(8, 10, 30, 0.5);
+      border-left: 4px solid #7ea6ff;
+    }
+    .rp-note.tip { border-left-color: #ffd166; }
+    .rp-note.fair { border-left-color: #4ade80; }
+    .rp-note.unfair { border-left-color: #f7a23b; }
+    .rp h3 {
+      font-family: var(--head);
+      font-size: 11.5px;
+      letter-spacing: 1px;
+      margin: 14px 0 6px;
+      color: rgba(220, 228, 255, 0.75);
+    }
+    .rp-tablewrap { overflow-x: auto; }
+    .rp table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
+    .rp th {
+      font-family: var(--head);
+      font-size: 9px;
+      letter-spacing: 0.5px;
+      text-align: left;
+      color: rgba(220, 228, 255, 0.6);
+      padding: 5px 6px;
+      border-bottom: 1px solid rgba(140, 160, 255, 0.25);
+    }
+    .rp td { padding: 6px; border-bottom: 1px solid rgba(140, 160, 255, 0.12); font-variant-numeric: tabular-nums; }
+    .rp tr.cur td { background: rgba(126, 166, 255, 0.1); }
+    .rp td.chg { background: rgba(247, 162, 59, 0.2); color: #ffd9a3; font-weight: 700; border-radius: 6px; }
+    .rp td .st { color: #ffd166; }
+    .rp-key { font-size: 12px; color: rgba(220, 228, 255, 0.6); margin-top: 5px; }
+    .rp-key b { color: #ffd9a3; }
+    .rp-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+    .rp-actions button {
+      cursor: pointer;
+      font-family: var(--body);
+      font-size: 14.5px;
+      font-weight: 700;
+      border-radius: 11px;
+      padding: 9px 16px;
+      border: 1.5px solid rgba(140, 160, 255, 0.3);
+      background: rgba(10, 14, 38, 0.6);
+      color: #e8ecff;
+    }
+    .rp-actions button.go {
+      border-color: transparent;
+      background: linear-gradient(145deg, #4ade80, #16a34a);
+      color: #fff;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .ov .ovgo { animation: none; }
+    }
+
+    /* ---------- backdrop: the sheet's pulse monitor, bar chart and robot art
+       used to show through the cards and the gaps between them, looking like
+       UI stuck behind the panels. Blur and dim it so it reads as scenery. ---- */
+    body { background: transparent !important; }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -30px;
+      z-index: -1;
+      pointer-events: none;
+      background: #1c2249 var(--bp) center / cover no-repeat;
+      filter: blur(12px) brightness(0.45) saturate(0.85);
+    }
+    .card {
+      background: rgba(13, 16, 42, 0.94) !important;
+      backdrop-filter: blur(8px);
+    }
+
+    /* ---------- tablet / small laptop: stage on top, the two panels side by
+       side underneath instead of one very wide column ---------- */
+    @media (max-width: 1280px) {
+      .grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-areas: "stage stage" "ctrl info";
+        align-items: start;
+      }
+      .grid > section:nth-of-type(1) { grid-area: ctrl; }
+      .grid > section:nth-of-type(2) { grid-area: stage; }
+      .grid > section:nth-of-type(3) { grid-area: info; }
+    }
+    @media (max-width: 760px) {
+      .grid {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "stage" "ctrl" "info";
+      }
+    }
+
+
+    /* ---------- help window + scrollbars on the dark theme ---------- */
+    * { scrollbar-color: rgba(140, 160, 255, 0.35) transparent; scrollbar-width: thin; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(140, 160, 255, 0.3); border-radius: 4px; }
+    .helpbar.floatwin {
+      background: #10163a !important;
+      border-color: rgba(140, 160, 255, 0.32) !important;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55) !important;
+    }
+    .helpbar.floatwin .fw-head { background: rgba(8, 10, 30, 0.6) !important; border-bottom-color: rgba(140, 160, 255, 0.25) !important; }
+    .helpbar.floatwin .fw-title { color: rgba(220, 228, 255, 0.75) !important; }
+    .helpbar.floatwin .fw-tab-btn,
+    .helpbar.floatwin .fw-close {
+      background: rgba(10, 14, 38, 0.7) !important;
+      border-color: rgba(140, 160, 255, 0.3) !important;
+      color: rgba(226, 232, 255, 0.85) !important;
+    }
+    .helpbar.floatwin .fw-tab-btn.on { background: linear-gradient(145deg, #3b82f6, #1d4ed8) !important; border-color: transparent !important; color: #fff !important; }
+    .helpbar.floatwin .fw-close:hover { background: rgba(239, 68, 68, 0.25) !important; color: #fff !important; }
+    .helpbar.floatwin .fw-body, .helpbar.floatwin .tabpanel { color: #e8ecff !important; }
+    .helpbar.floatwin .fw-body b, .helpbar.floatwin .tabpanel b { color: #7dd3fc !important; }
+  </style>
 </head>
   <body>
     <header class="top">
@@ -1217,8 +1578,19 @@
               <b>Volume</b> (0–30) on the <b>Mini Speaker</b>.
             </li>
             <li>
-              Press <b>Pause</b> to freeze the readings, or <b>Reset</b> to
-              start again. Change <b>one</b> setting at a time and compare.
+              Watch the <b>crew member</b>: posture, breathing and face show
+              how calm they are, and the <b>Calmness ring</b> on the stage
+              shows the score and how it moved in the last 30 seconds.
+            </li>
+            <li>
+              Press <b>Stop Simulation</b> to get a <b>Run Report</b> with
+              stars, a heart-rate chart and a comparison with earlier runs.
+            </li>
+            <li>
+              Press <b>Start Simulation</b> to begin and
+              <b>Stop Simulation</b> to halt everything (readings, music and
+              animation). While running, press <b>Pause</b> to freeze the
+              readings, or <b>Reset</b> to start again. Change <b>one</b> setting at a time and compare.
             </li>
           </ol>
         </div>
@@ -1396,8 +1768,8 @@
               value="18"
             />
             <div class="hint">
-              DFPlayer volume runs 0–30. Click anywhere once to let the browser
-              start audio.
+              DFPlayer volume runs 0–30. Music starts when you press Start.
+              Tracks are CC0 (public domain) from OpenGameArt.
             </div>
           </div>
         </div>
@@ -1415,6 +1787,21 @@
 
         <div class="stagewrap">
           <canvas id="pod" width="860" height="380"></canvas>
+          <div class="ov show" id="startOv">
+            <div class="ovbox">
+              <h2 id="ovTitle">CREW POD STANDING BY</h2>
+              <p id="ovText">
+                Pick a Crew Situation, then start the simulation to watch the
+                bot read the crew and choose the music.
+              </p>
+              <button type="button" class="ovgo" id="ovGo">
+                ▶ START SIMULATION
+              </button>
+              <button type="button" class="ovlink" id="ovReport" hidden>
+                View last run report
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="graphrow">
@@ -1428,7 +1815,12 @@
           </div>
         </div>
         <div class="stage-foot">
-          <button type="button" class="btn pause" id="btnPause">Pause</button>
+          <button type="button" class="btn startstop" id="btnRun">
+            ▶ Start Simulation
+          </button>
+          <button type="button" class="btn pause" id="btnPause" disabled>
+            Pause
+          </button>
           <button type="button" class="btn" id="btnReset">Reset</button>
         </div>
       </section>
@@ -1580,6 +1972,49 @@
         <h3 style="margin-top: 14px">Bot Feedback</h3>
         <div class="log" id="logBox"></div>
       </section>
+    </div>
+
+    <div class="rpback" id="rpBack">
+      <div class="rp" role="dialog" aria-modal="true" aria-labelledby="rpTitle">
+        <div class="rp-top">
+          <div>
+            <h2 id="rpTitle">RUN REPORT</h2>
+            <div class="rp-sit" id="rpSit"></div>
+          </div>
+          <div class="rp-stars" id="rpStars"></div>
+        </div>
+        <div class="rp-verdict" id="rpVerdict"></div>
+        <div class="rp-tiles" id="rpTiles"></div>
+        <div class="rp-chartwrap">
+          <span class="glab">Heart rate during the run · background = music mode playing</span>
+          <canvas id="rpChart"></canvas>
+          <div class="rp-legend" id="rpLegend"></div>
+        </div>
+        <div class="rp-note tip" id="rpTip"></div>
+        <div class="rp-note" id="rpFair"></div>
+        <div id="rpCompare">
+          <h3>COMPARE RUNS</h3>
+          <div class="rp-tablewrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>RUN</th><th>SITUATION</th><th>THRESHOLD</th><th>AVERAGING</th>
+                  <th>BIOFEEDBACK</th><th>TIME</th><th>HEART RATE</th><th>END CALM</th>
+                  <th>CHANGES</th><th>RESULT</th>
+                </tr>
+              </thead>
+              <tbody id="rpRows"></tbody>
+            </table>
+          </div>
+          <div class="rp-key">
+            <b>Orange</b> cells are settings that changed from the run before.
+          </div>
+        </div>
+        <div class="rp-actions">
+          <button type="button" id="rpClose">Close</button>
+          <button type="button" class="go" id="rpNext">▶ Start next run</button>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -1922,6 +2357,7 @@
           audioOn: true,
           vol: 18,
           paused: false,
+          running: false, // Start/Stop: nothing moves until Start is pressed
           mode: "calm", // committed mode (what the DFPlayer is playing)
           candidate: "calm", // what the logic wants right now
           candSince: 0,
@@ -1937,7 +2373,18 @@
           lastFeedback: "",
           flapWarnAt: -99,
           volFrameUntil: 0,
+          scKey: "rest",
+          flashAt: -99, // mode-change ripple from the bot
+          flashCol: "#34d399",
         };
+
+        // Outcome visuals
+        let breathPh = 0; // crew breathing, faster under stress
+        let calmHist = []; // {t, c} for the calmness ring's change arrow
+        let modeMarks = []; // {t, k} flags on the BPM trend graph
+        let run = null; // stats for the run in progress (Start → Stop)
+        const runs = []; // finished runs, newest first
+        let runCount = 0;
 
         let tNow = 0;
         let beatPhase = 0; // 0..1 through the current cardiac cycle
@@ -2057,9 +2504,53 @@
           A.ok = true;
           retuneAudio(playingMode(), 0.05);
         }
+        // Sound is switched off in this version: the audio engine is never
+        // started, and the speaker visuals use their synthesised stand-in.
+        // Real music: five short CC0 tracks (see audio/CREDITS.txt), one per
+        // mode. Plain <audio> elements, crossfaded each frame. The browser only
+        // lets audio start after a click, so the first Start press unlocks it.
+        const TRACKS = {
+          calm: { src: "audio/calm_ambient_01.ogg", gain: 0.75 },
+          focus: { src: "audio/focus_rhythm_02.ogg", gain: 0.7, end: 30 },
+          relax: { src: "audio/calm_music_03.mp3", gain: 0.7 },
+          deep: { src: "audio/deep_relax_04.ogg", gain: 1.0 },
+          recovery: { src: "audio/recovery_gentle_05.mp3", gain: 0.8, end: 40 },
+        };
+        const P = { ready: false, el: {}, lvl: {} };
         function unlockAudio() {
-          initAudio();
-          if (A.ctx && A.ctx.state === "suspended") A.ctx.resume();
+          if (P.ready) return;
+          P.ready = true;
+          for (const key in TRACKS) {
+            const el = new Audio(TRACKS[key].src);
+            el.loop = !TRACKS[key].end;
+            el.preload = "auto";
+            el.volume = 0;
+            P.el[key] = el;
+            P.lvl[key] = 0;
+          }
+        }
+        function trackTick(dt) {
+          if (!P.ready) return;
+          const live = S.audioOn && !frozen();
+          const cur = playingMode();
+          for (const key in TRACKS) {
+            const el = P.el[key],
+              tr = TRACKS[key];
+            const on = live && key === cur;
+            // crossfade ~0.8 s between tracks
+            P.lvl[key] = approach(P.lvl[key], on ? 1 : 0, 0.25, dt);
+            // a long track plays only its first `end` seconds, fading at the seam
+            let seam = 1;
+            if (tr.end) {
+              const t = el.currentTime;
+              if (t >= tr.end) el.currentTime = 0;
+              seam = clamp((tr.end - t) / 1.2, 0, 1) * clamp(t / 0.6, 0, 1);
+            }
+            const v = clamp((S.vol / 30) * tr.gain * P.lvl[key] * seam, 0, 1);
+            el.volume = v;
+            if (on && el.paused) el.play().catch(() => {});
+            else if (!on && P.lvl[key] < 0.01 && !el.paused) el.pause();
+          }
         }
         function retuneAudio(key, glide) {
           if (!A.ok) return;
@@ -2095,7 +2586,7 @@
           if (!A.ok) return;
           const c = A.ctx,
             t = c.currentTime;
-          const live = S.audioOn && !S.paused && A.ctx.state === "running";
+          const live = S.audioOn && !frozen() && A.ctx.state === "running";
           // DFPlayer volume is 0..30; keep the top end civil for headphones.
           const target = live ? (S.vol / 30) * 0.55 : 0;
           A.master.gain.setTargetAtTime(target, t, 0.12);
@@ -2120,10 +2611,16 @@
         // MAX30102: the sensor sees an optical waveform, not a number. A beat is
         // a systolic peak plus a smaller dicrotic notch, riding on a slow
         // respiration wander. BPM has to be *derived* from the gaps between peaks.
+        // One PPG sample. The pulse is not a copy-paste: each beat has its own
+        // height, stress narrows and shrinks the pulse (vessels tighten) and
+        // hides the dicrotic notch, and the baseline rides the crew member's
+        // actual breathing — slow and deep when calm, fast and shallow when not.
         function ppgSample(phase, t, artifact) {
-          const sys = Math.exp(-Math.pow((phase - 0.13) / 0.075, 2));
-          const dic = 0.3 * Math.exp(-Math.pow((phase - 0.37) / 0.09, 2));
-          const resp = 0.05 * Math.sin(t * 0.9);
+          const st = crewStress();
+          const amp = S.beatAmp || 1;
+          const sys = amp * Math.exp(-Math.pow((phase - 0.13) / lerp(0.085, 0.058, st), 2));
+          const dic = amp * lerp(0.34, 0.08, st) * Math.exp(-Math.pow((phase - 0.37) / 0.09, 2));
+          const resp = lerp(0.14, 0.05, st) * Math.sin(breathPh);
           const noise = (rnd() - 0.5) * artifact;
           return sys + dic + resp + noise;
         }
@@ -2174,11 +2671,17 @@
           // Recovery is its own situation, not a sub-case of "high": the crew
           // member is on the way down and the room is quiet enough to leave them
           // on a gentle track instead of yanking them onto a deep calm one.
+          // Hysteresis: enter Recovery when the fall is clear (< -0.35 BPM/s),
+          // stay in it until the fall has really stopped (> -0.15 BPM/s). A
+          // single cut-off made a gentle cool-down flip Relax <-> Recovery on
+          // every wobble of the slope estimate and set off the flapping warning.
+          const slopeOk = S.recovHold ? slope < -0.15 : slope < -0.35;
           const recovering =
             S.wasAgitated &&
-            slope < -0.35 &&
+            slopeOk &&
             S.bpmDisp <= S.hrTh + 5 &&
             tNow - S.agitatedAt < 90;
+          S.recovHold = recovering;
 
           if (recovering && !noiseHigh) return "recovery";
           if (hrHigh && noiseHigh) return "deep";
@@ -2203,7 +2706,7 @@
           //     the music pulls it down against that. ---
           S.bpmActual = approach(S.bpmActual, S.bpmTarget, 6, dt);
           const m = MODES[playingMode()];
-          const playing = S.dfState !== "Paused" && !S.paused;
+          const playing = S.dfState !== "Paused" && !frozen();
           if (S.bio && playing && S.bpmActual > m.floor) {
             // Calming works less well in a loud room — that is why Focus Mode
             // exists at all.
@@ -2216,7 +2719,28 @@
           // Motion artifact grows with effort, so a fast pulse is also a dirtier
           // signal: exactly the case where averaging starts to matter.
           const artifact = 0.05 + 0.16 * clamp((S.bpmActual - 80) / 90, 0, 1);
-          const hz = S.bpmActual / 60;
+          // A real heart never holds one number. On top of the crew member's
+          // rate: slow drifts (a few BPM over tens of seconds), the breathing
+          // ripple (bigger when relaxed), and sudden surges that come more
+          // often and harder under stress — plus a startle jump each time a
+          // loud burst (like the alarm) hits.
+          {
+            const st = crewStress();
+            S.hrvT = (S.hrvT || 0) + dt;
+            const wander =
+              Math.sin(S.hrvT * 0.55) * 2.0 + Math.sin(S.hrvT * 0.23 + 1) * 2.6 + Math.sin(S.hrvT * 0.09 + 2) * 1.6;
+            S.surge = approach(S.surge || 0, 0, lerp(7, 3.5, st), dt);
+            if (rnd() < dt * lerp(0.05, 0.22, st)) S.surge += lerp(3, 6, st) * (0.5 + rnd());
+            const loud = S.sndRaw > S.snTh;
+            if (loud && !S.wasLoud && tNow - (S.startleAt || -99) > 5) {
+              S.surge += lerp(1.5, 3, st);
+              S.startleAt = tNow;
+            }
+            S.wasLoud = loud;
+            S.surge = Math.min(S.surge, 12);
+            S.hrvOff = wander * lerp(1, 1.3, st) + S.surge;
+          }
+          const hz = ((S.bpmActual + S.hrvOff) / 60) * (1 + 0.08 * (1 - crewStress()) * Math.sin(breathPh));
           beatPhase += hz * dt;
           while (beatPhase >= 1) {
             beatPhase -= 1;
@@ -2231,6 +2755,8 @@
               while (ibiHist.length > 16) ibiHist.shift();
             }
             beatMarks[beatMarks.length - 1] = 1;
+            // next beat's own pulse height
+            S.beatAmp = lerp(1.05, 0.62, crewStress()) * (1 + (rnd() - 0.5) * 0.16);
           }
           // The averaging window is what the learner is moving.
           const n = Math.min(S.avgN, ibiHist.length);
@@ -2297,6 +2823,16 @@
           if (playing && S.audioOn) ideal += 8;
           S.calmness = approach(S.calmness, clamp(ideal, 0, 100), 3.2, dt);
 
+          // --- outcome tracking ---
+          const stress = crewStress();
+          breathPh += lerp(0.8, 3.2, stress) * dt;
+          if (!calmHist.length || tNow - calmHist[calmHist.length - 1].t >= 0.5) {
+            calmHist.push({ t: tNow, c: S.calmness });
+            while (calmHist.length && tNow - calmHist[0].t > 31) calmHist.shift();
+          }
+          while (modeMarks.length && tNow - modeMarks[0].t > 31) modeMarks.shift();
+          if (run) trackRun(dt);
+
           // --- DFPlayer status settles back to Playing after a track change ---
           if (S.dfState === "Changed" && tNow - S.dfChangedAt > 1.3)
             S.dfState = "Playing";
@@ -2314,6 +2850,11 @@
           while (S.changeTimes.length && tNow - S.changeTimes[0] > 60)
             S.changeTimes.shift();
           if (S.src === "bot") retuneAudio(key);
+          modeMarks.push({ t: tNow, k: key });
+          S.flashAt = tNow;
+          S.flashCol = MODES[key].col;
+          if (key === "recovery" || (key === "calm" && prev && prev !== "focus")) S.sighAt = tNow; // relieved sigh
+          if (run) run.changes++;
           announce(key, prev);
         }
 
@@ -2347,6 +2888,7 @@
             tNow - S.flapWarnAt > 12
           ) {
             S.flapWarnAt = tNow;
+            if (run) run.flaps++;
             log("Threshold too sensitive. Music changes too quickly.", "bad");
           }
         }
@@ -2452,14 +2994,16 @@
             "Track " + String(m.track).padStart(2, "0");
           $("dfFile").textContent = m.file;
           const st = $("dfState");
-          st.textContent = S.paused
-            ? "Paused"
+          st.textContent = !S.running
+            ? "Stopped"
+            : S.paused
+              ? "Paused"
             : S.src === "manual"
               ? "Playing (manual)"
               : S.dfState;
           st.className =
             "mv " +
-            (S.paused ? "stop" : S.dfState === "Changed" ? "chg" : "play");
+            (frozen() ? "stop" : S.dfState === "Changed" ? "chg" : "play");
           // Real DFPlayer Mini frame: 7E FF 06 <cmd> 00 <param hi> <param lo> EF
           // A volume change sends its own command, so the learner sees the bus
           // carry more than one kind of instruction.
@@ -2492,7 +3036,7 @@
             "/30 · " +
             m.tempo +
             " BPM pad" +
-            (!S.audioOn ? " · muted" : A.ok ? "" : " · click to start audio");
+            (!S.audioOn ? " · muted" : "");
 
           // --- calmness ---
           const c = S.calmness;
@@ -2520,7 +3064,7 @@
         const waveArr = new Float32Array(256);
         let spkLevel = 0;
         function sampleAudio() {
-          const live = S.audioOn && !S.paused;
+          const live = S.audioOn && !frozen();
           if (!live) {
             waveArr.fill(0);
             spkLevel = approach(spkLevel, 0, 0.12, 0.016);
@@ -2572,44 +3116,7 @@
           px.fillStyle = bg;
           px.fillRect(0, 0, W, H);
 
-          // Wall ribs
-          px.strokeStyle = "rgba(120,150,210,0.07)";
-          px.lineWidth = 2;
-          for (let i = 1; i < 7; i++) {
-            const x = (W / 7) * i;
-            px.beginPath();
-            px.moveTo(x, 0);
-            px.lineTo(x, floorY);
-            px.stroke();
-          }
-
-          // Viewport with stars
-          const vx = W * 0.13,
-            vy = H * 0.27,
-            vr = Math.min(W, H) * 0.15;
-          px.save();
-          px.beginPath();
-          px.arc(vx, vy, vr, 0, TAU);
-          px.clip();
-          px.fillStyle = "#02040c";
-          px.fillRect(vx - vr, vy - vr, vr * 2, vr * 2);
-          for (const s of stars) {
-            const d = Math.hypot(s.x - vx, s.y - vy);
-            if (d > vr) continue;
-            px.globalAlpha =
-              0.35 + 0.55 * Math.abs(Math.sin(tNow * 0.7 + s.tw));
-            px.fillStyle = "#dce9ff";
-            px.beginPath();
-            px.arc(s.x, s.y, s.r, 0, TAU);
-            px.fill();
-          }
-          px.globalAlpha = 1;
-          px.restore();
-          px.strokeStyle = "#2c3d5e";
-          px.lineWidth = 4 * k;
-          px.beginPath();
-          px.arc(vx, vy, vr, 0, TAU);
-          px.stroke();
+          drawDeck(k, floorY);
 
           // Floor
           const fg = px.createLinearGradient(0, floorY, 0, H);
@@ -2640,110 +3147,1446 @@
 
           drawSoundSource(k, floorY);
           drawMusicWaves(m, botX, floorY, k, crewX);
+          drawAura(crewX, floorY, k);
           drawCrew(crewX, floorY, k);
           drawBot(botX, floorY, k, m);
+          drawFloaters(k, floorY);
+          drawModeRipple(botX, floorY, k);
+          drawCalmRing(k);
         }
 
-        function drawCrew(cx, floorY, k) {
-          const seatY = floorY - 26 * k;
-          // Recliner
-          px.fillStyle = "#1a2540";
-          rr(px, cx - 62 * k, floorY - 14 * k, 124 * k, 14 * k, 6 * k);
+
+        // Observation deck: the whole back wall is window, cupola-style — tall
+        // panes between struts that fan out toward the ceiling. Outside, Earth
+        // turns below (day side with clouds, night side with city lights and an
+        // aurora), the Moon hangs in the dark, the Sun flares in the corner and
+        // a satellite drifts past now and then.
+        const EARTH = (() => {
+          let sd = 917;
+          const r = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);
+          const land = [],
+            clouds = [],
+            cities = [];
+          for (let i = 0; i < 10; i++) land.push({ a: r(), d: 0.12 + r() * 0.8, w: 0.04 + r() * 0.07, h: 0.02 + r() * 0.05, rot: r() * 3 });
+          for (let i = 0; i < 26; i++) clouds.push({ a: r(), d: 0.05 + r() * 0.9, w: 0.015 + r() * 0.05, h: 0.006 + r() * 0.016, rot: r() * 3 });
+          for (let i = 0; i < 70; i++) cities.push({ a: r(), d: 0.1 + r() * 0.85, s: 0.6 + r() * 1.4 });
+          return { land, clouds, cities };
+        })();
+        function drawOutside(k, top, bot) {
+          const wh = bot - top;
+          const sp = px.createLinearGradient(0, top, 0, bot);
+          sp.addColorStop(0, "#00020a");
+          sp.addColorStop(1, "#040a1c");
+          px.fillStyle = sp;
+          px.fillRect(0, top, W, wh);
+          // stars drift as the station moves
+          for (const s2 of stars) {
+            const sx = (((s2.x - tNow * 5) % W) + W) % W;
+            const sy = top + (s2.y % wh);
+            px.globalAlpha = 0.3 + 0.55 * Math.abs(Math.sin(tNow * 0.7 + s2.tw));
+            px.fillStyle = "#dce9ff";
+            px.beginPath();
+            px.arc(sx, sy, s2.r * 0.8, 0, TAU);
+            px.fill();
+          }
+          px.globalAlpha = 1;
+          // Moon
+          const mx = W * 0.2 - ((tNow * 1.2) % (W * 0.3)) * 0.05,
+            my = top + wh * 0.2,
+            mr = 13 * k;
+          const mg = px.createRadialGradient(mx - mr * 0.3, my - mr * 0.3, 1, mx, my, mr);
+          mg.addColorStop(0, "#f1f1ea");
+          mg.addColorStop(1, "#9a9a92");
+          px.fillStyle = mg;
+          px.beginPath();
+          px.arc(mx, my, mr, 0, TAU);
           px.fill();
-          px.fillStyle = "#22304f";
-          rr(px, cx - 44 * k, seatY - 12 * k, 106 * k, 20 * k, 9 * k);
+          px.fillStyle = "rgba(90,90,85,0.35)";
+          [[-0.3, -0.1, 0.22], [0.25, 0.25, 0.16], [0.1, -0.35, 0.12]].forEach(([dx, dy, rr2]) => {
+            px.beginPath();
+            px.arc(mx + dx * mr, my + dy * mr, rr2 * mr, 0, TAU);
+            px.fill();
+          });
+          // satellite crossing high up every ~45 s
+          const sat = (tNow % 45) / 45;
+          if (sat < 0.5) {
+            const sx = -40 + (W + 80) * (sat / 0.5),
+              sy = top + wh * 0.32 - sat * wh * 0.1;
+            px.save();
+            px.translate(sx, sy);
+            px.rotate(-0.15);
+            px.fillStyle = "#c9d2e3";
+            px.fillRect(-4 * k, -3 * k, 8 * k, 6 * k);
+            px.fillStyle = "#2c4d8a";
+            px.fillRect(-18 * k, -2 * k, 12 * k, 4 * k);
+            px.fillRect(6 * k, -2 * k, 12 * k, 4 * k);
+            px.restore();
+          }
+          // Earth
+          const R = W * 1.35;
+          const ecx = W * 0.4,
+            ecy = bot + R - wh * 0.36;
+          const eg = px.createRadialGradient(ecx - R * 0.25, ecy - R * 0.92, R * 0.05, ecx, ecy, R);
+          eg.addColorStop(0, "#3a86d0");
+          eg.addColorStop(0.6, "#15497f");
+          eg.addColorStop(1, "#0a2a55");
+          px.fillStyle = eg;
+          px.beginPath();
+          px.arc(ecx, ecy, R, 0, TAU);
           px.fill();
           px.save();
-          px.translate(cx - 34 * k, seatY - 8 * k);
-          px.rotate(-0.2);
-          px.fillStyle = "#22304f";
-          rr(px, -16 * k, -92 * k, 32 * k, 96 * k, 13 * k);
-          px.fill();
+          px.beginPath();
+          px.arc(ecx, ecy, R, 0, TAU);
+          px.clip();
+          const capTop = ecy - R;
+          const span = W * 1.6;
+          const place = (it, speed) => {
+            const u = (((it.a - tNow * speed) % 1) + 1) % 1;
+            return [-W * 0.3 + u * span, capTop + it.d * wh * 0.42];
+          };
+          for (const l of EARTH.land) {
+            const [lx, ly] = place(l, 0.0035);
+            px.fillStyle = "rgba(70,110,72,0.6)";
+            px.beginPath();
+            px.ellipse(lx, ly, l.w * W, l.h * W * 0.55, l.rot, 0, TAU);
+            px.fill();
+            px.fillStyle = "rgba(150,130,90,0.3)";
+            px.beginPath();
+            px.ellipse(lx + l.w * W * 0.3, ly, l.w * W * 0.45, l.h * W * 0.28, l.rot, 0, TAU);
+            px.fill();
+          }
+          for (const c of EARTH.clouds) {
+            const [cx3, cy3] = place(c, 0.0055);
+            px.fillStyle = "rgba(240,246,255,0.5)";
+            px.beginPath();
+            px.ellipse(cx3, cy3, c.w * W, c.h * W, c.rot * 0.2, 0, TAU);
+            px.fill();
+          }
+          // night side to the right, with city lights
+          const ns = px.createLinearGradient(0, 0, W, 0);
+          ns.addColorStop(0, "rgba(0,0,0,0)");
+          ns.addColorStop(0.55, "rgba(0,0,12,0.2)");
+          ns.addColorStop(0.75, "rgba(0,2,14,0.8)");
+          ns.addColorStop(1, "rgba(0,2,14,0.92)");
+          px.fillStyle = ns;
+          px.fillRect(0, top, W, wh);
+          for (const c of EARTH.cities) {
+            const [cx3, cy3] = place(c, 0.0035);
+            if (cx3 < W * 0.7) continue;
+            px.globalAlpha = clamp((cx3 - W * 0.7) / (W * 0.08), 0, 1) * (0.6 + 0.4 * Math.sin(tNow * 3 + c.a * 50));
+            px.fillStyle = "#ffd88a";
+            px.beginPath();
+            px.arc(cx3, cy3, c.s * k, 0, TAU);
+            px.fill();
+          }
+          px.globalAlpha = 1;
           px.restore();
-
-          // Legs
-          px.fillStyle = "#e2eaf8";
-          rr(px, cx + 12 * k, seatY - 26 * k, 62 * k, 20 * k, 10 * k);
-          px.fill();
-          px.fillStyle = "#c9d6ec";
-          rr(px, cx + 62 * k, seatY - 30 * k, 20 * k, 26 * k, 8 * k);
-          px.fill();
-
-          // Torso (reclined) with the pulsing heart on the chest
-          const bob = Math.sin(tNow * 0.8) * 1.4 * k;
+          // atmosphere
+          px.strokeStyle = "rgba(120,190,255,0.55)";
+          px.lineWidth = 5 * k;
+          px.beginPath();
+          px.arc(ecx, ecy, R + 2 * k, 0, TAU);
+          px.stroke();
+          px.strokeStyle = "rgba(170,220,255,0.16)";
+          px.lineWidth = 16 * k;
+          px.beginPath();
+          px.arc(ecx, ecy, R + 9 * k, 0, TAU);
+          px.stroke();
+          // aurora over the night side
           px.save();
-          px.translate(cx - 4 * k, seatY - 24 * k + bob);
-          px.rotate(-0.24);
-          px.fillStyle = "#eef4ff";
-          rr(px, -25 * k, -64 * k, 50 * k, 72 * k, 21 * k);
+          for (let j = 0; j < 3; j++) {
+            px.beginPath();
+            for (let i = 0; i <= 40; i++) {
+              const xx = W * 0.68 + (W * 0.34 * i) / 40;
+              const ang = Math.asin(clamp((xx - ecx) / (R + 14 * k), -1, 1));
+              const yy = ecy - Math.cos(ang) * (R + 14 * k) - (6 + j * 5) * k - Math.sin(i * 0.5 + tNow * 1.1 + j) * 4 * k;
+              i ? px.lineTo(xx, yy) : px.moveTo(xx, yy);
+            }
+            px.strokeStyle = j === 2 ? "rgba(190,110,255,0.18)" : "rgba(90,255,170," + (0.28 - j * 0.08) + ")";
+            px.lineWidth = (7 - j * 1.5) * k;
+            px.stroke();
+          }
+          px.restore();
+          // Sun glare from the top-right corner
+          const sx0 = W * 0.985,
+            sy0 = top + wh * 0.05;
+          const sg = px.createRadialGradient(sx0, sy0, 0, sx0, sy0, 120 * k);
+          sg.addColorStop(0, "rgba(255,255,240,0.95)");
+          sg.addColorStop(0.12, "rgba(255,240,200,0.55)");
+          sg.addColorStop(1, "rgba(255,220,160,0)");
+          px.fillStyle = sg;
+          px.beginPath();
+          px.arc(sx0, sy0, 120 * k, 0, TAU);
           px.fill();
-          px.fillStyle = "#d5e0f3";
-          rr(px, -25 * k, -18 * k, 50 * k, 12 * k, 6 * k);
-          px.fill();
+        }
+        function drawDeck(k, floorY) {
+          const ceil = 16 * k,
+            sill = floorY - 26 * k;
+          // struts: bottom positions across the wall, fanning out at the top
+          const bx = [0.0, 0.17, 0.355, 0.5, 0.645, 0.83, 1.0];
+          const struts = bx.map((f) => {
+            const xb = W * f;
+            return [xb, W / 2 + (xb - W / 2) * 1.12];
+          });
+          drawOutside(k, ceil, sill);
+          // glass: each pane gets its own slow reflection and edge tint
+          for (let i = 0; i < struts.length - 1; i++) {
+            const [b0, t0] = struts[i],
+              [b1, t1] = struts[i + 1];
+            px.save();
+            px.beginPath();
+            px.moveTo(t0, ceil);
+            px.lineTo(t1, ceil);
+            px.lineTo(b1, sill);
+            px.lineTo(b0, sill);
+            px.closePath();
+            px.clip();
+            const pw = Math.max(b1 - b0, t1 - t0);
+            const off = ((tNow * 7 + i * 61) % (pw * 2.4)) - pw * 0.7;
+            px.globalAlpha = 0.06;
+            px.fillStyle = "#ffffff";
+            px.beginPath();
+            px.moveTo(Math.min(t0, b0) + off, ceil);
+            px.lineTo(Math.min(t0, b0) + off + pw * 0.12, ceil);
+            px.lineTo(Math.min(t0, b0) + off - pw * 0.25, sill);
+            px.lineTo(Math.min(t0, b0) + off - pw * 0.37, sill);
+            px.closePath();
+            px.fill();
+            px.globalAlpha = 1;
+            const eg2 = px.createLinearGradient(0, ceil, 0, sill);
+            eg2.addColorStop(0, "rgba(120,160,230,0.08)");
+            eg2.addColorStop(0.2, "rgba(0,0,0,0)");
+            eg2.addColorStop(0.85, "rgba(0,0,0,0)");
+            eg2.addColorStop(1, "rgba(120,160,230,0.1)");
+            px.fillStyle = eg2;
+            px.fillRect(0, ceil, W, sill - ceil);
+            px.restore();
+          }
+          // struts
+          px.lineCap = "butt";
+          for (const [b, t] of struts) {
+            px.strokeStyle = "#1a243d";
+            px.lineWidth = 15 * k;
+            px.beginPath();
+            px.moveTo(t, ceil);
+            px.lineTo(b, sill);
+            px.stroke();
+            px.strokeStyle = "#3a4b72";
+            px.lineWidth = 2 * k;
+            px.beginPath();
+            px.moveTo(t - 5 * k, ceil);
+            px.lineTo(b - 5 * k, sill);
+            px.stroke();
+            px.fillStyle = "#5b6f9c";
+            for (let i = 1; i < 6; i++) {
+              const f = i / 6;
+              px.beginPath();
+              px.arc(lerp(t, b, f) + 2 * k, lerp(ceil, sill, f), 1.6 * k, 0, TAU);
+              px.fill();
+            }
+          }
+          // ceiling beam with a light strip
+          px.fillStyle = "#141d33";
+          px.fillRect(0, 0, W, ceil);
+          px.fillStyle = "rgba(170,210,255,0.55)";
+          px.fillRect(W * 0.08, ceil - 4 * k, W * 0.84, 2 * k);
+          // sill console with status LEDs
+          px.fillStyle = "#161f37";
+          px.fillRect(0, sill, W, floorY - sill);
+          px.fillStyle = "#24315a";
+          px.fillRect(0, sill, W, 3 * k);
+          for (let i = 0; i < 24; i++) {
+            const lx = W * 0.03 + (W * 0.94 * i) / 23;
+            const on = Math.sin(tNow * 1.7 + i * 2.3) > 0.4;
+            px.fillStyle = on ? (i % 5 === 0 ? "#f59e0b" : "#34d399") : "rgba(120,150,210,0.25)";
+            px.fillRect(lx, sill + 10 * k, 4 * k, 2.5 * k);
+          }
+        }
 
-          // The heart snaps on the systolic peak and eases back — same phase the
-          // PPG trace is drawing.
-          const beat = Math.exp(-Math.pow((beatPhase - 0.13) / 0.1, 2));
-          const hs = (9 + beat * 4.2) * k;
+        // Only things that belong in a rest pod float here: the crew member's
+        // drink pouch and stray water from it, a sweat towel, the headphones
+        // (this is a DJ pod) and a photo from home. Each drifts on its own
+        // slow loop and tumbles, staying clear of the floor.
+        const FLOATERS = [
+          { t: "pouch", fx: 0.43, fy: 0.42, ax: 0.03, ay: 0.05, sx: 0.31, sy: 0.43, ph: 0.2, vr: 0.3 },
+          { t: "water", fx: 0.63, fy: 0.3, ax: 0.03, ay: 0.05, sx: 0.21, sy: 0.35, ph: 1.9, vr: 0 },
+          { t: "towel", fx: 0.15, fy: 0.44, ax: 0.03, ay: 0.04, sx: 0.17, sy: 0.23, ph: 0.7, vr: 0.08 },
+          { t: "headphones", fx: 0.88, fy: 0.52, ax: 0.02, ay: 0.04, sx: 0.21, sy: 0.29, ph: 2.4, vr: 0.18 },
+          { t: "photo", fx: 0.08, fy: 0.22, ax: 0.02, ay: 0.03, sx: 0.15, sy: 0.19, ph: 1.1, vr: 0.1 },
+          { t: "drops", fx: 0.56, fy: 0.36, ax: 0.02, ay: 0.03, sx: 0.27, sy: 0.33, ph: 3.3, vr: 0.05 },
+        ];
+        function drawFloaters(k, floorY) {
+          // a cable tethered to the ceiling, swaying
+          {
+            const ax2 = W * 0.22,
+              ay2 = 16 * k;
+            const sw = Math.sin(tNow * 0.6) * 22 * k;
+            px.strokeStyle = "#e0a63a";
+            px.lineWidth = 2.4 * k;
+            px.lineCap = "round";
+            px.beginPath();
+            px.moveTo(ax2, ay2);
+            px.bezierCurveTo(ax2 + sw, ay2 + 40 * k, ax2 - sw * 1.4, ay2 + 70 * k, ax2 + sw * 0.6, ay2 + 96 * k);
+            px.stroke();
+            px.fillStyle = "#9aa9c4";
+            px.fillRect(ax2 + sw * 0.6 - 3 * k, ay2 + 94 * k, 6 * k, 8 * k);
+          }
+          for (const f of FLOATERS) {
+            const x = W * (f.fx + f.ax * Math.sin(tNow * f.sx + f.ph)),
+              y = Math.min(H * (f.fy + f.ay * Math.sin(tNow * f.sy + f.ph * 1.3)), floorY - 30 * k);
+            px.save();
+            px.translate(x, y);
+            px.rotate(f.ph + tNow * f.vr);
+            const kk = k * 1.6;
+            switch (f.t) {
+              case "pouch":
+                px.fillStyle = "#cfd8e8";
+                rr(px, -6 * kk, -9 * kk, 12 * kk, 18 * kk, 3 * kk);
+                px.fill();
+                px.fillStyle = "#38bdf8";
+                rr(px, -6 * kk, -1 * kk, 12 * kk, 6 * kk, 1 * kk);
+                px.fill();
+                px.fillStyle = "#7d93bb";
+                rr(px, -1.5 * kk, -13 * kk, 3 * kk, 5 * kk, 1 * kk);
+                px.fill();
+                break;
+              case "pen":
+                px.fillStyle = "#2563eb";
+                rr(px, -12 * kk, -1.6 * kk, 20 * kk, 3.2 * kk, 1.5 * kk);
+                px.fill();
+                px.fillStyle = "#e5e7eb";
+                px.beginPath();
+                px.moveTo(8 * kk, -1.6 * kk);
+                px.lineTo(13 * kk, 0);
+                px.lineTo(8 * kk, 1.6 * kk);
+                px.fill();
+                break;
+              case "tablet":
+                px.fillStyle = "#1f2937";
+                rr(px, -12 * kk, -8 * kk, 24 * kk, 16 * kk, 2.5 * kk);
+                px.fill();
+                px.fillStyle = "#38bdf8";
+                px.globalAlpha = 0.7;
+                rr(px, -10 * kk, -6 * kk, 20 * kk, 12 * kk, 1.5 * kk);
+                px.fill();
+                px.globalAlpha = 1;
+                px.fillStyle = "#e0f2fe";
+                for (let i = 0; i < 3; i++) px.fillRect(-8 * kk, (-4 + i * 3.5) * kk, (14 - i * 4) * kk, 1.2 * kk);
+                break;
+              case "wrench":
+                px.fillStyle = "#9ca3af";
+                rr(px, -10 * kk, -1.8 * kk, 16 * kk, 3.6 * kk, 1.5 * kk);
+                px.fill();
+                px.beginPath();
+                px.arc(8 * kk, 0, 4.5 * kk, 0.6, TAU - 0.6);
+                px.lineTo(8 * kk, 0);
+                px.fill();
+                break;
+              case "orange":
+                px.fillStyle = "#fb923c";
+                px.beginPath();
+                px.arc(0, 0, 6 * kk, 0, TAU);
+                px.fill();
+                px.fillStyle = "rgba(255,255,255,0.35)";
+                px.beginPath();
+                px.arc(-2 * kk, -2 * kk, 1.8 * kk, 0, TAU);
+                px.fill();
+                px.fillStyle = "#16a34a";
+                px.beginPath();
+                px.ellipse(2 * kk, -6 * kk, 2.5 * kk, 1.2 * kk, 0.5, 0, TAU);
+                px.fill();
+                break;
+              case "water": {
+                // a wobbling ball of water, the classic microgravity sight
+                const wb = Math.sin(tNow * 3.2) * 0.12;
+                px.scale(1 + wb, 1 - wb);
+                const wg = px.createRadialGradient(-2 * kk, -2 * kk, 1, 0, 0, 8 * kk);
+                wg.addColorStop(0, "rgba(220,240,255,0.9)");
+                wg.addColorStop(0.5, "rgba(120,190,255,0.45)");
+                wg.addColorStop(1, "rgba(80,150,230,0.25)");
+                px.fillStyle = wg;
+                px.beginPath();
+                px.arc(0, 0, 8 * kk, 0, TAU);
+                px.fill();
+                px.strokeStyle = "rgba(200,230,255,0.6)";
+                px.lineWidth = 1 * kk;
+                px.stroke();
+                break;
+              }
+              case "towel": {
+                // a soft cloth that ripples as it drifts
+                px.fillStyle = "#f8fafc";
+                px.beginPath();
+                const tw = 22 * kk,
+                  th = 13 * kk;
+                px.moveTo(-tw / 2, -th / 2);
+                for (let i = 0; i <= 8; i++) px.lineTo(-tw / 2 + (tw * i) / 8, -th / 2 + Math.sin(tNow * 2 + i) * 1.4 * kk);
+                for (let i = 8; i >= 0; i--) px.lineTo(-tw / 2 + (tw * i) / 8, th / 2 + Math.sin(tNow * 2 + i + 1) * 1.4 * kk);
+                px.closePath();
+                px.fill();
+                px.fillStyle = "#38bdf8";
+                px.fillRect(-tw / 2 + 2 * kk, -th / 2 + 2.5 * kk, tw - 4 * kk, 1.6 * kk);
+                px.fillRect(-tw / 2 + 2 * kk, th / 2 - 4 * kk, tw - 4 * kk, 1.6 * kk);
+                break;
+              }
+              case "headphones":
+                px.strokeStyle = "#475569";
+                px.lineWidth = 2.4 * kk;
+                px.beginPath();
+                px.arc(0, 0, 8 * kk, Math.PI * 1.1, Math.PI * 1.9);
+                px.stroke();
+                px.fillStyle = "#1f2937";
+                rr(px, -10 * kk, -2 * kk, 5 * kk, 8 * kk, 2 * kk);
+                px.fill();
+                rr(px, 5 * kk, -2 * kk, 5 * kk, 8 * kk, 2 * kk);
+                px.fill();
+                px.fillStyle = "#8b5cf6";
+                px.fillRect(-9 * kk, 0, 3 * kk, 4 * kk);
+                px.fillRect(6 * kk, 0, 3 * kk, 4 * kk);
+                break;
+              case "photo":
+                px.fillStyle = "#f8fafc";
+                rr(px, -8 * kk, -10 * kk, 16 * kk, 20 * kk, 1.5 * kk);
+                px.fill();
+                {
+                  const pg = px.createLinearGradient(0, -8 * kk, 0, 4 * kk);
+                  pg.addColorStop(0, "#7dd3fc");
+                  pg.addColorStop(1, "#86efac");
+                  px.fillStyle = pg;
+                  px.fillRect(-6.5 * kk, -8.5 * kk, 13 * kk, 13 * kk);
+                }
+                px.fillStyle = "#fbbf24";
+                px.beginPath();
+                px.arc(3 * kk, -5 * kk, 1.8 * kk, 0, TAU);
+                px.fill();
+                px.fillStyle = "#475569";
+                px.fillRect(-5 * kk, 6.5 * kk, 10 * kk, 1 * kk);
+                break;
+              case "drops":
+                [[0, 0, 2.6], [7, -4, 1.6], [-6, 5, 1.9], [4, 7, 1.2]].forEach(([dx, dy, r2], i) => {
+                  const wob = Math.sin(tNow * 3 + i) * 0.12;
+                  px.save();
+                  px.translate(dx * kk, dy * kk);
+                  px.scale(1 + wob, 1 - wob);
+                  px.fillStyle = "rgba(140,200,255,0.55)";
+                  px.beginPath();
+                  px.arc(0, 0, r2 * kk, 0, TAU);
+                  px.fill();
+                  px.fillStyle = "rgba(255,255,255,0.8)";
+                  px.beginPath();
+                  px.arc(-r2 * 0.35 * kk, -r2 * 0.35 * kk, r2 * 0.3 * kk, 0, TAU);
+                  px.fill();
+                  px.restore();
+                });
+                break;
+              case "food":
+                px.fillStyle = "#d1d5db";
+                rr(px, -9 * kk, -7 * kk, 18 * kk, 14 * kk, 2 * kk);
+                px.fill();
+                px.fillStyle = "#ef4444";
+                px.fillRect(-9 * kk, -2 * kk, 18 * kk, 4 * kk);
+                px.fillStyle = "#6b7280";
+                px.fillRect(-9 * kk, -7 * kk, 18 * kk, 2 * kk);
+                break;
+              case "candy":
+                ["#ef4444", "#facc15", "#22c55e", "#3b82f6", "#a855f7"].forEach((c, i) => {
+                  px.fillStyle = c;
+                  px.beginPath();
+                  px.arc(Math.cos(i * 1.3) * 8 * kk, Math.sin(i * 2.1) * 6 * kk, 2.4 * kk, 0, TAU);
+                  px.fill();
+                });
+                break;
+              case "sock":
+                px.fillStyle = "#e5e7eb";
+                rr(px, -4 * kk, -10 * kk, 8 * kk, 14 * kk, 3 * kk);
+                px.fill();
+                rr(px, -4 * kk, 0, 13 * kk, 7 * kk, 3.5 * kk);
+                px.fill();
+                px.fillStyle = "#3b82f6";
+                px.fillRect(-4 * kk, -10 * kk, 8 * kk, 2.5 * kk);
+                break;
+            }
+            px.restore();
+          }
+        }
+
+        /* =================== OUTCOME VISUALS =================== */
+        // 0 = settled, 1 = under stress. Driven by the same calmness score the
+        // bar shows, so the body language never disagrees with the numbers.
+        function crewStress() {
+          return clamp((80 - S.calmness) / 50, 0, 1);
+        }
+        // What kind of stress it is decides how it shows. A high pulse after a
+        // workout is tiredness, not fear; a loud room is irritation.
+        //   tired   — Post-Exercise: slumped back, panting, flushed, wipes brow
+        //   panic   — Equipment Alarm: startled, shaking, hand on chest
+        //   anxious — EVA Prep: nervous fidgeting, worried brows
+        //   noise   — loud room (Comms Check): squint, grimace, hand to ear
+        //   tense   — high pulse set by hand: tense, no shaking
+        //   calm    — everything else
+        function crewMood() {
+          const st = crewStress();
+          const loud = S.sndDisp > S.snTh;
+          if (st < 0.22) return loud ? "noise" : "calm";
+          switch (S.scKey) {
+            case "exercise":
+              return "tired";
+            case "alarm":
+              return "panic";
+            case "comms":
+              return "noise";
+            case "eva":
+              return "anxious";
+          }
+          return loud ? "noise" : "tense";
+        }
+        function crewSleepy() {
+          return clamp((S.calmness - 86) / 9, 0, 1);
+        }
+        function mixCol(a, b, t) {
+          const A1 = hex2rgb(a),
+            B1 = hex2rgb(b);
+          return A1.map((v, i) => Math.round(lerp(v, B1[i], t)));
+        }
+        const rgbA = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+        function calmCol(c) {
+          return c > 70 ? "#22c55e" : c > 45 ? "#f7a23b" : "#ff5470";
+        }
+
+        // A halo round the crew member: soft teal when settled, a jagged red
+        // flare under stress.
+        function drawAura(cx, floorY, k) {
+          const st = crewStress();
+          const mood = crewMood();
+          // red spikes for fright, warm orange for exertion, amber for noise
+          const hot = mood === "tired" ? "#fb923c" : mood === "noise" ? "#f59e0b" : "#ff5470";
+          const col = mixCol("#5eead4", hot, st);
+          const spiky = mood === "panic" ? 1 : mood === "anxious" || mood === "tense" ? 0.6 : 0.25;
+          const ox = cx - 2 * k,
+            oy = floorY - 92 * k;
+          const R = (76 + Math.sin(breathPh) * 4) * k;
+          const g = px.createRadialGradient(ox, oy, 8 * k, ox, oy, R * 1.25);
+          g.addColorStop(0, rgbA(col, 0.16 + st * 0.18));
+          g.addColorStop(1, rgbA(col, 0));
+          px.fillStyle = g;
+          px.beginPath();
+          px.arc(ox, oy, R * 1.25, 0, TAU);
+          px.fill();
+          if (st > 0.05) {
+            px.strokeStyle = rgbA(col, 0.25 + st * 0.45);
+            px.lineWidth = (1.5 + st * 1.5) * k;
+            px.beginPath();
+            for (let i = 0; i <= 64; i++) {
+              const a = (i / 64) * TAU;
+              const n =
+                Math.sin(a * 7 + tNow * 9) * 0.5 +
+                Math.sin(a * 13 - tNow * 6.5) * 0.5;
+              const r = R * (0.92 + st * 0.13 * spiky * n);
+              const x = ox + Math.cos(a) * r,
+                y = oy + Math.sin(a) * r * 0.92;
+              i ? px.lineTo(x, y) : px.moveTo(x, y);
+            }
+            px.closePath();
+            px.stroke();
+          }
+        }
+
+        function drawModeRipple(bx, floorY, k) {
+          const age = tNow - S.flashAt;
+          if (age < 0 || age > 1.3) return;
+          const ph = age / 1.3;
           px.save();
-          px.shadowColor = "rgba(255,77,109," + (0.35 + beat * 0.5) + ")";
+          px.globalAlpha = (1 - ph) * 0.8;
+          px.strokeStyle = S.flashCol;
+          px.lineWidth = (5 - ph * 3) * k;
+          px.shadowColor = S.flashCol;
           px.shadowBlur = 16 * k;
-          px.fillStyle = "#ff4d6d";
-          heart(px, 0, -36 * k, hs);
-          px.fill();
+          px.beginPath();
+          px.arc(bx, floorY - 90 * k, (30 + ph * 260) * k, 0, TAU);
+          px.stroke();
           px.restore();
-          px.restore();
+        }
 
-          // Head + visor
-          const hx = cx - 26 * k,
-            hy = seatY - 96 * k + bob;
-          px.fillStyle = "#f4f8ff";
-          px.beginPath();
-          px.arc(hx, hy, 21 * k, 0, TAU);
-          px.fill();
-          px.fillStyle = "#25344f";
-          px.beginPath();
-          px.arc(hx, hy, 21 * k, -0.55, 1.05);
-          px.fill();
-          px.strokeStyle = "#8fb6e8";
-          px.lineWidth = 2 * k;
-          px.beginPath();
-          px.arc(hx, hy, 21 * k, 0, TAU);
-          px.stroke();
-
-          // Arm reaching to the armrest, ending in the MAX30102 finger clip
-          px.strokeStyle = "#e2eaf8";
-          px.lineWidth = 13 * k;
-          px.lineCap = "round";
-          px.beginPath();
-          px.moveTo(cx - 6 * k, seatY - 48 * k + bob);
-          px.lineTo(cx + 26 * k, seatY - 30 * k);
-          px.lineTo(cx + 44 * k, seatY - 16 * k);
-          px.stroke();
-
-          const sx2 = cx + 46 * k,
-            sy2 = seatY - 14 * k;
-          px.fillStyle = "#1c2947";
-          rr(px, sx2 - 9 * k, sy2 - 8 * k, 22 * k, 16 * k, 5 * k);
-          px.fill();
-          px.strokeStyle = "#3a4d72";
-          px.lineWidth = 1.5 * k;
-          rr(px, sx2 - 9 * k, sy2 - 8 * k, 22 * k, 16 * k, 5 * k);
-          px.stroke();
-          // Red IR emitter, brightest at the systolic peak
-          const beat2 = Math.exp(-Math.pow((beatPhase - 0.13) / 0.11, 2));
+        // Calmness as a ring gauge on the stage, with how it moved in 30 s.
+        function drawCalmRing(k) {
+          const c = S.calmness;
+          const col = calmCol(c);
+          const R = Math.max(22, Math.min(34 * k, H * 0.12));
+          const x = W * 0.5,
+            y = R + Math.max(12, H * 0.05);
           px.save();
-          px.shadowColor = "rgba(255,60,90,0.95)";
-          px.shadowBlur = (7 + beat2 * 13) * k;
-          px.fillStyle = "#ff3b5c";
+          px.fillStyle = "rgba(5,8,22,0.7)";
           px.beginPath();
-          px.arc(sx2 + 2 * k, sy2, (2.6 + beat2 * 1.6) * k, 0, TAU);
+          px.arc(x, y, R + 6, 0, TAU);
+          px.fill();
+          px.lineCap = "round";
+          px.lineWidth = Math.max(5, R * 0.2);
+          px.strokeStyle = "rgba(140,160,255,0.16)";
+          px.beginPath();
+          px.arc(x, y, R, 0, TAU);
+          px.stroke();
+          px.strokeStyle = col;
+          px.shadowColor = col;
+          px.shadowBlur = 12;
+          px.beginPath();
+          px.arc(x, y, R, -Math.PI / 2, -Math.PI / 2 + TAU * clamp(c / 100, 0.001, 1));
+          px.stroke();
+          px.shadowBlur = 0;
+          px.textAlign = "center";
+          px.textBaseline = "middle";
+          px.fillStyle = "#eef2ff";
+          px.font = "800 " + Math.round(R * 0.5) + "px Orbitron, sans-serif";
+          px.fillText(Math.round(c) + "%", x, y - R * 0.08);
+          px.fillStyle = "rgba(220,228,255,0.65)";
+          px.font = "700 " + Math.max(8, Math.round(R * 0.22)) + "px Orbitron, sans-serif";
+          px.fillText("CALM", x, y + R * 0.38);
+
+          // Change over the last 30 s
+          let d = 0;
+          if (calmHist.length > 1) {
+            const old = calmHist.find((h) => h.t >= tNow - 30) || calmHist[0];
+            d = c - old.c;
+          }
+          const fs = Math.max(11, Math.round(R * 0.36));
+          px.font = "700 " + fs + "px Rajdhani, sans-serif";
+          px.textBaseline = "top";
+          const ty = y + R + 10;
+          let txt, tc;
+          if (Math.abs(d) < 2) {
+            txt = "● steady";
+            tc = "rgba(220,228,255,0.7)";
+          } else if (d > 0) {
+            txt = "▲ +" + Math.round(d) + "% in 30 s";
+            tc = "#4ade80";
+          } else {
+            txt = "▼ " + Math.round(d) + "% in 30 s";
+            tc = "#ff7a93";
+          }
+          const label = "CREW CALMNESS  " + txt;
+          const tw = px.measureText(label).width;
+          px.fillStyle = "rgba(5,8,22,0.7)";
+          rr(px, x - tw / 2 - 8, ty - 3, tw + 16, fs + 7, 7);
+          px.fill();
+          px.fillStyle = "rgba(220,228,255,0.75)";
+          px.textAlign = "left";
+          const lw = px.measureText("CREW CALMNESS  ").width;
+          px.fillText("CREW CALMNESS  ", x - tw / 2, ty);
+          px.fillStyle = tc;
+          px.fillText(txt, x - tw / 2 + lw, ty);
+          px.restore();
+        }
+
+        // Two-bone IK: joint position for a limb from P to target T.
+        // bend = +1 / -1 picks which side the elbow or knee folds to.
+        function ik(px1, py1, tx, ty, l1, l2, bend) {
+          let dx = tx - px1,
+            dy = ty - py1;
+          let d = Math.hypot(dx, dy) || 0.001;
+          const maxd = (l1 + l2) * 0.999;
+          if (d > maxd) {
+            dx *= maxd / d;
+            dy *= maxd / d;
+            d = maxd;
+          }
+          const base = Math.atan2(dy, dx);
+          const c = clamp((l1 * l1 + d * d - l2 * l2) / (2 * l1 * d), -1, 1);
+          const ang = base + bend * Math.acos(c);
+          return [px1 + Math.cos(ang) * l1, py1 + Math.sin(ang) * l1, px1 + dx, py1 + dy];
+        }
+        // A limb segment: dark outline, then the suit colour on top.
+        function limb(x1, y1, x2, y2, w, fill, line, k) {
+          px.lineCap = "round";
+          px.strokeStyle = line;
+          px.lineWidth = w + 3 * k;
+          px.beginPath();
+          px.moveTo(x1, y1);
+          px.lineTo(x2, y2);
+          px.stroke();
+          px.strokeStyle = fill;
+          px.lineWidth = w;
+          px.beginPath();
+          px.moveTo(x1, y1);
+          px.lineTo(x2, y2);
+          px.stroke();
+        }
+        const smooth = (x) => {
+          const t = clamp(x, 0, 1);
+          return t * t * (3 - 2 * t);
+        };
+
+        // The crew member inside the station: no spacesuit, just the on-board
+        // clothes (crew polo, cargo trousers, socks and soft shoes). They sit
+        // in a rest seat held by a lap strap; their hair floats a little in
+        // microgravity. Everything about the pose comes from the calmness score:
+        //   stressed — sits forward off the backrest, hand on the chest, heels
+        //              bouncing, fingers drumming, head darting about
+        //   settled  — leans back, hand resting on the thigh, nods to the music
+        //   asleep   — head droops onto the headrest, z z z
+        // The MAX30102 is a band on the wrist resting on the armrest.
+        function drawCrew(cx, floorY, k) {
+          const st = crewStress(),
+            zz = crewSleepy();
+          const mood = crewMood();
+          const panic = mood === "panic",
+            tired = mood === "tired",
+            nervy = mood === "anxious" || mood === "tense";
+          // only real fright shakes the body; nerves just fidget
+          const shake = panic ? smooth((st - 0.45) / 0.5) : nervy ? 0.4 * smooth((st - 0.2) / 0.5) : 0;
+          const tiredAmt = tired ? smooth((st - 0.15) / 0.5) : 0;
+          const m = MODES[playingMode()];
+          const music = spkLevel > 0.02 ? clamp(spkLevel * 1.6, 0, 1) : 0;
+          const nod = Math.sin(tNow * TAU * (m.tempo / 60) * 0.5) * music * (1 - st) * (1 - zz);
+
+          const SHIRT = "#2f5d9e",
+            SHIRT_L = "#1b365f",
+            SHIRT_F = "#264c83",
+            PANTS = "#8c7f5e",
+            PANTS_L = "#5c5340",
+            PANTS_F = "#73684d",
+            SKIN = "#f1c7a3",
+            SKIN_L = "#bf8f6a",
+            SKIN_F = "#d9ac88",
+            SHOE = "#2a3346",
+            SEAT = "#22304f",
+            SEAT2 = "#2c3d63";
+
+          // --- seat ---------------------------------------------------------
+          const hipX = cx - 8 * k,
+            hipY = floorY - 62 * k;
+          const BACK = -0.26; // backrest recline
+          px.fillStyle = "#18223a";
+          rr(px, cx - 22 * k, floorY - 44 * k, 22 * k, 44 * k, 5 * k);
+          px.fill();
+          px.fillStyle = "#1f2b47";
+          px.beginPath();
+          px.ellipse(cx - 11 * k, floorY - 2 * k, 38 * k, 6 * k, 0, 0, TAU);
+          px.fill();
+          px.save();
+          px.translate(hipX - 21 * k, hipY + 6 * k);
+          px.rotate(BACK);
+          px.fillStyle = SEAT;
+          rr(px, -11 * k, -84 * k, 22 * k, 88 * k, 10 * k);
+          px.fill();
+          px.strokeStyle = SEAT2;
+          px.lineWidth = 2 * k;
+          rr(px, -11 * k, -84 * k, 22 * k, 88 * k, 10 * k);
+          px.stroke();
+          px.fillStyle = SEAT2;
+          rr(px, -9 * k, -104 * k, 24 * k, 20 * k, 9 * k);
           px.fill();
           px.restore();
-          px.fillStyle = "#7d93bb";
-          px.font = "700 " + 9 * k + "px Orbitron, sans-serif";
-          px.textAlign = "center";
-          px.fillText("MAX30102", sx2 + 2 * k, sy2 + 22 * k);
+          px.fillStyle = SEAT;
+          rr(px, hipX - 26 * k, hipY + 4 * k, 64 * k, 13 * k, 6 * k);
+          px.fill();
+          // footrest bar on a strut
+          px.strokeStyle = "#18223a";
+          px.lineWidth = 4 * k;
+          px.beginPath();
+          px.moveTo(hipX + 30 * k, hipY + 16 * k);
+          px.lineTo(hipX + 50 * k, floorY - 8 * k);
+          px.stroke();
+          px.fillStyle = SEAT2;
+          rr(px, hipX + 36 * k, floorY - 10 * k, 32 * k, 6 * k, 3 * k);
+          px.fill();
+
+          // --- body frame -----------------------------------------------------
+          // Torso shape in its own frame (x = forward, y up is negative),
+          // rotated by `lean` about the hip. Joints are points on that shape.
+          const breath = Math.sin(breathPh);
+          const lean = tired
+            ? BACK - 0.06 * tiredAmt // slumped right back into the seat
+            : panic || nervy
+              ? lerp(BACK, 0.07, st)
+              : mood === "noise"
+                ? lerp(BACK, BACK + 0.12, st)
+                : BACK - 0.04 * zz;
+          const cl = Math.cos(lean),
+            sl = Math.sin(lean);
+          const jx = panic ? Math.sin(tNow * 17) * Math.sin(tNow * 3.1) * 0.9 * k * shake : 0;
+          const hop = (panic || mood === "noise") && S.startleAt !== undefined && tNow - S.startleAt < 0.7 ? Math.sin(((tNow - S.startleAt) / 0.7) * Math.PI) : 0;
+          const Hx = hipX + jx,
+            Hy = hipY - hop * 4 * k; // startle: jolts up off the seat
+          // panting after exercise: deep, heaving breaths
+          const heave = 1 + 0.9 * tiredAmt;
+          const chest = 1 + breath * lerp(0.02, 0.05, st) * heave;
+          const lift = breath * lerp(0.6, 1.6, st) * k * heave;
+          const toW = (lx, ly) => [Hx + lx * cl - ly * sl, Hy + lx * sl + ly * cl];
+          const [Sx, Sy] = toW(-2 * k, -44 * k - lift);
+          const [FSx, FSy] = toW(-6 * k, -44 * k - lift);
+          const [Nx, Ny] = toW(1 * k, -49 * k - lift);
+          const [HPx, HPy] = toW(5 * k, -2 * k);
+          const [FHx, FHy] = toW(-1 * k, -4 * k);
+
+          // short-lived reactions on top of the mood
+          const since = (t0) => (t0 === undefined ? 99 : tNow - t0);
+          const glance = since(S.flashAt) < 2.6 ? Math.sin(clamp(since(S.flashAt) / 2.6, 0, 1) * Math.PI) : 0; // looks at the bot when the music changes
+          const startle = (panic || mood === "noise") && since(S.startleAt) < 0.7 ? Math.sin((since(S.startleAt) / 0.7) * Math.PI) : 0;
+          const sigh = since(S.sighAt) < 2.8 ? Math.sin((since(S.sighAt) / 2.8) * Math.PI) : 0;
+          // a yawn every ~14 s while drifting off
+          const yc = (tNow % 14) / 14;
+          const yawn = mood === "calm" && st < 0.2 && zz > 0.02 && zz < 0.6 && yc < 0.16 ? Math.sin((yc / 0.16) * Math.PI) : 0;
+          S.face = { glance, startle, sigh, yawn };
+          const look = panic || nervy ? (Math.sin(tNow * 2.3) * 0.7 + Math.sin(tNow * 5.1) * 0.3) * 0.08 * (panic ? shake : 0.7) : 0;
+          const headRot = tired
+            ? lean * 0.6 - 0.14 * tiredAmt + Math.sin(breathPh) * 0.03 * tiredAmt // head back, bobbing with each breath
+            : lean * 0.6 + lerp(-0.04, panic || nervy ? 0.08 : 0.02, st) + zz * 0.2 + nod * 0.05 + look + glance * 0.07 - yawn * 0.12 - sigh * 0.05;
+
+          // Limb segments drawn as one piece: all outlines, then all fills.
+          function limbs(segs, fill, line) {
+            px.lineCap = "round";
+            px.lineJoin = "round";
+            px.strokeStyle = line;
+            for (const g of segs) {
+              px.lineWidth = g[4] + 2.6 * k;
+              px.beginPath();
+              px.moveTo(g[0], g[1]);
+              px.lineTo(g[2], g[3]);
+              px.stroke();
+            }
+            px.strokeStyle = fill;
+            for (const g of segs) {
+              px.lineWidth = g[4];
+              px.beginPath();
+              px.moveTo(g[0], g[1]);
+              px.lineTo(g[2], g[3]);
+              px.stroke();
+            }
+          }
+          function shoe(ax, ay, kx, ky, col) {
+            const ang = Math.atan2(ay - ky, ax - kx) - Math.PI / 2;
+            px.save();
+            px.translate(ax, ay);
+            px.rotate(ang);
+            px.fillStyle = "#cfd6e4"; // sock cuff
+            rr(px, -6 * k, -5 * k, 12 * k, 5 * k, 2 * k);
+            px.fill();
+            px.fillStyle = col;
+            rr(px, -7 * k, -1 * k, 22 * k, 9 * k, 4.5 * k);
+            px.fill();
+            px.fillStyle = "#cfd6e4"; // sole
+            rr(px, -7 * k, 6 * k, 22 * k, 2.5 * k, 1.2 * k);
+            px.fill();
+            px.fillStyle = "rgba(255,255,255,0.35)"; // laces
+            for (let i = 0; i < 3; i++) px.fillRect((1 + i * 3) * k, 0.5 * k, 1.6 * k, 1.2 * k);
+            px.restore();
+          }
+          // An arm with a short sleeve: skin limb, sleeve with a hem over the top.
+          function arm(sx, sy, ex, ey, wx, wy, sleeve, sleeveL, skin, skinL) {
+            limbs(
+              [
+                [sx, sy, ex, ey, 11 * k],
+                [ex, ey, wx, wy, 10 * k],
+              ],
+              skin,
+              skinL,
+            );
+            const mx = lerp(sx, ex, 0.55),
+              my = lerp(sy, ey, 0.55);
+            limbs([[sx, sy, mx, my, 15 * k]], sleeve, sleeveL);
+            px.fillStyle = sleeve;
+            px.beginPath();
+            px.arc(sx, sy, 7.6 * k, 0, TAU);
+            px.fill();
+            // sleeve hem
+            const ang = Math.atan2(my - sy, mx - sx);
+            px.strokeStyle = sleeveL;
+            px.lineWidth = 2.2 * k;
+            px.beginPath();
+            px.moveTo(mx - Math.sin(ang) * 7.4 * k, my + Math.cos(ang) * 7.4 * k);
+            px.lineTo(mx + Math.sin(ang) * 7.4 * k, my - Math.cos(ang) * 7.4 * k);
+            px.stroke();
+          }
+
+          // --- far leg (behind) -------------------------------------------------
+          const bounce = Math.abs(Math.sin(tNow * 11)) * 3 * k * shake;
+          const footX = lerp(hipX + 52 * k, hipX + 40 * k, panic || nervy ? st : 0),
+            footY = lerp(floorY - 14 * k, floorY - 16 * k, st);
+          const [fkx, fky, fax, fay] = ik(FHx, FHy, footX - 6 * k, footY - 1 * k, 40 * k, 42 * k, -1);
+          limbs(
+            [
+              [FHx, FHy, fkx, fky, 17 * k],
+              [fkx, fky, fax, fay, 13 * k],
+            ],
+            PANTS_F,
+            PANTS_L,
+          );
+          shoe(fax, fay, fkx, fky, "#232b3d");
+
+          // --- far arm: rests on the thigh, clutches the chest under stress -----
+          const restX = Hx + 15 * k,
+            restY = Hy - 8 * k;
+          const hc = [Nx + Math.sin(headRot) * 22 * k, Ny - Math.cos(headRot) * 22 * k];
+          const inHead = (a2, b2) => [hc[0] + a2 * Math.cos(headRot) - b2 * Math.sin(headRot), hc[1] + a2 * Math.sin(headRot) + b2 * Math.cos(headRot)];
+          let tgt = toW(15 * k, -30 * k - lift),
+            grab = 0;
+          if (panic) grab = smooth((st - 0.5) / 0.35); // hand clutches the chest
+          else if (tired) {
+            // every few seconds the back of the hand wipes the brow
+            const c = (tNow % 7) / 7;
+            grab = (c < 0.28 ? Math.sin((c / 0.28) * Math.PI) : 0) * tiredAmt;
+            tgt = inHead(9 * k, -9 * k);
+          } else if (mood === "noise") {
+            S.earAmt = approach(S.earAmt || 0, S.sndDisp > S.snTh ? 1 : 0.15, 0.3, 1 / 60);
+            grab = S.earAmt;
+            tgt = inHead(-13 * k, 4 * k); // hand cupped over the ear, at the side of the head
+          }
+          const [fex, fey, fwx, fwy] = ik(
+            FSx,
+            FSy,
+            lerp(restX, tgt[0], grab),
+            lerp(restY, tgt[1], grab),
+            25 * k,
+            24 * k,
+            1,
+          );
+          // A hand as one simple mitten with a thumb — no separate fingers.
+          function hand(hx2, hy2, ang, skin, skinL) {
+            px.save();
+            px.translate(hx2, hy2);
+            px.rotate(ang);
+            px.fillStyle = skin;
+            px.strokeStyle = skinL;
+            px.lineWidth = 1.2 * k;
+            px.beginPath();
+            px.ellipse(4.5 * k, 0, 6.2 * k, 4.6 * k, 0, 0, TAU);
+            px.fill();
+            px.stroke();
+            px.beginPath();
+            px.ellipse(3 * k, -4 * k, 2.6 * k, 1.8 * k, -0.6, 0, TAU);
+            px.fill();
+            px.stroke();
+            px.restore();
+          }
+          const farArm = () => {
+            arm(FSx, FSy, fex, fey, fwx, fwy, SHIRT_F, SHIRT_L, SKIN_F, SKIN_L);
+            hand(fwx, fwy, Math.atan2(fwy - fey, fwx - fex), SKIN_F, SKIN_L);
+          };
+          if (grab < 0.5 || mood === "noise") farArm(); // far hand to far ear stays behind the head
+
+          // --- torso + near leg: one outline pass, one fill pass -----------------
+          const [nkx, nky, nax, nay] = ik(HPx, HPy, footX, footY - bounce, 40 * k, 42 * k, -1);
+          const torsoPath = () => {
+            px.save();
+            px.translate(Hx, Hy);
+            px.rotate(lean);
+            px.scale(chest, 1);
+            const t = -lift;
+            px.beginPath();
+            px.moveTo(-15 * k, 8 * k);
+            px.lineTo(-16 * k, -22 * k);
+            px.quadraticCurveTo(-18 * k, -46 * k + t, -7 * k, -50 * k + t);
+            px.lineTo(8 * k, -50 * k + t);
+            px.quadraticCurveTo(20 * k, -48 * k + t, 19 * k, -33 * k);
+            px.quadraticCurveTo(16 * k, -18 * k, 17 * k, -4 * k);
+            px.quadraticCurveTo(17 * k, 9 * k, 3 * k, 9 * k);
+            px.quadraticCurveTo(-13 * k, 9 * k, -15 * k, 8 * k);
+            px.closePath();
+            px.restore();
+          };
+          const nearLeg = [
+            [HPx, HPy, nkx, nky, 19 * k],
+            [nkx, nky, nax, nay, 15 * k],
+          ];
+          px.lineWidth = 2.6 * k;
+          px.strokeStyle = SHIRT_L;
+          torsoPath();
+          px.stroke();
+          px.lineCap = "round";
+          px.strokeStyle = PANTS_L;
+          for (const g of nearLeg) {
+            px.lineWidth = g[4] + 2.6 * k;
+            px.beginPath();
+            px.moveTo(g[0], g[1]);
+            px.lineTo(g[2], g[3]);
+            px.stroke();
+          }
+          px.fillStyle = SHIRT;
+          torsoPath();
+          px.fill();
+          // trousers up to the waist
+          px.save();
+          torsoPath();
+          px.clip();
+          px.translate(Hx, Hy);
+          px.rotate(lean);
+          px.fillStyle = PANTS;
+          px.fillRect(-30 * k, -10 * k, 60 * k, 30 * k);
+          px.fillStyle = "rgba(0,0,0,0.12)"; // shade down the back
+          px.fillRect(-30 * k, -60 * k, 14 * k, 80 * k);
+          const sh = px.createLinearGradient(-16 * k, 0, 20 * k, 0); // soft light on the chest
+          sh.addColorStop(0, "rgba(255,255,255,0)");
+          sh.addColorStop(0.75, "rgba(255,255,255,0.1)");
+          sh.addColorStop(1, "rgba(255,255,255,0)");
+          px.fillStyle = sh;
+          px.fillRect(-20 * k, -55 * k, 40 * k, 45 * k);
+          // shirt placket with two buttons, and a fold line
+          px.strokeStyle = "rgba(15,30,60,0.45)";
+          px.lineWidth = 1.2 * k;
+          px.beginPath();
+          px.moveTo(13 * k, -48 * k - lift);
+          px.lineTo(13 * k, -40 * k - lift);
+          px.moveTo(-6 * k, -20 * k);
+          px.quadraticCurveTo(2 * k, -16 * k, 12 * k, -19 * k);
+          px.stroke();
+          px.fillStyle = "#dbe4f3";
+          [-46, -42].forEach((yy) => {
+            px.beginPath();
+            px.arc(14.5 * k, yy * k - lift, 0.9 * k, 0, TAU);
+            px.fill();
+          });
+          px.restore();
+          px.strokeStyle = PANTS;
+          for (const g of nearLeg) {
+            px.lineWidth = g[4];
+            px.beginPath();
+            px.moveTo(g[0], g[1]);
+            px.lineTo(g[2], g[3]);
+            px.stroke();
+          }
+          // crease down the shin
+          px.strokeStyle = "rgba(255,255,255,0.12)";
+          px.lineWidth = 1.4 * k;
+          px.beginPath();
+          px.moveTo(lerp(nkx, nax, 0.1), lerp(nky, nay, 0.1));
+          px.lineTo(lerp(nkx, nax, 0.85), lerp(nky, nay, 0.85));
+          px.stroke();
+          // cargo pocket on the thigh
+          px.save();
+          px.translate(lerp(HPx, nkx, 0.55), lerp(HPy, nky, 0.55));
+          px.rotate(Math.atan2(nky - HPy, nkx - HPx));
+          px.fillStyle = PANTS_F;
+          rr(px, -6 * k, -1 * k, 12 * k, 8 * k, 2 * k);
+          px.fill();
+          px.restore();
+          shoe(nax, nay, nkx, nky, SHOE);
+
+          // shirt details, lap strap, heartbeat glow on the chest
+          px.save();
+          px.translate(Hx, Hy);
+          px.rotate(lean);
+          px.fillStyle = "#f4c95d"; // mission patch
+          px.beginPath();
+          px.arc(9 * k, -36 * k - lift, 3.6 * k, 0, TAU);
+          px.fill();
+          px.fillStyle = SHIRT_L;
+          px.beginPath();
+          px.arc(9 * k, -36 * k - lift, 1.8 * k, 0, TAU);
+          px.fill();
+          px.fillStyle = "#1b2540"; // lap strap + buckle
+          rr(px, -16 * k, -9 * k, 34 * k, 5 * k, 2 * k);
+          px.fill();
+          px.fillStyle = "#9aa9c4";
+          rr(px, 5 * k, -10 * k, 6 * k, 7 * k, 1.5 * k);
+          px.fill();
+          const beat = Math.exp(-Math.pow((beatPhase - 0.13) / 0.1, 2));
+          px.globalAlpha = 0.35 + beat * 0.55;
+          px.shadowColor = "rgba(255,77,109,0.9)";
+          px.shadowBlur = (4 + beat * 10) * k;
+          px.fillStyle = "#ff4d6d";
+          heart(px, 2 * k, -30 * k - lift, (3.6 + beat * 1.6) * k);
+          px.fill();
+          px.restore();
+
+          // --- armrest ---------------------------------------------------------------
+          const armTop = hipY - 20 * k;
+          px.fillStyle = "#18223a";
+          rr(px, hipX + 24 * k, armTop + 6 * k, 6 * k, 18 * k, 2 * k);
+          px.fill();
+          px.fillStyle = SEAT2;
+          rr(px, hipX - 20 * k, armTop, 60 * k, 8 * k, 4 * k);
+          px.fill();
+
+          // --- neck + head (turns about the neck) --------------------------------------
+          px.save();
+          px.translate(Nx, Ny);
+          px.rotate(headRot);
+          px.lineCap = "round";
+          px.strokeStyle = SKIN_L;
+          px.lineWidth = 11.5 * k;
+          px.beginPath();
+          px.moveTo(0, 2 * k);
+          px.lineTo(1 * k, -12 * k);
+          px.stroke();
+          px.strokeStyle = SKIN;
+          px.lineWidth = 9 * k;
+          px.stroke();
+          px.restore();
+          // shirt collar over the base of the neck
+          px.save();
+          px.translate(Nx, Ny);
+          px.rotate(lean);
+          px.fillStyle = SHIRT_L;
+          px.beginPath();
+          px.moveTo(-8 * k, -1 * k);
+          px.quadraticCurveTo(0, 5 * k, 9 * k, -1 * k);
+          px.lineTo(9 * k, 3 * k);
+          px.quadraticCurveTo(0, 9 * k, -8 * k, 3 * k);
+          px.closePath();
+          px.fill();
+          // polo collar flaps
+          px.fillStyle = "#3a6db3";
+          px.beginPath();
+          px.moveTo(2 * k, 2 * k);
+          px.lineTo(11 * k, 0);
+          px.lineTo(9 * k, 7 * k);
+          px.closePath();
+          px.moveTo(-1 * k, 2 * k);
+          px.lineTo(-8 * k, 0);
+          px.lineTo(-6 * k, 6 * k);
+          px.closePath();
+          px.fill();
+          px.restore();
+          px.save();
+          px.translate(Nx, Ny);
+          px.rotate(headRot);
+          px.translate(0, -22 * k);
+          drawHead(0, 0, k, st, zz, mood);
+          px.restore();
+
+          if (grab >= 0.5 && mood !== "noise") farArm();
+
+          // --- near arm: elbow on the armrest, forearm along it, band on the wrist ----
+          {
+            const tap = Math.sin(tNow * 14) * 1.1 * k * shake;
+            const ex = hipX - 13 * k + jx,
+              ey = armTop - 3 * k;
+            const fa = -0.05 - st * 0.22;
+            const wx = ex + Math.cos(fa) * 26 * k,
+              wy = ey + Math.sin(fa) * 26 * k;
+            arm(Sx, Sy, ex, ey, wx, wy, SHIRT, SHIRT_L, SKIN, SKIN_L);
+
+            const da = Math.atan2(wy - ey, wx - ex);
+            px.save();
+            px.translate(wx, wy);
+            px.rotate(da);
+            // hand: a mitten that taps on the armrest when nervous
+            px.save();
+            px.rotate(tap * 0.05);
+            px.fillStyle = SKIN;
+            px.strokeStyle = SKIN_L;
+            px.lineWidth = 1.2 * k;
+            px.beginPath();
+            px.ellipse(6 * k, 0, 7 * k, 5 * k, 0, 0, TAU);
+            px.fill();
+            px.stroke();
+            px.beginPath();
+            px.ellipse(4 * k, -4.4 * k, 2.8 * k, 1.9 * k, -0.5, 0, TAU);
+            px.fill();
+            px.stroke();
+            px.restore();
+
+            // MAX30102 wristband: strap round the wrist, sensor pod on top
+            px.fillStyle = "#1b2540";
+            rr(px, -3.5 * k, -6.5 * k, 7 * k, 13 * k, 2.5 * k);
+            px.fill();
+            px.fillStyle = "#2a3a5e";
+            rr(px, -5.5 * k, -10.5 * k, 11 * k, 5.5 * k, 2 * k);
+            px.fill();
+            px.strokeStyle = "#5b78b0";
+            px.lineWidth = 1 * k;
+            rr(px, -5.5 * k, -10.5 * k, 11 * k, 5.5 * k, 2 * k);
+            px.stroke();
+            const beat2 = Math.exp(-Math.pow((beatPhase - 0.13) / 0.11, 2));
+            px.shadowColor = "rgba(255,60,90,0.95)";
+            px.shadowBlur = (6 + beat2 * 12) * k;
+            px.fillStyle = "#ff3b5c";
+            px.beginPath();
+            px.arc(0, -7.8 * k, (1.6 + beat2 * 1.1) * k, 0, TAU);
+            px.fill();
+            px.restore();
+
+            const lx = wx + 32 * k,
+              ly = wy - 28 * k;
+            px.strokeStyle = "rgba(125,147,187,0.7)";
+            px.lineWidth = 1.2 * k;
+            px.beginPath();
+            px.moveTo(wx + 2 * k, wy - 9 * k);
+            px.lineTo(lx - 4 * k, ly + 3 * k);
+            px.stroke();
+            px.fillStyle = "#9fb4d8";
+            px.font = "700 " + 9 * k + "px Orbitron, sans-serif";
+            px.textAlign = "left";
+            px.fillText("MAX30102", lx, ly);
+            px.fillStyle = "#7d93bb";
+            px.font = "600 " + 8 * k + "px Orbitron, sans-serif";
+            px.fillText("WRIST SENSOR", lx, ly + 10 * k);
+          }
+
+        }
+
+        // Head with floating hair and a face. The face is the outcome: wide
+        // eyes and a tight mouth under stress, a smile when settled, eyes
+        // closed and drifting off when fully calm.
+        function drawHead(hx, hy, k, st, zz, mood) {
+          mood = mood || "calm";
+          const HAIR = "#3a2a22",
+            SKIN = "#f1c7a3",
+            SKIN_L = "#bf8f6a";
+          // back of the hair, and a few strands floating up in microgravity
+          px.fillStyle = HAIR;
+          px.beginPath();
+          px.ellipse(hx - 3 * k, hy - 2 * k, 16.5 * k, 16.5 * k, 0, 0, TAU);
+          px.fill();
+          px.beginPath(); // volume at the crown
+          px.ellipse(hx - 1 * k, hy - 11 * k, 13 * k, 7 * k, -0.1, 0, TAU);
+          px.fill();
+          px.strokeStyle = HAIR;
+          px.lineCap = "round";
+          px.lineWidth = 2.4 * k;
+          for (let i = 0; i < 3; i++) {
+            const a0 = -2.2 + i * 0.4;
+            const bx = hx - 3 * k + Math.cos(a0) * 13 * k,
+              by = hy - 2 * k + Math.sin(a0) * 13 * k;
+            const sw = Math.sin(tNow * 1.1 + i * 1.9) * 1.6 * k;
+            px.beginPath();
+            px.moveTo(bx, by);
+            px.quadraticCurveTo(bx - 4 * k, by - 3 * k + sw, bx - 7 * k, by - 2 * k + sw);
+            px.stroke();
+          }
+          // face
+          px.fillStyle = SKIN;
+          px.strokeStyle = SKIN_L;
+          px.lineWidth = 1.2 * k;
+          px.beginPath();
+          px.ellipse(hx + 1 * k, hy + 1 * k, 14 * k, 15.5 * k, 0, 0, TAU);
+          px.fill();
+          px.beginPath();
+          px.ellipse(hx + 1 * k, hy + 1 * k, 14 * k, 15.5 * k, 0, -0.9, 1.9);
+          px.stroke();
+          // nose
+          px.beginPath();
+          px.moveTo(hx + 14.5 * k, hy - 1 * k);
+          px.quadraticCurveTo(hx + 18 * k, hy + 4 * k, hx + 14 * k, hy + 5 * k);
+          px.fill();
+          px.stroke();
+          // hair over the top and back of the head
+          px.save();
+          px.beginPath();
+          px.ellipse(hx + 1 * k, hy + 1 * k, 14.6 * k, 16 * k, 0, 0, TAU);
+          px.clip();
+          px.fillStyle = HAIR;
+          px.beginPath();
+          px.moveTo(hx - 20 * k, hy + 8 * k);
+          px.lineTo(hx - 6 * k, hy + 6 * k);
+          px.quadraticCurveTo(hx - 6 * k, hy - 7 * k, hx + 6 * k, hy - 8 * k);
+          px.quadraticCurveTo(hx + 13 * k, hy - 9 * k, hx + 17 * k, hy - 5 * k);
+          px.lineTo(hx + 17 * k, hy - 22 * k);
+          px.lineTo(hx - 20 * k, hy - 22 * k);
+          px.closePath();
+          px.fill();
+          px.restore();
+
+          // cheeks: flushed after exercise, pale-pink when relaxed
+          const blush =
+            mood === "tired"
+              ? rgba("#ff5470", 0.3 + st * 0.25)
+              : st > 0.5
+                ? rgba("#ff5470", 0.22 + st * 0.18)
+                : rgba("#ff8fa6", 0.18 * (1 - st));
+          px.fillStyle = blush;
+          px.beginPath();
+          px.ellipse(hx + 4 * k, hy + 6 * k, 2.8 * k, 1.9 * k, 0, 0, TAU);
+          px.moveTo(hx + 14.6 * k, hy + 6 * k);
+          px.ellipse(hx + 12 * k, hy + 6 * k, 2.6 * k, 1.9 * k, 0, 0, TAU);
+          px.fill();
+
+          // fringe falling over the forehead
+          px.fillStyle = HAIR;
+          px.beginPath();
+          px.moveTo(hx + 2 * k, hy - 13 * k);
+          px.quadraticCurveTo(hx + 12 * k, hy - 12 * k, hx + 15 * k, hy - 5 * k);
+          px.quadraticCurveTo(hx + 9 * k, hy - 8 * k, hx + 4 * k, hy - 7 * k);
+          px.closePath();
+          px.fill();
+
+          const F = S.face || { glance: 0, startle: 0, sigh: 0, yawn: 0 };
+          const ink = "#2a2140";
+          px.strokeStyle = ink;
+          px.fillStyle = ink;
+          px.lineCap = "round";
+          px.lineWidth = 1.5 * k;
+          const gx2 = F.glance * 1.1 * k; // eyes slide toward the bot
+          const eyes = [hx + 4 * k + gx2, hx + 11.5 * k + gx2],
+            ey = hy + 0.5 * k;
+          const closed = F.yawn > 0.35 || F.sigh > 0.3;
+          const blinking = (tNow * (0.25 + st * 0.5)) % 1 > 0.965;
+          for (const ex of eyes) {
+            if (zz > 0.35 || closed) {
+              px.beginPath();
+              px.arc(ex, ey - 1 * k, 2.2 * k, 0.15 * Math.PI, 0.85 * Math.PI);
+              px.stroke();
+            } else if (blinking) {
+              px.beginPath();
+              px.moveTo(ex - 2 * k, ey);
+              px.lineTo(ex + 2 * k, ey);
+              px.stroke();
+            } else if (mood === "tired") {
+              // heavy, half-closed lids
+              px.beginPath();
+              px.arc(ex, ey, 2.1 * k, 0, Math.PI);
+              px.fill();
+              px.beginPath();
+              px.moveTo(ex - 2.6 * k, ey - 0.2 * k);
+              px.lineTo(ex + 2.6 * k, ey - 0.2 * k);
+              px.stroke();
+            } else if (mood === "noise" && st >= 0.0 && S.sndDisp > S.snTh * 0.8) {
+              // squinting at the racket
+              px.beginPath();
+              px.moveTo(ex - 2.4 * k, ey - 1.2 * k);
+              px.lineTo(ex + 2.4 * k, ey + 0.6 * k);
+              px.stroke();
+            } else if ((mood === "panic" && st > 0.5) || F.startle > 0.3) {
+              px.fillStyle = "#ffffff";
+              px.beginPath();
+              px.arc(ex, ey, 2.6 * k, 0, TAU);
+              px.fill();
+              px.stroke();
+              px.fillStyle = ink;
+              px.beginPath();
+              px.arc(ex + 0.7 * k, ey, 1.1 * k, 0, TAU);
+              px.fill();
+            } else if (st < 0.25) {
+              px.beginPath();
+              px.arc(ex, ey + 1 * k, 2.2 * k, 1.15 * Math.PI, 1.85 * Math.PI);
+              px.stroke();
+            } else {
+              px.beginPath();
+              px.arc(ex, ey, 1.5 * k, 0, TAU);
+              px.fill();
+            }
+          }
+          if (mood === "noise" && S.sndDisp > S.snTh * 0.8) {
+            // brows pulled down in irritation
+            px.beginPath();
+            px.moveTo(eyes[0] - 2.5 * k, ey - 4.5 * k);
+            px.lineTo(eyes[0] + 2.2 * k, ey - 3 * k);
+            px.moveTo(eyes[1] - 2.2 * k, ey - 3 * k);
+            px.lineTo(eyes[1] + 2.5 * k, ey - 4.5 * k);
+            px.stroke();
+          } else if (F.startle > 0.3 || F.glance > 0.3) {
+            const up = (F.startle * 2.4 + F.glance * 1.2) * k;
+            px.beginPath();
+            px.moveTo(eyes[0] - 2.5 * k, ey - 4.2 * k - up);
+            px.quadraticCurveTo(eyes[0], ey - 5.6 * k - up, eyes[0] + 2.5 * k, ey - 4.2 * k - up);
+            px.moveTo(eyes[1] - 2.5 * k, ey - 4.2 * k - up);
+            px.quadraticCurveTo(eyes[1], ey - 5.6 * k - up, eyes[1] + 2.5 * k, ey - 4.2 * k - up);
+            px.stroke();
+          } else if (st <= 0.3 || mood === "tired") {
+            // relaxed brows (droop a little when tired)
+            px.lineWidth = 1.2 * k;
+            const dr = mood === "tired" ? 0.8 * k : 0;
+            px.beginPath();
+            px.moveTo(eyes[0] - 2.4 * k, ey - 4.4 * k);
+            px.lineTo(eyes[0] + 2.2 * k, ey - 4.6 * k + dr);
+            px.moveTo(eyes[1] - 2.2 * k, ey - 4.6 * k + dr);
+            px.lineTo(eyes[1] + 2.4 * k, ey - 4.4 * k);
+            px.stroke();
+            px.lineWidth = 1.5 * k;
+          } else if (zz < 0.35) {
+            const tilt = (st - 0.3) * 3.5 * k;
+            px.beginPath();
+            px.moveTo(eyes[0] - 2.5 * k, ey - 4 * k);
+            px.lineTo(eyes[0] + 2 * k, ey - 4 * k - tilt);
+            px.moveTo(eyes[1] - 2 * k, ey - 4 * k - tilt);
+            px.lineTo(eyes[1] + 2.5 * k, ey - 4 * k);
+            px.stroke();
+          }
+          const mx = hx + 8.5 * k,
+            my = hy + 9 * k;
+          px.beginPath();
+          if (F.yawn > 0.15) {
+            // big yawn
+            px.ellipse(mx, my + 1 * k, 2.8 * k, (1.5 + 3 * F.yawn) * k, 0, 0, TAU);
+            px.fill();
+          } else if (F.sigh > 0.15) {
+            // relieved "phew": small round exhale, with a soft puff of breath
+            px.ellipse(mx + 1 * k, my, 1.6 * k, 1.9 * k, 0, 0, TAU);
+            px.fill();
+            px.strokeStyle = "rgba(200,230,255," + (0.5 * F.sigh).toFixed(3) + ")";
+            px.lineWidth = 1.2 * k;
+            for (let i = 0; i < 3; i++) {
+              px.beginPath();
+              px.arc(mx + (6 + i * 3) * k, my, (1.5 + i) * k, -0.9, 0.9);
+              px.stroke();
+            }
+            px.strokeStyle = ink;
+            px.lineWidth = 1.5 * k;
+          } else if (mood === "tired" && st > 0.2) {
+            // panting: mouth open, opening wider on each breath
+            px.ellipse(mx, my, 2.4 * k, (1.4 + 1.4 * Math.abs(Math.sin(breathPh))) * k, 0, 0, TAU);
+            px.fill();
+          } else if (mood === "noise" && S.sndDisp > S.snTh * 0.8) {
+            // gritted-teeth grimace
+            px.fillStyle = "#ffffff";
+            rr(px, mx - 4 * k, my - 1.6 * k, 8 * k, 3.2 * k, 1.2 * k);
+            px.fill();
+            px.lineWidth = 1 * k;
+            px.stroke();
+            px.beginPath();
+            px.moveTo(mx - 4 * k, my);
+            px.lineTo(mx + 4 * k, my);
+            px.stroke();
+            px.fillStyle = ink;
+          } else if (mood === "panic" && st > 0.8) {
+            px.ellipse(mx, my, 2 * k, 2.6 * k, 0, 0, TAU);
+            px.fill();
+          } else if (st > 0.5 && mood !== "tired") {
+            px.moveTo(mx - 4 * k, my);
+            for (let i = 1; i <= 6; i++)
+              px.lineTo(mx - 4 * k + i * 1.35 * k, my + (i % 2 ? -1 : 1) * k);
+            px.stroke();
+          } else if (st > 0.25) {
+            px.moveTo(mx - 3.5 * k, my);
+            px.lineTo(mx + 3.5 * k, my);
+            px.stroke();
+          } else {
+            px.arc(mx, my - 2.5 * k, 4 * k, 0.2 * Math.PI, 0.8 * Math.PI);
+            px.stroke();
+          }
+
+          // sweat: pouring after exercise, some in a fright or nerves, none from noise
+          const sweat =
+            mood === "tired"
+              ? clamp((st - 0.15) / 0.3, 0, 1)
+              : mood === "noise"
+                ? 0
+                : clamp((st - 0.45) / 0.4, 0, 1);
+          // In microgravity sweat does not run down: it beads on the skin and
+          // little spheres slowly float away.
+          if (sweat > 0) {
+            px.fillStyle = "rgba(170,225,255,0.9)";
+            [[6, -10], [11, -9], [15, -6]].forEach(([bx2, by2], i) => {
+              px.globalAlpha = sweat * (0.6 + 0.4 * Math.sin(tNow * 2 + i));
+              px.beginPath();
+              px.arc(hx + bx2 * k, hy + by2 * k, 1.3 * k, 0, TAU);
+              px.fill();
+            });
+            for (let i = 0; i < 4; i++) {
+              const ph = (tNow * 0.22 + i * 0.25) % 1;
+              const dx = hx + (12 + ph * 26 + i * 2) * k,
+                dy = hy - (8 + ph * 20 + Math.sin(ph * 6 + i) * 3) * k;
+              px.globalAlpha = (1 - ph) * sweat * 0.85;
+              px.beginPath();
+              px.arc(dx, dy, (1.1 + 0.5 * (i % 2)) * k, 0, TAU);
+              px.fill();
+              px.strokeStyle = "rgba(255,255,255,0.6)";
+              px.lineWidth = 0.6 * k;
+              px.stroke();
+            }
+            px.globalAlpha = 1;
+          }
+
+          if (zz > 0.05) {
+            px.fillStyle = "#c4b5fd";
+            px.textAlign = "center";
+            for (let i = 0; i < 3; i++) {
+              const ph = (tNow * 0.35 + i / 3) % 1;
+              px.globalAlpha = Math.sin(ph * Math.PI) * zz;
+              px.font = "800 " + (8 + ph * 6) * k + "px Orbitron, sans-serif";
+              px.fillText("z", hx + (12 + ph * 20) * k, hy - (18 + ph * 30) * k);
+            }
+            px.globalAlpha = 1;
+          }
         }
 
         function drawBot(bx, floorY, k, m) {
@@ -2803,6 +4646,42 @@
           rr(px, fx2, fy2, fw, fh, 12 * k);
           px.fill();
           drawFace(fx2, fy2, fw, fh, k, m);
+
+          // Warning when its decision keeps flipping between modes
+          if (S.flapWarnAt > 0 && tNow - S.flapWarnAt < 6) {
+            const age = tNow - S.flapWarnAt;
+            const txt = "Switching modes too often";
+            const sub = "threshold too close to the reading";
+            px.save();
+            px.globalAlpha = clamp(Math.min(age / 0.25, (6 - age) / 0.5), 0, 1);
+            px.font = "800 " + 10.5 * k + "px Orbitron, sans-serif";
+            const tw = Math.max(px.measureText(txt).width, 150 * k) + 20 * k;
+            const bw2 = tw,
+              bh2 = 36 * k;
+            const qx = clamp(bx - bw2 / 2, 8, W - bw2 - 8),
+              qy = bodyY - 62 * k + Math.sin(tNow * 4) * 2 * k;
+            px.fillStyle = "rgba(40,24,6,0.92)";
+            px.strokeStyle = "#ffd166";
+            px.lineWidth = 1.6 * k;
+            rr(px, qx, qy, bw2, bh2, 8 * k);
+            px.fill();
+            px.stroke();
+            px.beginPath();
+            px.moveTo(bx - 7 * k, qy + bh2);
+            px.lineTo(bx, qy + bh2 + 8 * k);
+            px.lineTo(bx + 7 * k, qy + bh2);
+            px.closePath();
+            px.fillStyle = "rgba(40,24,6,0.92)";
+            px.fill();
+            px.textAlign = "center";
+            px.textBaseline = "alphabetic";
+            px.fillStyle = "#ffd166";
+            px.fillText("⚠ " + txt, qx + bw2 / 2, qy + 15 * k);
+            px.fillStyle = "rgba(255,230,180,0.85)";
+            px.font = "600 " + 9.5 * k + "px Rajdhani, sans-serif";
+            px.fillText(sub, qx + bw2 / 2, qy + 28 * k);
+            px.restore();
+          }
 
           // Sound sensor microphone on top
           const mx = bx + 24 * k,
@@ -3032,7 +4911,7 @@
           for (let i = 0; i < n; i++) {
             if (!beatMarks[i]) continue;
             const x = (i / (n - 1)) * w;
-            gx.fillRect(x - 1, 4, 2, h - 8);
+            gx.fillRect(x - 1, 4, 2, 12);
           }
           gx.fillStyle = "#ffa8b8";
           gx.font = "700 15px Orbitron, sans-serif";
@@ -3046,8 +4925,33 @@
 
         function drawTrend() {
           const [w, h] = D.trend;
-          const LO = 40,
-            HI = 185;
+          // The scale zooms to the heart-rate data, so a swing of a few BPM is
+          // visible instead of a flat line. The threshold is drawn at the edge
+          // with an arrow when it is off the scale.
+          let dLo = Infinity,
+            dHi = -Infinity;
+          for (const p of trendBuf) {
+            if (p.bpm < dLo) dLo = p.bpm;
+            if (p.bpm > dHi) dHi = p.bpm;
+          }
+          if (!isFinite(dLo)) {
+            dLo = S.bpmDisp;
+            dHi = S.bpmDisp;
+          }
+          // pull the threshold in only when it is close to the data
+          if (S.hrTh > dHi && S.hrTh - dHi < 12) dHi = S.hrTh;
+          if (S.hrTh < dLo && dLo - S.hrTh < 12) dLo = S.hrTh;
+          let tLo = dLo - 5,
+            tHi = dHi + 5;
+          if (tHi - tLo < 24) {
+            const mid = (tHi + tLo) / 2;
+            tLo = mid - 12;
+            tHi = mid + 12;
+          }
+          S.trLo = S.trLo === undefined ? tLo : approach(S.trLo, tLo, 0.6, 1 / 60);
+          S.trHi = S.trHi === undefined ? tHi : approach(S.trHi, tHi, 0.6, 1 / 60);
+          const LO = S.trLo,
+            HI = S.trHi;
           const yOf = (b) =>
             h - 10 - ((clamp(b, LO, HI) - LO) / (HI - LO)) * (h - 20);
           tx.clearRect(0, 0, w, h);
@@ -3087,7 +4991,18 @@
           tx.fillStyle = "#ff8fa6";
           tx.font = "700 11px Orbitron, sans-serif";
           tx.textAlign = "left";
-          tx.fillText("THRESHOLD " + S.hrTh, 8, yTh - 5);
+          const thOff = S.hrTh > HI ? "↑" : S.hrTh < LO ? "↓" : "";
+          tx.fillText("THRESHOLD " + S.hrTh + (thOff ? " " + thOff : ""), 8, thOff === "↓" ? h - 16 : thOff ? 14 : yTh - 5);
+          // scale labels down the right edge
+          tx.font = "600 10px Consolas, monospace";
+          tx.textAlign = "right";
+          tx.fillStyle = "rgba(160,180,230,0.7)";
+          const stepB = HI - LO > 70 ? 20 : 10;
+          for (let b = Math.ceil(LO / stepB) * stepB; b <= HI; b += stepB) {
+            const yy = yOf(b);
+            if (yy < 12 || yy > h - 22 || Math.abs(yy - yTh) < 9) continue;
+            tx.fillText(b, w - 6, yy + 3);
+          }
 
           // Trend line
           if (trendBuf.length > 1) {
@@ -3113,6 +5028,35 @@
               TAU,
             );
             tx.fill();
+          }
+          // Mode-change flags: music switched here → watch the line respond
+          {
+            const t0 = tNow - 30;
+            tx.font = "700 10px Orbitron, sans-serif";
+            tx.textAlign = "center";
+            tx.textBaseline = "top";
+            for (const mk of modeMarks) {
+              if (mk.t < t0) continue;
+              const x = clamp((mk.t - t0) / 30, 0, 1) * w;
+              const col = MODES[mk.k].col;
+              tx.strokeStyle = rgba(col, 0.75);
+              tx.lineWidth = 1.5;
+              tx.setLineDash([3, 3]);
+              tx.beginPath();
+              tx.moveTo(x, 20);
+              tx.lineTo(x, h);
+              tx.stroke();
+              tx.setLineDash([]);
+              const lab = MODES[mk.k].chip;
+              const lw = tx.measureText(lab).width + 10;
+              const lx = clamp(x, lw / 2 + 2, w - lw / 2 - 2);
+              tx.fillStyle = col;
+              rr(tx, lx - lw / 2, 4, lw, 15, 5);
+              tx.fill();
+              tx.fillStyle = "#0b1030";
+              tx.fillText(lab, lx, 6.5);
+            }
+            tx.textBaseline = "alphabetic";
           }
           tx.fillStyle = "#64789e";
           tx.font = "600 11px Rajdhani, sans-serif";
@@ -3215,6 +5159,8 @@
 
         function applyScenario(key) {
           const s = SCENARIOS[key];
+          S.scKey = key;
+          if (run) run.scenarios.add(key);
           $("scHint").textContent = s.hint;
           S.bpmTarget = s.bpm;
           setRange("r_bpm", s.bpm, (v) => v + " BPM", "v_bpm");
@@ -3252,10 +5198,6 @@
           S.manualMode = v;
           retuneAudio(v);
         });
-        bindGroup("tgAudio", "aud", (v) => {
-          S.audioOn = v === "on";
-          unlockAudio();
-        });
 
         bindRange(
           "r_bpm",
@@ -3278,6 +5220,10 @@
           (v) => v + (v === 1 ? " sample" : " samples"),
           (v) => (S.avgN = v),
         );
+        bindGroup("tgAudio", "aud", (v) => {
+          S.audioOn = v === "on";
+        });
+
         bindRange(
           "r_vol",
           "v_vol",
@@ -3287,6 +5233,330 @@
             S.volFrameUntil = tNow + 1.8;
           },
         );
+
+        // Stopped or paused: the sim clock, heart model, music and animation
+        // all hold still.
+        function frozen() {
+          return !S.running || S.paused;
+        }
+        function setRunning(on) {
+          if (on && !S.running) beginRun();
+          else if (!on && S.running) endRun();
+          S.running = on;
+          const b = $("btnRun");
+          b.classList.toggle("on", on);
+          b.textContent = on ? "■ Stop Simulation" : "▶ Start Simulation";
+          // Pause only makes sense while the simulation is running.
+          S.paused = false;
+          $("btnPause").disabled = !on;
+          $("btnPause").classList.remove("on");
+          $("btnPause").textContent = "Pause";
+          log(
+            on ? "Simulation started." : "Simulation stopped.",
+            on ? "ok" : "warn",
+          );
+          syncOverlay();
+        }
+        $("btnRun").addEventListener("click", () => {
+          unlockAudio();
+          setRunning(!S.running);
+        });
+        $("ovGo").addEventListener("click", () => {
+          unlockAudio();
+          closeReport();
+          setRunning(true);
+        });
+        $("ovReport").addEventListener("click", () => openReport());
+        $("rpClose").addEventListener("click", closeReport);
+        $("rpNext").addEventListener("click", () => {
+          unlockAudio();
+          closeReport();
+          setRunning(true);
+        });
+        $("rpBack").addEventListener("click", (e) => {
+          if (e.target === e.currentTarget) closeReport();
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") closeReport();
+        });
+
+        /* =================== RUN REPORT =================== */
+        const scName = (key) => {
+          const b = document.querySelector('[data-sc="' + key + '"]');
+          return b ? b.textContent.trim() : key;
+        };
+        function settingsNow() {
+          return { sc: S.scKey, hrTh: S.hrTh, avgN: S.avgN, bio: S.bio };
+        }
+        function beginRun() {
+          run = {
+            t0: tNow,
+            scenarios: new Set([S.scKey]),
+            set0: settingsNow(),
+            bpm0: S.bpmDisp,
+            calm0: S.calmness,
+            peak: S.bpmDisp,
+            lastLow: S.calmness < 70 ? 0 : null, // last time calm was below 70%
+            changes: 0,
+            flaps: 0,
+            samples: [],
+            sClock: 1,
+          };
+        }
+        function trackRun(dt) {
+          run.peak = Math.max(run.peak, S.bpmDisp);
+          if (S.calmness < 70) run.lastLow = tNow - run.t0;
+          run.sClock += dt;
+          if (run.sClock >= 0.25) {
+            run.sClock = 0;
+            run.samples.push({ t: tNow - run.t0, b: S.bpmDisp, m: S.mode });
+            if (run.samples.length > 2400)
+              run.samples = run.samples.filter((_, i) => i % 2 === 0);
+          }
+        }
+        function endRun() {
+          const r = run;
+          run = null;
+          if (!r) return;
+          const dur = tNow - r.t0;
+          if (dur < 0.5) return; // a stray double-click is not a run
+          const set1 = settingsNow();
+          const calm1 = S.calmness;
+          let stars = 1;
+          if (calm1 >= 75 && r.flaps === 0 && r.changes <= 4) stars = 3;
+          else if (calm1 >= 55 && r.flaps <= 1) stars = 2;
+          runCount++;
+          runs.unshift({
+            n: runCount,
+            dur,
+            sc: [...r.scenarios],
+            set: set1,
+            midChange:
+              r.set0.hrTh !== set1.hrTh ||
+              r.set0.avgN !== set1.avgN ||
+              r.set0.bio !== set1.bio ||
+              r.scenarios.size > 1,
+            bpm0: r.bpm0,
+            bpm1: S.bpmDisp,
+            peak: r.peak,
+            calm0: r.calm0,
+            calm1,
+            calmOk: calm1 >= 70,
+            calmAt: r.lastLow, // null = never dropped below 70%
+            changes: r.changes,
+            flaps: r.flaps,
+            samples: r.samples,
+            stars,
+          });
+          if (runs.length > 5) runs.pop();
+          $("ovReport").hidden = false;
+          openReport();
+        }
+
+        const fmtT = (sec) => {
+          const m = Math.floor(sec / 60),
+            s2 = Math.round(sec % 60);
+          return m ? m + "m " + String(s2).padStart(2, "0") + "s" : s2 + " s";
+        };
+        const starStr = (n) =>
+          [1, 2, 3].map((i) => '<span class="' + (i <= n ? "on" : "off") + '">★</span>').join("");
+
+        function openReport() {
+          const r = runs[0];
+          if (!r) return;
+          const prev = runs[1];
+          $("rpTitle").textContent = "RUN " + r.n + " REPORT";
+          $("rpSit").textContent =
+            r.sc.map(scName).join(" → ") +
+            " · threshold " + r.set.hrTh + " BPM · averaging " + r.set.avgN +
+            " · biofeedback " + (r.set.bio ? "on" : "off");
+          $("rpStars").innerHTML = starStr(r.stars);
+          $("rpVerdict").textContent =
+            r.stars === 3
+              ? "Mission success: the crew settled smoothly."
+              : r.stars === 2
+                ? "Crew stabilising, with room to improve."
+                : r.flaps > 1
+                  ? "The music kept flipping, so the crew couldn't settle."
+                  : "The crew is still stressed at the end of the run.";
+
+          const dB = r.bpm1 - r.bpm0,
+            dC = r.calm1 - r.calm0;
+          const arrow = (d, goodDown) => {
+            if (Math.abs(d) < 1) return '<small>(no change)</small>';
+            const good = goodDown ? d < 0 : d > 0;
+            return '<small class="' + (good ? "dn" : "up") + '">' + (d < 0 ? "▼" : "▲") + " " + Math.abs(Math.round(d)) + "</small>";
+          };
+          const tiles = [
+            ["Run time", fmtT(r.dur)],
+            ["Heart rate", Math.round(r.bpm0) + " → " + Math.round(r.bpm1) + " " + arrow(dB, true)],
+            ["Crew calm", Math.round(r.calm0) + "% → " + Math.round(r.calm1) + "% " + arrow(dC, false)],
+            [
+              "Time to calm",
+              !r.calmOk
+                ? '<span class="bad">Not reached</span>'
+                : r.calmAt === null
+                  ? '<span class="good">Stayed calm</span>'
+                  : fmtT(r.calmAt),
+            ],
+            ["Peak heart rate", Math.round(r.peak) + " BPM"],
+            ["Mode changes", '<span class="' + (r.changes > 4 ? "bad" : "") + '">' + r.changes + "</span>"],
+            ["Flapping warnings", '<span class="' + (r.flaps ? "bad" : "good") + '">' + r.flaps + "</span>"],
+          ];
+          $("rpTiles").innerHTML = tiles
+            .map((t) => '<div class="rp-tile"><div class="k">' + t[0] + '</div><div class="v">' + t[1] + "</div></div>")
+            .join("");
+
+          // Tip: the most likely reason for the result
+          let tip;
+          if (r.flaps > 0)
+            tip = "Tip: a reading kept crossing a threshold, so the decision flipped back and forth. Move the Heart Rate Threshold further from the heart rate, and remember a loud, bursty room (like the alarm) can cause it too.";
+          else if (!r.set.bio)
+            tip = "Tip: Biofeedback was off, so the music could not lower the heart rate. Turn it on and compare.";
+          else if (r.calm1 < 55 && r.dur < 40)
+            tip = "Tip: calming takes time. Let the next run go a little longer before you stop it.";
+          else if (r.set.avgN <= 2 && r.changes > 3)
+            tip = "Tip: with very little Sensor Averaging the reading is jumpy. Try more samples.";
+          else if (r.set.avgN >= 13)
+            tip = "Tip: heavy averaging is smooth but slow to react. Try fewer samples and see whether the bot responds sooner.";
+          else if (r.stars === 3)
+            tip = "Great run. Try a harder situation, such as Equipment Alarm, with the same settings.";
+          else tip = "Tip: try a different Heart Rate Threshold and compare the two runs.";
+          $("rpTip").textContent = tip;
+
+          // Fair test check against the run before
+          const fair = $("rpFair");
+          if (!prev) {
+            fair.className = "rp-note";
+            fair.textContent = "This is your first run. Change one setting and run again to compare.";
+          } else {
+            const diffs = [];
+            if (prev.sc.join() !== r.sc.join()) diffs.push("Crew Situation");
+            if (prev.set.hrTh !== r.set.hrTh) diffs.push("Heart Rate Threshold");
+            if (prev.set.avgN !== r.set.avgN) diffs.push("Sensor Averaging");
+            if (prev.set.bio !== r.set.bio) diffs.push("Biofeedback");
+            if (r.midChange) {
+              fair.className = "rp-note unfair";
+              fair.textContent = "Settings changed during this run, so the result mixes two set-ups. Change settings while stopped for a fair test.";
+            } else if (diffs.length === 0) {
+              fair.className = "rp-note fair";
+              fair.textContent = "Same settings as run " + prev.n + ". Repeating a test checks your result is reliable.";
+            } else if (diffs.length === 1) {
+              fair.className = "rp-note fair";
+              fair.textContent = "Fair test: you changed only the " + diffs[0] + " since run " + prev.n + ", so any difference came from it.";
+            } else {
+              fair.className = "rp-note unfair";
+              fair.textContent = "You changed " + diffs.length + " settings since run " + prev.n + " (" + diffs.join(", ") + "). Change just one next time to know which one mattered.";
+            }
+          }
+
+          // Comparison table
+          $("rpCompare").style.display = runs.length > 1 ? "" : "none";
+          $("rpRows").innerHTML = runs
+            .map((x, i) => {
+              const o = runs[i + 1];
+              const c = (diff) => (o && diff ? ' class="chg"' : "");
+              return (
+                '<tr class="' + (i === 0 ? "cur" : "") + '">' +
+                "<td>" + x.n + "</td>" +
+                "<td" + c(o && o.sc.join() !== x.sc.join()) + ">" + x.sc.map(scName).join(" → ") + "</td>" +
+                "<td" + c(o && o.set.hrTh !== x.set.hrTh) + ">" + x.set.hrTh + " BPM</td>" +
+                "<td" + c(o && o.set.avgN !== x.set.avgN) + ">" + x.set.avgN + "</td>" +
+                "<td" + c(o && o.set.bio !== x.set.bio) + ">" + (x.set.bio ? "On" : "Off") + "</td>" +
+                "<td>" + fmtT(x.dur) + "</td>" +
+                "<td>" + Math.round(x.bpm0) + " → " + Math.round(x.bpm1) + "</td>" +
+                "<td>" + Math.round(x.calm1) + "%</td>" +
+                "<td>" + x.changes + "</td>" +
+                '<td><span class="st">' + "★".repeat(x.stars) + "</span></td>" +
+                "</tr>"
+              );
+            })
+            .join("");
+
+          $("rpBack").classList.add("show");
+          drawReportChart(r);
+          $("rpNext").focus();
+        }
+        function closeReport() {
+          $("rpBack").classList.remove("show");
+        }
+
+        function drawReportChart(r) {
+          const cv = $("rpChart");
+          const box = cv.getBoundingClientRect();
+          const w = box.width || 700,
+            h = box.height || 130;
+          const kk = dpr();
+          cv.width = Math.round(w * kk);
+          cv.height = Math.round(h * kk);
+          const c = cv.getContext("2d");
+          c.setTransform(kk, 0, 0, kk, 0, 0);
+          c.clearRect(0, 0, w, h);
+          const sm = r.samples;
+          if (sm.length < 2) return;
+          const T = Math.max(sm[sm.length - 1].t, 1);
+          let lo = Math.min(r.set.hrTh, ...sm.map((p) => p.b)) - 8,
+            hi = Math.max(r.set.hrTh, ...sm.map((p) => p.b)) + 8;
+          const xOf = (t) => (t / T) * w,
+            yOf = (b) => h - 14 - ((b - lo) / (hi - lo)) * (h - 22);
+          // Mode bands
+          const used = new Set();
+          let s0 = 0;
+          for (let i = 1; i <= sm.length; i++) {
+            if (i === sm.length || sm[i].m !== sm[s0].m) {
+              const col = MODES[sm[s0].m].col;
+              used.add(sm[s0].m);
+              c.fillStyle = rgba(col, 0.22);
+              const x0 = xOf(sm[s0].t),
+                x1 = i === sm.length ? w : xOf(sm[i].t);
+              c.fillRect(x0, 0, x1 - x0, h - 12);
+              s0 = i;
+            }
+          }
+          // Threshold
+          c.strokeStyle = "#ff8fa6";
+          c.setLineDash([6, 4]);
+          c.lineWidth = 1.5;
+          c.beginPath();
+          c.moveTo(0, yOf(r.set.hrTh));
+          c.lineTo(w, yOf(r.set.hrTh));
+          c.stroke();
+          c.setLineDash([]);
+          c.fillStyle = "#ff8fa6";
+          c.font = "700 10px Orbitron, sans-serif";
+          c.textAlign = "left";
+          c.fillText("THRESHOLD " + r.set.hrTh, 6, yOf(r.set.hrTh) - 4);
+          // BPM line
+          c.strokeStyle = "#ffd166";
+          c.lineWidth = 2.4;
+          c.lineJoin = "round";
+          c.beginPath();
+          sm.forEach((p, i) => (i ? c.lineTo(xOf(p.t), yOf(p.b)) : c.moveTo(xOf(p.t), yOf(p.b))));
+          c.stroke();
+          // Time axis
+          c.fillStyle = "#7d93bb";
+          c.font = "600 11px Rajdhani, sans-serif";
+          c.textAlign = "left";
+          c.fillText("0 s", 2, h - 1);
+          c.textAlign = "right";
+          c.fillText(fmtT(T), w - 2, h - 1);
+          $("rpLegend").innerHTML =
+            '<span><i style="background:#ffd166"></i>Heart rate (BPM)</span>' +
+            [...used].map((k) => '<span><i style="background:' + MODES[k].col + '"></i>' + MODES[k].name + "</span>").join("");
+        }
+
+        function syncOverlay() {
+          const ov = $("startOv");
+          ov.classList.toggle("show", !S.running);
+          if (!S.running) {
+            const first = runCount === 0;
+            $("ovTitle").textContent = first ? "CREW POD STANDING BY" : "SIMULATION STOPPED";
+            $("ovText").textContent = first
+              ? "Pick a Crew Situation, then start the simulation to watch the bot read the crew and choose the music."
+              : "Change one setting, then start the next run and compare the reports.";
+            $("ovGo").textContent = first ? "▶ START SIMULATION" : "▶ START NEXT RUN";
+          }
+        }
 
         $("btnPause").addEventListener("click", (e) => {
           S.paused = !S.paused;
@@ -3334,6 +5604,10 @@
           ibiHist = [];
           bpmHist = [];
           trendBuf = [];
+          calmHist = [];
+          modeMarks = [];
+          breathPh = 0;
+          S.flashAt = -99;
           ppgBuf.fill(0);
           beatMarks.fill(0);
           tNow = 0;
@@ -3349,6 +5623,7 @@
           S.bpmRaw = S.bpmTarget;
           S.sndDisp = 0;
           retuneAudio("calm", 0.25);
+          if (S.running) beginRun();
           log("Simulation reset. Crew status is stable.", "ok");
         }
 
@@ -3384,12 +5659,14 @@
           let dt = (now - last) / 1000;
           last = now;
           dt = Math.min(dt, 0.05); // a backgrounded tab must not fast-forward the crew
-          if (!S.paused) {
+          if (!frozen()) {
             tNow += dt;
             step(dt);
           }
           sampleAudio();
           audioTick();
+          trackTick(Math.min((now - (loop.prev || now)) / 1000, 0.1));
+          loop.prev = now;
           drawPod();
           drawPPG();
           drawTrend();
@@ -3399,8 +5676,6 @@
         }
 
         /* =================== BOOT =================== */
-        document.addEventListener("pointerdown", unlockAudio, { once: true });
-        document.addEventListener("keydown", unlockAudio, { once: true });
         refit();
         seedStars();
         if (typeof ResizeObserver !== "undefined") {
@@ -3416,6 +5691,9 @@
         S.bpmDisp = S.bpmTarget;
         S.bpmRaw = S.bpmTarget;
         log("Crew status is stable.", "ok");
+        log("Press Start Simulation to begin.", "mus");
+        document.addEventListener("pointerdown", unlockAudio, { once: true });
+        document.addEventListener("keydown", unlockAudio, { once: true });
         requestAnimationFrame(loop);
       })();
     </script>
