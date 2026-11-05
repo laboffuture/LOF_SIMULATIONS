@@ -23,7 +23,7 @@
         --accent: #0891b2;
         --accent2: #67e8f9;
         --blue: #3b82f6;
-        --blue2: #93c5fd;
+        --blue2: #93c5fd; 
         --white-star: #e7ebf5;
         --yellow: #facc15;
         --yellow2: #fde68a;
@@ -933,6 +933,280 @@
       .fw-head-actions { justify-content: flex-start; min-width: 0; padding: 0 32px 0 20px; }
     }
   </style>
+  <style id="lof-revamp">
+    /* ---------- backdrop: blur the sheet so its art never looks like UI
+       stuck behind the panels; near-solid cards ---------- */
+    body { background: transparent !important; }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -30px;
+      z-index: -1;
+      pointer-events: none;
+      background: #1c2249 var(--bp) center / cover no-repeat;
+      filter: blur(12px) brightness(0.45) saturate(0.85);
+    }
+    .card {
+      background: rgba(13, 16, 42, 0.94) !important;
+      backdrop-filter: blur(8px);
+    }
+
+    /* ---------- dark controls that match the cards ---------- */
+    .card .swatch,
+    .card .toggle button {
+      background: rgba(10, 14, 38, 0.55) !important;
+      border: 1.5px solid rgba(140, 160, 255, 0.28) !important;
+      color: rgba(226, 232, 255, 0.86) !important;
+      box-shadow: none !important;
+    }
+    .card .swatch { font-size: 12.5px; }
+    .card .swatch:hover,
+    .card .toggle button:hover { border-color: rgba(170, 190, 255, 0.65) !important; color: #fff !important; }
+    .card .swatch.on {
+      background: color-mix(in srgb, var(--sw) 24%, #0b1030) !important;
+      border-color: var(--sw) !important;
+      color: #fff !important;
+      box-shadow: 0 0 0 1px var(--sw), 0 6px 16px color-mix(in srgb, var(--sw) 35%, transparent) !important;
+    }
+    .card .toggle button.on {
+      background: linear-gradient(145deg, #0891b2, #0e7490) !important;
+      border-color: transparent !important;
+      color: #fff !important;
+    }
+    .card .toggle.warn button.on {
+      background: linear-gradient(145deg, #d97706, #b45309) !important;
+    }
+    .card .btn.start {
+      background: linear-gradient(145deg, #0891b2, #0e7490) !important;
+      color: #fff !important;
+    }
+    .card .btn.reset {
+      background: rgba(10, 14, 38, 0.6) !important;
+      border: 1.5px solid rgba(140, 160, 255, 0.3) !important;
+      color: #e8ecff !important;
+      box-shadow: none !important;
+    }
+    .card .btn.mission { background: linear-gradient(145deg, #9333ea, #6b21a8) !important; color: #fff !important; }
+    .card .btn.mission.on { background: linear-gradient(145deg, #ef4444, #b91c1c) !important; }
+    .card .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .card .btn.startstop {
+      width: auto;
+      margin-bottom: 0;
+      padding: 11px 20px;
+      font-size: 14px;
+      min-width: 190px;
+      background: linear-gradient(145deg, #22c55e, #15803d) !important;
+      border-color: transparent !important;
+      color: #fff !important;
+      box-shadow: 0 8px 18px rgba(22, 163, 74, 0.3);
+    }
+    .card .btn.startstop.on {
+      background: linear-gradient(145deg, #ef4444, #b91c1c) !important;
+      box-shadow: 0 8px 18px rgba(220, 38, 38, 0.3);
+    }
+    .card button:focus-visible,
+    .rp button:focus-visible,
+    .ov button:focus-visible { outline: 2px solid #9db8ff; outline-offset: 2px; }
+
+    /* ---------- status banner + feedback on the dark theme ---------- */
+    .modebanner {
+      background: rgba(10, 14, 38, 0.6) !important;
+      border-color: rgba(140, 160, 255, 0.3) !important;
+      color: #e8ecff !important;
+    }
+    .modebanner .lab { color: #67e8f9 !important; }
+    .modebanner .txt { color: #eef2ff !important; }
+    .card .feedback {
+      color: #e8ecff !important;
+      background: rgba(8, 10, 30, 0.5) !important;
+      font-size: 13.5px;
+    }
+    .card .feedback.ok { background: rgba(34, 197, 94, 0.13) !important; }
+    .card .feedback.warn { background: rgba(247, 162, 59, 0.13) !important; }
+    .card .feedback.bad { background: rgba(255, 84, 112, 0.14) !important; }
+
+    /* ---------- readable type ---------- */
+    .card .sub { font-size: 13.5px; }
+    .hint { font-size: 12.5px; }
+    .stat .k { font-size: 11px; }
+    .maprow { font-size: 13px; }
+
+    /* ---------- constellation progress: every star named ---------- */
+    .constar { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px !important; }
+    .constar small { font-size: 10.5px; font-weight: 700; color: rgba(220, 228, 255, 0.7); letter-spacing: 0.2px; }
+    .constar.on small { color: #fff; }
+
+    /* ---------- layout: stage on top below 1280px ---------- */
+    @media (max-width: 1280px) {
+      .grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+        grid-template-areas: "stage stage" "ctrl info";
+        align-items: start;
+      }
+      .grid > section:nth-of-type(1) { grid-area: ctrl; }
+      .grid > section:nth-of-type(2) { grid-area: stage; }
+      .grid > section:nth-of-type(3) { grid-area: info; }
+      /* the bench needs height to stay readable when the stage is full width */
+      .stagewrap { height: clamp(460px, 56vw, 640px) !important; }
+    }
+    @media (max-width: 760px) {
+      .grid { grid-template-columns: minmax(0, 1fr) !important; grid-template-areas: "stage" "ctrl" "info"; }
+    }
+
+    /* ---------- start / stopped overlay on the stage ---------- */
+    .stagewrap { position: relative; }
+    .ov {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 50%, rgba(6, 9, 24, 0.55), rgba(6, 9, 24, 0.84));
+      backdrop-filter: blur(1.5px);
+      border-radius: 14px;
+      z-index: 5;
+      padding: 16px;
+    }
+    .ov.show { display: flex; }
+    .ov .ovbox { text-align: center; max-width: 440px; }
+    .ov h2 { font-family: var(--head); font-size: clamp(14px, 2vw, 19px); letter-spacing: 1.5px; margin: 0 0 6px; color: #eef2ff; }
+    .ov p { margin: 0 0 14px; color: rgba(220, 228, 255, 0.85); font-size: 14.5px; line-height: 1.4; }
+    .ov .ovgo {
+      font-family: var(--head);
+      font-size: 14px;
+      letter-spacing: 1px;
+      font-weight: 800;
+      color: #fff;
+      cursor: pointer;
+      border: none;
+      border-radius: 14px;
+      padding: 13px 26px;
+      background: linear-gradient(145deg, #22c55e, #15803d);
+      animation: ovpulse 2s infinite;
+    }
+    .ov .ovgo:hover { transform: translateY(-2px); }
+    .ov .ovlink[hidden] { display: none; }
+    .ov .ovlink { display: block; margin: 10px auto 0; background: none; border: none; color: #9db8ff; font-family: var(--body); font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: underline; }
+    @keyframes ovpulse {
+      0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.55), 0 10px 26px rgba(22, 163, 74, 0.4); }
+      70% { box-shadow: 0 0 0 16px rgba(74, 222, 128, 0), 0 10px 26px rgba(22, 163, 74, 0.4); }
+      100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0), 0 10px 26px rgba(22, 163, 74, 0.4); }
+    }
+
+    /* ---------- session report ---------- */
+    .rpback { position: fixed; inset: 0; z-index: 9000; display: none; align-items: center; justify-content: center; background: rgba(4, 6, 18, 0.66); padding: 16px; }
+    .rpback.show { display: flex; }
+    .rp {
+      width: min(820px, 100%);
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      background: linear-gradient(160deg, #161d44, #0b1030);
+      border: 1px solid rgba(140, 160, 255, 0.32);
+      border-radius: 18px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+      padding: 18px 20px 16px;
+      color: #e8ecff;
+      font-family: var(--body);
+    }
+    .rp-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+    .rp h2 { font-family: var(--head); font-size: 17px; letter-spacing: 1.4px; margin: 0; }
+    .rp .rp-sit { color: rgba(220, 228, 255, 0.7); font-size: 14px; margin-top: 2px; }
+    .rp-stars { font-size: 30px; letter-spacing: 3px; line-height: 1; white-space: nowrap; }
+    .rp-stars .on { color: #ffd166; text-shadow: 0 0 12px rgba(255, 209, 102, 0.55); }
+    .rp-stars .off { color: rgba(220, 228, 255, 0.18); }
+    .rp-verdict { font-size: 16px; font-weight: 700; margin: 10px 0 12px; }
+    .rp-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+    .rp-tile { background: rgba(8, 10, 30, 0.5); border: 1px solid rgba(140, 160, 255, 0.22); border-radius: 12px; padding: 8px 10px; }
+    .rp-tile .k { font-family: var(--head); font-size: 9.5px; letter-spacing: 0.6px; color: rgba(220, 228, 255, 0.6); text-transform: uppercase; }
+    .rp-tile .v { font-size: 18px; font-weight: 700; margin-top: 3px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .rp-tile .v small { font-size: 13px; font-weight: 600; }
+    .rp .good { color: #4ade80; }
+    .rp .bad { color: #ff7a93; }
+    .rp h3 { font-family: var(--head); font-size: 11.5px; letter-spacing: 1px; margin: 14px 0 6px; color: rgba(220, 228, 255, 0.75); }
+    .rp-timeline { display: flex; flex-wrap: wrap; gap: 6px; }
+    .rp-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; font-size: 13px; font-weight: 700; background: rgba(8, 10, 30, 0.55); border: 1.5px solid var(--sw); }
+    .rp-chip i { width: 10px; height: 10px; border-radius: 50%; background: var(--sw); display: inline-block; }
+    .rp-note { margin-top: 10px; padding: 9px 12px; border-radius: 11px; font-size: 14px; line-height: 1.4; background: rgba(8, 10, 30, 0.5); border-left: 4px solid #7ea6ff; }
+    .rp-note.tip { border-left-color: #ffd166; }
+    .rp-note.fair { border-left-color: #4ade80; }
+    .rp-note.unfair { border-left-color: #f7a23b; }
+    .rp-tablewrap { overflow-x: auto; }
+    .rp table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
+    .rp th { font-family: var(--head); font-size: 9px; letter-spacing: 0.5px; text-align: left; color: rgba(220, 228, 255, 0.6); padding: 5px 6px; border-bottom: 1px solid rgba(140, 160, 255, 0.25); }
+    .rp td { padding: 6px; border-bottom: 1px solid rgba(140, 160, 255, 0.12); font-variant-numeric: tabular-nums; }
+    .rp td.chg { background: rgba(247, 162, 59, 0.2); color: #ffd9a3; font-weight: 700; border-radius: 6px; }
+    .rp-key { font-size: 12px; color: rgba(220, 228, 255, 0.6); margin-top: 5px; }
+    .rp-key b { color: #ffd9a3; }
+    .rp-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+    .rp-actions button { cursor: pointer; font-family: var(--body); font-size: 14.5px; font-weight: 700; border-radius: 11px; padding: 9px 16px; border: 1.5px solid rgba(140, 160, 255, 0.3); background: rgba(10, 14, 38, 0.6); color: #e8ecff; }
+    .rp-actions button.go { border-color: transparent; background: linear-gradient(145deg, #22c55e, #15803d); color: #fff; }
+    @media (prefers-reduced-motion: reduce) { .ov .ovgo { animation: none; } }
+
+    /* ---------- report: values wrap inside their tile, no sideways scroll ---------- */
+    .rp { overflow-x: hidden; }
+    .rp-tiles { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+    .rp-tile .v { white-space: normal; overflow-wrap: anywhere; line-height: 1.25; }
+    .rp-tile .v.list { font-size: 14px; }
+    @media (max-width: 560px) {
+      .rp { padding: 14px 12px; }
+      .rp table { font-size: 12px; }
+      .rp th, .rp td { padding: 5px 4px; }
+    }
+
+    /* ---------- dark scrollbars everywhere ---------- */
+    * { scrollbar-color: rgba(140, 160, 255, 0.35) transparent; scrollbar-width: thin; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(140, 160, 255, 0.3); border-radius: 4px; }
+
+    /* ---------- help window on the dark theme ---------- */
+    .helpbar.floatwin {
+      background: #10163a !important;
+      border-color: rgba(140, 160, 255, 0.32) !important;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55) !important;
+    }
+    .helpbar.floatwin .fw-head { background: rgba(8, 10, 30, 0.6) !important; border-bottom-color: rgba(140, 160, 255, 0.25) !important; }
+    .helpbar.floatwin .fw-title { color: rgba(220, 228, 255, 0.75) !important; }
+    .helpbar.floatwin .fw-tab-btn,
+    .helpbar.floatwin .fw-close {
+      background: rgba(10, 14, 38, 0.7) !important;
+      border-color: rgba(140, 160, 255, 0.3) !important;
+      color: rgba(226, 232, 255, 0.85) !important;
+    }
+    .helpbar.floatwin .fw-tab-btn.on { background: linear-gradient(145deg, #0891b2, #0e7490) !important; border-color: transparent !important; color: #fff !important; }
+    .helpbar.floatwin .fw-close:hover { background: rgba(239, 68, 68, 0.25) !important; color: #fff !important; }
+    .helpbar.floatwin .fw-body, .helpbar.floatwin .tabpanel { color: #e8ecff !important; }
+    .helpbar.floatwin .fw-body b, .helpbar.floatwin .tabpanel b { color: #7dd3fc !important; }
+
+    /* ---------- stars you can open ---------- */
+    .constar, .maprow { cursor: pointer; transition: 0.15s; }
+    .constar:hover, .constar:focus-visible { transform: translateY(-2px); border-color: var(--sw) !important; opacity: 1; outline: none; }
+    .maprow { border-radius: 8px; padding: 3px 6px; margin: 0 -6px; }
+    .maprow:hover, .maprow:focus-visible { background: rgba(140, 160, 255, 0.12); outline: none; }
+    .maprow .open { margin-left: auto; padding-left: 6px; font-size: 16px; line-height: 1; color: rgba(160, 180, 230, 0.55); flex: 0 0 auto; }
+    .maprow:hover .open { color: #fff; }
+    .maprow { display: flex; align-items: center; gap: 8px; }
+
+    /* ---------- status chip: dark fills so white text stays readable ---------- */
+    .modebanner .chip { color: #fff !important; }
+    .modebanner .chip.c-ready { background: linear-gradient(145deg, #0891b2, #0e7490) !important; }
+    .modebanner .chip.c-scan { background: linear-gradient(145deg, #9333ea, #6b21a8) !important; }
+    .modebanner .chip.c-match { background: linear-gradient(145deg, #16a34a, #15803d) !important; }
+    .modebanner .chip.c-unclear { background: linear-gradient(145deg, #d97706, #b45309) !important; }
+
+    /* ---------- star info panel ---------- */
+    .si-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .si-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--sw); box-shadow: 0 0 14px var(--sw); flex: 0 0 auto; }
+    .si-name { font-family: var(--head); font-size: 20px; letter-spacing: 1px; }
+    .si-sub { color: rgba(220, 228, 255, 0.7); font-size: 14px; }
+    .si-chip { margin-left: auto; font-family: var(--head); font-size: 11px; letter-spacing: 0.8px; padding: 6px 10px; border-radius: 9px; }
+    .si-chip.ok { background: rgba(34, 197, 94, 0.18); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.5); }
+    .si-chip.no { background: rgba(8, 10, 30, 0.6); color: rgba(220, 228, 255, 0.7); border: 1px solid rgba(140, 160, 255, 0.3); }
+    .si-chart { margin-top: 12px; background: #070b1d; border: 1px solid rgba(120, 150, 230, 0.28); border-radius: 12px; padding: 8px 10px 6px; }
+    .si-chart canvas { width: 100%; height: 150px; display: block; }
+    .si-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: rgba(220, 228, 255, 0.8); margin-top: 4px; }
+    .si-legend i { display: inline-block; width: 16px; height: 3px; vertical-align: middle; margin-right: 5px; }
+  </style>
 </head>
   <body>
     <header class="top">
@@ -948,10 +1222,10 @@
         <div class="tabpanel" data-panel="use">
           <ol>
             <li>
-              Pick a <b>Wand Colour</b> — <b>Blue</b>, <b>Sky Blue</b>,
-              <b>White</b>, <b>Yellow</b>, <b>Orange</b> or <b>Red</b>. The tip
-              lights up, but nothing is read yet — the sensor only sees light
-              once you start the scan.
+              Pick an <b>LED Colour</b> — <b>Blue</b>, <b>Sky Blue</b>,
+              <b>White</b>, <b>Yellow</b>, <b>Orange</b> or <b>Red</b>. The LED
+              source is set, but nothing is read yet — its shutter only opens
+              when you scan.
             </li>
             <li>
               Set the <b>LED Intensity</b> (0–100%). 100% gives the full
@@ -960,7 +1234,7 @@
             </li>
             <li>
               Turn <b>Background Interference</b> <b>On</b> or <b>Off</b>.
-              <b>On</b> washes the scene bright with stray light and makes the
+              <b>On</b> lets stray room light fall onto the sensor and makes the
               graph glitch. <b>Off</b> keeps a clean, dark reading.
             </li>
             <li>
@@ -969,9 +1243,32 @@
               shakier.
             </li>
             <li>
-              Press <b>Start</b> under the decoder view. The wand swishes
-              through the air and points at the sensor lens. The
-              <b>Decoder Status</b> bar shows what is happening.
+              Press <b>Start Simulation</b>, then <b>Scan</b>. Follow the
+              <b>Signal Path</b>: the LED source shines into the sensor, the AS7341 reads
+              eight channels, and the microcontroller compares them with the
+              star map. The <b>Decoder Status</b> bar shows each step.
+            </li>
+            <li>
+              Watch the <b>Spectrum</b>: the eight channel bars fill in live, then
+              the measured curve is drawn over the matched star's reference
+              curve (dashed). The <b>Signal</b> gauge shows whether the light is
+              too weak, good, or clipping.
+            </li>
+            <li>
+              Click any star — in <b>Constellation Progress</b>, the
+              <b>Star Mapping Reference</b>, or on the stage — to open its
+              details: real data, its reference spectrum and your result.
+              <b>Run light</b> in that panel scans that star's LED colour
+              straight away.
+            </li>
+            <li>
+              <b>Match vs Star Map</b> shows how closely the reading matches each
+              of the six stars. The highest bar wins, but only if it clears the
+              green <b>minimum to match</b> line and the signal is strong
+              enough. The bars update live as you move <b>LED Intensity</b> and
+              <b>Sensor Sensitivity</b>: a dimmer LED or a less sensitive sensor
+              gives a noisier reading, so every match drops. The decoded star then appears on
+              the <b>temperature strip</b> with its real data.
             </li>
             <li>
               Watch the <b>AS7341 channel graph</b> on the decoder console. It
@@ -980,7 +1277,7 @@
             </li>
             <li>
               Read <b>Spectral Reading &amp; Decode Status</b>: the
-              <b>Wand Colour</b>, <b>Brightness</b>, <b>Interference</b>,
+              <b>LED Colour</b>, <b>Brightness</b>, <b>Interference</b>,
               <b>Dominant Channel</b> and <b>Star Result</b>. Use the
               <b>Star Mapping Reference</b> to see which colour matches which
               star, from Rigel (blue) to Betelgeuse (red).
@@ -998,8 +1295,10 @@
               when the hidden constellation is restored.
             </li>
             <li>
-              Press <b>Reset</b> to start again. Change <b>one</b> setting at
-              a time and compare.
+              Press <b>Stop Simulation</b> to get a <b>Session Report</b>:
+              every scan side by side, with the settings you changed between
+              scans highlighted. Press <b>Reset</b> to start again. Change
+              <b>one</b> setting at a time and compare.
             </li>
           </ol>
         </div>
@@ -1040,6 +1339,11 @@
               star's identity by matching them to a colour map.
             </li>
             <li>
+              <b>Star colour and temperature:</b> blue stars are the hottest and
+              red stars the coolest. Rigel burns at about 12,000 K, Betelgeuse at
+              about 3,600 K.
+            </li>
+            <li>
               <b>Careful measurement:</b> scientific decoding needs careful
               observation, and changing one thing at a time.
             </li>
@@ -1051,11 +1355,11 @@
     <div class="grid">
       <!-- ================= CONTROLS ================= -->
       <section class="card">
-        <h3>Wand &amp; Environment</h3>
+        <h3>Light Source &amp; Environment</h3>
         <p class="sub">Set the light, then scan. The sensor only sees what you send it.</p>
 
         <div class="cmdgroup">
-          <h4>Wand Colour</h4>
+          <h4>LED Colour</h4>
           <div class="colorpick" id="colorPick">
             <button class="swatch" data-color="blue" style="--sw:#3b82f6"><span class="dot"></span>Blue</button>
             <button class="swatch" data-color="skyblue" style="--sw:#38bdf8"><span class="dot"></span>Sky Blue</button>
@@ -1064,7 +1368,7 @@
             <button class="swatch" data-color="orange" style="--sw:#fb923c"><span class="dot"></span>Orange</button>
             <button class="swatch" data-color="red" style="--sw:#ef4444"><span class="dot"></span>Red</button>
           </div>
-          <div class="hint">Choosing a colour only lights the tip — press Start below to read it.</div>
+          <div class="hint">Choosing a colour sets the LED — press Scan below to read it.</div>
         </div>
 
         <div class="cmdgroup">
@@ -1082,7 +1386,7 @@
             <button data-interf="on">On</button>
             <button data-interf="off" class="on">Off</button>
           </div>
-          <div class="hint">On washes the whole scene bright with stray light and glitches the decoded graph; Off keeps a clean, dark reading.</div>
+          <div class="hint">On lets stray room light fall onto the sensor and glitches the decoded graph; Off keeps a clean, dark reading.</div>
         </div>
 
         <div class="cmdgroup">
@@ -1098,7 +1402,7 @@
           <h4>System</h4>
           <button type="button" class="btn mission" id="btnMission">▶ Run Guided Decode</button>
         </div>
-        <div class="hint">Choose a colour and set the brightness above, then press <b>Start</b> below the decoder view.</div>
+        <div class="hint">Press <b>Start Simulation</b>, choose a colour and set the brightness, then press <b>Scan</b> below the decoder view.</div>
       </section>
 
       <!-- ================= STAGE ================= -->
@@ -1106,17 +1410,26 @@
         <div class="modebanner" id="banner">
           <div>
             <div class="lab">DECODER STATUS</div>
-            <div class="txt" id="bannerTxt">Ready — pick a wand colour and press Start.</div>
+            <div class="txt" id="bannerTxt">Simulation stopped — press Start Simulation.</div>
           </div>
           <div class="chip c-ready" id="bannerChip">READY</div>
         </div>
 
         <div class="stagewrap">
           <canvas id="core" width="900" height="440"></canvas>
+          <div class="ov show" id="startOv">
+            <div class="ovbox">
+              <h2 id="ovTitle">DECODER STANDING BY</h2>
+              <p id="ovText">Start the simulation, pick an LED colour, then press Scan to decode its star.</p>
+              <button type="button" class="ovgo" id="ovGo">▶ START SIMULATION</button>
+              <button type="button" class="ovlink" id="ovReport" hidden>View last session report</button>
+            </div>
+          </div>
         </div>
 
         <div class="stage-foot">
-          <button type="button" class="btn start" id="btnStart" disabled>▶ Start</button>
+          <button type="button" class="btn startstop" id="btnRun">▶ Start Simulation</button>
+          <button type="button" class="btn start" id="btnStart" disabled>◉ Scan</button>
           <button type="button" class="btn reset" id="btnReset">↺ Reset</button>
           <span class="missionNote" id="missionNote"></span>
         </div>
@@ -1129,7 +1442,7 @@
 
         <div class="statusgrid">
           <div class="stat">
-            <div class="k">Wand Colour</div>
+            <div class="k">LED Colour</div>
             <div class="v n" id="s_color">None</div>
           </div>
           <div class="stat">
@@ -1151,27 +1464,86 @@
         </div>
 
         <h3 style="margin-top: 14px">Star Mapping Reference</h3>
-        <div class="maprow"><span class="msw" style="background:#3b82f6"></span>Blue-dominant channels → Rigel (Blue Star)</div>
-        <div class="maprow"><span class="msw" style="background:#38bdf8"></span>Saturated blue-white → Sirius (Sky Blue Star)</div>
-        <div class="maprow"><span class="msw" style="background:#cbd5e1"></span>Balanced, bright channels → Procyon (White Star)</div>
-        <div class="maprow"><span class="msw" style="background:#facc15"></span>Yellow-warm dominant → the Sun (Yellow Star)</div>
-        <div class="maprow"><span class="msw" style="background:#fb923c"></span>Orange-warm dominant → Arcturus (Orange Star)</div>
-        <div class="maprow"><span class="msw" style="background:#ef4444"></span>Red-dominant channels → Betelgeuse (Red Star)</div>
+        <div class="maprow" role="button" tabindex="0" data-star="blue"><span class="msw" style="background:#3b82f6"></span>Blue-dominant channels → Rigel (Blue Star)<span class="open" aria-hidden="true">›</span></div>
+        <div class="maprow" role="button" tabindex="0" data-star="skyblue"><span class="msw" style="background:#38bdf8"></span>Saturated blue-white → Sirius (Sky Blue Star)<span class="open" aria-hidden="true">›</span></div>
+        <div class="maprow" role="button" tabindex="0" data-star="white"><span class="msw" style="background:#cbd5e1"></span>Balanced, bright channels → Procyon (White Star)<span class="open" aria-hidden="true">›</span></div>
+        <div class="maprow" role="button" tabindex="0" data-star="yellow"><span class="msw" style="background:#facc15"></span>Yellow-warm dominant → the Sun (Yellow Star)<span class="open" aria-hidden="true">›</span></div>
+        <div class="maprow" role="button" tabindex="0" data-star="orange"><span class="msw" style="background:#fb923c"></span>Orange-warm dominant → Arcturus (Orange Star)<span class="open" aria-hidden="true">›</span></div>
+        <div class="maprow" role="button" tabindex="0" data-star="red"><span class="msw" style="background:#ef4444"></span>Red-dominant channels → Betelgeuse (Red Star)<span class="open" aria-hidden="true">›</span></div>
         <div class="hint">Sirius and Procyon read almost identically to the AS7341 — both are bright enough to saturate most channels, a real sensor limitation, not a bug.</div>
 
         <h3 style="margin-top: 14px">Constellation Progress</h3>
         <div class="conperm" id="conperm">
-          <div class="constar" id="con-blue" style="--sw:#3b82f6">✦</div>
-          <div class="constar" id="con-skyblue" style="--sw:#38bdf8">✦</div>
-          <div class="constar" id="con-white" style="--sw:#94a3b8">✦</div>
-          <div class="constar" id="con-yellow" style="--sw:#facc15">✦</div>
-          <div class="constar" id="con-orange" style="--sw:#fb923c">✦</div>
-          <div class="constar" id="con-red" style="--sw:#ef4444">✦</div>
+          <div class="constar" role="button" tabindex="0" data-star="blue" title="Open star details" id="con-blue" style="--sw:#3b82f6"><span>✦</span><small>Rigel</small></div>
+          <div class="constar" role="button" tabindex="0" data-star="skyblue" title="Open star details" id="con-skyblue" style="--sw:#38bdf8"><span>✦</span><small>Sirius</small></div>
+          <div class="constar" role="button" tabindex="0" data-star="white" title="Open star details" id="con-white" style="--sw:#94a3b8"><span>✦</span><small>Procyon</small></div>
+          <div class="constar" role="button" tabindex="0" data-star="yellow" title="Open star details" id="con-yellow" style="--sw:#facc15"><span>✦</span><small>Sun</small></div>
+          <div class="constar" role="button" tabindex="0" data-star="orange" title="Open star details" id="con-orange" style="--sw:#fb923c"><span>✦</span><small>Arcturus</small></div>
+          <div class="constar" role="button" tabindex="0" data-star="red" title="Open star details" id="con-red" style="--sw:#ef4444"><span>✦</span><small>Betelgeuse</small></div>
         </div>
 
         <h3 style="margin-top: 14px">System Feedback</h3>
         <div class="feedback" id="feedback">Star Spectrum Decoder started.</div>
       </section>
+    </div>
+
+    <div class="rpback" id="rpBack">
+      <div class="rp" role="dialog" aria-modal="true" aria-labelledby="rpTitle">
+        <div class="rp-top">
+          <div>
+            <h2 id="rpTitle">SESSION REPORT</h2>
+            <div class="rp-sit" id="rpSit"></div>
+          </div>
+          <div class="rp-stars" id="rpStars"></div>
+        </div>
+        <div class="rp-verdict" id="rpVerdict"></div>
+        <div class="rp-tiles" id="rpTiles"></div>
+        <h3>SCANS IN ORDER</h3>
+        <div class="rp-timeline" id="rpTimeline"></div>
+        <div class="rp-note tip" id="rpTip"></div>
+        <div class="rp-note" id="rpFair"></div>
+        <h3>COMPARE SCANS</h3>
+        <div class="rp-tablewrap">
+          <table>
+            <thead>
+              <tr><th>SCAN</th><th>LED COLOUR</th><th>LED INTENSITY</th><th>INTERFERENCE</th><th>SENSITIVITY</th><th>DOMINANT</th><th>RESULT</th></tr>
+            </thead>
+            <tbody id="rpRows"></tbody>
+          </table>
+        </div>
+        <div class="rp-key"><b>Orange</b> cells are settings that changed from the scan before.</div>
+        <div class="rp-actions">
+          <button type="button" id="rpClose">Close</button>
+          <button type="button" class="go" id="rpNext">▶ Start next session</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="rpback sib" id="siBack">
+      <div class="rp" role="dialog" aria-modal="true" aria-labelledby="siName">
+        <div class="si-head">
+          <span class="si-dot" id="siDot"></span>
+          <div>
+            <div class="si-name" id="siName"></div>
+            <div class="si-sub" id="siSub"></div>
+          </div>
+          <span class="si-chip" id="siChip"></span>
+        </div>
+        <div class="rp-tiles" id="siTiles" style="margin-top: 12px"></div>
+        <div class="si-chart">
+          <span class="glab">AS7341 REFERENCE SPECTRUM · F1–F8</span>
+          <canvas id="siChart"></canvas>
+          <div class="si-legend" id="siLegend"></div>
+        </div>
+        <h3>HOW THE DECODER RECOGNISES IT</h3>
+        <div class="rp-note" id="siRule"></div>
+        <h3>YOUR RESULT</h3>
+        <div class="rp-note" id="siYou"></div>
+        <div class="rp-actions">
+          <button type="button" id="siClose">Close</button>
+          <button type="button" class="go" id="siSet">Run light</button>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -1257,7 +1629,7 @@
           const signal = profile.map((p) => p * distFactor * brightFactor);
           // Interference no longer corrupts the actual reading/classification — a scan
           // still correctly identifies the star with interference on. It only drives
-          // the visual: the scene washes white and the decoded graph glitches.
+          // the visual: stray light falls on the sensor and the decoded graph glitches.
           const reading = signal.map((v) => clamp(v, 0, 1.4));
           return { reading, signalPeak: Math.max(...signal) };
         }
@@ -1270,8 +1642,9 @@
             bestScore = -1,
             secondBest = null,
             secondScore = -1;
-          for (const key of COLOR_ORDER) {
-            const score = dotp(normalize(reading), normalize(STARS[key].profile));
+          const live = liveScores();
+          for (const [ki, key] of COLOR_ORDER.entries()) {
+            const score = live[ki];
             if (score > bestScore) {
               secondScore = bestScore;
               secondBest = best;
@@ -1306,7 +1679,7 @@
           sensitivity: 50,
           phase: "idle", // idle | swish | point | reading | result
           phaseT: 0,
-          wandAngle: 0.85, // radians, resting pose (matches REST_ANGLE below)
+          wandAngle: 0.45, // radians, resting pose of the wand in the glove
           displayReadings: new Array(N_CH).fill(0),
           targetReadings: new Array(N_CH).fill(0),
           signalPeak: 0,
@@ -1319,7 +1692,18 @@
           missionIdx: 0,
           missionElapsed: 0,
           missionStepStarted: false,
+          running: false, // Start/Stop Simulation
+          armAngle: 1.25, // wand arm, radians from the shoulder
+          clock: 0, // sim seconds, frozen while stopped
+          react: null, // { kind: "yay" | "huh", at }
+          unlockAt: {},
+          lastDecode: {}, // key -> settings + counts of the last successful decode
+          hits: [], // clickable star regions on the stage canvas
         };
+        let simT = 0;
+        let session = null;
+        const sessions = [];
+        let sessionCount = 0;
         const REST_ANGLE = 0.85; // arm hangs down and OUT to her side, clear of the dress — not reaching back or through it
         const DURATION = { swish: 850, point: 350, reading: 900 };
 
@@ -1387,20 +1771,21 @@
 
         function updateActionButton() {
           const btn = $("btnStart");
-          btn.disabled = !S.color || S.phase === "swish" || S.phase === "point" || S.phase === "reading";
-          if (S.phase === "result" && S.resultKey === "unclear") {
-            btn.textContent = "🔄 Rescan";
-          } else {
-            btn.textContent = "▶ Start";
-          }
+          btn.disabled = !S.running || !S.color || S.phase === "swish" || S.phase === "point" || S.phase === "reading";
+          const label = S.phase === "result" && S.resultKey === "unclear" ? "🔄 Rescan" : "◉ Scan";
+          if (btn.textContent !== label) btn.textContent = label;
+          $("btnMission").disabled = !S.running;
         }
 
         function startScan() {
           if (!S.color) {
-            setFeedback("Select a wand colour before starting.", "warn");
+            setFeedback("Select an LED colour before starting.", "warn");
             return;
           }
           if (S.phase === "swish" || S.phase === "point" || S.phase === "reading") return;
+          if (!S.running) return;
+          newNoise();
+          S.scanKey = settingsKey();
           S.phase = "swish";
           S.phaseT = 0;
           setFeedback("Sensor Reading Active", "");
@@ -1426,11 +1811,224 @@
           setSensitivity(100);
           updateActionButton();
           setFeedback("Star Spectrum Decoder started.", "ok");
+          S.unlockAt = {};
+          S.lastDecode = {};
+          S.react = null;
         }
         $("btnReset").addEventListener("click", () => {
           resetSystem();
           if (S.missionRunning) stopMission();
         });
+
+
+        /* =================== SESSION (Start / Stop Simulation) =================== */
+        const fmtT = (sec) => {
+          const m = Math.floor(sec / 60),
+            s2 = Math.round(sec % 60);
+          return m ? m + "m " + String(s2).padStart(2, "0") + "s" : s2 + " s";
+        };
+        const colName = (k) => STARS[k].name.replace(" Star", "");
+        const REASON = {
+          weak: "too weak",
+          saturated: "saturated",
+          mixed: "too noisy",
+          ambiguous: "two stars match",
+        };
+        function logScan(result) {
+          if (!session) return;
+          let domIdx = 0;
+          for (let i = 1; i < N_CH; i++) if (S.targetReadings[i] > S.targetReadings[domIdx]) domIdx = i;
+          session.scans.push({
+            n: session.scans.length + 1,
+            color: S.color,
+            bright: Math.round(S.brightness),
+            interf: S.interference > 3,
+            sens: Math.round(S.sensitivity),
+            dom: "F" + (domIdx + 1) + " (" + WAVELEN[domIdx] + " nm)",
+            key: result.key,
+            reason: result.reason,
+            guided: S.missionRunning,
+          });
+        }
+        function beginSession() {
+          session = { t0: S.clock, scans: [], before: Object.assign({}, S.unlocked) };
+        }
+        function endSession() {
+          const r = session;
+          session = null;
+          if (!r || !r.scans.length) return;
+          sessionCount++;
+          const matched = r.scans.filter((x) => x.key !== "unclear").length;
+          const newStars = COLOR_ORDER.filter((k) => S.unlocked[k] && !r.before[k]);
+          const acc = matched / r.scans.length;
+          let stars = 1;
+          if (acc >= 0.8) stars = 3;
+          else if (acc >= 0.5) stars = 2;
+          sessions.unshift({
+            n: sessionCount,
+            dur: S.clock - r.t0,
+            scans: r.scans,
+            matched,
+            newStars,
+            total: COLOR_ORDER.filter((k) => S.unlocked[k]).length,
+            stars,
+          });
+          if (sessions.length > 5) sessions.pop();
+          $("ovReport").hidden = false;
+          openReport();
+        }
+        function setRunning(on) {
+          if (on && !S.running) beginSession();
+          if (!on && S.running) {
+            if (S.missionRunning) stopMission();
+            S.running = false;
+            endSession();
+          }
+          S.running = on;
+          const b = $("btnRun");
+          b.classList.toggle("on", on);
+          b.textContent = on ? "■ Stop Simulation" : "▶ Start Simulation";
+          setFeedback(on ? "Simulation started. Pick an LED colour and press Scan." : "Simulation stopped.", on ? "ok" : "warn");
+          syncOverlay();
+          updateActionButton();
+        }
+        function syncOverlay() {
+          $("startOv").classList.toggle("show", !S.running);
+          if (S.running) return;
+          const first = sessionCount === 0;
+          $("ovTitle").textContent = first ? "DECODER STANDING BY" : "SIMULATION STOPPED";
+          $("ovText").textContent = first
+            ? "Start the simulation, pick an LED colour, then press Scan to decode its star."
+            : "Change one setting, then start a new session and compare the reports.";
+          $("ovGo").textContent = first ? "▶ START SIMULATION" : "▶ START NEXT SESSION";
+        }
+        function closeReport() {
+          $("rpBack").classList.remove("show");
+        }
+        $("btnRun").addEventListener("click", () => setRunning(!S.running));
+        $("ovGo").addEventListener("click", () => {
+          closeReport();
+          setRunning(true);
+        });
+        $("ovReport").addEventListener("click", () => openReport());
+        $("rpClose").addEventListener("click", closeReport);
+        $("rpNext").addEventListener("click", () => {
+          closeReport();
+          setRunning(true);
+        });
+        $("rpBack").addEventListener("click", (e) => {
+          if (e.target === e.currentTarget) closeReport();
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") closeReport();
+        });
+
+        function openReport() {
+          const r = sessions[0];
+          if (!r) return;
+          $("rpTitle").textContent = "SESSION " + r.n + " REPORT";
+          $("rpSit").textContent =
+            r.scans.length + " scan" + (r.scans.length === 1 ? "" : "s") + " in " + fmtT(r.dur) +
+            (r.scans.some((x) => x.guided) ? " · includes Guided Decode" : "");
+          $("rpStars").innerHTML = [1, 2, 3]
+            .map((i) => '<span class="' + (i <= r.stars ? "on" : "off") + '">★</span>')
+            .join("");
+          $("rpVerdict").textContent =
+            r.total === 6
+              ? "Hidden constellation fully restored — all six stars decoded."
+              : r.stars === 3
+                ? "Clean decoding: almost every scan identified its star."
+                : r.stars === 2
+                  ? "Some scans were unclear. Check the tip below."
+                  : "Most scans were unclear, so few stars were decoded.";
+          const unclear = r.scans.filter((x) => x.key === "unclear");
+          const counts = {};
+          unclear.forEach((x) => (counts[x.reason] = (counts[x.reason] || 0) + 1));
+          const tiles = [
+            ["Scans", r.scans.length],
+            ["Clear readings", '<span class="' + (r.matched === r.scans.length ? "good" : "") + '">' + r.matched + " / " + r.scans.length + "</span>"],
+            ["Unclear", '<span class="' + (unclear.length ? "bad" : "good") + '">' + unclear.length + "</span>"],
+            ["New stars", '<span class="list">' + (r.newStars.length ? r.newStars.map((k) => STARS[k].star.replace("the ", "")).join(", ") : "none") + "</span>"],
+            ["Constellation", r.total + " / 6"],
+          ];
+          $("rpTiles").innerHTML = tiles
+            .map((t) => '<div class="rp-tile"><div class="k">' + t[0] + '</div><div class="v' + (t[0] === "New stars" ? " list" : "") + '">' + t[1] + "</div></div>")
+            .join("");
+          $("rpTimeline").innerHTML = r.scans
+            .map((x) => {
+              const ok = x.key !== "unclear";
+              return (
+                '<span class="rp-chip" style="--sw:' + STARS[x.color].sw + '"><i></i>' +
+                x.n + ". " + colName(x.color) + " → " + (ok ? STARS[x.key].star + " ✓" : "unclear ?") + "</span>"
+              );
+            })
+            .join("");
+
+          // tip: the most common reason a scan failed
+          let tip;
+          const worst = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
+          if (worst === "weak")
+            tip = "Tip: " + counts.weak + " scan(s) were too weak to classify. Raise the LED Intensity or the Sensor Sensitivity.";
+          else if (worst === "mixed")
+            tip = "Tip: readings were too noisy to match. A brighter LED or higher Sensor Sensitivity gives a cleaner reading.";
+          else if (worst === "saturated")
+            tip = "Tip: the sensor clipped at its maximum. Lower the LED Intensity a little.";
+          else if (worst === "ambiguous")
+            tip = "Tip: Sirius and Procyon look almost the same to the AS7341 — a real sensor limit, not your mistake.";
+          else if (r.total < 6)
+            tip = "Tip: every scan was clear. Try the colours you haven't decoded yet to finish the constellation.";
+          else tip = "Great work. Now dim the LED Intensity step by step to find where readings stop being clear.";
+          $("rpTip").textContent = tip;
+
+          // fair-test check between consecutive scans
+          const diffs = [];
+          for (let i = 1; i < r.scans.length; i++) {
+            const a = r.scans[i - 1],
+              b = r.scans[i];
+            let d = 0;
+            if (a.color !== b.color) d++;
+            if (a.bright !== b.bright) d++;
+            if (a.interf !== b.interf) d++;
+            if (a.sens !== b.sens) d++;
+            diffs.push(d);
+          }
+          const fair = $("rpFair");
+          if (!diffs.length) {
+            fair.className = "rp-note";
+            fair.textContent = "Only one scan this session. Change one setting and scan again to compare.";
+          } else {
+            const one = diffs.filter((d) => d === 1).length,
+              many = diffs.filter((d) => d > 1).length;
+            if (many === 0) {
+              fair.className = "rp-note fair";
+              fair.textContent = "Fair testing: between every pair of scans you changed at most one setting, so each difference has a clear cause.";
+            } else {
+              fair.className = "rp-note unfair";
+              fair.textContent =
+                "In " + many + " of " + diffs.length + " steps you changed more than one setting at once (" + one +
+                " step(s) changed just one). Change one thing at a time to know what caused a difference.";
+            }
+          }
+
+          $("rpRows").innerHTML = r.scans
+            .map((x, i) => {
+              const o = r.scans[i - 1];
+              const c = (diff) => (o && diff ? ' class="chg"' : "");
+              const ok = x.key !== "unclear";
+              return (
+                "<tr><td>" + x.n + "</td>" +
+                "<td" + c(o && o.color !== x.color) + ">" + colName(x.color) + "</td>" +
+                "<td" + c(o && o.bright !== x.bright) + ">" + x.bright + "%</td>" +
+                "<td" + c(o && o.interf !== x.interf) + ">" + (x.interf ? "On" : "Off") + "</td>" +
+                "<td" + c(o && o.sens !== x.sens) + ">" + x.sens + "%</td>" +
+                "<td>" + x.dom + "</td>" +
+                '<td class="' + (ok ? "good" : "bad") + '">' + (ok ? STARS[x.key].star : "Unclear (" + REASON[x.reason] + ")") + "</td></tr>"
+              );
+            })
+            .join("");
+          $("rpBack").classList.add("show");
+          $("rpNext").focus();
+        }
 
         /* =================== GUIDED MISSION =================== */
         const MISSION = COLOR_ORDER.map((key) => ({
@@ -1443,8 +2041,8 @@
             // Guided Decode instead of being silently forced off.
             selectColor(key);
           },
-          hold: 400,
-          scanAt: 400,
+          hold: 1200,
+          scanAt: 1200,
         }));
         function startMission() {
           S.missionRunning = true;
@@ -1480,7 +2078,8 @@
           $("missionNote").textContent = "Decode " + (S.missionIdx + 1) + "/" + MISSION.length + " — " + step.label;
           S.missionElapsed += dtMs;
           if (S.missionElapsed >= step.scanAt && S.phase === "idle") startScan();
-          const totalStepTime = step.scanAt + DURATION.swish + DURATION.point + DURATION.reading + 900;
+          // time to read each result before the next colour
+          const totalStepTime = step.scanAt + DURATION.swish + DURATION.point + DURATION.reading + 3000;
           if (S.missionElapsed >= totalStepTime) {
             S.missionIdx++;
             S.missionStepStarted = false;
@@ -1503,6 +2102,7 @@
         }
 
         function step(dt) {
+          S.clock += dt;
           S.phaseT += dt * 1000;
 
           if (S.phase === "swish") {
@@ -1532,7 +2132,21 @@
               S.resultCandidates = result.candidates || null;
               S.phase = "result";
               S.phaseT = 0;
-              if (result.key !== "unclear") S.unlocked[result.key] = true;
+              if (result.key !== "unclear") {
+                if (!S.unlocked[result.key]) S.unlockAt[result.key] = S.clock;
+                S.unlocked[result.key] = true;
+              }
+              S.react = { kind: result.key === "unclear" ? "huh" : "yay", at: S.clock };
+              if (result.key !== "unclear") {
+                S.lastDecode[result.key] = {
+                  led: S.color,
+                  bright: Math.round(S.brightness),
+                  sens: Math.round(S.sensitivity),
+                  interf: S.interference > 3,
+                  counts: noisyCounts(S.color),
+                };
+              }
+              logScan(result);
               applyResultFeedback(result);
               updateActionButton();
             }
@@ -1563,14 +2177,14 @@
             };
             setFeedback(msgs[result.key] + " Star identity decoded successfully.", "ok");
           } else if (result.reason === "weak") {
-            setFeedback("Move the wand closer for stronger readings.", "warn");
+            setFeedback("Signal too weak to classify. Raise the LED Intensity or the Sensor Sensitivity.", "warn");
           } else if (result.reason === "saturated") {
-            setFeedback("Light too strong. Move the wand slightly away.", "warn");
+            setFeedback("Light too strong — the sensor is clipping. Lower the LED Intensity.", "warn");
           } else if (result.reason === "ambiguous") {
             const [a, b] = (result.candidates || []).map((k) => STARS[k].name);
             setFeedback(`Reading matches ${a} and ${b} equally — the sensor can't tell these two apart.`, "bad");
           } else {
-            setFeedback("Background light is affecting the scan. Reading is unclear — adjust and scan again.", "bad");
+            setFeedback("Reading too noisy to match any star. Raise the LED Intensity or the Sensor Sensitivity and scan again.", "bad");
           }
         }
 
@@ -1608,24 +2222,28 @@
           const txt = $("bannerTxt");
           if (S.phase === "idle") {
             chip.className = "chip c-ready";
-            chip.textContent = "READY";
-            txt.textContent = S.color ? STARS[S.color].name.replace(" Star", "") + " wand ready — press Start." : "Ready — pick a wand colour and press Start.";
+            chip.textContent = S.running ? "READY" : "STOPPED";
+            txt.textContent = !S.running
+              ? "Simulation stopped — press Start Simulation."
+              : S.color
+                ? STARS[S.color].name.replace(" Star", "") + " LED ready — press Scan."
+                : "Ready — pick an LED colour, then press Scan.";
           } else if (S.phase === "swish" || S.phase === "point" || S.phase === "reading") {
             chip.className = "chip c-scan";
-            chip.textContent = S.phase === "reading" ? "READING" : "AIMING";
-            txt.textContent = S.phase === "reading" ? "AS7341 reading spectral channels…" : "Wand swishing toward the sensor…";
+            chip.textContent = S.phase === "reading" ? "READING" : "ALIGNING";
+            txt.textContent = S.phase === "reading" ? "AS7341 reading spectral channels…" : "Shutter opening — aligning the beam on the sensor…";
           } else {
             if (S.resultKey === "unclear") {
               chip.className = "chip c-unclear";
               chip.textContent = "UNCLEAR";
               txt.textContent =
                 S.resultReason === "weak"
-                  ? "Signal too weak — move wand closer."
+                  ? "Signal too weak — raise LED Intensity or Sensitivity."
                   : S.resultReason === "saturated"
-                    ? "Signal saturated — move wand away."
+                    ? "Signal saturated — lower LED Intensity."
                     : S.resultReason === "ambiguous"
                       ? "Two reference stars match equally — genuinely ambiguous."
-                      : "Reading mixed by interference — rescan.";
+                      : "Reading too noisy — raise intensity or sensitivity.";
             } else {
               chip.className = "chip c-match";
               chip.textContent = "MATCHED";
@@ -1656,576 +2274,924 @@
           return S.color ? STARS[S.color].sw : "#475569";
         }
 
+        /* ---------- instrument bench ----------
+           The stage is the measurement itself, left to right:
+             signal path  — LED source on an optical rail → AS7341 → MCU → result
+             spectrum     — live channel bars, then measured vs reference curve
+             match panel  — how closely the reading matches each star on the map
+             temperature  — where the decoded star sits from hot blue to cool red
+        */
+        const STARINFO = {
+          blue: { cls: "B8 Ia", temp: 12100, dist: "~860 ly", con: "Orion" },
+          skyblue: { cls: "A1 V", temp: 9940, dist: "8.6 ly", con: "Canis Major" },
+          white: { cls: "F5 IV", temp: 6530, dist: "11.5 ly", con: "Canis Minor" },
+          yellow: { cls: "G2 V", temp: 5772, dist: "8.3 light-min", con: "our Solar System" },
+          orange: { cls: "K1.5 III", temp: 4290, dist: "36.7 ly", con: "Boötes" },
+          red: { cls: "M1 Ia", temp: 3600, dist: "~550 ly", con: "Orion" },
+        };
+        const CH_COL = ["#7c3aed", "#2563eb", "#06b6d4", "#22c55e", "#a3e635", "#f59e0b", "#f97316", "#dc2626"];
+        const MONO = "Consolas, 'Courier New', monospace";
+        const font = (w, px2, fam) => w + " " + Math.round(px2) + "px " + (fam || "'Rajdhani', sans-serif");
+
+        function confThreshold() {
+          return 0.985 - (S.sensitivity / 100) * 0.05;
+        }
+        function weakThreshold() {
+          return 0.55 - (S.sensitivity / 100) * 0.35;
+        }
+        function matchScores(reading) {
+          const r = normalize(reading);
+          return COLOR_ORDER.map((k) => dotp(r, normalize(STARS[k].profile)));
+        }
+        // What one AS7341 channel reads for the current LED colour and settings
+        // (raw counts, with the sensor's noise floor and clipping behaviour).
+        function measuredCounts(key) {
+          const sensF = clamp(S.sensitivity / 100, 0, 1);
+          return STARS[key].profile.map((p) => {
+            const raw = applyIntensity(p * 30000, S.brightness);
+            return NOISE_FLOOR + (raw - NOISE_FLOOR) * sensF;
+          });
+        }
+        // Real readings carry noise. It grows as the LED dims (less light, same
+        // electronic noise) and as sensitivity drops. The noise pattern is fixed
+        // for each scan, so the match only moves when a setting moves.
+        function sensorNoiseSigma() {
+          const sensF = clamp(S.sensitivity / 100, 0, 1),
+            bt = clamp(S.brightness / 100, 0, 1);
+          return 30000 * 0.07 * Math.pow(1 - sensF, 1.4) + 900 * Math.pow(1 - bt, 2);
+        }
+        function newNoise() {
+          S.noise = Array.from({ length: 8 }, () => {
+            const u1 = Math.random() || 1e-6,
+              u2 = Math.random();
+            return Math.sqrt(-2 * Math.log(u1)) * Math.cos(TAU * u2);
+          });
+        }
+        function noisyCounts(key) {
+          if (!S.noise) newNoise();
+          const sg = sensorNoiseSigma();
+          return measuredCounts(key).map((c, i) => clamp(c + S.noise[i] * sg, 0, 30000));
+        }
+        function liveScores() {
+          return S.color ? matchScores(noisyCounts(S.color)) : null;
+        }
+        function settingsKey() {
+          return [S.color, Math.round(S.brightness), Math.round(S.sensitivity), S.interference > 3].join("|");
+        }
+        function glitch() {
+          return Math.max(S.interference > 3 ? 1 : 0, 1 - clamp(S.sensitivity / 100, 0, 1));
+        }
+
+        function panel(x, y, w, h, title, u) {
+          ctx.fillStyle = "#070b1d";
+          ctx.strokeStyle = "rgba(120,150,230,0.28)";
+          ctx.lineWidth = 1.2;
+          rr(ctx, x, y, w, h, 10);
+          ctx.fill();
+          ctx.stroke();
+          if (title) {
+            ctx.fillStyle = "rgba(160,190,255,0.75)";
+            ctx.font = font(700, 10 * u, "'Orbitron', sans-serif");
+            ctx.textAlign = "left";
+            ctx.textBaseline = "alphabetic";
+            ctx.fillText(title, x + 10, y + 16 * u);
+          }
+        }
+
         function drawScene(t) {
           ctx.clearRect(0, 0, CW, CH);
           const g = ctx.createLinearGradient(0, 0, 0, CH);
-          g.addColorStop(0, "#0c1330");
-          g.addColorStop(1, "#070a1c");
+          g.addColorStop(0, "#0b1129");
+          g.addColorStop(1, "#060918");
           ctx.fillStyle = g;
           ctx.fillRect(0, 0, CW, CH);
-
-          // starfield
-          ctx.fillStyle = "rgba(255,255,255,0.55)";
-          for (let i = 0; i < 60; i++) {
-            const sx = (i * 173.3) % CW;
-            const sy = (i * 97.7) % CH;
-            const tw = 0.4 + 0.6 * Math.abs(Math.sin(t * 1.3 + i));
-            ctx.globalAlpha = 0.15 + tw * 0.35;
-            ctx.beginPath();
-            ctx.arc(sx, sy, 1 + (i % 3 === 0 ? 0.6 : 0), 0, TAU);
-            ctx.fill();
-          }
-          ctx.globalAlpha = 1;
-
-          // Background Interference is a straight on/off: dark space when off,
-          // bright white stray light washing the scene when on.
-          const interferenceOn = S.interference > 3;
-          if (interferenceOn) {
-            ctx.fillStyle = "rgba(255,255,255,0.92)";
-            ctx.fillRect(0, 0, CW, CH);
-          }
-
-          const pad = 16;
-          ctx.strokeStyle = "rgba(140,170,255,0.2)";
-          ctx.lineWidth = 2;
-          rr(ctx, pad, pad, CW - pad * 2, CH - pad * 2, 18);
-          ctx.stroke();
-
-          // ---- astronaut mascot holding the wand ----
-          // Kept further left (as a fraction of canvas width, so it holds at every
-          // screen size — tablet, laptop, or a big monitor) to leave proper open
-          // space between the character and the console instead of crowding it.
-          const pivotX = CW * 0.2,
-            pivotY = CH * 0.62;
-          const consoleX = CW * 0.67,
-            consoleY = CH * 0.48;
-          // big decoder console — sized off the canvas so it stays a dominant, readable monitor
-          const consoleW = clamp(CW * 0.46, 300, 460);
-          const consoleH = clamp(CH * 0.8, 250, 360);
-          const cHalfW = consoleW / 2,
-            cHalfH = consoleH / 2;
-          const lensX = consoleX - cHalfW + 26,
-            lensY = consoleY + cHalfH - 24;
-          const oledX = consoleX - cHalfW + 16,
-            oledY = consoleY - cHalfH + 34,
-            oledW = consoleW - 32,
-            oledH = consoleH - 76;
-
-          const { handX, handY } = drawAstronaut(pivotX, pivotY);
-          const pointAngle = Math.atan2(lensY - handY, lensX - handX);
-
-          let angleTarget;
-          if (S.phase === "swish") {
-            const u = easeInOutCubic(clamp(S.phaseT / DURATION.swish, 0, 1));
-            const flourish = -1.15;
-            S.wandAngle = lerp(REST_ANGLE, pointAngle, u) + Math.sin(u * Math.PI) * flourish;
-          } else {
-            angleTarget = S.phase === "idle" ? REST_ANGLE + Math.sin(t * 1.4) * 0.05 : pointAngle;
-            S.wandAngle = approach(S.wandAngle, angleTarget, 0.18, 1 / 60);
-          }
-
-          const wandLen = Math.min(CW, CH) * 0.2;
-          const tipX = handX + Math.cos(S.wandAngle) * wandLen;
-          const tipY = handY + Math.sin(S.wandAngle) * wandLen;
-          S.tipX = tipX;
-          S.tipY = tipY;
-
-          // handle
-          ctx.strokeStyle = "#8b6f4e";
-          ctx.lineWidth = 4;
-          ctx.lineCap = "round";
-          ctx.beginPath();
-          ctx.moveTo(handX, handY);
-          ctx.lineTo(lerp(handX, tipX, 0.22), lerp(handY, tipY, 0.22));
-          ctx.stroke();
-          // shaft
-          ctx.strokeStyle = "#c9a876";
-          ctx.lineWidth = 2.6;
-          ctx.beginPath();
-          ctx.moveTo(lerp(handX, tipX, 0.22), lerp(handY, tipY, 0.22));
-          ctx.lineTo(tipX, tipY);
-          ctx.stroke();
-
-          // tip glow — brightness has to be visible here, not just in the sensor bars:
-          // dim LED = small faint glow, bright LED = big, hot, ray-emitting glow.
-          const wc = wandColorHex();
-          if (S.color) {
-            const brightT = clamp(S.brightness / 100, 0, 1);
-            const baseGlow = lerp(4, 27, brightT);
-            const glowR = baseGlow + (S.phase !== "idle" ? 6 : 0) + Math.sin(t * 5) * (1 + brightT * 2.5);
-            const glowAlpha = lerp(0.3, 1, brightT);
-            const rad = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, glowR);
-            rad.addColorStop(0, brightT > 0.65 ? "#ffffff" : wc);
-            rad.addColorStop(0.45, wc);
-            rad.addColorStop(1, "rgba(0,0,0,0)");
-            ctx.globalAlpha = glowAlpha;
-            ctx.fillStyle = rad;
-            ctx.beginPath();
-            ctx.arc(tipX, tipY, glowR, 0, TAU);
-            ctx.fill();
-            ctx.globalAlpha = 1;
-
-            // light rays radiating out once the LED is reasonably bright
-            if (brightT > 0.3) {
-              const rayT = (brightT - 0.3) / 0.7;
-              const rayLen = lerp(3, 24, rayT);
-              const nRays = 8;
-              ctx.strokeStyle = wc;
-              ctx.lineWidth = 1.4;
-              ctx.globalAlpha = 0.55 * rayT;
-              for (let i = 0; i < nRays; i++) {
-                const a = (i / nRays) * TAU + t * 0.7;
-                const r0 = glowR * 0.55;
-                ctx.beginPath();
-                ctx.moveTo(tipX + Math.cos(a) * r0, tipY + Math.sin(a) * r0);
-                ctx.lineTo(tipX + Math.cos(a) * (r0 + rayLen), tipY + Math.sin(a) * (r0 + rayLen));
-                ctx.stroke();
-              }
-              ctx.globalAlpha = 1;
-            }
-          }
-          ctx.beginPath();
-          ctx.arc(tipX, tipY, 4.5, 0, TAU);
-          ctx.fillStyle = S.color ? wc : "#475569";
-          ctx.fill();
-          ctx.strokeStyle = "rgba(255,255,255,0.6)";
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
-
-          // sparkles
-          S.sparkles.forEach((p) => {
-            ctx.globalAlpha = clamp(1 - p.age / p.life, 0, 1);
-            ctx.fillStyle = wc;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, TAU);
-            ctx.fill();
-          });
-          ctx.globalAlpha = 1;
-
-          // aiming beam during point/reading/result
-          if (S.color && (S.phase === "point" || S.phase === "reading" || S.phase === "result")) {
-            const beamAlpha = S.phase === "reading" ? 0.35 + 0.25 * Math.abs(Math.sin(t * 10)) : 0.28;
-            ctx.strokeStyle = wc;
-            ctx.globalAlpha = beamAlpha;
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(tipX, tipY);
-            ctx.lineTo(lensX, lensY);
-            ctx.stroke();
-            ctx.globalAlpha = 1;
-          }
-
-          // ---- decoder console / monitor (big, so the star graph is readable) ----
-          ctx.fillStyle = "#101a3c";
-          ctx.strokeStyle = "#2f3f7a";
-          ctx.lineWidth = 2.5;
-          rr(ctx, consoleX - cHalfW, consoleY - cHalfH, consoleW, consoleH, 16);
-          ctx.fill();
-          ctx.stroke();
-          ctx.fillStyle = "#9fb3ff";
-          ctx.font = "700 11px 'Rajdhani', sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText("AS7341 SPECTRAL SENSOR", consoleX, consoleY - cHalfH + 20);
-
-          // AS7341 lens (bottom-left of the console, aimed at by the wand)
-          const scanning = S.phase === "reading";
-          const lensPulse = scanning ? 1 + 0.25 * Math.abs(Math.sin(t * 9)) : 1;
-          ctx.beginPath();
-          ctx.arc(lensX, lensY, 13 * lensPulse, 0, TAU);
-          ctx.fillStyle = "#050814";
-          ctx.fill();
-          ctx.strokeStyle = scanning ? wc : "#3f4f8f";
-          ctx.lineWidth = 3;
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.arc(lensX, lensY, 5, 0, TAU);
-          ctx.fillStyle = scanning ? wc : "#3f4f8f";
-          ctx.fill();
-
-          // OLED screen — the dominant surface of the console
-          ctx.fillStyle = "#020617";
-          ctx.strokeStyle = "#1e293b";
-          ctx.lineWidth = 2;
-          rr(ctx, oledX, oledY, oledW, oledH, 6);
-          ctx.fill();
-          ctx.stroke();
-
-          ctx.textAlign = "center";
-          if (S.phase === "idle") {
-            ctx.fillStyle = "#38bdf8";
-            ctx.font = "700 13px 'Rajdhani', sans-serif";
-            ctx.fillText(S.color ? "READY TO SCAN" : "AWAITING WAND", oledX + oledW / 2, oledY + oledH / 2 + 4);
-          } else if (S.phase === "swish" || S.phase === "point") {
-            ctx.fillStyle = "#facc15";
-            ctx.font = "700 13px 'Rajdhani', sans-serif";
-            ctx.fillText("ALIGNING…", oledX + oledW / 2, oledY + oledH / 2 + 4);
-          } else if (S.phase === "reading") {
-            ctx.fillStyle = "#a78bfa";
-            ctx.font = "700 13px 'Rajdhani', sans-serif";
-            ctx.fillText("SCANNING" + ".".repeat(1 + Math.floor(t * 4) % 3), oledX + oledW / 2, oledY + oledH / 2 + 4);
-          } else if (S.phase === "result") {
-            if (S.resultKey === "unclear") {
-              ctx.fillStyle = "#fbbf24";
-              ctx.font = "800 14px 'Rajdhani', sans-serif";
-              ctx.fillText("UNCLEAR — RESCAN", oledX + oledW / 2, oledY + 30);
-              ctx.font = "600 10px 'Rajdhani', sans-serif";
-              ctx.fillStyle = "#cbd5e1";
-              const hint =
-                S.resultReason === "weak"
-                  ? "move wand closer"
-                  : S.resultReason === "saturated"
-                    ? "move wand away"
-                    : S.resultReason === "ambiguous"
-                      ? "two stars match equally — real sensor limit"
-                      : "reduce interference";
-              ctx.fillText(hint, oledX + oledW / 2, oledY + 50);
-            } else {
-              const st = STARS[S.resultKey];
-              ctx.fillStyle = st.sw;
-              ctx.font = "800 13px 'Orbitron', sans-serif";
-              ctx.fillText(st.name.toUpperCase(), oledX + oledW / 2, oledY + 15);
-              ctx.fillStyle = "#94a3b8";
-              ctx.font = "600 9px 'Rajdhani', sans-serif";
-              ctx.fillText(st.star, oledX + oledW / 2, oledY + 27);
-              drawSpectralGraph(oledX + 10, oledY + 42, oledW - 20, oledH - 54);
-            }
-          }
-
-          // console footer label
-          ctx.fillStyle = "#7c8ac0";
-          ctx.font = "700 9px 'Rajdhani', sans-serif";
-          ctx.fillText("DECODER CONSOLE", consoleX, consoleY + cHalfH + 18);
-        }
-
-        // Kid-proportioned astronaut mascot — a big head, a short pudgy torso, and
-        // stubby limbs, matching the LOF reference art (white suit, red wrist/waist/
-        // ankle bands, black gloves & boots, dark starry visor, LOF chest badge).
-        // Both arms hang naturally at the sides; the wand rotates inside the right glove (a
-        // wrist flourish) so it can still swish/point without the arm itself having to move.
-        // Returns the right-hand glove position so the caller can anchor the wand there.
-        function drawAstronaut(bodyCenterX, bodyCenterY) {
-          const au = Math.min(CW, CH) * 0.0095;
-          // Kid proportions, but tall enough that the torso, arms, and legs are
-          // all clearly their own separate, visible parts.
-          const armLen = 9 * au;
-          const torsoW = 15 * au,
-            torsoH = 16 * au;
-          // Negative inset so the shoulder sits clearly outside the torso's edge,
-          // with enough margin that the arm's own stroke width (plus its outline)
-          // never creeps back into the torso's fill.
-          const shoulderInsetX = -2.5 * au,
-            shoulderInsetY = 2.4 * au;
-
-          const torsoTop = bodyCenterY - torsoH / 2,
-            torsoBottom = bodyCenterY + torsoH / 2;
-          const rShoulderX = bodyCenterX + torsoW / 2 - shoulderInsetX,
-            rShoulderY = torsoTop + shoulderInsetY;
-          const lShoulderX = bodyCenterX - torsoW / 2 + shoulderInsetX,
-            lShoulderY = torsoTop + shoulderInsetY;
-          const rAngle = 1.48; // just off straight-down, so the hand clears the hip
-          const lAngle = Math.PI - rAngle; // mirrored to the other side
-          const gripX = rShoulderX + Math.cos(rAngle) * armLen,
-            gripY = rShoulderY + Math.sin(rAngle) * armLen;
-
-          const white = "#e9edf6",
-            edge = "#aab3cc",
-            black = "#30354a", // lighter than pure black so it still reads against the dark space backdrop
-            blackEdge = "#8b93b8",
-            red = "#dc2626";
-
-          // ---- legs & boots — stubby but long enough to clearly read as legs ----
-          const legW = 6.5 * au,
-            legGap = 2 * au,
-            legH = 10 * au,
-            bootW = 9.5 * au,
-            bootH = 5.5 * au;
-          const hipY = torsoBottom - au;
-          const legBottomY = hipY + legH;
-          [bodyCenterX - legGap / 2 - legW / 2, bodyCenterX + legGap / 2 + legW / 2].forEach((lx) => {
-            ctx.fillStyle = white;
-            ctx.strokeStyle = edge;
-            ctx.lineWidth = 1.4;
-            rr(ctx, lx - legW / 2, hipY, legW, legH, legW * 0.35);
-            ctx.fill();
-            ctx.stroke();
-            ctx.fillStyle = red;
-            rr(ctx, lx - legW / 2 - 0.4 * au, legBottomY - 2.6 * au, legW + 0.8 * au, 2.6 * au, 1.4 * au);
-            ctx.fill();
-            // boot: ankle cuff + a separate, wider sole so it reads as a boot
-            // shape rather than a plain rounded box
-            ctx.fillStyle = black;
-            ctx.strokeStyle = blackEdge;
-            ctx.lineWidth = 1.2;
-            rr(ctx, lx - bootW / 2, legBottomY, bootW, bootH * 0.62, bootH * 0.28);
-            ctx.fill();
-            ctx.stroke();
-            const soleW = bootW + 2.6 * au,
-              soleY = legBottomY + bootH * 0.5,
-              soleH = bootH * 0.6;
-            rr(ctx, lx - soleW / 2, soleY, soleW, soleH, soleH * 0.5);
-            ctx.fill();
-            ctx.stroke();
-            ctx.strokeStyle = "rgba(255,255,255,0.18)";
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(lx - bootW / 2 + 1, legBottomY + bootH * 0.28);
-            ctx.lineTo(lx + bootW / 2 - 1, legBottomY + bootH * 0.28);
-            ctx.stroke();
-          });
-
-          // ---- torso — short and rounded, almost egg-shaped, like a kid's puffy suit ----
-          ctx.fillStyle = "#eef2fa";
-          ctx.strokeStyle = edge;
-          ctx.lineWidth = 1.6;
-          rr(ctx, bodyCenterX - torsoW / 2, torsoTop, torsoW, torsoH, torsoW * 0.42);
-          ctx.fill();
-          ctx.stroke();
-
-          // waist band
-          ctx.fillStyle = red;
-          rr(ctx, bodyCenterX - torsoW / 2 - 0.4 * au, torsoBottom - 2.6 * au, torsoW + 0.8 * au, 2.6 * au, 1.4 * au);
-          ctx.fill();
-
-          // LOF chest badge
-          const badgeW = 5.6 * au,
-            badgeH = 4 * au;
-          const badgeX = bodyCenterX - badgeW / 2,
-            badgeY = torsoTop + torsoH * 0.28;
-          ctx.fillStyle = "#ffffff";
-          ctx.strokeStyle = "#8891a8";
+          // faint engineering grid
+          ctx.strokeStyle = "rgba(120,150,230,0.05)";
           ctx.lineWidth = 1;
-          rr(ctx, badgeX, badgeY, badgeW, badgeH, 0.8 * au);
-          ctx.fill();
-          ctx.stroke();
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.font = `800 ${Math.max(6, Math.round(3.5 * au))}px 'Orbitron', sans-serif`;
-          const badgeMidY = badgeY + badgeH / 2 + 0.35 * au;
-          ctx.fillStyle = "#2563eb";
-          ctx.fillText("L", bodyCenterX - 1.7 * au, badgeMidY);
-          ctx.fillStyle = "#ef4444";
-          ctx.fillText("O", bodyCenterX, badgeMidY);
-          ctx.fillStyle = "#2563eb";
-          ctx.fillText("F", bodyCenterX + 1.7 * au, badgeMidY);
-          ctx.textBaseline = "alphabetic";
-
-          // ---- both arms hang naturally at the sides — drawn after the torso
-          // so they sit in front of it instead of being painted over ----
-          const sway = Math.sin(performance.now() / 900) * 0.04;
-          const lHandX = lShoulderX + Math.cos(lAngle + sway) * armLen,
-            lHandY = lShoulderY + Math.sin(lAngle + sway) * armLen;
-          [
-            [lShoulderX, lShoulderY, lHandX, lHandY],
-            [rShoulderX, rShoulderY, gripX, gripY],
-          ].forEach(([sx, sy, hx, hy]) => {
-            // outline pass first, so the sleeve has a visible edge against the
-            // torso even where the two are right next to each other
-            ctx.strokeStyle = edge;
-            ctx.lineWidth = 3.6 * au + 2;
-            ctx.lineCap = "round";
+          for (let x = 0; x < CW; x += 24) {
             ctx.beginPath();
-            ctx.moveTo(sx, sy);
-            ctx.lineTo(hx, hy);
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, CH);
             ctx.stroke();
-            ctx.strokeStyle = white;
-            ctx.lineWidth = 3.6 * au;
-            ctx.lineCap = "round";
+          }
+          for (let y = 0; y < CH; y += 24) {
             ctx.beginPath();
-            ctx.moveTo(sx, sy);
-            ctx.lineTo(hx, hy);
+            ctx.moveTo(0, y);
+            ctx.lineTo(CW, y);
             ctx.stroke();
-            ctx.fillStyle = red;
-            ctx.beginPath();
-            ctx.arc(lerp(sx, hx, 0.8), lerp(sy, hy, 0.8), 1.8 * au, 0, TAU);
-            ctx.fill();
-            // a chubby, rounded kid's mitt rather than a small fist
-            ctx.fillStyle = black;
-            ctx.strokeStyle = blackEdge;
-            ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.arc(hx, hy, 3.6 * au, 0, TAU);
-            ctx.fill();
-            ctx.stroke();
-          });
-
-          // ---- helmet — a touch bigger than the torso, not overwhelming it ----
-          const helmetR = 9.5 * au;
-          const helmetCenterX = bodyCenterX,
-            helmetCenterY = torsoTop - helmetR * 0.55;
-          ctx.fillStyle = "#f3f5fa";
-          ctx.strokeStyle = edge;
-          ctx.lineWidth = 1.8;
-          ctx.beginPath();
-          ctx.arc(helmetCenterX, helmetCenterY, helmetR, 0, TAU);
-          ctx.fill();
-          ctx.stroke();
-
-          // visor — dark, starry, with a small pale "moon"
-          const visorR = helmetR * 0.72;
-          const visorCX = helmetCenterX,
-            visorCY = helmetCenterY + helmetR * 0.06;
-          const vg = ctx.createRadialGradient(visorCX - visorR * 0.3, visorCY - visorR * 0.3, visorR * 0.1, visorCX, visorCY, visorR);
-          vg.addColorStop(0, "#161d38");
-          vg.addColorStop(1, "#05060f");
-          ctx.fillStyle = vg;
-          ctx.beginPath();
-          ctx.arc(visorCX, visorCY, visorR, 0, TAU);
-          ctx.fill();
-          ctx.strokeStyle = "#9aa5c4";
-          ctx.lineWidth = 1.4;
-          ctx.stroke();
-
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(visorCX, visorCY, visorR, 0, TAU);
-          ctx.clip();
-          ctx.fillStyle = "#fbbf24";
-          ctx.beginPath();
-          ctx.arc(visorCX + visorR * 0.35, visorCY - visorR * 0.4, visorR * 0.26, 0, TAU);
-          ctx.fill();
-          ctx.fillStyle = "rgba(255,255,255,0.9)";
-          [
-            [-0.4, -0.1, 0.055],
-            [0.1, 0.35, 0.04],
-            [-0.15, 0.5, 0.055],
-            [0.35, 0.15, 0.04],
-            [-0.5, 0.3, 0.045],
-          ].forEach(([dx, dy, r]) => {
-            ctx.beginPath();
-            ctx.arc(visorCX + dx * visorR, visorCY + dy * visorR, r * visorR, 0, TAU);
-            ctx.fill();
-          });
-          ctx.restore();
-
-          ctx.strokeStyle = "rgba(255,255,255,0.35)";
-          ctx.lineWidth = visorR * 0.14;
-          ctx.lineCap = "round";
-          ctx.beginPath();
-          ctx.arc(visorCX, visorCY, visorR * 0.78, Math.PI * 1.1, Math.PI * 1.35);
-          ctx.stroke();
-
-          return { handX: gripX, handY: gripY };
-        }
-
-        // AS7341 channel readings (F1-F8), drawn straight onto the decoder console OLED.
-        // Uses the confirmed star's pure reference profile (from the real sensor PDF) as
-        // each channel's 100%-intensity raw count; LED Intensity then dims it per-channel
-        // through applyIntensity() — full reference values at 100%, dimmer (with a noise
-        // floor and saturation-release behavior) as intensity drops.
-        function drawSpectralGraph(gx, gy, gw, gh) {
-          const st = STARS[S.resultKey];
-          const profile = st.profile;
-          const n = profile.length;
-          const interferenceOn = S.interference > 3;
-          // Sensitivity behaves like Intensity for the graph — 100% is the ideal (full,
-          // clean reading), and it shrinks toward the noise floor as sensitivity drops.
-          // It also has its own glitch: a poorly-sensitive sensor gets progressively
-          // shakier readings even with Background Interference off ("in dark mode").
-          const sensFactor = clamp(S.sensitivity / 100, 0, 1);
-          const sensGlitch = 1 - sensFactor;
-          const glitchStrength = Math.max(interferenceOn ? 1 : 0, sensGlitch);
-          const padL = 24,
-            padR = 4,
-            padT = 4,
-            padB = 12;
-          const x0 = gx + padL,
-            x1 = gx + gw - padR;
-          const y0 = gy + padT,
-            y1 = gy + gh - padB;
-
-          ctx.fillStyle = "#02030a";
-          ctx.fillRect(gx, gy, gw, gh);
-          ctx.strokeStyle = "#334155";
-          ctx.lineWidth = 1;
-          ctx.strokeRect(gx, gy, gw, gh);
-
-          // gridlines + raw-count axis labels (0 / 15k / 30k), matching the reference PDF's scale
-          ctx.font = "600 6.5px 'Rajdhani', sans-serif";
-          ctx.textAlign = "right";
-          [0, 15000, 30000].forEach((v) => {
-            const y = y1 - (v / 30000) * (y1 - y0);
-            ctx.strokeStyle = "rgba(255,255,255,0.1)";
-            ctx.beginPath();
-            ctx.moveTo(x0, y);
-            ctx.lineTo(x1, y);
-            ctx.stroke();
-            ctx.fillStyle = "#7d87ad";
-            ctx.fillText(v / 1000 + "k", x0 - 3, y + 2.5);
-          });
-
-          // F1-F8 points from the pure reference profile
-          const stepX = (x1 - x0) / (n - 1);
-          const pts = [];
-          let domI = 0;
-          for (let i = 0; i < n; i++) {
-            if (profile[i] > profile[domI]) domI = i;
-            let raw = applyIntensity(profile[i] * 30000, S.brightness);
-            raw = NOISE_FLOOR + (raw - NOISE_FLOOR) * sensFactor;
-            let y = clamp(y1 - (raw / 30000) * (y1 - y0), y0 - 4, y1);
-            // Glitch: jitters the trace channel-by-channel, redrawn fresh every frame
-            // so it visibly flickers rather than sitting still. Strength scales with
-            // how bad things are (interference and/or low sensitivity).
-            if (glitchStrength > 0) y = clamp(y + (Math.random() * 2 - 1) * 7 * glitchStrength, y0 - 4, y1);
-            pts.push([x0 + i * stepX, y]);
           }
 
-          ctx.textAlign = "center";
-          ctx.font = "700 6.5px 'Rajdhani', sans-serif";
-          ctx.fillStyle = "#9fa8cc";
-          pts.forEach(([x], i) => ctx.fillText("F" + (i + 1), x, y1 + 10));
+          const u = clamp(Math.min(CW / 760, CH / 520), 0.8, 1.3);
+          const m = 12;
+          const topH = clamp(CH * 0.22, 84, 130);
+          const botH = clamp(CH * 0.22, 96, 140);
+          const midY = m + topH + 8,
+            midH = CH - midY - botH - 8 - m;
+          const innerW = CW - 2 * m;
+          const specW = innerW * 0.6 - 4,
+            matchW = innerW - specW - 8;
+          const botY = midY + midH + 8;
+          const stripW = innerW * 0.62 - 4,
+            cardW = innerW - stripW - 8;
 
-          // A corrupted signal randomly flickers to white instead of holding its colour
-          const lineColor = Math.random() < 0.25 * glitchStrength ? "#ffffff" : st.sw;
-          ctx.strokeStyle = lineColor;
-          ctx.lineWidth = 2;
-          ctx.lineJoin = "round";
-          ctx.lineCap = "round";
-          ctx.beginPath();
-          pts.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
-          ctx.stroke();
+          S.hits = [];
+          const lens = drawSignalPath(m, m, innerW, topH, t, u);
+          drawSpectrum(m, midY, specW, midH, t, u);
+          drawMatch(m + specW + 8, midY, matchW, midH, t, u);
+          drawTempStrip(m, botY, stripW, botH, t, u);
+          drawStarCard(m + stripW + 8, botY, cardW, botH, t, u);
 
-          pts.forEach(([x, y], i) => {
-            ctx.beginPath();
-            ctx.arc(x, y, i === domI ? 3.2 : 2, 0, TAU);
-            ctx.fillStyle = lineColor;
-            ctx.fill();
-            ctx.strokeStyle = "#0b0e22";
-            ctx.lineWidth = 1;
-            ctx.stroke();
-          });
-
-          // Glitch tear bars — a couple of thin horizontal slices sheared sideways,
-          // reshuffled every frame so it reads as static, not decoration. More
-          // frequent and more visible the worse interference/sensitivity get.
-          if (glitchStrength > 0) {
+          // Background interference: stray room light falls onto the sensor
+          // window only. The rest of the bench stays dark and readable.
+          if (S.interference > 3) {
             ctx.save();
+            const halo = ctx.createRadialGradient(lens.x, lens.y, 0, lens.x, lens.y, 46 * u);
+            halo.addColorStop(0, "rgba(255,250,235,0.45)");
+            halo.addColorStop(1, "rgba(255,250,235,0)");
+            ctx.fillStyle = halo;
             ctx.beginPath();
-            ctx.rect(gx, gy, gw, gh);
-            ctx.clip();
-            for (let g = 0; g < 3; g++) {
-              if (Math.random() < 0.45 * glitchStrength) {
-                const barY = lerp(y0, y1, Math.random());
-                const barH = 1.5 + Math.random() * 3;
-                const shift = (Math.random() * 2 - 1) * 12 * glitchStrength;
-                ctx.globalAlpha = (0.35 + Math.random() * 0.35) * glitchStrength;
-                ctx.fillStyle = Math.random() < 0.5 ? "#ffffff" : st.sw;
-                ctx.fillRect(x0 + shift, barY, x1 - x0, barH);
-              }
-            }
-            ctx.globalAlpha = 1;
+            ctx.arc(lens.x, lens.y, 46 * u, 0, TAU);
+            ctx.fill();
+            ctx.globalAlpha = 0.35 + 0.15 * Math.sin(t * 6);
+            const sg = ctx.createLinearGradient(lens.x, 0, lens.x, lens.y);
+            sg.addColorStop(0, "rgba(255,255,255,0)");
+            sg.addColorStop(1, "rgba(255,255,255,0.9)");
+            ctx.fillStyle = sg;
+            ctx.beginPath();
+            ctx.moveTo(lens.x - 40 * u, 0);
+            ctx.lineTo(lens.x + 40 * u, 0);
+            ctx.lineTo(lens.x + 6, lens.y);
+            ctx.lineTo(lens.x - 6, lens.y);
+            ctx.closePath();
+            ctx.fill();
             ctx.restore();
+            ctx.fillStyle = "#fef3c7";
+            ctx.font = font(700, 10 * u);
+            ctx.textAlign = "center";
+            ctx.fillText("STRAY LIGHT", lens.x, m + 12 * u);
           }
         }
+
+        // ---- 1. signal path ------------------------------------------------
+        function drawSignalPath(x, y, w, h, t, u) {
+          panel(x, y, w, h, "SIGNAL PATH", u);
+          const cy = y + h * 0.56;
+          const handX = x + w * 0.1,
+            handY = cy + 4 * u;
+          const chipX = x + w * 0.42,
+            mcuX = x + w * 0.63,
+            outX = x + w * 0.85;
+          const busy = S.phase === "reading";
+          const done = S.phase === "result";
+          const wc = wandColorHex();
+          const labelY = y + h - 7 * u;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "alphabetic";
+          const label = (txt, lx) => {
+            ctx.fillStyle = "rgba(170,190,240,0.72)";
+            ctx.font = font(700, 10.5 * u);
+            ctx.fillText(txt, lx, labelY);
+          };
+
+          // wires between stages, with data pulses while reading
+          ctx.strokeStyle = "rgba(120,150,230,0.35)";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(chipX + 24 * u, cy);
+          ctx.lineTo(outX - 40 * u, cy);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          if (busy || done) {
+            const n = busy ? 3 : 1;
+            for (let i = 0; i < n; i++) {
+              const ph = busy ? (t * 0.9 + i / n) % 1 : 1;
+              const px2 = lerp(chipX + 24 * u, outX - 40 * u, ph);
+              ctx.fillStyle = busy ? wc : S.resultKey === "unclear" ? "#fbbf24" : "#4ade80";
+              ctx.shadowColor = ctx.fillStyle;
+              ctx.shadowBlur = 8;
+              ctx.beginPath();
+              ctx.arc(px2, cy, 3.2 * u, 0, TAU);
+              ctx.fill();
+              ctx.shadowBlur = 0;
+            }
+          }
+
+          // AS7341: eight filter windows lit by the channel readings
+          const cw = 44 * u,
+            chH = 30 * u;
+          ctx.fillStyle = "#101a3c";
+          ctx.strokeStyle = "#3b4f8f";
+          ctx.lineWidth = 1.5;
+          rr(ctx, chipX - cw / 2, cy - chH / 2, cw, chH, 4);
+          ctx.fill();
+          ctx.stroke();
+          const counts = S.color ? noisyCounts(S.color) : null;
+          for (let i = 0; i < 8; i++) {
+            const col = i % 4,
+              row = Math.floor(i / 4);
+            const fx = chipX - cw / 2 + 5 * u + col * 9 * u,
+              fy = cy - chH / 2 + 5 * u + row * 11 * u;
+            let lit = 0.12;
+            if (counts && (busy || done)) {
+              const k = busy ? clamp(S.phaseT / DURATION.reading, 0, 1) : 1;
+              lit = 0.12 + 0.88 * clamp((counts[i] / 30000) * k, 0, 1);
+            }
+            ctx.globalAlpha = lit;
+            ctx.fillStyle = CH_COL[i];
+            ctx.fillRect(fx, fy, 7 * u, 8 * u);
+            ctx.globalAlpha = 1;
+          }
+          label("AS7341 · 8 CH", chipX);
+
+          // microcontroller
+          const mw = 36 * u;
+          ctx.fillStyle = "#14203f";
+          ctx.strokeStyle = "#3b4f8f";
+          rr(ctx, mcuX - mw / 2, cy - mw / 2, mw, mw, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#5b6fa8";
+          ctx.lineWidth = 1.2;
+          for (let i = 0; i < 4; i++) {
+            const o = -mw / 2 + 6 * u + i * 8 * u;
+            ctx.beginPath();
+            ctx.moveTo(mcuX + o, cy - mw / 2);
+            ctx.lineTo(mcuX + o, cy - mw / 2 - 4 * u);
+            ctx.moveTo(mcuX + o, cy + mw / 2);
+            ctx.lineTo(mcuX + o, cy + mw / 2 + 4 * u);
+            ctx.stroke();
+          }
+          ctx.fillStyle = busy ? "#a78bfa" : "rgba(160,180,230,0.6)";
+          ctx.font = font(700, 9 * u, MONO);
+          ctx.fillText(busy ? "CMP" : "MCU", mcuX, cy + 3 * u);
+          label("COMPARE TO MAP", mcuX);
+
+          // result tag
+          const tw = Math.min(150 * u, w * 0.2),
+            th = 30 * u;
+          let txt = "—",
+            col = "rgba(160,180,230,0.5)";
+          if (busy) {
+            txt = "READING" + ".".repeat(1 + (Math.floor(t * 4) % 3));
+            col = "#a78bfa";
+          } else if (S.phase === "swish" || S.phase === "point") {
+            txt = "ALIGNING";
+            col = "#facc15";
+          } else if (done) {
+            txt = S.resultKey === "unclear" ? "UNCLEAR" : STARS[S.resultKey].star.toUpperCase();
+            col = S.resultKey === "unclear" ? "#fbbf24" : STARS[S.resultKey].sw;
+          }
+          ctx.fillStyle = "#0b1230";
+          ctx.strokeStyle = col;
+          ctx.lineWidth = done ? 2 : 1.2;
+          rr(ctx, outX - tw / 2, cy - th / 2, tw, th, 6);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = col;
+          ctx.font = font(800, 12.5 * u, "'Orbitron', sans-serif");
+          ctx.fillText(txt, outX, cy + 4.5 * u);
+          label("RESULT", outX);
+
+          // ---- calibrated LED light source on the optical rail ----------------
+          // A housing with a heatsink and a shutter that opens for the scan; the
+          // beam goes straight into the AS7341's filter window.
+          const srcW = Math.min(100 * u, w * 0.18),
+            srcH = 40 * u;
+          const sx0 = x + 14 * u,
+            sxA = sx0 + srcW; // aperture
+          const railY = cy + srcH / 2 + 4 * u;
+          // rail, with a short post up to the sensor
+          ctx.fillStyle = "#1a2547";
+          ctx.fillRect(sx0 - 4 * u, railY, chipX + 30 * u - sx0, 3.5 * u);
+          ctx.fillStyle = "#24315a";
+          ctx.fillRect(chipX - 2.5 * u, cy + 15 * u, 5 * u, Math.max(0, railY - cy - 15 * u));
+          // shutter: 0 closed → 1 open
+          let shut = 0;
+          if (S.phase === "swish") shut = easeInOutCubic(clamp(S.phaseT / DURATION.swish, 0, 1));
+          else if (S.phase === "point" || busy || done) shut = 1;
+          const bt = clamp(S.brightness / 100, 0, 1);
+          // beam: straight from the source into the sensor window
+          if (S.color && shut > 0) {
+            const a1 = shut * lerp(0.18, 0.55, bt) * (busy ? 0.85 + 0.15 * Math.sin(t * 12) : 1);
+            const bh = 12 * u;
+            ctx.globalAlpha = a1;
+            ctx.fillStyle = wc;
+            ctx.fillRect(sxA, cy - bh / 2, chipX - 22 * u - sxA, bh);
+            ctx.globalAlpha = 1;
+          }
+          // housing
+          ctx.fillStyle = "#1b2440";
+          ctx.strokeStyle = "#4a5d93";
+          ctx.lineWidth = 1.5;
+          rr(ctx, sx0, cy - srcH / 2, srcW, srcH, 5);
+          ctx.fill();
+          ctx.stroke();
+          // heatsink fins at the back
+          ctx.strokeStyle = "#3a4a78";
+          ctx.lineWidth = 2;
+          for (let i = 0; i < 4; i++) {
+            const fx = sx0 + 6 * u + i * 5 * u;
+            ctx.beginPath();
+            ctx.moveTo(fx, cy - srcH / 2 + 5 * u);
+            ctx.lineTo(fx, cy + srcH / 2 - 5 * u);
+            ctx.stroke();
+          }
+          // front vent slots
+          ctx.strokeStyle = "#2c3a63";
+          ctx.lineWidth = 1.5;
+          for (let i = 0; i < 3; i++) {
+            const vy = cy - 8 * u + i * 8 * u;
+            ctx.beginPath();
+            ctx.moveTo(sx0 + 30 * u, vy);
+            ctx.lineTo(sxA - 18 * u, vy);
+            ctx.stroke();
+          }
+          // aperture + shutter blades
+          ctx.fillStyle = "#0a0f22";
+          ctx.fillRect(sxA - 10 * u, cy - 9 * u, 10 * u, 18 * u);
+          if (S.color) {
+            const glowR = lerp(5, 14, bt) * u * (0.4 + 0.6 * shut);
+            const rg = ctx.createRadialGradient(sxA - 4 * u, cy, 0, sxA - 4 * u, cy, glowR);
+            rg.addColorStop(0, bt > 0.6 && shut > 0.5 ? "#ffffff" : wc);
+            rg.addColorStop(0.5, wc);
+            rg.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.globalAlpha = 0.35 + 0.65 * shut;
+            ctx.fillStyle = rg;
+            ctx.beginPath();
+            ctx.arc(sxA - 4 * u, cy, glowR, 0, TAU);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+          const blade = 9 * u * (1 - shut);
+          ctx.fillStyle = "#3a4a78";
+          ctx.fillRect(sxA - 2 * u, cy - 9 * u, 3 * u, blade);
+          ctx.fillRect(sxA - 2 * u, cy + 9 * u - blade, 3 * u, blade);
+          return { x: chipX, y: cy };
+        }
+
+        // ---- 2. spectrum ----------------------------------------------------
+        function drawSpectrum(x, y, w, h, t, u) {
+          panel(x, y, w, h, "SPECTRUM · RAW COUNTS", u);
+          const gauW = 34 * u;
+          const x0 = x + 44 * u,
+            x1 = x + w - gauW - 22 * u,
+            y0 = y + 30 * u,
+            y1 = y + h - 40 * u;
+          const yOf = (c) => y1 - (clamp(c, 0, 31000) / 30000) * (y1 - y0);
+          const xOf = (i) => lerp(x0, x1, i / 7);
+          // axes + grid
+          ctx.font = font(600, 10 * u, MONO);
+          ctx.textAlign = "right";
+          [0, 10000, 20000, 30000].forEach((v) => {
+            ctx.strokeStyle = "rgba(255,255,255,0.08)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x0, yOf(v));
+            ctx.lineTo(x1, yOf(v));
+            ctx.stroke();
+            ctx.fillStyle = "rgba(160,180,230,0.7)";
+            ctx.fillText(v / 1000 + "k", x0 - 6, yOf(v) + 3);
+          });
+          // visible-spectrum band under the channels
+          const bandY = y1 + 6 * u,
+            bandH = 7 * u;
+          const bg = ctx.createLinearGradient(x0, 0, x1, 0);
+          CH_COL.forEach((c, i) => bg.addColorStop(i / 7, c));
+          ctx.fillStyle = bg;
+          rr(ctx, x0 - 6, bandY, x1 - x0 + 12, bandH, 3);
+          ctx.fill();
+          ctx.textAlign = "center";
+          for (let i = 0; i < 8; i++) {
+            ctx.fillStyle = "rgba(220,228,255,0.85)";
+            ctx.font = font(700, 10.5 * u);
+            ctx.fillText("F" + (i + 1), xOf(i), bandY + bandH + 11 * u);
+            ctx.fillStyle = "rgba(160,180,230,0.6)";
+            ctx.font = font(600, 9 * u, MONO);
+            ctx.fillText(WAVELEN[i], xOf(i), bandY + bandH + 21 * u);
+          }
+
+          const busy = S.phase === "reading";
+          const done = S.phase === "result";
+          if (!S.color || (!busy && !done)) {
+            ctx.fillStyle = "rgba(170,190,240,0.6)";
+            ctx.font = font(700, 13 * u);
+            ctx.fillText(
+              !S.color ? "Choose an LED colour, then Scan" : S.phase === "idle" ? "Ready to scan" : "Shutter opening — aligning the beam…",
+              (x0 + x1) / 2,
+              (y0 + y1) / 2,
+            );
+          } else {
+            const meas = noisyCounts(S.color);
+            const gl = glitch();
+            if (busy) {
+              // live acquisition: channel bars climb with noise until they lock
+              const k = clamp(S.phaseT / DURATION.reading, 0, 1);
+              const bw = ((x1 - x0) / 7) * 0.55;
+              for (let i = 0; i < 8; i++) {
+                const v = meas[i] * k + (Math.random() * 2 - 1) * 2500 * (1 - k);
+                ctx.fillStyle = CH_COL[i];
+                ctx.globalAlpha = 0.85;
+                ctx.fillRect(xOf(i) - bw / 2, yOf(Math.max(0, v)), bw, y1 - yOf(Math.max(0, v)));
+                ctx.globalAlpha = 1;
+              }
+            } else {
+              // references: every star faint, the matched (or closest) one dashed
+              const sc = liveScores();
+              let best = 0;
+              sc.forEach((v, i) => {
+                if (v > sc[best]) best = i;
+              });
+              const refKey = S.resultKey && S.resultKey !== "unclear" ? S.resultKey : COLOR_ORDER[best];
+              COLOR_ORDER.forEach((k) => {
+                if (k === refKey) return;
+                ctx.strokeStyle = "rgba(160,180,230,0.13)";
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                STARS[k].profile.forEach((pv, i) => (i ? ctx.lineTo(xOf(i), yOf(pv * 30000)) : ctx.moveTo(xOf(i), yOf(pv * 30000))));
+                ctx.stroke();
+              });
+              ctx.strokeStyle = STARS[refKey].sw;
+              ctx.globalAlpha = 0.75;
+              ctx.lineWidth = 1.6;
+              ctx.setLineDash([6, 5]);
+              ctx.beginPath();
+              STARS[refKey].profile.forEach((pv, i) => (i ? ctx.lineTo(xOf(i), yOf(pv * 30000)) : ctx.moveTo(xOf(i), yOf(pv * 30000))));
+              ctx.stroke();
+              ctx.setLineDash([]);
+              ctx.globalAlpha = 1;
+              // measured curve (glitches with interference / low sensitivity)
+              const pts = meas.map((c, i) => [xOf(i), yOf(c + (gl ? (Math.random() * 2 - 1) * 1800 * gl : 0))]);
+              const wc = STARS[S.color].sw;
+              ctx.strokeStyle = Math.random() < 0.2 * gl ? "#ffffff" : wc;
+              ctx.lineWidth = 2.6;
+              ctx.lineJoin = "round";
+              ctx.beginPath();
+              pts.forEach(([px2, py2], i) => (i ? ctx.lineTo(px2, py2) : ctx.moveTo(px2, py2)));
+              ctx.stroke();
+              let dom = 0;
+              meas.forEach((c, i) => {
+                if (c > meas[dom]) dom = i;
+              });
+              pts.forEach(([px2, py2], i) => {
+                ctx.fillStyle = wc;
+                ctx.beginPath();
+                ctx.arc(px2, py2, i === dom ? 4.2 : 2.6, 0, TAU);
+                ctx.fill();
+              });
+              // legend in the header row, right-aligned, never over the data
+              ctx.font = font(700, 10.5 * u);
+              const ly = y + 16 * u;
+              const refTxt = "ref " + STARS[refKey].star.replace("the ", "");
+              const wRef = ctx.measureText(refTxt).width,
+                wMea = ctx.measureText("measured").width;
+              const rEnd = x + w - 10 * u;
+              const refX = rEnd - wRef,
+                meaX = refX - 24 * u - wMea - 20 * u;
+              ctx.textAlign = "left";
+              ctx.fillStyle = STARS[refKey].sw;
+              ctx.fillText(refTxt, refX, ly);
+              ctx.strokeStyle = STARS[refKey].sw;
+              ctx.setLineDash([4, 3]);
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(refX - 20 * u, ly - 3.5 * u);
+              ctx.lineTo(refX - 5 * u, ly - 3.5 * u);
+              ctx.stroke();
+              ctx.setLineDash([]);
+              ctx.fillStyle = wc;
+              ctx.fillText("measured", meaX, ly);
+              ctx.fillRect(meaX - 19 * u, ly - 5 * u, 14 * u, 3 * u);
+            }
+          }
+
+          // signal-quality gauge: peak level between "too weak" and "clipping"
+          const gx = x + w - gauW - 8 * u,
+            gy0 = y0 + 22 * u,
+            gy1 = y1;
+          const peak = S.phase === "idle" || S.phase === "swish" || S.phase === "point" ? (S.color ? computeReading().signalPeak : 0) : S.signalPeak;
+          const sy = (v) => gy1 - (clamp(v, 0, 1.4) / 1.4) * (gy1 - gy0);
+          const gw = 12 * u;
+          ctx.fillStyle = "#0b1230";
+          ctx.strokeStyle = "rgba(120,150,230,0.35)";
+          ctx.lineWidth = 1;
+          rr(ctx, gx, gy0, gw, gy1 - gy0, 4);
+          ctx.fill();
+          ctx.stroke();
+          const wk = weakThreshold();
+          ctx.fillStyle = "rgba(251,191,36,0.14)";
+          ctx.fillRect(gx, sy(wk), gw, gy1 - sy(wk));
+          ctx.fillStyle = "rgba(239,68,68,0.18)";
+          ctx.fillRect(gx, gy0, gw, sy(1.05) - gy0);
+          const zone = peak < wk ? "#fbbf24" : peak > 1.05 ? "#ef4444" : "#4ade80";
+          if (S.color) {
+            ctx.fillStyle = zone;
+            ctx.fillRect(gx + 2, sy(peak), gw - 4, gy1 - sy(peak));
+          }
+          ctx.fillStyle = "rgba(170,190,240,0.75)";
+          ctx.font = font(700, 9 * u);
+          ctx.textAlign = "center";
+          ctx.fillText("SIGNAL", gx + gw / 2, gy0 - 13 * u);
+          ctx.fillStyle = zone;
+          ctx.fillText(!S.color ? "—" : peak < wk ? "WEAK" : peak > 1.05 ? "CLIP" : "OK", gx + gw / 2, gy0 - 4 * u);
+          ctx.strokeStyle = "#fbbf24";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(gx - 4, sy(wk));
+          ctx.lineTo(gx + gw + 4, sy(wk));
+          ctx.stroke();
+        }
+
+        // ---- 3. match against the star map --------------------------------
+        function drawMatch(x, y, w, h, t, u) {
+          panel(x, y, w, h, "MATCH vs STAR MAP", u);
+          const busy = S.phase === "reading";
+          const done = S.phase === "result";
+          let sc = null;
+          const aligning = S.phase === "swish" || S.phase === "point";
+          if (S.color && !aligning) {
+            sc = liveScores();
+            if (busy) {
+              const k = easeInOutCubic(clamp(S.phaseT / DURATION.reading, 0, 1));
+              sc = sc.map((v) => lerp(0.85, v, k) + (Math.random() - 0.5) * 0.01 * (1 - k));
+            }
+          }
+          const lo = 0.86;
+          const rowsTop = y + 28 * u,
+            rowsBot = y + h - 40 * u;
+          const rh = (rowsBot - rowsTop) / 6;
+          const nameW = 74 * u;
+          const bx0 = x + 22 * u + nameW,
+            bx1 = x + w - 52 * u;
+          const bxOf = (v) => lerp(bx0, bx1, clamp((v - lo) / (1 - lo), 0, 1));
+          let best = -1;
+          if (sc) sc.forEach((v, i) => {
+            if (best < 0 || v > sc[best]) best = i;
+          });
+          const stale = done && S.scanKey !== settingsKey();
+          const matchedKey = done && !stale && S.resultKey !== "unclear" ? S.resultKey : null;
+          COLOR_ORDER.forEach((k, i) => {
+            const ry = rowsTop + i * rh + rh / 2;
+            const isWin = matchedKey === k;
+            S.hits.push({ key: k, x0: x + 6, y0: ry - rh / 2, x1: bx0 - 4, y1: ry + rh / 2 });
+            if (isWin) {
+              ctx.fillStyle = "rgba(255,255,255,0.06)";
+              rr(ctx, x + 6, ry - rh / 2 + 1, w - 12, rh - 2, 6);
+              ctx.fill();
+            }
+            ctx.fillStyle = STARS[k].sw;
+            ctx.beginPath();
+            ctx.arc(x + 16 * u, ry, 4.5 * u, 0, TAU);
+            ctx.fill();
+            ctx.fillStyle = isWin ? "#ffffff" : "rgba(220,228,255,0.82)";
+            ctx.font = font(isWin ? 800 : 700, 12 * u);
+            ctx.textAlign = "left";
+            ctx.fillText(STARS[k].star.replace("the ", ""), x + 26 * u, ry + 4 * u);
+            ctx.fillStyle = "rgba(120,150,230,0.12)";
+            rr(ctx, bx0, ry - 4.5 * u, bx1 - bx0, 9 * u, 4);
+            ctx.fill();
+            if (sc) {
+              ctx.fillStyle = isWin ? STARS[k].sw : i === best && !matchedKey ? "rgba(251,191,36,0.8)" : "rgba(160,180,230,0.45)";
+              rr(ctx, bx0, ry - 4.5 * u, Math.max(2, bxOf(sc[i]) - bx0), 9 * u, 4);
+              ctx.fill();
+              ctx.fillStyle = isWin ? "#ffffff" : "rgba(200,212,245,0.8)";
+              ctx.font = font(700, 10.5 * u, MONO);
+              ctx.textAlign = "right";
+              ctx.fillText((sc[i] * 100).toFixed(1) + "%", x + w - 8 * u, ry + 4 * u);
+            }
+          });
+          // the controller's "confident match" line
+          const cx2 = bxOf(confThreshold());
+          ctx.strokeStyle = "rgba(74,222,128,0.8)";
+          ctx.setLineDash([4, 4]);
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(cx2, rowsTop - 4);
+          ctx.lineTo(cx2, rowsBot);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = "rgba(74,222,128,0.85)";
+          ctx.font = font(700, 9.5 * u);
+          ctx.textAlign = "center";
+          ctx.fillText("minimum to match", cx2, rowsBot + 12 * u);
+          // footnote says why the decision came out the way it did
+          let note = "The highest bar wins, if it clears the line.";
+          let nc = "rgba(160,180,230,0.65)";
+          if (S.phase === "idle" && S.color) {
+            note = "Live preview — change the sliders, then Scan.";
+          } else if (stale) {
+            nc = "#93c5fd";
+            note = "Settings changed — live preview. Scan again to decode.";
+          } else if (done && S.resultKey === "unclear") {
+            nc = "#fbbf24";
+            note =
+              S.resultReason === "weak"
+                ? "Shape matches, but the signal is too weak to trust."
+                : S.resultReason === "saturated"
+                  ? "Channels clipped at the ceiling — not classified."
+                  : S.resultReason === "ambiguous"
+                    ? "Sirius and Procyon tie — the sensor can't separate them."
+                    : "No star clears the minimum-to-match line.";
+          } else if (matchedKey) {
+            nc = "#4ade80";
+            note = "Highest match: " + STARS[matchedKey].star + " — decoded.";
+          }
+          ctx.fillStyle = nc;
+          ctx.font = font(700, 10.5 * u);
+          ctx.textAlign = "left";
+          ctx.fillText(note, x + 10 * u, y + h - 8 * u);
+        }
+
+        // ---- 4. temperature strip -----------------------------------------
+        function drawTempStrip(x, y, w, h, t, u) {
+          const done = COLOR_ORDER.filter((k) => S.unlocked[k]).length;
+          panel(x, y, w, h, "STAR COLOUR = TEMPERATURE   ·   DECODED " + done + " / 6", u);
+          const sx0 = x + 48 * u,
+            sx1 = x + w - 48 * u,
+            sy2 = y + Math.max(h * 0.54, 46 * u),
+            sh = 10 * u;
+          const tx = (T) => lerp(sx0, sx1, (Math.log(12800) - Math.log(T)) / (Math.log(12800) - Math.log(3300)));
+          const gr = ctx.createLinearGradient(sx0, 0, sx1, 0);
+          [
+            [12800, "#7aa2ff"],
+            [9500, "#c9dbff"],
+            [6600, "#fff4e0"],
+            [5600, "#ffe28a"],
+            [4300, "#ffb36b"],
+            [3300, "#ff6a4a"],
+          ].forEach(([T, c]) => gr.addColorStop((tx(T) - sx0) / (sx1 - sx0), c));
+          ctx.fillStyle = gr;
+          rr(ctx, sx0, sy2 - sh / 2, sx1 - sx0, sh, sh / 2);
+          ctx.fill();
+          // ends of the scale, level with the strip so they never meet a star label
+          ctx.font = font(800, 10.5 * u);
+          ctx.textAlign = "right";
+          ctx.fillStyle = "#9cb8ff";
+          ctx.fillText("HOT", sx0 - 8 * u, sy2 + 4 * u);
+          ctx.textAlign = "left";
+          ctx.fillStyle = "#ff8a6a";
+          ctx.fillText("COOL", sx1 + 8 * u, sy2 + 4 * u);
+          const latest = S.phase === "result" && S.resultKey !== "unclear" ? S.resultKey : null;
+          COLOR_ORDER.forEach((k, i) => {
+            const X = tx(STARINFO[k].temp);
+            const on = S.unlocked[k];
+            const up = i % 2 === 0;
+            S.hits.push({ key: k, x0: X - 14 * u, y0: sy2 - 30 * u, x1: X + 14 * u, y1: sy2 + 32 * u });
+            ctx.strokeStyle = on ? STARS[k].sw : "rgba(160,180,230,0.35)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(X, sy2 + (up ? -sh / 2 : sh / 2));
+            ctx.lineTo(X, sy2 + (up ? -13 * u : 13 * u));
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(X, sy2, (k === latest ? 7 : 5) * u, 0, TAU);
+            ctx.fillStyle = on ? STARS[k].sw : "#0b1230";
+            ctx.fill();
+            ctx.strokeStyle = on ? "#ffffff" : "rgba(160,180,230,0.5)";
+            ctx.lineWidth = k === latest ? 2.2 : 1.2;
+            ctx.stroke();
+            if (k === latest) {
+              const age = S.unlockAt[k] !== undefined ? S.clock - S.unlockAt[k] : 99;
+              const ring = (t * 0.8) % 1;
+              ctx.strokeStyle = STARS[k].sw;
+              ctx.globalAlpha = 1 - ring;
+              ctx.beginPath();
+              ctx.arc(X, sy2, (8 + ring * 6) * u, 0, TAU);
+              ctx.stroke();
+              ctx.globalAlpha = 1;
+              void age;
+            }
+            ctx.fillStyle = on ? "#e8ecff" : "rgba(160,180,230,0.5)";
+            ctx.font = font(on ? 800 : 600, 10.5 * u);
+            ctx.textAlign = "center";
+            ctx.fillText(STARS[k].star.replace("the ", ""), X, up ? sy2 - 19 * u : sy2 + 27 * u);
+          });
+        }
+
+        // ---- 5. star card ----------------------------------------------------
+        function drawStarCard(x, y, w, h, t, u) {
+          const key = S.phase === "result" && S.resultKey !== "unclear" ? S.resultKey : null;
+          panel(x, y, w, h, key ? "DECODED STAR" : "STAR CARD", u);
+          ctx.textAlign = "left";
+          if (!key) {
+            ctx.fillStyle = "rgba(170,190,240,0.6)";
+            ctx.font = font(700, 12 * u);
+            ctx.fillText(S.phase === "result" ? "Reading unclear — no star decoded." : "Decode a star to see its data.", x + 12 * u, y + h / 2 + 6 * u);
+            return;
+          }
+          const st = STARS[key],
+            info = STARINFO[key];
+          S.hits.push({ key, x0: x, y0: y, x1: x + w, y1: y + h });
+          ctx.fillStyle = st.sw;
+          ctx.shadowColor = st.sw;
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(x + 22 * u, y + 38 * u, 9 * u, 0, TAU);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "#ffffff";
+          ctx.font = font(800, 17 * u, "'Orbitron', sans-serif");
+          ctx.fillText(st.star.replace("the ", "The "), x + 38 * u, y + 44 * u);
+          const rows = [
+            ["Class", info.cls],
+            ["Surface", info.temp.toLocaleString() + " K"],
+            ["Distance", info.dist],
+            ["Found in", info.con],
+          ];
+          const cols = 2,
+            colW = (w - 24 * u) / cols;
+          // fixed rhythm: label, value, then the next row, always inside the card
+          const gap = 27 * u;
+          rows.forEach(([kk, vv], i) => {
+            const cx2 = x + 12 * u + (i % cols) * colW,
+              cy2 = y + 60 * u + Math.floor(i / cols) * gap;
+            ctx.fillStyle = "rgba(160,180,230,0.7)";
+            ctx.font = font(700, 9.5 * u);
+            ctx.fillText(kk.toUpperCase(), cx2, cy2);
+            ctx.fillStyle = "#e8ecff";
+            ctx.font = font(700, 12 * u, MONO);
+            ctx.fillText(vv, cx2, cy2 + 12 * u);
+          });
+        }
+
+
+        /* =================== STAR INFO PANEL =================== */
+        const RULE = {
+          blue: "Blue-dominant channels",
+          skyblue: "Saturated blue-white",
+          white: "Balanced, bright channels",
+          yellow: "Yellow-warm dominant",
+          orange: "Orange-warm dominant",
+          red: "Red-dominant channels",
+        };
+        const EXTRA = {
+          skyblue: "Sirius and Procyon look almost identical to the AS7341 — both saturate most channels. That is a real sensor limit, not a mistake.",
+          white: "Procyon and Sirius look almost identical to the AS7341 — both saturate most channels. That is a real sensor limit, not a mistake.",
+          yellow: "Our own Sun: the same physics that colours distant stars sets its yellow-white light.",
+          blue: "Blue light means a very hot surface — Rigel is one of the hottest bright stars in the sky.",
+          red: "Red light means a cool surface — Betelgeuse is a red supergiant, cool but enormous.",
+          orange: "Arcturus is an orange giant: cooler than the Sun, so its light peaks toward the red.",
+        };
+        let siKey = null;
+        function openStarInfo(key) {
+          siKey = key;
+          const st = STARS[key],
+            info = STARINFO[key];
+          const sb = $("siBack");
+          sb.style.setProperty("--sw", st.sw);
+          $("siDot").style.setProperty("--sw", st.sw);
+          $("siName").textContent = st.star.replace("the ", "The ");
+          $("siSub").textContent = st.name + " · decoded from " + colName(key) + " LED light";
+          const dec = S.unlocked[key];
+          const chip = $("siChip");
+          chip.className = "si-chip " + (dec ? "ok" : "no");
+          chip.textContent = dec ? "DECODED ✓" : "NOT DECODED YET";
+          $("siTiles").innerHTML = [
+            ["Spectral class", info.cls],
+            ["Surface temperature", info.temp.toLocaleString() + " K"],
+            ["Distance", info.dist],
+            ["Found in", info.con],
+          ]
+            .map((t) => '<div class="rp-tile"><div class="k">' + t[0] + '</div><div class="v">' + t[1] + "</div></div>")
+            .join("");
+          const strong = st.profile
+            .map((v, i) => [v, i])
+            .filter(([v]) => v >= 0.95)
+            .map(([, i]) => "F" + (i + 1) + " (" + WAVELEN[i] + " nm)");
+          $("siRule").innerHTML =
+            "<b>" + RULE[key] + " → " + st.star + "</b>. Strongest channels: " + strong.join(", ") + ". " + EXTRA[key];
+          const ld = S.lastDecode[key];
+          $("siYou").textContent = ld
+            ? "Decoded with the " + colName(ld.led) + " LED at " + ld.bright + "% intensity, " + ld.sens + "% sensitivity, interference " + (ld.interf ? "on" : "off") + ". Its last reading is drawn on the chart."
+            : dec
+              ? "Decoded earlier in this run."
+              : "Not decoded yet. Select the " + colName(key) + " LED, keep the intensity high enough for a clear signal, and press Scan.";
+          const set = $("siSet");
+          set.textContent = "▶ Run " + colName(key) + " light";
+          set.hidden = S.phase === "swish" || S.phase === "point" || S.phase === "reading";
+          sb.classList.add("show");
+          drawStarInfoChart(key);
+          $("siClose").focus();
+        }
+        function closeStarInfo() {
+          $("siBack").classList.remove("show");
+        }
+        function drawStarInfoChart(key) {
+          const cv2 = $("siChart");
+          const box = cv2.getBoundingClientRect();
+          const w = box.width || 600,
+            h = box.height || 150;
+          const kk = Math.max(1, window.devicePixelRatio || 1);
+          cv2.width = Math.round(w * kk);
+          cv2.height = Math.round(h * kk);
+          const c = cv2.getContext("2d");
+          c.setTransform(kk, 0, 0, kk, 0, 0);
+          c.clearRect(0, 0, w, h);
+          const x0 = 40,
+            x1 = w - 10,
+            y0 = 8,
+            y1 = h - 34;
+          const xOf = (i) => lerp(x0, x1, (i + 0.5) / 8);
+          const yOf = (v) => y1 - (clamp(v, 0, 31000) / 30000) * (y1 - y0);
+          c.font = "600 10px Consolas, monospace";
+          c.textAlign = "right";
+          [0, 15000, 30000].forEach((v) => {
+            c.strokeStyle = "rgba(255,255,255,0.08)";
+            c.beginPath();
+            c.moveTo(x0, yOf(v));
+            c.lineTo(x1, yOf(v));
+            c.stroke();
+            c.fillStyle = "rgba(160,180,230,0.7)";
+            c.fillText(v / 1000 + "k", x0 - 6, yOf(v) + 3);
+          });
+          const bw = ((x1 - x0) / 8) * 0.6;
+          STARS[key].profile.forEach((v, i) => {
+            c.fillStyle = CH_COL[i];
+            c.globalAlpha = 0.85;
+            c.fillRect(xOf(i) - bw / 2, yOf(v * 30000), bw, y1 - yOf(v * 30000));
+            c.globalAlpha = 1;
+          });
+          const ld = S.lastDecode[key];
+          if (ld) {
+            c.strokeStyle = "#ffffff";
+            c.lineWidth = 2;
+            c.beginPath();
+            ld.counts.forEach((v, i) => (i ? c.lineTo(xOf(i), yOf(v)) : c.moveTo(xOf(i), yOf(v))));
+            c.stroke();
+            ld.counts.forEach((v, i) => {
+              c.fillStyle = "#ffffff";
+              c.beginPath();
+              c.arc(xOf(i), yOf(v), 3, 0, TAU);
+              c.fill();
+            });
+          }
+          c.textAlign = "center";
+          for (let i = 0; i < 8; i++) {
+            c.fillStyle = "rgba(220,228,255,0.85)";
+            c.font = "700 11px 'Rajdhani', sans-serif";
+            c.fillText("F" + (i + 1), xOf(i), y1 + 14);
+            c.fillStyle = "rgba(160,180,230,0.6)";
+            c.font = "600 9.5px Consolas, monospace";
+            c.fillText(WAVELEN[i] + " nm", xOf(i), y1 + 26);
+          }
+          $("siLegend").innerHTML =
+            '<span><i style="background:linear-gradient(90deg,#7c3aed,#22c55e,#dc2626)"></i>reference (100% intensity)</span>' +
+            (ld ? '<span><i style="background:#fff"></i>your last decode</span>' : "");
+        }
+        $("siClose").addEventListener("click", closeStarInfo);
+        // Run that star's LED colour: start the simulation if needed, select the
+        // colour, and scan it straight away.
+        $("siSet").addEventListener("click", () => {
+          const key = siKey;
+          closeStarInfo();
+          if (!key) return;
+          if (S.missionRunning) stopMission();
+          if (!S.running) setRunning(true);
+          selectColor(key);
+          startScan();
+        });
+        $("siBack").addEventListener("click", (e) => {
+          if (e.target === e.currentTarget) closeStarInfo();
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") closeStarInfo();
+        });
+        document.querySelectorAll("[data-star]").forEach((el) => {
+          el.addEventListener("click", () => openStarInfo(el.dataset.star));
+          el.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              openStarInfo(el.dataset.star);
+            }
+          });
+        });
+        // stars drawn on the stage: temperature strip, match rows, star card
+        function hitAt(e) {
+          const r = cv.getBoundingClientRect();
+          const mx = e.clientX - r.left,
+            my = e.clientY - r.top;
+          return S.hits.find((h) => mx >= h.x0 && mx <= h.x1 && my >= h.y0 && my <= h.y1);
+        }
+        cv.addEventListener("click", (e) => {
+          const h = hitAt(e);
+          if (h) openStarInfo(h.key);
+        });
+        cv.addEventListener("mousemove", (e) => {
+          cv.style.cursor = hitAt(e) ? "pointer" : "default";
+        });
 
         /* =================== MAIN LOOP =================== */
         let last = performance.now();
         function loop(now) {
           const dt = clamp((now - last) / 1000, 0, 0.1);
           last = now;
-          step(dt);
-          tickMission(dt * 1000);
+          if (S.running) {
+            simT += dt;
+            step(dt);
+            tickMission(dt * 1000);
+          }
           updateDashboard();
-          drawScene(now / 1000);
+          drawScene(simT);
           requestAnimationFrame(loop);
         }
 
@@ -2254,6 +3220,7 @@
         setInterference(0);
         setSensitivity(100);
         updateActionButton();
+        syncOverlay();
         requestAnimationFrame(loop);
       })();
     </script>
