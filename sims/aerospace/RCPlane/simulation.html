@@ -6043,8 +6043,18 @@
             }
           });
           // sun + shadow box follow the plane
-          sun.target.position.copy(S.pos);
-          sun.position.copy(S.pos).addScaledVector(sunDir, 300);
+          // snap the shadow area to the shadow map's texel grid, so shadow edges do not crawl as the plane moves
+          {
+            const fw = sunDir.clone().negate();
+            const rt = new THREE.Vector3().crossVectors(fw, UPV).normalize();
+            const up = new THREE.Vector3().crossVectors(rt, fw).normalize();
+            const texel = (sun.shadow.camera.right - sun.shadow.camera.left) / sun.shadow.mapSize.x;
+            const a = S.pos.dot(rt),
+              b = S.pos.dot(up);
+            const snapped = S.pos.clone().addScaledVector(rt, Math.round(a / texel) * texel - a).addScaledVector(up, Math.round(b / texel) * texel - b);
+            sun.target.position.copy(snapped);
+            sun.position.copy(snapped).addScaledVector(sunDir, 300);
+          }
           // camera
           const hf = new THREE.Vector3(S.f.x, 0, S.f.z);
           if (hf.lengthSq() < 0.01) hf.set(Math.sin(e.psi), 0, -Math.cos(e.psi));
@@ -9133,6 +9143,33 @@
         resetSim();
         resize();
         const H = 1 / 120;
+        // pose before the latest physics step, for smooth drawing between steps
+        const PV = { ok: false, pos: new THREE.Vector3(), r: new THREE.Vector3(), u: new THREE.Vector3(), f: new THREE.Vector3(), cur: null };
+        function savePrev() {
+          PV.pos.copy(S.pos);
+          PV.r.copy(S.r);
+          PV.u.copy(S.u);
+          PV.f.copy(S.f);
+          PV.ok = true;
+        }
+        function applyBlend(a) {
+          PV.cur = { pos: S.pos.clone(), r: S.r.clone(), u: S.u.clone(), f: S.f.clone() };
+          // a big jump (reset, rewind, a new lesson) is drawn as it is
+          if (PV.pos.distanceToSquared(S.pos) > 25) return;
+          S.pos.lerpVectors(PV.pos, PV.cur.pos, a);
+          S.f.lerpVectors(PV.f, PV.cur.f, a).normalize();
+          S.u.lerpVectors(PV.u, PV.cur.u, a);
+          S.u.addScaledVector(S.f, -S.u.dot(S.f)).normalize();
+          S.r.crossVectors(S.f, S.u).normalize();
+        }
+        function undoBlend() {
+          if (!PV.cur) return;
+          S.pos.copy(PV.cur.pos);
+          S.r.copy(PV.cur.r);
+          S.u.copy(PV.cur.u);
+          S.f.copy(PV.cur.f);
+          PV.cur = null;
+        }
         let last = performance.now(),
           accum = 0,
           panelT = 0,
@@ -9146,18 +9183,26 @@
           if (live) {
             accum += dt;
             while (accum >= H) {
+              savePrev();
               step(H);
               accum -= H;
               if (!S.running) break;
             }
-          } else accum = 0;
+          } else {
+            accum = 0;
+            PV.ok = false;
+          }
           if (live !== !wasPaused) {
             wasPaused = !live;
             sfx.suspend(!live && S.started && !S.ended ? true : false);
           }
           sfx.motor(controls().thr, S.V, live && !S.crashed);
           sfx.air(S.ground ? S.Vg : S.V, S.ground, live && !S.crashed);
+          // draw the plane part-way between the last two physics steps (the rest of the game keeps the exact state)
+          const blend = live && PV.ok && !S.crashed;
+          if (blend) applyBlend(accum / H);
           updateVisuals(live ? dt : 0.016);
+          if (blend) undoBlend();
           modeVisuals();
           pathStep();
           updateDemoSticks();
@@ -9174,7 +9219,7 @@
         requestAnimationFrame(frame);
 
         // test hook (used for automated screenshots)
-        window.__rc = { pointHit, TREES, SPAN_H, renderer, GAME, PROG, GATES: () => GATES, marks: () => pathMarks, TK, THREE, S, input, settings, startPause, finish, resetSim, setCam, step, markSkill };
+        window.__rc = { plane, camera, pointHit, TREES, SPAN_H, renderer, GAME, PROG, GATES: () => GATES, marks: () => pathMarks, TK, THREE, S, input, settings, startPause, finish, resetSim, setCam, step, markSkill };
       })();
     </script>
 
