@@ -1,0 +1,3491 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hydraulic Landing Gear · Flight Mission</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #1f2a30;
+        --panel: #26343b;
+        --panel2: #2d3d45;
+        --well: rgba(10, 16, 20, 0.45);
+        --line: rgba(232, 240, 245, 0.14);
+        --txt: #eef3f6;
+        --mut: #b3c2cb;
+        --dim: #7f929d;
+        --accent: #e8590c;
+        --accent-press: #c94a08;
+        --sky: #4da3ff;
+        --press: #ff8a3d;
+        --safe: #3fcf8e;
+        --slow: #fab219;
+        --fail: #ff5d5d;
+        --idle: #8fa3ae;
+        --shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+        --r: 10px;
+        --head: "Orbitron", sans-serif;
+        --body: "Rajdhani", sans-serif;
+        --mono: "IBM Plex Mono", Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        font-family: var(--body);
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--txt);
+        background-color: var(--bg);
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+        background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+        height: 100vh;
+        overflow: hidden;
+        padding: 0 clamp(12px, 2vw, 26px) 12px;
+        display: flex;
+        flex-direction: column;
+      }
+      h1,
+      h3,
+      .badge {
+        font-family: var(--head);
+      }
+
+      /* ---------- header ---------- */
+      header.top {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0;
+        margin-bottom: 10px;
+        border-bottom: 1px solid var(--line);
+        flex: 0 0 auto;
+      }
+      header.top .title {
+        grid-column: 2;
+        text-align: center;
+      }
+      header.top h1 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      header.top .helpbtns {
+        grid-column: 3;
+        justify-self: end;
+      }
+      @media (max-width: 760px) {
+        header.top {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+        header.top .helpbtns {
+          grid-row: 1;
+          grid-column: 1;
+          justify-self: center;
+        }
+        header.top .title {
+          grid-row: 2;
+          grid-column: 1;
+        }
+        header.top h1 {
+          font-size: 17px;
+        }
+      }
+
+      /* ---------- layout ---------- */
+      .grid {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr) 310px;
+        gap: 14px;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        box-shadow: var(--shadow);
+        padding: 14px 16px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
+      }
+      .card::-webkit-scrollbar {
+        width: 8px;
+      }
+      .card::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.18);
+        border-radius: 4px;
+      }
+      .card h3 {
+        margin: 0 0 6px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--mut);
+      }
+      @media (max-width: 1180px) {
+        body {
+          overflow: auto;
+          height: auto;
+        }
+        .grid {
+          grid-template-columns: minmax(0, 1fr);
+          flex: 0 0 auto;
+        }
+        .card.stage {
+          height: 820px;
+          order: -1;
+        }
+      }
+
+      /* ---------- left panel: controls ---------- */
+      .scen {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .scen button {
+        display: grid;
+        grid-template-columns: 26px 1fr auto;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--panel2);
+        color: var(--txt);
+        font-family: var(--body);
+        font-size: 14.5px;
+        font-weight: 700;
+        line-height: 1.15;
+        transition: 0.12s ease;
+      }
+      .scen button:hover {
+        border-color: var(--sky);
+      }
+      .scen button .n {
+        font-family: var(--head);
+        font-size: 12px;
+        color: var(--dim);
+        text-align: center;
+      }
+      .scen button small {
+        display: block;
+        font-size: 12px;
+        color: var(--dim);
+        font-weight: 600;
+      }
+      .scen button .st {
+        font-size: 12px;
+        color: var(--slow);
+        letter-spacing: 1px;
+        white-space: nowrap;
+      }
+      .scen button.on {
+        border-color: var(--accent);
+        box-shadow: inset 0 0 0 1px var(--accent);
+        background: rgba(232, 89, 12, 0.12);
+      }
+      .scen button.on .n {
+        color: var(--press);
+      }
+      .scinfo {
+        background: var(--well);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 13px;
+        line-height: 1.35;
+        margin-bottom: 4px;
+      }
+      .scinfo .kv {
+        display: grid;
+        grid-template-columns: 62px 1fr;
+        gap: 6px;
+        padding: 2px 0;
+      }
+      .scinfo .kv b {
+        font-family: var(--head);
+        font-size: 8.5px;
+        letter-spacing: 0.1em;
+        color: var(--dim);
+        text-transform: uppercase;
+        padding-top: 3px;
+      }
+      .scinfo p {
+        margin: 6px 0 0;
+        padding-top: 6px;
+        border-top: 1px dashed var(--line);
+        color: var(--mut);
+      }
+      .ctrl {
+        margin: 14px 0 8px;
+      }
+      .ctrl .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+        gap: 6px;
+      }
+      .ctrl label {
+        font-size: 14px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      kbd {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        font-weight: 600;
+        color: var(--mut);
+        border: 1px solid var(--line);
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        padding: 0 4px;
+        margin-left: 4px;
+      }
+      .ctrl .val {
+        font-family: var(--head);
+        font-size: 11.5px;
+        color: var(--sky);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-align: right;
+      }
+      .toggle {
+        display: flex;
+        gap: 6px;
+      }
+      .toggle button {
+        flex: 1;
+        cursor: pointer;
+        border: 1px solid #dbe2e8;
+        background: #fcfdfe;
+        color: #4c5c6b;
+        padding: 12px 4px;
+        border-radius: 8px;
+        font-family: var(--body);
+        font-size: 16px;
+        font-weight: 700;
+        transition: 0.12s ease;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      .toggle button:hover {
+        border-color: var(--sky);
+      }
+      .toggle button.on {
+        background: #fff1e8;
+        border-color: var(--accent);
+        color: #7a2c04;
+        box-shadow: inset 0 0 0 1px var(--accent);
+      }
+      .toggle button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .toggle button:focus-visible,
+      .btn:focus-visible,
+      .scen button:focus-visible {
+        outline: 2px solid var(--sky);
+        outline-offset: 2px;
+      }
+      .hint {
+        font-size: 12.5px;
+        color: var(--mut);
+        line-height: 1.4;
+        margin: 6px 0 0;
+      }
+      .autos {
+        font-size: 12.5px;
+        color: var(--mut);
+        margin: 8px 0 0;
+      }
+      .autos b {
+        color: var(--safe);
+        font-weight: 700;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .btn {
+        flex: 1;
+        cursor: pointer;
+        border-radius: 8px;
+        padding: 11px 8px;
+        font-family: var(--head);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border: 1px solid transparent;
+        transition: 0.12s ease;
+      }
+      .btn.start {
+        background: var(--accent);
+        color: #fff;
+        box-shadow: 0 6px 14px rgba(232, 89, 12, 0.3);
+      }
+      .btn.start:hover {
+        background: var(--accent-press);
+      }
+      .btn.start.running {
+        background: #fcfdfe;
+        color: #17293b;
+        border-color: #dbe2e8;
+        box-shadow: none;
+      }
+      .btn.reset {
+        background: transparent;
+        color: var(--txt);
+        border-color: var(--line);
+      }
+      .btn.reset:hover {
+        border-color: var(--mut);
+      }
+      .keys {
+        font-size: 12px;
+        color: var(--dim);
+        line-height: 1.9;
+        margin-top: 12px;
+        border-top: 1px dashed var(--line);
+        padding-top: 8px;
+      }
+      .keys kbd {
+        margin: 0 2px 0 0;
+      }
+
+      /* ---------- stage ---------- */
+      .card.stage {
+        display: flex;
+        flex-direction: column;
+        padding: 12px;
+        overflow: hidden;
+      }
+      .scene-wrap {
+        position: relative;
+        flex: 1 1 auto;
+        min-height: 0;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      #scene {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      /* overlays share one row, so the status chip and the time window can never overlap */
+      .ovl {
+        position: absolute;
+        left: 10px;
+        right: 10px;
+        top: 10px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        pointer-events: none;
+        z-index: 2;
+      }
+      .modechip {
+        flex: 0 1 auto;
+        min-width: 0;
+        background: rgba(15, 22, 27, 0.88);
+        border: 1px solid var(--line);
+        color: var(--txt);
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.3;
+        padding: 6px 14px;
+        border-radius: 14px;
+        text-align: left;
+      }
+      @media (max-width: 600px) {
+        .modechip {
+          font-size: 12.5px;
+        }
+        .tw {
+          flex-basis: 200px !important;
+        }
+      }
+
+      /* time window pop-up: information only, no buttons */
+      .tw {
+        position: relative;
+        flex: 0 0 250px;
+        margin-left: auto;
+        background: rgba(15, 22, 27, 0.9);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 10px 9px;
+        z-index: 3;
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(-6px);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+      }
+      .tw.show {
+        opacity: 1;
+        transform: none;
+      }
+      .tw-h {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-family: var(--head);
+        font-size: 9.5px;
+        letter-spacing: 0.12em;
+        color: var(--mut);
+        margin-bottom: 6px;
+      }
+      .tw-h b {
+        color: var(--press);
+        font-size: 11px;
+      }
+      .tw-bar {
+        position: relative;
+        height: 12px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: visible;
+      }
+      .tw-bar .seg {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+      }
+      .seg.early,
+      .seg.bad {
+        background: rgba(255, 93, 93, 0.55);
+      }
+      .seg.ok {
+        background: rgba(63, 207, 142, 0.85);
+      }
+      .seg.late {
+        background: rgba(250, 178, 25, 0.8);
+      }
+      .seg.crash {
+        background: rgba(150, 20, 20, 0.9);
+      }
+      .tw-bar i {
+        position: absolute;
+        top: -4px;
+        bottom: -4px;
+        width: 3px;
+        margin-left: -1.5px;
+        background: #fff;
+        border-radius: 2px;
+        box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+      }
+      .tw-bar i.sel {
+        background: var(--sky);
+        box-shadow: 0 0 6px rgba(77, 163, 255, 0.9);
+        display: none;
+      }
+      .tw-scale {
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 9.5px;
+        color: var(--dim);
+        margin-top: 4px;
+      }
+      .tw-s {
+        font-size: 13px;
+        font-weight: 700;
+        margin-top: 4px;
+        line-height: 1.25;
+      }
+
+      /* ---------- right panel: metrics ---------- */
+      .fc {
+        background: #11181c;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+        margin: 0 0 12px;
+      }
+      .fc h3 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
+      }
+      .fc h3 em {
+        font-style: normal;
+        font-size: 8.5px;
+        letter-spacing: 0.08em;
+        padding: 2px 7px;
+        border-radius: 999px;
+        border: 1px solid currentColor;
+        color: var(--sky);
+        white-space: nowrap;
+      }
+      .fc-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+        font-size: 13px;
+        padding: 2px 0;
+      }
+      .fc-row span {
+        color: var(--mut);
+      }
+      .fc-row b {
+        font-family: var(--mono);
+        font-size: 13px;
+        white-space: nowrap;
+      }
+      .spdbar {
+        position: relative;
+        height: 8px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.08);
+        margin: 3px 0 2px;
+      }
+      .spdbar i {
+        display: block;
+        height: 100%;
+        width: 0;
+        border-radius: 4px;
+        background: var(--sky);
+      }
+      .spdbar u {
+        position: absolute;
+        top: -3px;
+        bottom: -3px;
+        width: 2px;
+        margin-left: -1px;
+        background: var(--slow);
+      }
+      .spdlab {
+        position: relative;
+        height: 13px;
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--slow);
+        margin-bottom: 4px;
+      }
+      .spdlab span {
+        position: absolute;
+        transform: translateX(-50%);
+        white-space: nowrap;
+      }
+      .warns {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 6px;
+      }
+      .warns div {
+        font-family: var(--head);
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        padding: 4px 8px;
+        border-radius: 5px;
+        border: 1px solid currentColor;
+        background: rgba(15, 22, 27, 0.85);
+      }
+      .warns .none {
+        color: var(--dim);
+        border-color: var(--line);
+        font-weight: 600;
+      }
+      .seqlist {
+        list-style: none;
+        margin: 0 0 10px;
+        padding: 0;
+        counter-reset: s;
+      }
+      .seqlist li {
+        display: grid;
+        grid-template-columns: 22px 1fr;
+        gap: 7px;
+        align-items: center;
+        font-size: 13px;
+        line-height: 1.2;
+        padding: 4px 6px;
+        border-radius: 6px;
+        color: var(--dim);
+        border: 1px solid transparent;
+      }
+      .seqlist li i {
+        font-style: normal;
+        font-family: var(--head);
+        font-size: 9px;
+        font-weight: 700;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--line);
+      }
+      .seqlist li small {
+        font-family: var(--head);
+        font-size: 7.5px;
+        letter-spacing: 0.08em;
+        margin-left: 4px;
+        padding: 1px 5px;
+        border-radius: 999px;
+        border: 1px solid currentColor;
+        vertical-align: 1px;
+      }
+      .seqlist li small.you {
+        color: var(--press);
+      }
+      .seqlist li small.auto {
+        color: var(--dim);
+      }
+      .seqlist li.now {
+        color: #fff;
+        font-weight: 700;
+      }
+      .seqlist li.now i {
+        border-color: var(--txt);
+        color: #fff;
+      }
+      .seqlist li.done {
+        color: var(--txt);
+      }
+      .seqlist li.done i {
+        background: rgba(63, 207, 142, 0.18);
+        border-color: var(--safe);
+        color: var(--safe);
+      }
+      .seqlist li.warn {
+        color: var(--txt);
+      }
+      .seqlist li.warn i {
+        background: rgba(250, 178, 25, 0.18);
+        border-color: var(--slow);
+        color: var(--slow);
+      }
+      .seqlist li.fail {
+        color: var(--txt);
+      }
+      .seqlist li.fail i {
+        background: rgba(255, 93, 93, 0.2);
+        border-color: var(--fail);
+        color: var(--fail);
+      }
+      .reading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+      }
+      .reading .k {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--mut);
+      }
+      .badge {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid currentColor;
+        white-space: nowrap;
+      }
+      .note {
+        font-size: 12.5px;
+        color: var(--mut);
+        line-height: 1.4;
+        margin: 4px 0 2px;
+      }
+      .formula {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--txt);
+        white-space: nowrap;
+        overflow: hidden;
+        margin: 6px 0 0;
+      }
+      .posbar {
+        height: 8px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+        margin: 2px 0 2px;
+      }
+      .posbar i {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: var(--sky);
+      }
+      .poslabels {
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--dim);
+        padding-bottom: 6px;
+      }
+      .lights {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        background: #11181c;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px;
+        margin: 4px 0 4px;
+      }
+      .light {
+        text-align: center;
+        font-family: var(--head);
+        font-size: 8.5px;
+        letter-spacing: 0.06em;
+        color: var(--dim);
+      }
+      .light span {
+        display: block;
+        width: 22px;
+        height: 22px;
+        margin: 0 auto 5px;
+        border-radius: 50%;
+        background: #2b3338;
+        border: 2px solid #3b464c;
+      }
+      .light.green span {
+        background: #3fcf8e;
+        border-color: #9ff0c9;
+        box-shadow: 0 0 12px rgba(63, 207, 142, 0.8);
+      }
+      .light.red span {
+        background: #ff5d5d;
+        border-color: #ffb3b3;
+        box-shadow: 0 0 12px rgba(255, 93, 93, 0.8);
+      }
+      .light.amber span {
+        background: #fab219;
+        border-color: #ffe08a;
+        box-shadow: 0 0 12px rgba(250, 178, 25, 0.8);
+      }
+      .mbox {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+        margin: 10px 0;
+      }
+      .mbox h3 {
+        letter-spacing: 0.06em;
+        font-size: 11px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 4px;
+      }
+      .mbox h3 em {
+        font-style: normal;
+        font-size: 8.5px;
+        letter-spacing: 0.08em;
+        padding: 2px 7px;
+        border-radius: 999px;
+        border: 1px solid currentColor;
+        color: var(--dim);
+        white-space: nowrap;
+      }
+      .frow {
+        display: grid;
+        grid-template-columns: 104px 1fr 66px;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        margin: 5px 0;
+      }
+      .frow .bar {
+        height: 10px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+      }
+      .frow .bar i {
+        display: block;
+        height: 100%;
+        width: 0;
+      }
+      .frow b {
+        font-family: var(--mono);
+        font-size: 12px;
+        text-align: right;
+        white-space: nowrap;
+      }
+      .debrief {
+        display: none;
+        background: #11181c;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin: 4px 0 8px;
+      }
+      .debrief.show {
+        display: block;
+      }
+      .debrief .dt {
+        font-family: var(--head);
+        font-size: 15px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .debrief .reason {
+        color: var(--fail);
+        font-weight: 700;
+        font-size: 14px;
+        line-height: 1.35;
+        margin: 6px 0 0;
+      }
+      .log {
+        list-style: none;
+        margin: 4px 0 0;
+        padding: 0;
+        font-size: 12.5px;
+      }
+      .log li {
+        display: grid;
+        grid-template-columns: 18px 1fr;
+        gap: 8px;
+        padding: 4px 0;
+        border-bottom: 1px dashed var(--line);
+      }
+      .log li b {
+        font-family: var(--mono);
+        text-align: center;
+      }
+      .ev-ok {
+        color: var(--safe);
+      }
+      .ev-warn {
+        color: var(--slow);
+      }
+      .ev-bad {
+        color: var(--fail);
+      }
+      .ev-info {
+        color: var(--dim);
+      }
+      .mini {
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--mut);
+        margin-top: 10px;
+      }
+
+      /* ---------- guide buttons + floating guide window ---------- */
+      .helpbtns {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .helpbtn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head, "Orbitron", sans-serif);
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #fff;
+        background: #2a78d6;
+        border: 1px solid #2a78d6;
+        border-radius: 8px;
+        padding: 8px 14px;
+        box-shadow: 0 6px 14px rgba(42, 120, 214, 0.24);
+        transition: transform 0.15s ease, background 0.15s ease;
+      }
+      .helpbtn:hover {
+        transform: translateY(-1px);
+      }
+      .helpbtn:focus-visible {
+        outline: 2px solid var(--txt);
+        outline-offset: 2px;
+      }
+      .helpbtn.on {
+        background: var(--accent) !important;
+        border-color: var(--accent) !important;
+        box-shadow: 0 6px 14px rgba(232, 89, 12, 0.26);
+      }
+      .helpbar {
+        display: none;
+      }
+      .helpbar.floatwin {
+        position: fixed !important;
+        z-index: 10000 !important;
+        display: none;
+        flex-direction: column !important;
+        background: var(--panel) !important;
+        border: 1px solid var(--line) !important;
+        border-radius: var(--r) !important;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45) !important;
+        overflow: hidden !important;
+        min-width: 280px !important;
+        min-height: 200px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: calc(100vw - 16px) !important;
+        max-height: calc(100vh - 16px) !important;
+      }
+      .helpbar.floatwin.show {
+        display: flex !important;
+      }
+      .fw-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 12px;
+        background: var(--panel2);
+        border-bottom: 1px solid var(--line);
+        cursor: move;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+        flex: 0 0 auto;
+      }
+      .fw-title {
+        font-family: var(--head);
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--mut);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .fw-title::before {
+        content: "⠿";
+        font-size: 13px;
+        color: var(--dim);
+      }
+      .fw-head-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .fw-tab-btn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 4px 8px;
+        border-radius: 5px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--mut);
+        transition: 0.15s ease;
+      }
+      .fw-tab-btn:hover {
+        border-color: var(--dim);
+        color: var(--txt);
+      }
+      .fw-tab-btn.on {
+        background: var(--accent) !important;
+        border-color: var(--accent) !important;
+        color: #fff !important;
+      }
+      .fw-close {
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--mut);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.15s ease;
+      }
+      .fw-close:hover {
+        background: #fbe7e7;
+        border-color: #f0c4c4;
+        color: #8a1f1f;
+      }
+      .fw-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 14px 16px;
+        overflow-y: auto;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--txt);
+      }
+      .fw-body ol,
+      .fw-body ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .fw-body li {
+        margin-bottom: 6px;
+      }
+      .fw-body b {
+        color: var(--sky);
+      }
+      .fw-body h4 {
+        font-family: var(--head);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        color: var(--press);
+        margin: 12px 0 6px;
+        text-transform: uppercase;
+      }
+      .fw-grip {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 16px;
+        height: 16px;
+        cursor: nwse-resize;
+        touch-action: none;
+        background: linear-gradient(135deg, transparent 50%, var(--dim) 50%, var(--dim) 58%, transparent 58%, transparent 70%, var(--dim) 70%, var(--dim) 78%, transparent 78%);
+      }
+      .floatwin.dragging {
+        opacity: 0.94;
+      }
+      .tabpanel {
+        display: none;
+      }
+      .tabpanel.on {
+        display: block;
+      }
+      /* ---------- visual alerts: flashing outline on the flight view + small pop-up messages at the top ---------- */
+      .scene-wrap::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 8px;
+        border: 3px solid transparent;
+        pointer-events: none;
+        z-index: 4;
+      }
+      .scene-wrap.al-warn::after {
+        border-color: var(--slow);
+        box-shadow: inset 0 0 22px rgba(250, 178, 25, 0.45);
+        animation: alPulse 1s ease-in-out infinite;
+      }
+      .scene-wrap.al-bad::after {
+        border-color: var(--fail);
+        box-shadow: inset 0 0 30px rgba(255, 93, 93, 0.6);
+        animation: alPulse 0.5s ease-in-out infinite;
+      }
+      .warns div.blink {
+        animation: alPulse 0.5s ease-in-out infinite;
+      }
+      @keyframes alPulse {
+        50% {
+          opacity: 0.25;
+        }
+      }
+      /* left column of the flight-view overlay: the status chip, then the alert pop-ups stacked under it,
+         so they stay inside the flight view and never cover the time window or the aircraft */
+      .ovl-l {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      .ovl-l .modechip {
+        max-width: 100%;
+      }
+      .toasts {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        max-width: 100%;
+        pointer-events: none;
+      }
+      .toasts:empty {
+        display: none;
+      }
+      .toast {
+        font-family: var(--head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-align: center;
+        padding: 7px 16px;
+        border-radius: 999px;
+        border: 1.5px solid currentColor;
+        background: rgba(15, 22, 27, 0.96);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+        animation: toastIn 0.25s ease-out;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+      }
+      .toast.warn {
+        color: var(--slow);
+      }
+      .toast.bad {
+        color: var(--fail);
+      }
+      .toast.out {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+      @keyframes toastIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px) scale(0.96);
+        }
+      }
+      .seg.worse {
+        background: rgba(215, 45, 45, 0.8);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .helpbtn,
+        .toggle button,
+        .btn,
+        .tw,
+        .toast {
+          transition: none;
+        }
+        .scene-wrap.al-warn::after,
+        .scene-wrap.al-bad::after,
+        .warns div.blink,
+        .toast {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div></div>
+      <div class="title">
+        <h1>Hydraulic Landing Gear · Flight Mission</h1>
+      </div>
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">What You'll Learn</button>
+      </div>
+      <div class="helpbar" id="helpbar">
+        <div class="tabpanel" data-panel="use">
+          <p>The autopilot flies the aircraft. <b>You only move the landing gear</b> — Extend or Retract — at the right moment. Pumps, wheel brakes and autobrake work by themselves.</p>
+          <h4>Before you fly</h4>
+          <ol>
+            <li>Pick one of the <b>three scenarios</b> on the left. Each has its own aircraft, environment, runway and landing gear, and the panel explains what it teaches.</li>
+            <li>Press <b>Start</b> <kbd>Enter</kbd>. The engine-driven <b>hydraulic pumps start automatically</b>. When the pressure is in the green, the brakes release and the take-off roll begins.</li>
+          </ol>
+          <h4>Take-off</h4>
+          <ol start="3">
+            <li>Watch the <b>Time Window</b> pop-up on the flight view. <b>Green</b> = select now, <b>amber</b> = late, <b>red</b> = unsafe. The white line is "now".</li>
+            <li>After lift-off and <b>positive rate</b>, select <b>Retract</b> <kbd>G</kbd> in the left panel while the window is green. The wheels are braked automatically as they fold into the wheel wells.</li>
+            <li>The gear must be <b>retracted and locked before VLO</b> (the gear speed limit for that aircraft). If you miss the window, the flight view <b>flashes red with a "GEAR NOT UP" alert</b> until the gear is up and locked. If it is still down at VLO, the autopilot holds the speed there and the climb slows. If the gear is never raised, the flight can't continue and the crew returns to land: <b>mission failed</b>.</li>
+          </ol>
+          <h4>Landing</h4>
+          <ol start="6">
+            <li>The cruise is skipped. On the approach, wait until the speed is <b>below VLO</b>, then select <b>Extend</b> <kbd>G</kbd> while the window is green, so you have <b>three greens by 1,000 ft</b>. The autopilot keeps landing whatever you do, so a late Extend has consequences:
+              <ul>
+                <li><b>Amber</b> — locks between 1,000 and 500 ft: the approach is unstable and the touchdown is firm, but you land.</li>
+                <li><b>Red</b> — locks below 500 ft, the real-world limit where the "too low, gear" warning fires and a crew must go around: the autopilot presses on to a <b>hard landing</b> and the aircraft is grounded — mission failed.</li>
+                <li><b>Deeper red</b> — the gear is half out or more but <b>not locked</b> at touchdown: the wheels touch, then the legs <b>snap back into themselves</b>, the wheels tear off and the aircraft drops onto its belly and grinds to a short stop in smoke.</li>
+                <li><b>Dark red</b> — the gear is less than half out (or never extended): a <b>belly landing</b>, dragging down the runway in sparks.</li>
+              </ul>
+            </li>
+            <li>At touchdown, watch the <b>oleo strut load</b> in the Hydraulics box take the landing load. The autobrake stops the aircraft.</li>
+          </ol>
+          <h4>Reading the screen</h4>
+          <ul>
+            <li><b>Left panel</b>: scenario and controls only.</li>
+            <li><b>Right panel</b>: flight conditions (airspeed against VLO, altitude, vertical speed, pitch, squat switch, wheels) and active warnings, then the six-step sequence, the gear lights and one Hydraulics box (pressure, piston force, gear load, strut load). The flight log appears in the debrief.</li>
+            <li>The <b>landing gear glows orange</b> on the aircraft, in the close-up and in the gear hydraulics diagram while it is moving.</li>
+            <li>Try the wrong timing to see the consequence: extend above VLO (door overload), retract late (gear-not-up alert, speed held at VLO), never retract (return to land), extend late (unstable, firm landing), later (hard landing below 500 ft), too late (gear collapse) or never (belly landing).</li>
+          </ul>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <ul>
+            <li>How a pump, selector valve and actuator move the gear: <b>Force = Pressure × Area</b>. Different aircraft use different pressures (207 or 345 bar) and piston sizes.</li>
+            <li>Why a heavier gear travels more slowly, so the pilot must select it earlier.</li>
+            <li>Why gear has a speed limit (<b>VLO</b>): the airflow load on the legs and doors grows very fast with speed. Above VLO the gear can stall part-way and the doors can be bent or torn off.</li>
+            <li>The take-off order: lift-off → <b>positive rate</b> → retract. The <b>squat switch</b> stops the gear retracting while the aircraft is on the ground.</li>
+            <li>Why the wheels are braked automatically before they enter the wheel wells.</li>
+            <li>The <b>up-lock</b> holds the gear in flight; the <b>down-lock</b> stops it folding on touchdown. "Three greens" means every down-lock is engaged. An unlocked gear collapses; a gear that is still up means a belly landing.</li>
+            <li>How the <b>oleo strut</b> works as the suspension: nitrogen gas is the spring, oil forced through a small hole (the orifice) is the damper. Its pressure is <b>P = F ÷ A</b>.</li>
+            <li>Why a firm wet-runway landing or a short rough-strip landing needs a stronger, longer-stroke strut.</li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card controls" aria-label="Scenario and landing gear controls">
+        <h3>Scenario</h3>
+        <div class="scen" id="scenList"></div>
+        <div class="scinfo" id="scInfo"></div>
+
+        <div class="ctrl">
+          <div class="row"><label>Landing Gear<kbd>G</kbd></label><span class="val" id="cmdVal">Extend</span></div>
+          <div class="toggle" id="cmdToggle">
+            <button type="button" data-v="extend" class="on">⬇ Extend</button>
+            <button type="button" data-v="retract">⬆ Retract</button>
+          </div>
+          <p class="hint" id="cmdHint">Extend — fluid pushes the piston and swings the leg forward and down into its lock.</p>
+        </div>
+        <p class="autos"><b>Automatic:</b> hydraulic pumps · wheel brake · autobrake</p>
+
+        <div class="actions">
+          <button type="button" class="btn start" id="startBtn">▶ Start</button>
+          <button type="button" class="btn reset" id="resetBtn">↺ Restart</button>
+        </div>
+        <div class="keys"><kbd>G</kbd>extend / retract · <kbd>Enter</kbd>start / pause</div>
+      </section>
+
+      <section class="card stage" aria-label="Aircraft, landing gear, gear hydraulics and suspension">
+        <div class="scene-wrap">
+          <canvas id="scene" role="img" aria-label="Flight view of the aircraft, a close-up of the main landing gear, the gear hydraulic circuit and the oleo strut suspension"></canvas>
+          <div class="ovl">
+            <div class="ovl-l">
+              <div class="modechip" id="modeChip">Choose a scenario and press Start.</div>
+              <div class="toasts" id="toasts" aria-live="polite"></div>
+            </div>
+            <div class="tw" id="tw" aria-live="polite">
+              <div class="tw-h"><span>⏱ TIME WINDOW</span><b id="twWhat">RETRACT</b></div>
+              <div class="tw-bar"><div id="twSegs"></div><i class="sel" id="twSel"></i><i id="twNow"></i></div>
+              <div class="tw-scale"><span id="twL">lift-off</span><span id="twR">VLO</span></div>
+              <div class="tw-s" id="twStatus">—</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card readings" aria-label="Landing gear metrics and sequence">
+        <div class="debrief" id="debrief">
+          <div class="dt" id="dTitle">Mission Complete</div>
+          <div class="reason" id="dReason"></div>
+        </div>
+
+        <div class="fc" aria-label="Flight conditions">
+          <h3>Flight Conditions <em id="fcPhase">Ready</em></h3>
+          <div class="fc-row"><span>Airspeed</span><b id="fcSpd">0 kt</b></div>
+          <div class="spdbar"><i id="fcSpdBar"></i><u id="fcVloTick"></u></div>
+          <div class="spdlab"><span id="fcVloLab">VLO</span></div>
+          <div class="fc-row"><span>Altitude</span><b id="fcAlt">0 ft</b></div>
+          <div class="fc-row"><span>Vertical speed</span><b id="fcVs">0 ft/min</b></div>
+          <div class="fc-row"><span>Pitch</span><b id="fcPitch">0.0°</b></div>
+          <div class="fc-row"><span>Squat switch</span><b id="fcWow">Ground</b></div>
+          <div class="fc-row"><span>Wheels</span><b id="fcWheel">Stopped</b></div>
+          <div class="warns" id="warns"></div>
+        </div>
+
+        <h3>Sequence</h3>
+        <ol class="seqlist" id="seqList"></ol>
+
+        <h3>Landing Gear</h3>
+        <div class="lights" aria-label="Cockpit gear indicator">
+          <div class="light" id="lgDown"><span></span>DOWN &amp; LOCKED</div>
+          <div class="light" id="lgTransit"><span></span>IN TRANSIT</div>
+          <div class="light" id="lgUp"><span></span>UP &amp; LOCKED</div>
+        </div>
+        <div class="posbar"><i id="posFill"></i></div>
+        <div class="poslabels"><span>Up</span><span id="posPct">100% down</span><span>Down</span></div>
+
+        <div class="mbox" id="mbAct">
+          <h3>Hydraulics <em id="actTag">Off</em></h3>
+          <div class="frow"><span>Pressure</span><div class="bar"><i id="pBar"></i></div><b id="pVal">0 bar</b></div>
+          <div class="frow"><span>Piston force</span><div class="bar"><i id="fBar" style="background: var(--press)"></i></div><b id="fVal">0 kN</b></div>
+          <div class="frow"><span>Gear + air load</span><div class="bar"><i id="rBar" style="background: var(--idle)"></i></div><b id="rVal">—</b></div>
+          <div class="frow"><span>Oleo strut load</span><div class="bar"><i id="sBar" style="background: var(--sky)"></i></div><b id="sVal">0 kN</b></div>
+          <div class="formula" id="formula">F = P × A</div>
+        </div>
+
+        <div id="logWrap" hidden>
+          <h3 style="margin-top: 12px">Flight Log</h3>
+          <ul class="log" id="log"></ul>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      (() => {
+        "use strict";
+
+        /* ================= scenarios ================= */
+        // P: system pressure (bar) · area: actuator piston (cm²) · gearW: weight load on the actuator (kN)
+        // airK: airflow load on the leg at VLO (kN) · baseT: nominal gear travel time (s)
+        // oleo: weight on one main gear (kN), strut piston area (cm²), stroke (m), touchdown sink rate (ft/s)
+        const SCEN = [
+          {
+            id: "bizjet", type: "bizjet", theme: "coast",
+            name: "Business Jet", tag: "Coastal airport · clear morning",
+            aircraft: "Business jet · 18 t",
+            env: "Coastal airport · calm morning",
+            runway: "1,800 m asphalt · dry",
+            gear: "Single wheel · 207 bar · 15 cm²",
+            rwLen: 1800, surface: "asphalt", rough: 0, rain: false, gust: 0,
+            P: 207, area: 15, gearW: 14, airK: 11, baseT: 3.2,
+            VLO: 200, VLOF: 125, rollAcc: 18, accel: 9, vref: 115, brakeDecel: 16, descent: 95, tdOff: 300,
+            oleo: { weight: 80, area: 80, stroke: 0.3, sink: 2 },
+            cruise: 52, fl: "FL410",
+            explain: "The basic sequence. A light, fast jet with a light single-wheel gear: a small piston moves it in about 3–4 s. The jet speeds up quickly after take-off, so retract soon after positive rate. On a calm day the touchdown is gentle and the oleo strut only uses part of its stroke.",
+          },
+          {
+            id: "airliner", type: "airliner", theme: "night",
+            name: "Wide-body Airliner", tag: "Big hub · heavy rain at night",
+            aircraft: "Wide-body airliner · 250 t",
+            env: "Big hub · heavy rain, night",
+            runway: "3,500 m concrete · wet",
+            gear: "4-wheel bogie · 345 bar · 60 cm²",
+            rwLen: 3500, surface: "wet", rough: 0, rain: true, gust: 0,
+            P: 345, area: 60, gearW: 95, airK: 72, baseT: 5,
+            VLO: 270, VLOF: 165, rollAcc: 24, accel: 8, vref: 145, brakeDecel: 20, descent: 95, tdOff: 420,
+            oleo: { weight: 1000, area: 450, stroke: 0.5, sink: 4.5 },
+            cruise: 610, fl: "FL370",
+            explain: "Heavy gear, high-pressure hydraulics. Each main gear is a four-wheel bogie weighing several tonnes. A 345 bar system and a big 60 cm² piston give 207 kN, yet the leg still needs about 6 s to travel — so select it early. On a wet runway the crew lands firmly on purpose to cut through the water, so the oleo struts take a big load.",
+          },
+          {
+            id: "transport", type: "transport", theme: "mountain",
+            name: "Military Transport", tag: "Mountain gravel strip · gusty",
+            aircraft: "Turboprop transport · 70 t",
+            env: "Mountain valley · gusty",
+            runway: "1,100 m gravel · rough",
+            gear: "Tandem wheels · 207 bar · 40 cm²",
+            rwLen: 1100, surface: "gravel", rough: 1, rain: false, gust: 1,
+            P: 207, area: 40, gearW: 38, airK: 29, baseT: 4.5,
+            VLO: 170, VLOF: 115, rollAcc: 18, accel: 6, vref: 110, brakeDecel: 16, descent: 95, tdOff: 120,
+            oleo: { weight: 300, area: 220, stroke: 0.75, sink: 8 },
+            cruise: 95, fl: "FL240",
+            explain: "Rugged gear for a short, rough strip. The short, sturdy legs fold into pods on the fuselage. Its VLO is low (170 kt), so the gear must be up before the climb gets fast. To stop on 1,100 m of gravel the pilot lands hard on purpose: long-stroke oleo struts soak up the impact and every bump of the gravel.",
+          },
+        ];
+
+        /* ================= constants ================= */
+        // GATE: airline stabilised-approach gate (1,000 ft) · STAB: the hard floor (500 ft), where the "too low, gear" warning fires
+        const KT = 0.5144, UNLOCK_TIME = 0.6, APP_ALT = 2000, GATE = 1000, STAB = 500, XS = 0.4; // XS = strut compression under the static weight
+        const FOLD = -1; // the leg folds backward to retract and swings forward to extend
+        const SEQ = [
+          ["pumps", "Hydraulic pumps start", "auto"],
+          ["roll", "Take-off roll · struts carry the weight", "auto"],
+          ["lof", "Lift-off · positive rate", "auto"],
+          ["ret", "Retract gear in the time window", "you"],
+          ["brake", "Wheels braked to a stop", "auto"],
+          ["uplock", "Up & locked before VLO", "auto"],
+          ["cruise", "Cruise", "auto"],
+          ["slow", "Approach · slow below VLO", "auto"],
+          ["ext", "Extend gear in the time window", "you"],
+          ["down", "Three greens by 1,000 ft", "auto"],
+          ["td", "Touchdown · oleo absorbs the load", "auto"],
+          ["rollout", "Rollout · autobrake", "auto"],
+        ];
+        // the right panel shows the 12 steps above combined into 6
+        const SEQ_VIEW = [
+          ["Take-off", "auto", ["pumps", "roll", "lof"]],
+          ["Retract gear in the window", "you", ["ret"]],
+          ["Up & locked before VLO", "auto", ["brake", "uplock"]],
+          ["Cruise · slow below VLO", "auto", ["cruise", "slow"]],
+          ["Extend gear in the window", "you", ["ext"]],
+          ["Three greens · touchdown", "auto", ["down", "td", "rollout"]],
+        ];
+        function groupState(keys) {
+          const v = keys.map((k) => f.seq[k] || "");
+          if (v.includes("fail")) return "fail";
+          if (v.includes("now")) return "now";
+          if (v.every((x) => x === "done" || x === "warn")) return v.includes("warn") ? "warn" : "done";
+          return v.some((x) => x) ? "now" : "";
+        }
+        const HOLD_MAX = 10; // s the autopilot will hold VLO waiting for a gear that was never selected up
+
+        const $ = (id) => document.getElementById(id);
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const fmt = (n) => Math.round(n).toLocaleString("en-US");
+
+        let S = SCEN[0];
+        const st = {}; // gear hydraulics
+        const f = {}; // flight, suspension and game state
+        let logDirty = true;
+
+        function reset() {
+          Object.assign(st, {
+            cmd: "extend", running: false, t: 0,
+            x: 1, lockUp: false, lockDown: true, unlockT: 0,
+            press: 0, rate: 0, stallT: 0, cycleT: 0, lastCycle: null, pumpAng: 0, flow: 0,
+          });
+          Object.assign(f, {
+            phase: "ready", tP: 0, spd: 0, alt: 0, vs: 0, dist: 0, prevAlt: 0, pitch: 0, wow: true, pumpsOn: false, readyT: 0,
+            s: XS, sv: 0, sLoad: S.oleo.weight, sPeak: 0, wFrac: 1, bottomed: false, bumpT: 0,
+            wheelSpin: 0, wheelAng: 0, call: null, callQ: [], log: [], once: {}, seq: {},
+            tPR: null, tRetract: null, tExtend: null, tVLO: null, rw: "to", thr: 0, overT: 0, holdT: 0,
+            doorDmg: false, doorsTorn: false, crashKind: null, reason: "", skipT: 0, horn: false,
+            gearAlarm: false, alarmT: 0, gateMiss: false, stabMiss: false, lockAlt: null, crashT: 0, shake: 0,
+            sparks: [], debris: [], smoke: [], loose: [], snapped: false, stopT: 0, landed: false, result: null,
+            win: { ret: climbPlan(), ext: null },
+          });
+          logDirty = true;
+        }
+        const setSeq = (k, v) => { f.seq[k] = v; };
+
+        /* ================= gear hydraulics ================= */
+        const Fmax = () => (S.P * S.area) / 100; // kN  (bar × cm² ÷ 100)
+        const pistonF = () => (st.press * S.area) / 100;
+        const airLoad = (spd) => S.airK * Math.pow(spd / S.VLO, 4); // airflow load climbs very fast with speed
+        function gearLoad(x, dir, spd, wow) {
+          const air = wow ? 0 : airLoad(spd) * (0.3 + 0.7 * x);
+          const g = dir > 0 ? S.gearW * (0.6 + 0.5 * x) : S.gearW * (1.1 - 0.4 * (1 - x));
+          return g + air;
+        }
+        const moveRate = (net) => (net <= 0.02 * Fmax() ? 0 : (1 / S.baseT) * Math.sqrt(Math.min(2, net / (0.45 * Fmax()))));
+        const locked = () => st.lockUp || st.lockDown;
+        const atTarget = () => (st.cmd === "extend" ? st.lockDown : st.lockUp);
+        const stowed = () => st.lockUp && st.unlockT === 0;
+        const failed = () => st.stallT > 1.5;
+
+        // how long the gear takes if selected at time t0 to reach xEnd, with the speed changing along the flight path
+        function travelAlong(dir, t0, spdAt, xEnd = 1) {
+          let x = dir > 0 ? 0 : 1, t = UNLOCK_TIME;
+          for (let i = 0; i < 6000; i++) {
+            const r = moveRate(Fmax() - gearLoad(x, dir, spdAt(t0 + t), false));
+            x += dir * r * 0.01;
+            t += 0.01;
+            if (dir > 0 ? x >= xEnd : x <= 0) return t;
+          }
+          return 99;
+        }
+        // the latest moment to select the gear and still reach xEnd by the deadline
+        function latestStart(dir, deadline, spdAt, from, xEnd = 1) {
+          for (let t0 = deadline; t0 > from; t0 -= 0.05) if (t0 + travelAlong(dir, t0, spdAt, xEnd) <= deadline) return t0;
+          return from;
+        }
+
+        function hydStep(dt) {
+          const target = f.pumpsOn ? S.P : 0;
+          st.press += (target - st.press) * (1 - Math.exp(-dt / (target > st.press ? 0.5 : 0.9)));
+          if (f.pumpsOn) st.pumpAng += dt * (4 + st.press / 40);
+          st.flow += dt * Math.abs(st.rate) * 6 + (st.rate ? dt * 0.6 : 0);
+
+          const dir = st.cmd === "extend" ? 1 : -1;
+          st.rate = 0;
+          if (f.phase === "crash") return; // the gear is wrecked: the actuator can't move it any more
+          if (atTarget()) { st.stallT = 0; return; }
+          if (f.wow && dir < 0) return; // squat switch
+          if (locked()) {
+            if (st.press > 30) {
+              st.unlockT += dt;
+              if (st.unlockT >= UNLOCK_TIME) {
+                st.lockUp = st.lockDown = false;
+                st.unlockT = 0;
+                st.cycleT = 0;
+              }
+            }
+            return;
+          }
+          st.cycleT += dt;
+          const r = moveRate(pistonF() - gearLoad(st.x, dir, f.spd, f.wow));
+          if (r > 0) {
+            st.rate = dir * r;
+            st.x += st.rate * dt;
+            st.stallT = 0;
+          } else st.stallT += dt;
+          if (dir > 0 && st.x >= 1) {
+            st.x = 1;
+            st.lockDown = true;
+            finishCycle();
+            if (!f.wow) callout("THREE GREENS", "#3fcf8e");
+          } else if (dir < 0 && st.x <= 0) {
+            st.x = 0;
+            st.lockUp = true;
+            finishCycle();
+          }
+        }
+        function finishCycle() {
+          st.lastCycle = st.cycleT;
+          st.rate = 0;
+          st.stallT = 0;
+        }
+
+        /* ================= oleo strut (suspension) ================= */
+        // nitrogen spring + oil forced through an orifice (damper); f.s = compression, 0 … 1 of the stroke
+        function oleoStep(dt) {
+          const gearOn = st.lockDown && f.wow && f.phase !== "crash";
+          if (gearOn) {
+            let w = 1;
+            if (f.phase === "roll") w = 1 - 0.9 * Math.pow(f.spd / S.VLOF, 2); // wings take the weight as speed builds
+            else if (f.phase === "roll2") w = Math.min(1, 0.55 + f.tP * 0.4); // lift dumps after touchdown
+            f.wFrac = clamp(w, 0.05, 1);
+            const spring = Math.pow(Math.max(0, f.s) / XS, 1.5);
+            f.sv += (9 * (f.wFrac - spring) - 5 * f.sv) * dt;
+            f.s += f.sv * dt;
+            if (f.s >= 1) { if (f.sv > 0.4) f.bottomed = true; f.s = 1; f.sv = 0; }
+            if (f.s <= 0) { f.s = 0; f.sv = Math.max(0, f.sv); }
+            if (S.rough && f.spd > 5 && (f.phase === "roll" || f.phase === "roll2")) {
+              f.bumpT -= dt;
+              if (f.bumpT <= 0) {
+                f.bumpT = 0.2 + Math.random() * 0.45;
+                f.sv += (0.3 + Math.random() * 0.9) * S.rough * Math.min(1, f.spd / 90);
+              }
+            }
+            f.sLoad = Math.max(0, S.oleo.weight * (Math.pow(f.s / XS, 1.5) + 0.35 * f.sv));
+          } else {
+            f.s += (0 - f.s) * Math.min(1, dt * 5);
+            f.sv = 0;
+            f.sLoad = 0;
+          }
+          if (f.phase === "roll2") f.sPeak = Math.max(f.sPeak, f.sLoad);
+        }
+        const strutP = () => (f.sLoad * 100) / S.oleo.area; // bar
+
+        /* ================= flight log + callouts ================= */
+        // kind: "ok" | "warn" | "bad" | "info"
+        function logEv(kind, msg) {
+          f.log.push({ kind, msg });
+          logDirty = true;
+        }
+        function logOnce(key, kind, msg) {
+          if (f.once[key]) return false;
+          f.once[key] = true;
+          logEv(kind, msg);
+          return true;
+        }
+        const toastSeen = {};
+        function toast(text, kind) {
+          const box = $("toasts"), now = performance.now();
+          if (toastSeen[text] && now - toastSeen[text] < 2500) return; // the same alert never stacks up
+          toastSeen[text] = now;
+          const el = document.createElement("div");
+          el.className = "toast " + kind;
+          el.textContent = "⚠ " + text;
+          box.appendChild(el);
+          while (box.children.length > 2) box.firstChild.remove(); // two at most, so they stay in the sky above the aircraft
+          setTimeout(() => el.classList.add("out"), 2600);
+          setTimeout(() => el.remove(), 3000);
+        }
+        // call-outs queue up and show one at a time, so a new one never covers or cuts off the last
+        const CALL_LEN = 1.8;
+        function callout(text, col) {
+          // amber and red call-outs also pop up as a small message at the top of the screen
+          if (col === "#ff5d5d") toast(text, "bad");
+          else if (col === "#fab219") toast(text, "warn");
+          const c = { text, t: 0, col: col || "#ffffff" };
+          if (!f.call || f.call.t >= CALL_LEN) f.call = c;
+          else {
+            f.callQ.push(c);
+            if (f.callQ.length > 2) f.callQ.shift();
+          }
+        }
+        function stepCall(dt) {
+          if (!f.call) return;
+          f.call.t += dt;
+          if (f.callQ.length && f.call.t >= 1 && f.call.t < 1.4) f.call.t = 1.4; // another is waiting: start fading now
+          if (f.call.t >= CALL_LEN && f.callQ.length) f.call = f.callQ.shift();
+        }
+
+        /* ================= flight plans (for the time window) ================= */
+        // climb: the acceleration builds as the aircraft cleans up (×1.25 after 12.5 s),
+        // and almost doubles once the gear is up and its drag is gone
+        const RAMP_T = 12.5;
+        const climbAcc = (t, clean) => S.accel * (clean ? 1.9 : 1 + 0.02 * Math.min(t, RAMP_T));
+        const climbVsMax = (clean, held) => (held ? 3600 : clean ? 4400 : 3000); // ft/min
+        const CLIMB_VS_RATE = 1800; // ft/min gained per second after lift-off
+        // the steepest the aircraft can rotate on the runway before the tail would touch
+        const rotMax = () => Math.min(8, 0.8 * (Math.atan(PLANE[S.type].gearH / -PLANE[S.type].x0) * 180) / Math.PI);
+        function climbPlan() {
+          let spd = S.VLOF, vs = 300, alt = 0, t = 0, tPR = null;
+          const dt = 0.01;
+          while (t < 90 && spd < S.VLO) {
+            spd = Math.min(S.VLO + 60, spd + climbAcc(t, false) * dt);
+            vs = Math.min(climbVsMax(false, false), vs + CLIMB_VS_RATE * dt);
+            alt += (vs / 60) * dt;
+            t += dt;
+            if (tPR == null && alt > 25) tPR = t;
+          }
+          // speed gained by time tt (the integral of climbAcc with the gear out)
+          const spdAt = (tt) => {
+            const a = Math.min(tt, RAMP_T);
+            return Math.min(S.VLO + 60, S.VLOF + S.accel * (a + 0.01 * a * a + 1.25 * Math.max(0, tt - RAMP_T)));
+          };
+          const close = latestStart(-1, t, spdAt, tPR);
+          return { open: tPR, close: Math.max(tPR + 0.5, close), vlo: t, span: t + 3 };
+        }
+        const appSpd = (t) => Math.max(S.vref, S.VLO + 30 - 10 * t);
+        const appAlt = (a, dt) => a - Math.min(S.descent, Math.max(4.5, a * 1.6)) * dt; // steady descent that eases into the flare
+        function appPlan() {
+          let a = APP_ALT, t = 0, d = 0, tV = null, tG = null, tS = null;
+          const dt = 0.01;
+          while (a > 0 && t < 200) {
+            const v = appSpd(t);
+            d += v * KT * dt;
+            if (tV == null && v <= S.VLO) tV = t;
+            const na = appAlt(a, dt);
+            if (tG == null && a > GATE && na <= GATE) tG = t;
+            if (tS == null && a > STAB && na <= STAB) tS = t;
+            a = na;
+            t += dt;
+          }
+          // green: locked by 1,000 ft · amber: by 500 ft (firm) · then locked by touchdown (hard landing, failed)
+          // · at least half out (collapse) · less (belly drag)
+          const close = Math.max(tV + 0.5, latestStart(1, tG, appSpd, tV));
+          const late = Math.max(close, latestStart(1, tS, appSpd, tV));
+          const lockTd = Math.max(late, latestStart(1, t, appSpd, tV));
+          const half = Math.max(lockTd, latestStart(1, t, appSpd, tV, PART));
+          return { open: tV, close, late, lockTd, half, td: t, gate: tG, stab: tS, span: t + 0.6, dist: d };
+        }
+
+        /* ================= flight sequence ================= */
+        const visAlt = () => (f.phase === "skip" ? f.visAlt : f.alt); // altitude used for the picture (eased during the cruise skip)
+        // time scale per phase: fast where there is nothing to decide, normal while a gear window is open
+        const TS = { pre: 1.6, roll: 1.8, climb: 1, abort: 1.6, app: 1.3, roll2: 2.2, crash: 1.6 };
+        const FAST = 2.2; // after the decision is made (gear up & locked, or down & locked)
+        // below 200 ft the last few seconds run in real time, so the late-gear outcomes are easier to aim for
+        const FLARE_ALT = 200;
+        function tsNow() {
+          const ph = f.phase;
+          if (ph === "climb") return stowed() ? FAST : TS.climb;
+          if (ph === "app") {
+            if (st.lockDown) return f.alt < FLARE_ALT ? TS.app : FAST;
+            if (f.tExtend == null && f.win.ext && f.tP < f.win.ext.open) return FAST; // still too fast for the gear
+            return f.alt < FLARE_ALT ? 1 : TS.app;
+          }
+          return TS[ph] || 1;
+        }
+
+        function step(dt) {
+          if (f.phase === "ready" || f.phase === "done") return;
+          if (f.phase === "skip") return stepSkip(dt);
+          st.t += dt;
+          f.tP += dt;
+          f.shake = Math.max(0, f.shake - dt * 1.2);
+          hydStep(dt);
+          flightStep(dt);
+          oleoStep(dt);
+          f.sparks = f.sparks.filter((p) => (p.life -= dt) > 0);
+          f.sparks.forEach((p) => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 300 * dt; });
+          f.debris = f.debris.filter((p) => (p.life -= dt) > 0);
+          f.debris.forEach((p) => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 120 * dt; p.r += p.vr * dt; });
+          f.smoke = f.smoke.filter((p) => (p.life -= dt) > 0);
+          f.smoke.forEach((p) => { p.x += p.vx * dt; p.y += p.vy * dt; p.r += 16 * dt; });
+          // loose wheels: bounce along the runway, rolling on ahead of the wreck as it stops
+          const wr = PLANE[S.type].wr;
+          f.loose.forEach((p) => {
+            p.vy += 420 * dt;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            const gy = -wr * (p.nose ? 0.85 : 1);
+            if (p.y > gy) { p.y = gy; p.vy *= -0.45; p.vx *= 0.9; }
+            p.vx = Math.max(0, p.vx - 10 * dt);
+            p.ang += p.vx * dt * 0.25;
+          });
+        }
+
+        function flightStep(dt) {
+          const ph = f.phase;
+          f.prevAlt = f.alt;
+          f.wheelAng += f.wheelSpin * 0.09 * dt;
+          f.gearAlarm = false;
+
+          if (ph === "pre") {
+            f.spd = 0;
+            f.readyT = st.press >= 0.7 * S.P ? f.readyT + dt : 0;
+            if (f.readyT > 0.4) {
+              f.phase = "roll";
+              f.tP = 0;
+              setSeq("pumps", "done");
+              setSeq("roll", "now");
+              logEv("info", `Hydraulic pumps started automatically — ${S.P} bar in the gear circuit`);
+              callout("BRAKES OFF · TAKE-OFF THRUST");
+            }
+          } else if (ph === "roll") {
+            f.spd += S.rollAcc * dt;
+            f.wheelSpin = f.spd;
+            f.dist += f.spd * KT * dt;
+            if (f.spd >= 80 && !f.once.c80) { f.once.c80 = 1; callout("80 KNOTS"); }
+            if (f.spd >= S.VLOF - 15) {
+              if (!f.once.cVR) { f.once.cVR = 1; callout("ROTATE"); }
+              f.pitch = Math.min(rotMax(), f.pitch + 5 * dt); // nose up for lift-off, short of a tail strike
+            }
+            if (f.spd >= S.VLOF) {
+              f.phase = "climb";
+              f.tP = 0;
+              f.wow = false;
+              f.vs = 300;
+              setSeq("roll", "done");
+              setSeq("lof", "now");
+              callout("LIFT-OFF");
+            }
+          } else if (ph === "climb" || ph === "abort") {
+            const clean = stowed();
+            let spd = ph === "abort" ? Math.max(S.VLO - 20, f.spd - 4 * dt) : Math.min(S.VLO + 90, f.spd + climbAcc(f.tP, clean) * dt);
+            // a gear that is down or moving must stay at or below VLO: the autopilot pitches up and holds the speed there
+            const held = ph === "climb" && !clean && spd >= S.VLO;
+            if (held) spd = S.VLO;
+            f.spd = spd;
+            f.vs = Math.min(climbVsMax(clean, held), f.vs + CLIMB_VS_RATE * dt);
+            if (ph === "abort") f.vs = Math.max(0, f.vs - 2600 * dt);
+            f.alt += (f.vs / 60) * dt;
+            // a steep initial climb, steeper still once the gear is up (or when held back at VLO)
+            f.pitch += ((ph === "abort" ? 0 : held ? 16 : clean ? 14 : 11) - f.pitch) * Math.min(1, dt * 1.2);
+            f.dist += f.spd * KT * dt;
+            // automatic wheel braking once the gear is selected up
+            const braking = st.cmd === "retract";
+            f.wheelSpin = Math.max(0, f.wheelSpin - (braking ? 140 : 3) * dt);
+            if (f.seq.brake === "now" && f.wheelSpin <= 1) {
+              setSeq("brake", "done");
+              logEv("info", "Wheel brakes applied automatically — the wheels stopped before entering the wells");
+            }
+            if (ph === "abort") {
+              if (f.tP > 3.5) finish(false);
+              return;
+            }
+            // gear-not-up warning: once the retract window has closed, the alert flashes until the gear is up & locked
+            const Wr = f.win.ret;
+            f.gearAlarm = f.tPR != null && !stowed() && (f.tRetract == null ? f.tP > Wr.close : f.tRetract > Wr.close);
+            if (f.gearAlarm) {
+              f.alarmT += dt;
+              if (logOnce("gearAlarm", "warn", "Gear-not-up warning — the gear was still down after the retract window closed, so the alert flashed")) {
+                callout("GEAR NOT UP · RETRACT", "#ff5d5d");
+              }
+            }
+            if (held) {
+              f.holdT += dt;
+              if (logOnce("hold", "warn", `Speed held at VLO ${S.VLO} kt — the gear was not up yet, so the autopilot pitched up to stop the aircraft going faster`)) {
+                callout("SPEED HELD AT VLO · GEAR NOT UP", "#fab219");
+              }
+              if (st.cmd === "extend" && f.holdT > HOLD_MAX) return returnToLand();
+            }
+            if (f.alt > 25 && f.tPR == null) {
+              f.tPR = f.tP;
+              setSeq("lof", "done");
+              if (f.tRetract == null) setSeq("ret", "now");
+              callout("POSITIVE RATE");
+            }
+            if (st.lockUp && !f.once.stowed) {
+              f.once.stowed = true;
+              if (f.holdT === 0) {
+                logEv("ok", `Up & locked at ${Math.round(f.spd)} kt — before VLO ${S.VLO} kt`);
+                setSeq("uplock", "done");
+              } else {
+                logEv("warn", `Up & locked only after the speed was held at VLO for ${f.holdT.toFixed(1)} s — the climb was slowed while waiting for the gear`);
+                setSeq("uplock", "warn");
+              }
+              callout("UP & LOCKED", "#3fcf8e");
+            }
+            if (stowed() && f.tP >= f.win.ret.vlo + 1.5) startSkip();
+          } else if (ph === "app") {
+            f.spd = appSpd(f.tP);
+            f.alt = Math.max(0, appAlt(f.alt, dt));
+            f.vs = ((f.alt - f.prevAlt) / dt) * 60;
+            f.dist += f.spd * KT * dt;
+            f.pitch += ((f.alt < 60 ? 2 : 0) - f.pitch) * Math.min(1, dt * 1.5); // level approach, small flare
+            if (f.tVLO == null && f.spd <= S.VLO) {
+              f.tVLO = f.tP;
+              setSeq("slow", "done");
+              if (f.tExtend == null) { setSeq("ext", "now"); callout("BELOW VLO · EXTEND WINDOW OPEN", "#3fcf8e"); }
+            }
+            // gear out above VLO: the airflow overloads the doors (an exceedance: the landing continues, the doors need an inspection)
+            if (!stowed() && f.spd > S.VLO) {
+              f.overT += dt;
+              if (f.overT > 0.8 && !f.doorDmg) {
+                f.doorDmg = true;
+                logEv("warn", `Gear lowered above VLO (${Math.round(f.spd)} kt) — the airflow overloaded the gear doors; they need an inspection after landing`);
+                callout("GEAR DOOR OVERLOAD", "#fab219");
+                for (let i = 0; i < 8; i++) f.debris.push({ x: -10, y: -10, vx: -60 - Math.random() * 120, vy: -20 + Math.random() * 40, life: 1.4, r: 0, vr: 6 });
+              }
+            }
+            if (st.lockDown && !f.once.downLock) {
+              f.once.downLock = true;
+              f.lockAlt = f.alt;
+              if (f.stabMiss) {
+                logEv("bad", `Three greens only at ${fmt(f.alt)} ft — below the 500 ft limit: an unstabilised approach`);
+                setSeq("down", "fail");
+              } else if (f.gateMiss) {
+                logEv("warn", `Three greens only at ${fmt(f.alt)} ft — below the 1,000 ft gate: an unstable, rushed approach`);
+                setSeq("down", "warn");
+              } else {
+                logEv("ok", `Three greens at ${fmt(f.alt)} ft — a stable approach`);
+                setSeq("down", "done");
+              }
+              setSeq("td", "now");
+            }
+            const cross = (a) => f.prevAlt > a && f.alt <= a;
+            // stabilised-approach gate: no three greens at 1,000 ft — the autopilot keeps landing, so the gear timing decides the outcome
+            if (cross(GATE) && !st.lockDown && !f.once.downLock) {
+              f.gateMiss = true;
+              logEv("warn", st.cmd === "extend" && f.tExtend != null
+                ? `No three greens at 1,000 ft — the gear was only ${Math.round(st.x * 100)}% down: an unstable approach`
+                : "No three greens at 1,000 ft — the gear was still up: an unstable approach");
+              callout("1,000 FT · NO THREE GREENS", "#fab219");
+            }
+            // 500 ft: the last point a real approach may continue unstabilised — the crew must go around, the autopilot presses on
+            if (cross(STAB) && !st.lockDown && !f.once.downLock) {
+              f.stabMiss = true;
+              logEv("bad", `No three greens at 500 ft — the gear was ${Math.round(st.x * 100)}% down. A real crew must go around here`);
+              callout("TOO LOW · GEAR", "#ff5d5d");
+            }
+            f.horn = !st.lockDown && f.alt < STAB;
+            if (f.alt <= 0) touchdown();
+          } else if (ph === "roll2") {
+            if (f.tP > 0.8) f.spd = Math.max(0, f.spd - S.brakeDecel * dt); // autobrake
+            f.wheelSpin = f.spd;
+            f.pitch = Math.max(0, f.pitch - 3 * dt);
+            f.dist += f.spd * KT * dt;
+            if (!f.once.absorbed && f.tP > 1.8) {
+              f.once.absorbed = true;
+              const g = f.sPeak / S.oleo.weight;
+              if (f.bottomed) logEv("warn", `Very hard landing — the oleo strut bottomed out (peak ${fmt(f.sPeak)} kN)`);
+              else logEv("ok", `Oleo strut absorbed the touchdown — peak ${fmt(f.sPeak)} kN, ${g.toFixed(1)}× the static load`);
+              setSeq("td", f.stabMiss ? "fail" : "done");
+              setSeq("rollout", "now");
+            }
+            if (f.spd <= 0) {
+              f.stopT += dt;
+              if (f.stopT > 1) {
+                setSeq("rollout", "done");
+                if (f.stabMiss) {
+                  // it landed on its wheels, but only by breaking the 500 ft rule
+                  f.reason = `Hard landing after an unstabilised approach: the gear only locked at ${fmt(f.lockAlt || 0)} ft, below the 500 ft limit. A real crew must go around there. Pressing on gave a rushed, hard touchdown (peak ${fmt(f.sPeak)} kN${f.bottomed ? ", the oleo strut bottomed out" : ""}), so the aircraft is grounded for a hard-landing inspection.`;
+                  finish(false);
+                } else finish(true);
+              }
+            }
+          } else if (ph === "crash") {
+            f.crashT += dt;
+            const coll = f.crashKind === "collapse";
+            if (coll) {
+              // collapse: it first rolls on the unlocked gear, then the legs give way under the load
+              if (f.crashT < SNAP_T) f.wheelSpin = f.spd;
+              else {
+                if (!f.snapped) snapGear();
+                st.x = Math.max(0.3, st.x - dt * 3); // the legs fold back into the wells
+                f.wheelSpin = 0;
+              }
+            }
+            // collapse: the wreckage digs in and stops it in a short distance · belly: a long slide on the skin
+            f.spd = Math.max(0, f.spd - (coll ? (f.snapped ? 30 : 4) : 13) * dt);
+            f.dist += f.spd * KT * dt;
+            f.pitch += ((coll && f.snapped ? -2 : 0) - f.pitch) * Math.min(1, dt * 3);
+            if (!coll) f.shake = Math.max(f.shake, 0.3 * Math.min(1, f.spd / 60));
+            const sparkNow = coll ? f.snapped && f.crashT < SNAP_T + 0.9 : true;
+            if (f.spd > 5 && sparkNow) {
+              for (let i = 0; i < (coll ? 6 : 5); i++) f.sparks.push({ x: (Math.random() - 0.3) * 70, y: 0, vx: -80 - Math.random() * 180, vy: -60 - Math.random() * 130, life: 0.5 + Math.random() * 0.5 });
+            }
+            // collapse: smoke from the crushed gear and scraping engines
+            if (coll && f.snapped && Math.random() < 0.6) {
+              f.smoke.push({ x: (Math.random() - 0.5) * 70, y: -6, r: 5 + Math.random() * 5, vx: -30 - Math.random() * 50, vy: -12 - Math.random() * 18, life: 1.8 });
+            }
+            if (f.spd <= 0) {
+              f.stopT += dt;
+              if (f.stopT > 1.4) finish(false);
+            }
+          }
+        }
+
+        // gear never selected up: the aircraft is stuck at VLO with the drag of the gear, so it can't climb to cruise
+        function returnToLand() {
+          f.phase = "abort";
+          f.tP = 0;
+          setSeq("ret", "fail");
+          setSeq("brake", "fail");
+          setSeq("uplock", "fail");
+          f.reason = `The gear was never selected up. With the gear down the aircraft must stay at or below VLO (${S.VLO} kt), and the drag of the gear stops it climbing to cruise and burns far more fuel. The crew levels off and returns to the airport.`;
+          logEv("bad", `Gear left down for ${HOLD_MAX} s at VLO — the flight could not continue, return to land`);
+          callout("GEAR NOT RETRACTED · RETURN TO LAND", "#ff5d5d");
+        }
+
+        function startSkip() {
+          f.phase = "skip";
+          f.skipT = 0;
+          f.horn = false;
+          f.skip0 = { alt: f.alt, spd: f.spd };
+          f.visAlt = f.alt; // set now so the frame drawn before the first skip step has a valid altitude
+          f.cloudA = 0;
+          setSeq("cruise", "now");
+          for (let i = 0; i < 200; i++) hydStep(0.05);
+        }
+        // cruise time skip: one smooth climb-and-descend curve, so the climb flows straight into the approach
+        const SKIP_DUR = 2;
+        function stepSkip(dt) {
+          f.skipT += dt;
+          const p = clamp(f.skipT / SKIP_DUR, 0, 1);
+          const e = p * p * (3 - 2 * p);
+          const hump = Math.pow(Math.sin(Math.PI * p), 2);
+          const a0 = f.skip0.alt, base = a0 + (APP_ALT - a0) * e;
+          f.prevAlt = f.alt;
+          f.alt = base + (parseInt(S.fl.slice(2), 10) * 100 - base) * hump;
+          f.visAlt = base + (2600 - base) * hump;
+          f.spd = f.skip0.spd + (appSpd(0) - f.skip0.spd) * e + 180 * hump;
+          f.pitch += (0 - f.pitch) * Math.min(1, dt * 2);
+          f.dist += (f.spd * KT + 1500 * hump) * dt;
+          f.skipE = e;
+          f.cloudA = hump;
+          if (f.skipT >= SKIP_DUR) startApproach();
+        }
+        function startApproach() {
+          f.phase = "app";
+          f.tP = 0;
+          f.alt = APP_ALT;
+          f.prevAlt = APP_ALT;
+          f.cloudA = 0;
+          f.spd = appSpd(0);
+          f.rw = "ldg";
+          f.win.ext = appPlan();
+          f.thr = f.dist + f.win.ext.dist - S.tdOff;
+          f.wow = false;
+          f.overT = 0;
+          setSeq("cruise", "done");
+          setSeq("slow", "now");
+          callout("APPROACH · WAIT FOR VLO");
+        }
+
+        function touchdown() {
+          f.alt = 0;
+          f.wow = true;
+          f.landed = true;
+          f.horn = false;
+          f.tP = 0;
+          if (st.lockDown) {
+            f.phase = "roll2";
+            f.s = 0;
+            // a rushed, unstable approach ends in a firmer touchdown; an unstabilised one below 500 ft in a hard one
+            f.sv = (S.oleo.sink * (f.stabMiss ? 2.8 : f.gateMiss ? 1.7 : 1) * 0.3048) / S.oleo.stroke;
+            f.sPeak = 0;
+            f.wheelSpin = f.spd;
+            if (f.stabMiss) {
+              callout("HARD LANDING", "#ff5d5d");
+              f.shake = 0.6;
+              logEv("bad", "Hard touchdown — the gear locked too late for the crew to settle the approach");
+            } else {
+              callout(f.gateMiss ? "FIRM TOUCHDOWN" : "TOUCHDOWN", f.gateMiss ? "#fab219" : "#3fcf8e");
+              logEv(f.gateMiss ? "warn" : "ok", f.gateMiss
+                ? "Touchdown on three greens, but firm — the late gear left no time to settle the approach"
+                : "Touchdown on three greens — the down-locks held");
+            }
+            setSeq("td", "now");
+          } else {
+            // the outcome depends on how far the gear got: partly out and unlocked folds on impact, barely out drags on the belly
+            const pct = Math.round(st.x * 100);
+            const W = f.win.ext;
+            const why = f.tExtend == null ? null
+              : st.cmd !== "extend" ? "the gear was selected up again on short final"
+              : f.tExtend > W.close ? `Extend was selected ${((f.tExtend - W.close) / TS.app).toFixed(1)} s after the window closed`
+              : "the gear was lowered above VLO and stalled in the airflow";
+            if (st.x >= PART) {
+              crash("collapse", `Gear collapse on impact: ${why}, so the gear was ${pct}% down but not locked at touchdown. The wheels touched first, but without the down-lock the landing load snapped the legs back into themselves: the wheels broke away and the aircraft dropped onto its belly and ground to a stop.`);
+            } else if (why == null || st.x < 0.03) {
+              crash("belly", `Gear-up landing: ${why ? why + ", so the gear was still up at touchdown" : "the gear was never extended"}. The aircraft touched down on its belly and dragged down the runway in a shower of sparks.`);
+            } else {
+              crash("belly", `Belly drag landing: ${why}, so the gear was only ${pct}% out at touchdown — too little to take any load. It was crushed back into the wells and the aircraft dragged down the runway on its belly.`);
+            }
+          }
+        }
+
+        function crash(kind, reason) {
+          f.phase = "crash";
+          f.crashKind = kind;
+          f.reason = reason;
+          f.stopT = 0;
+          f.crashT = 0;
+          f.shake = kind === "collapse" ? 0.3 : 0.7;
+          setSeq("down", "fail");
+          setSeq("td", "fail");
+          if (f.seq.ext !== "done") setSeq("ext", "fail");
+          if (kind === "belly") {
+            logEv("bad", "Belly landing — the aircraft dragged down the runway on its fuselage");
+            callout("BELLY LANDING", "#ff5d5d");
+            for (let i = 0; i < 7; i++) f.debris.push({ x: -20 + Math.random() * 50, y: -4, vx: -40 - Math.random() * 160, vy: -90 - Math.random() * 90, life: 1.2 + Math.random() * 0.8, r: 0, vr: (Math.random() - 0.5) * 14 });
+          } else {
+            logEv("bad", "Touched down on unlocked gear — the down-locks were not engaged");
+            callout("GEAR NOT LOCKED", "#ff5d5d");
+          }
+        }
+
+        // collapse: how long it rolls on the unlocked gear before the legs give way, and how far out the gear must be to collapse
+        const SNAP_T = 0.35, PART = 0.5;
+        // 0 = sitting on its gear · 1 = down on its belly
+        const crashDrop = () => (!f.crashKind ? 0 : f.crashKind === "belly" ? 1 : clamp((f.crashT - SNAP_T) / 0.18, 0, 1));
+        function snapGear() {
+          f.snapped = true;
+          f.shake = 1.3;
+          logEv("bad", "Gear collapsed — the unlocked legs snapped back into themselves and the wheels broke away");
+          callout("GEAR COLLAPSE", "#ff5d5d");
+          for (let i = 0; i < 20; i++) f.debris.push({ x: -30 + Math.random() * 70, y: -6, vx: -60 - Math.random() * 200, vy: -110 - Math.random() * 120, life: 1.4 + Math.random() * 0.9, r: 0, vr: (Math.random() - 0.5) * 16 });
+          for (let i = 0; i < 12; i++) f.smoke.push({ x: (Math.random() - 0.5) * 80, y: -6, r: 6 + Math.random() * 8, vx: -20 - Math.random() * 60, vy: -10 - Math.random() * 25, life: 2.2 });
+          // the main and nose wheels tear off and bounce away down the runway
+          const T = PLANE[S.type];
+          f.loose.push({ x: 0, y: -T.wr, vx: 150, vy: -170, ang: 0 }, { x: T.noseX, y: -T.wr * 0.85, vx: 190, vy: -130, ang: 0, nose: true });
+        }
+
+        function finish(win) {
+          f.phase = "done";
+          f.result = win;
+          st.running = false;
+          showResult(win);
+          // the sim stops here, so show the final call-out straight away and hold it
+          f.callQ = [];
+          f.call = { text: win ? "MISSION COMPLETE" : "MISSION FAILED", t: 0.5, col: win ? "#3fcf8e" : "#ff5d5d" };
+          syncStart();
+        }
+
+        /* ================= controls ================= */
+        const active = () => ["pre", "roll", "climb", "app", "roll2"].includes(f.phase);
+
+        function setToggle(v) {
+          $("cmdToggle").querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
+        }
+        function setCmd(v) {
+          if (!active() || v === st.cmd) return;
+          if (v === "retract" && f.wow) {
+            logOnce("wow", "warn", "Tried to retract on the ground — the squat switch blocked it (weight on wheels)");
+            callout("SQUAT SWITCH · WEIGHT ON WHEELS", "#ff5d5d");
+            return;
+          }
+          st.cmd = v;
+          setToggle(v);
+          syncHints();
+          st.lastCycle = null;
+          st.unlockT = 0;
+          if (v === "retract" && f.phase === "climb" && f.tRetract == null) {
+            f.tRetract = f.tP;
+            const W = f.win.ret;
+            if (f.tPR == null) {
+              logEv("warn", "Retract selected before positive rate — if the aircraft had sunk back, it would have hit the runway with the gear folding");
+              callout("NO POSITIVE RATE YET", "#ff5d5d");
+              setSeq("ret", "warn");
+            } else if (f.tP <= W.close) {
+              logEv("ok", `Retract selected ${(f.tP - f.tPR).toFixed(1)} s after positive rate — inside the time window`);
+              setSeq("ret", "done");
+            } else {
+              logEv("warn", `Retract selected late (${(f.tP - f.tPR).toFixed(1)} s after positive rate) — the gear can't lock before VLO, so the speed is held there`);
+              setSeq("ret", "warn");
+            }
+            setSeq("brake", f.wheelSpin > 1 ? "now" : "done");
+            setSeq("uplock", "now");
+          }
+          if (v === "extend" && f.phase === "app" && f.tExtend == null) {
+            f.tExtend = f.tP;
+            const W = f.win.ext;
+            if (f.spd > S.VLO) {
+              logEv("warn", `Extend selected at ${Math.round(f.spd)} kt — above VLO ${S.VLO} kt, the airflow load is too high`);
+              callout("ABOVE VLO · AIR LOAD TOO HIGH", "#ff5d5d");
+              setSeq("ext", "warn");
+            } else if (f.tP <= W.close + 0.1) {
+              logEv("ok", `Extend selected ${(f.tP - W.open).toFixed(1)} s after slowing below VLO — inside the time window`);
+              setSeq("ext", "done");
+            } else if (f.tP <= W.late) {
+              logEv("warn", "Extend selected late — the gear can only lock between 1,000 and 500 ft: an unstable approach and a firm landing");
+              callout("LATE · NO GREENS BY 1,000 FT", "#fab219");
+              setSeq("ext", "warn");
+            } else if (f.tP <= W.lockTd) {
+              logEv("bad", "Extend selected too late — the gear can only lock below 500 ft: an unstabilised approach and a hard landing");
+              callout("TOO LATE · LOCKS BELOW 500 FT", "#ff5d5d");
+              setSeq("ext", "fail");
+            } else if (f.tP <= W.half) {
+              logEv("bad", "Extend selected too late — the gear can't lock before touchdown, so it will fold on impact");
+              callout("TOO LATE · GEAR WON'T LOCK", "#ff5d5d");
+              setSeq("ext", "fail");
+            } else {
+              logEv("bad", "Extend selected far too late — the gear will be under half out at touchdown: a belly landing");
+              callout("TOO LATE · BELLY LANDING", "#ff5d5d");
+              setSeq("ext", "fail");
+            }
+            if (f.seq.slow !== "done") setSeq("slow", "warn");
+            if (!f.once.downLock) setSeq("down", "now");
+          }
+        }
+
+        $("cmdToggle").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) setCmd(b.dataset.v); });
+        document.addEventListener("keydown", (e) => {
+          if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+          if (e.target.closest && e.target.closest("input, textarea, select")) return;
+          const k = e.key.toLowerCase();
+          if (k === "g") setCmd(st.cmd === "extend" ? "retract" : "extend");
+          else if (k === "enter") {
+            if (e.target.closest && e.target.closest("button")) return;
+            startBtnAction();
+          }
+        });
+        document.addEventListener("click", (e) => {
+          const b = e.target.closest && e.target.closest("button");
+          if (b && e.detail > 0) b.blur();
+        });
+
+        function syncHints() {
+          $("cmdVal").textContent = st.cmd === "extend" ? "Extend" : "Retract";
+          $("cmdHint").textContent = st.cmd === "extend"
+            ? "Extend — fluid pushes the piston and swings the leg forward and down into its down-lock."
+            : "Retract — fluid pushes the piston the other way and folds the leg back into the wheel well.";
+        }
+
+        const startBtn = $("startBtn");
+        function syncStart() {
+          if (f.phase === "ready") startBtn.textContent = "▶ Start";
+          else if (f.phase === "done") startBtn.textContent = "▶ Fly Again";
+          else startBtn.textContent = st.running ? "❚❚ Pause" : "▶ Resume";
+          startBtn.classList.toggle("running", st.running);
+        }
+        function begin() {
+          reset();
+          f.phase = "pre";
+          f.pumpsOn = true;
+          st.running = true;
+          setSeq("pumps", "now");
+          setToggle("extend");
+          syncHints();
+          syncStart();
+          $("debrief").classList.remove("show");
+          $("toasts").innerHTML = ""; // clear alerts left over from the last flight
+          callout("ENGINES START · HYDRAULIC PUMPS ON");
+        }
+        function startBtnAction() {
+          if (f.phase === "ready" || f.phase === "done") return begin();
+          st.running = !st.running;
+          syncStart();
+        }
+        startBtn.addEventListener("click", startBtnAction);
+        function toReady() {
+          reset();
+          setToggle("extend");
+          syncHints();
+          $("debrief").classList.remove("show");
+          renderScenarios();
+          syncStart();
+        }
+        $("resetBtn").addEventListener("click", toReady);
+
+        /* ================= scenario panel + debrief ================= */
+        function renderScenarios() {
+          $("scenList").innerHTML = SCEN.map((s, i) =>
+            `<button type="button" data-i="${i}" class="${s === S ? "on" : ""}" aria-pressed="${s === S}"><span class="n">${i + 1}</span><span>${s.name}<small>${s.tag}</small></span></button>`
+          ).join("");
+          $("scInfo").innerHTML = [
+            ["Aircraft", S.aircraft],
+            ["Where", S.env],
+            ["Runway", S.runway],
+            ["Gear", S.gear],
+            ["Limits", `VLO ${S.VLO} kt · lift-off ${S.VLOF} kt`],
+          ].map(([k, v]) => `<div class="kv"><b>${k}</b><span>${v}</span></div>`).join("") + `<p>${S.explain}</p>`;
+        }
+        $("scenList").addEventListener("click", (e) => {
+          const b = e.target.closest("button");
+          if (!b) return;
+          S = SCEN[+b.dataset.i];
+          toReady();
+        });
+
+        function showResult(win) {
+          $("dTitle").textContent = win ? "Mission Complete" : "Mission Failed";
+          $("dTitle").style.color = win ? "var(--safe)" : "var(--fail)";
+          const notes = [];
+          if (f.alarmT > 0) notes.push(`The gear was raised late — the gear-not-up alert showed for ${f.alarmT.toFixed(1)} s after take-off.`);
+          if (f.holdT > 0) notes.push(`After take-off the speed was held at VLO for ${f.holdT.toFixed(1)} s waiting for the gear — a slower climb.`);
+          if (f.gateMiss) notes.push("The gear only locked below 1,000 ft — an unstable approach and a firm touchdown. A real crew would have gone around.");
+          if (f.doorDmg) notes.push("The gear was lowered above VLO — the doors were overloaded and need an inspection.");
+          if (f.bottomed) notes.push("The oleo strut bottomed out on touchdown — a hard-landing inspection is needed.");
+          const warned = f.log.some((l) => l.kind === "warn");
+          $("dReason").textContent = win
+            ? notes.length ? "Landed safely, but: " + notes.join(" ") : warned ? "Landed safely, with warnings — see the flight log below." : "Every gear step was on time. Landed safely."
+            : f.reason;
+          $("dReason").style.color = win ? "var(--slow)" : "var(--fail)";
+          $("debrief").classList.add("show");
+          logDirty = true;
+        }
+
+        /* ================= drawing helpers ================= */
+        const scene = $("scene");
+        const ctx = scene.getContext("2d");
+        function fit(cv) {
+          const dpr = window.devicePixelRatio || 1;
+          const w = cv.clientWidth, h = cv.clientHeight;
+          if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+            cv.width = Math.round(w * dpr);
+            cv.height = Math.round(h * dpr);
+          }
+          cv.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+          return { w, h };
+        }
+        function mix(a, b, t) {
+          const A = parseInt(a.slice(1), 16), B = parseInt(b.slice(1), 16);
+          const ch = (s) => Math.round(((A >> s) & 255) * (1 - t) + ((B >> s) & 255) * t);
+          return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
+        }
+        const hash = (n) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+        function pill(c, s, x, y, bg, fg) {
+          c.font = "700 8.5px 'Orbitron', sans-serif";
+          const w = c.measureText(s).width + 12;
+          c.fillStyle = bg || "rgba(15,22,27,0.82)";
+          c.beginPath(); c.roundRect(x - w / 2, y - 8, w, 15, 7); c.fill();
+          c.fillStyle = fg || "rgba(238,243,246,0.9)"; c.textAlign = "center";
+          c.fillText(s, x, y + 3);
+        }
+        function label(c, s, x, y, col) {
+          c.font = "700 8.5px 'Orbitron', sans-serif"; c.fillStyle = col || "rgba(238,243,246,0.7)"; c.textAlign = "center";
+          c.fillText(s, x, y);
+        }
+        // box frame: glows while its sequence is running, turns green when complete
+        function boxFrame(c, x0, y0, W, H, title, state, tag) {
+          c.font = "700 9.5px 'Orbitron', sans-serif"; c.fillStyle = "rgba(238,243,246,0.75)"; c.textAlign = "left";
+          c.fillText(title, x0 + 10, y0 + 17);
+          let bg = "rgba(127,146,157,0.25)", fg = "rgba(238,243,246,0.6)";
+          if (state === "active") {
+            const a = 0.55 + 0.45 * Math.sin(performance.now() / 170);
+            c.strokeStyle = `rgba(232,89,12,${a})`; c.lineWidth = 3;
+            c.strokeRect(x0 + 2, y0 + 2, W - 4, H - 4);
+            bg = "#e8590c"; fg = "#fff";
+          } else if (state === "done") {
+            c.strokeStyle = "rgba(63,207,142,0.55)"; c.lineWidth = 2;
+            c.strokeRect(x0 + 2, y0 + 2, W - 4, H - 4);
+            bg = "rgba(63,207,142,0.9)"; fg = "#0d2a1d";
+          }
+          c.font = "700 8px 'Orbitron', sans-serif";
+          const w = c.measureText(tag).width + 12;
+          c.fillStyle = bg;
+          c.beginPath(); c.roundRect(x0 + 10, y0 + 24, w, 14, 7); c.fill();
+          c.fillStyle = fg; c.textAlign = "left";
+          c.fillText(tag, x0 + 16, y0 + 34);
+        }
+
+        function drawScene() {
+          const { w: W, h: H } = fit(scene);
+          const c = ctx;
+          if (W >= 640) {
+            const fh = Math.round(H * 0.55);
+            drawFlight(c, 0, 0, W, fh);
+            const cw = Math.round(W * 0.38), hw = Math.round(W * 0.36);
+            drawCloseup(c, 0, fh, cw, H - fh);
+            drawCircuit(c, cw, fh, hw, H - fh);
+            drawSusp(c, cw + hw, fh, W - cw - hw, H - fh);
+            c.fillStyle = "#0d1316";
+            c.fillRect(0, fh - 1, W, 3);
+            c.fillRect(cw - 1, fh, 3, H - fh);
+            c.fillRect(cw + hw - 1, fh, 3, H - fh);
+          } else {
+            const fh = Math.round(H * 0.4), ch = Math.round(H * 0.27);
+            drawFlight(c, 0, 0, W, fh);
+            drawCloseup(c, 0, fh, W, ch);
+            const hw = Math.round(W * 0.58);
+            drawCircuit(c, 0, fh + ch, hw, H - fh - ch);
+            drawSusp(c, hw, fh + ch, W - hw, H - fh - ch);
+            c.fillStyle = "#0d1316";
+            c.fillRect(0, fh - 1, W, 3);
+            c.fillRect(0, fh + ch - 1, W, 3);
+            c.fillRect(hw - 1, fh + ch, 3, H - fh - ch);
+          }
+        }
+
+        function cloud(c, x, y, k) {
+          c.beginPath();
+          c.ellipse(x, y, 46 * k, 14 * k, 0, 0, 7);
+          c.ellipse(x + 30 * k, y + 5 * k, 30 * k, 11 * k, 0, 0, 7);
+          c.ellipse(x - 26 * k, y + 4 * k, 26 * k, 9 * k, 0, 0, 7);
+          c.fill();
+        }
+        function rain(c, W, H, n) {
+          c.strokeStyle = "rgba(190,210,235,0.45)"; c.lineWidth = 1;
+          const t = performance.now() / 1000;
+          c.beginPath();
+          for (let i = 0; i < n; i++) {
+            const x = ((hash(i) * W + t * 120 + i * 13) % (W + 40)) - 20;
+            const y = ((hash(i + 99) * H + t * 520) % (H + 30)) - 15;
+            c.moveTo(x, y); c.lineTo(x - 4, y + 13);
+          }
+          c.stroke();
+        }
+        function skyColors(k) {
+          if (S.theme === "night") return [mix("#141f3a", "#070c1c", k), mix("#2a3657", "#121b33", k)];
+          if (S.theme === "mountain") return [mix("#97a9b8", "#4a7fb8", k), mix("#dde4ea", "#a9c9e6", k)];
+          return [mix("#6fb2ec", "#2c64a8", k), mix("#dff1fc", "#8fc0ea", k)];
+        }
+
+        /* ---------- flight view ---------- */
+        function drawFlight(c, X, Y, W, H) {
+          c.save();
+          c.beginPath(); c.rect(X, Y, W, H); c.clip();
+          c.translate(X, Y);
+          if (f.shake > 0) c.translate((Math.random() - 0.5) * 10 * f.shake, (Math.random() - 0.5) * 7 * f.shake); // impact shake
+          const skip = f.phase === "skip";
+          const va = visAlt();
+          const k = clamp(va / 2500, 0, 1);
+          const [s0, s1] = skyColors(k);
+          const sky = c.createLinearGradient(0, 0, 0, H);
+          sky.addColorStop(0, s0); sky.addColorStop(1, s1);
+          c.fillStyle = sky;
+          c.fillRect(0, 0, W, H);
+
+          const gy = H * 0.84;
+          const altPx = Math.sqrt(clamp(va, 0, 2600) / 2600) * (gy - H * 0.55); // top of the view stays clear for the pop-ups
+          const PXM = W / 650;
+          const planeX = W * 0.36;
+          const sx = (wx) => planeX + (wx - f.dist) * PXM;
+
+          // clouds
+          c.fillStyle = S.theme === "night" ? "rgba(70,84,112,0.75)" : S.theme === "mountain" ? "rgba(236,240,243,0.85)" : "rgba(255,255,255,0.85)";
+          for (let i = 0; i < 7; i++) {
+            const span = W + 260;
+            const x = (((i * 190 - f.dist * PXM * 0.18) % span) + span) % span - 130;
+            const y = H * 0.1 + (i % 3) * H * 0.07 + k * H * 0.5;
+            cloud(c, x, y, 0.8 + (i % 2) * 0.4);
+          }
+          drawBackdrop(c, W, H, gy, k, sx, PXM, planeX);
+
+          // runways: the take-off runway stays in the world, the landing runway appears ahead on the approach
+          drawRunway(c, W, gy, sx, PXM, -180, S.rwLen, false);
+          if (f.rw === "ldg") drawRunway(c, W, gy, sx, PXM, f.thr, f.thr + S.rwLen, true);
+
+          // cruise: a cloud deck fades in below the aircraft and out again, hiding the time skip
+          const ca = skip ? f.cloudA || 0 : 0;
+          if (ca > 0.01) {
+            c.globalAlpha = ca;
+            const deck = c.createLinearGradient(0, H * 0.5, 0, H);
+            deck.addColorStop(0, "rgba(255,255,255,0)");
+            deck.addColorStop(0.35, S.theme === "night" ? "#2a3550" : "#eef3f7");
+            deck.addColorStop(1, S.theme === "night" ? "#222c44" : "#e3eaf0");
+            c.fillStyle = deck; c.fillRect(0, H * 0.5, W, H * 0.5);
+            c.fillStyle = S.theme === "night" ? "#2e3a57" : "#ffffff";
+            for (let i = 0; i < 9; i++) cloud(c, ((i * 140 - f.dist * PXM * 0.4) % (W + 280) + W + 280) % (W + 280) - 140, H * 0.7 + (i % 2) * 8, 1.4);
+            c.globalAlpha = 1;
+          }
+
+          // aircraft: flown level, no wobble
+          const s = clamp(Math.min(W / 760, H / 280), 0.5, 1.25);
+          const ay = gy + 4 - altPx;
+          drawPlane(c, planeX, ay, s);
+          const PT = PLANE[S.type];
+          f.loose.forEach((p) => wheel(c, planeX + p.x * s, ay + p.y * s, PT.wr * s * (p.nose ? 0.85 : 1), p.ang));
+          f.smoke.forEach((p) => {
+            c.globalAlpha = clamp(p.life / 2.2, 0, 1) * 0.55;
+            c.fillStyle = S.theme === "night" ? "#6d7480" : "#4c5258";
+            c.beginPath(); c.arc(planeX + p.x * s, ay + p.y * s, p.r * s, 0, 7); c.fill();
+          });
+          c.globalAlpha = 1;
+          c.fillStyle = "#ffcf5a";
+          f.sparks.forEach((p) => { c.globalAlpha = clamp(p.life * 2, 0, 1); c.fillRect(planeX + p.x * s, gy + p.y, 3, 3); });
+          c.fillStyle = "#c5ced6";
+          f.debris.forEach((p) => {
+            c.globalAlpha = clamp(p.life, 0, 1);
+            c.save(); c.translate(planeX + p.x * s, ay + p.y * s); c.rotate(p.r); c.fillRect(-4, -2, 8, 4); c.restore();
+          });
+          c.globalAlpha = 1;
+          if (S.rain && !skip) rain(c, W, H, 90);
+
+          if (skip) drawSkip(c, W, H);
+          drawCallout(c, W, H);
+          c.restore();
+        }
+
+        function drawBackdrop(c, W, H, gy, k, sx, PXM, planeX) {
+          const w0 = f.dist - planeX / PXM - 200;
+          if (S.theme === "coast") {
+            const hy = gy - 30;
+            // sea + distant headland and lighthouse
+            c.fillStyle = "#3b8fc4"; c.fillRect(0, hy, W, gy - hy);
+            c.strokeStyle = "rgba(255,255,255,0.45)"; c.lineWidth = 1;
+            for (let i = 0; i < 14; i++) {
+              const x = (((i * 97 - f.dist * PXM * 0.05) % (W + 60)) + W + 60) % (W + 60) - 30;
+              const y = hy + 5 + (i % 4) * 6;
+              c.beginPath(); c.moveTo(x, y); c.lineTo(x + 14, y); c.stroke();
+            }
+            const hx = (((W * 0.8 - f.dist * PXM * 0.03) % (W + 300)) + W + 300) % (W + 300) - 150;
+            c.fillStyle = "#7f9a7a";
+            c.beginPath(); c.moveTo(hx - 120, hy); c.quadraticCurveTo(hx - 40, hy - 26, hx + 40, hy - 14); c.lineTo(hx + 90, hy); c.closePath(); c.fill();
+            c.fillStyle = "#f2f2f2"; c.fillRect(hx + 10, hy - 40, 7, 26);
+            c.fillStyle = "#e05252"; c.fillRect(hx + 10, hy - 32, 7, 5);
+            c.fillStyle = "#ffe08a"; c.fillRect(hx + 9, hy - 44, 9, 4);
+            // sand + grass
+            c.fillStyle = "#e1cf98"; c.fillRect(0, gy - 6, W, 8);
+            c.fillStyle = "#8db574"; c.fillRect(0, gy, W, H - gy);
+            c.fillStyle = "#7aa463"; c.fillRect(0, gy + 14, W, H - gy - 14);
+            // palms
+            for (let wx = Math.floor(w0 / 150) * 150; sx(wx) < W + 40; wx += 150) {
+              const tx = sx(wx) + hash(wx) * 50, h = 22 + hash(wx + 1) * 10;
+              c.strokeStyle = "#8a6a45"; c.lineWidth = 3;
+              c.beginPath(); c.moveTo(tx, gy - 2); c.quadraticCurveTo(tx + 4, gy - h * 0.6, tx + 2, gy - h); c.stroke();
+              c.strokeStyle = "#3f7d45"; c.lineWidth = 3;
+              for (let a = 0; a < 5; a++) {
+                const ang = -2.8 + a * 0.65;
+                c.beginPath(); c.moveTo(tx + 2, gy - h); c.quadraticCurveTo(tx + 2 + Math.cos(ang) * 9, gy - h - 6, tx + 2 + Math.cos(ang) * 15, gy - h + Math.sin(ang) * 4 + 6); c.stroke();
+              }
+            }
+          } else if (S.theme === "night") {
+            // city skyline with lit windows
+            const base = gy - 4;
+            for (let i = -2; i < W / 34 + 3; i++) {
+              const off = (f.dist * PXM * 0.08) % 34;
+              const n = i + Math.floor((f.dist * PXM * 0.08) / 34);
+              const x = i * 34 - off, bw = 26 + hash(n) * 8, bh = 24 + hash(n + 7) * 54;
+              c.fillStyle = "#151d30"; c.fillRect(x, base - bh, bw, bh);
+              for (let r = 0; r < bh / 7 - 1; r++) for (let q = 0; q < 3; q++) {
+                if (hash(n * 31 + r * 7 + q) > 0.55) { c.fillStyle = "rgba(255,213,122,0.75)"; c.fillRect(x + 4 + q * 7, base - bh + 4 + r * 7, 3, 3); }
+              }
+              if (hash(n + 3) > 0.85) { c.fillStyle = "#ff5d5d"; c.fillRect(x + bw / 2 - 1, base - bh - 3, 3, 3); }
+            }
+            c.fillStyle = "#1b2633"; c.fillRect(0, gy, W, H - gy);
+            c.fillStyle = "#16202b"; c.fillRect(0, gy + 14, W, H - gy - 14);
+          } else {
+            // mountains (far + near), pines
+            const ridge = (par, amp, base, col, snow) => {
+              c.fillStyle = col;
+              c.beginPath(); c.moveTo(0, gy);
+              const pts = [];
+              for (let x = 0; x <= W + 30; x += 30) {
+                const wx = x + f.dist * PXM * par;
+                const y = base - amp * (0.55 + 0.45 * Math.sin(wx * 0.009) * Math.sin(wx * 0.0041 + 1.3)) - amp * 0.25 * Math.abs(Math.sin(wx * 0.021));
+                pts.push([x, y]); c.lineTo(x, y);
+              }
+              c.lineTo(W, gy); c.closePath(); c.fill();
+              if (snow) {
+                c.fillStyle = "rgba(245,248,250,0.92)";
+                pts.forEach(([x, y]) => { if (y < base - amp * 0.85) { c.beginPath(); c.moveTo(x - 9, y + 9); c.lineTo(x, y); c.lineTo(x + 9, y + 9); c.closePath(); c.fill(); } });
+              }
+            };
+            ridge(0.02, H * 0.42, gy - 10, "#8796a8", true);
+            ridge(0.06, H * 0.2, gy - 2, "#5f735f", false);
+            c.fillStyle = "#8e8160"; c.fillRect(0, gy, W, H - gy);
+            c.fillStyle = "#7c7152"; c.fillRect(0, gy + 14, W, H - gy - 14);
+            for (let wx = Math.floor(w0 / 70) * 70; sx(wx) < W + 30; wx += 70) {
+              const tx = sx(wx) + hash(wx) * 30, h = 14 + hash(wx + 2) * 12;
+              c.fillStyle = "#2f4a34";
+              c.beginPath(); c.moveTo(tx - h * 0.35, gy - 2); c.lineTo(tx, gy - 2 - h); c.lineTo(tx + h * 0.35, gy - 2); c.closePath(); c.fill();
+            }
+          }
+        }
+
+        function drawRunway(c, W, gy, sx, PXM, r0, r1, landing) {
+          const w0 = f.dist - sx(f.dist) / PXM - 200;
+          const a = Math.max(-10, sx(r0)), b = Math.min(W + 10, sx(r1));
+          if (a > W + 400 || b < -400) return;
+          // approach lights before the landing threshold at night
+          if (S.theme === "night" && landing) {
+            for (let wx = r0 - 300; wx < r0; wx += 30) {
+              const x = sx(wx);
+              if (x < -10 || x > W + 10) continue;
+              c.fillStyle = "rgba(255,255,255,0.95)"; c.beginPath(); c.arc(x, gy - 3, 2, 0, 7); c.fill();
+              c.fillStyle = "rgba(255,255,255,0.18)"; c.beginPath(); c.arc(x, gy - 3, 6, 0, 7); c.fill();
+            }
+          }
+          if (b <= a) return;
+          if (S.surface === "gravel") {
+            c.fillStyle = "#a28d6a"; c.fillRect(a, gy - 1, b - a, 11);
+            c.fillStyle = "rgba(70,58,40,0.5)";
+            for (let wx = Math.ceil(Math.max(r0, w0) / 9) * 9; wx < r1 && sx(wx) < W + 10; wx += 9) c.fillRect(sx(wx), gy + 1 + hash(wx) * 7, 2, 2);
+            for (let wx = Math.ceil(Math.max(r0, w0) / 100) * 100; wx <= r1 && sx(wx) < W + 10; wx += 100) {
+              c.fillStyle = "#ff8a3d"; c.fillRect(sx(wx) - 2, gy - 6, 5, 5);
+              c.fillStyle = "#fff"; c.fillRect(sx(wx) - 2, gy - 4, 5, 1.5);
+            }
+            // wind sock near the start
+            const ws = sx(r0 + 60);
+            if (ws > -20 && ws < W + 20) {
+              c.strokeStyle = "#555"; c.lineWidth = 2; c.beginPath(); c.moveTo(ws, gy - 1); c.lineTo(ws, gy - 26); c.stroke();
+              const flap = Math.sin(performance.now() / 160) * 2;
+              c.fillStyle = "#ff8a3d"; c.beginPath(); c.moveTo(ws, gy - 26); c.lineTo(ws - 18, gy - 23 + flap); c.lineTo(ws - 18, gy - 19 + flap); c.lineTo(ws, gy - 20); c.closePath(); c.fill();
+            }
+            return;
+          }
+          const wet = S.surface === "wet";
+          c.fillStyle = wet ? "#30363e" : "#4d555b";
+          c.fillRect(a, gy - 1, b - a, 11);
+          if (wet) {
+            c.fillStyle = "rgba(160,190,225,0.12)"; c.fillRect(a, gy + 1, b - a, 3);
+          }
+          c.fillStyle = "#f2f2f2";
+          for (let wx = Math.ceil(Math.max(r0, w0) / 60) * 60; wx < r1 && sx(wx) < W + 10; wx += 60) c.fillRect(sx(wx), gy + 3, 30 * PXM, 2);
+          if (sx(r0) > -20) c.fillRect(sx(r0) + 2, gy, 18 * PXM, 9);
+          for (let wx = Math.ceil(Math.max(r0, w0) / 60) * 60; wx <= r1 && sx(wx) < W + 10; wx += 60) {
+            const col = r1 - wx < 300 ? "#ff5d5d" : wet ? "#ffffff" : "#ffe08a";
+            c.fillStyle = col; c.beginPath(); c.arc(sx(wx), gy - 2, wet ? 2.2 : 1.8, 0, 7); c.fill();
+            if (wet) {
+              c.fillStyle = "rgba(255,255,255,0.15)"; c.beginPath(); c.arc(sx(wx), gy - 2, 6, 0, 7); c.fill();
+              c.fillStyle = "rgba(255,240,200,0.25)"; c.fillRect(sx(wx) - 1, gy, 2, 9);
+            }
+          }
+          if (sx(r1) < W + 10) { c.fillStyle = "#ff5d5d"; c.fillRect(sx(r1) - 2, gy - 6, 4, 6); }
+        }
+
+        /* aircraft side views (nose to the right; main gear wheel bottom at 0,0) */
+        const PLANE = {
+          bizjet: { x0: -118, x1: 112, fh: 26, gearH: 24, noseX: 84, wr: 6.5, wheels: 1, body: "#eef2f5", stripe: "#2a78d6", tail: "T", eng: "rear", wing: "low" },
+          airliner: { x0: -172, x1: 150, fh: 40, gearH: 34, noseX: 118, wr: 6.5, wheels: 4, body: "#f3f5f7", stripe: "#159a8c", tail: "conv", eng: "wing", wing: "low" },
+          transport: { x0: -150, x1: 108, fh: 42, gearH: 17, noseX: 78, wr: 6.5, wheels: 2, body: "#8f9b80", stripe: "#5d6852", tail: "T", eng: "prop", wing: "high" },
+        };
+        const THETA_UP = (85 * Math.PI) / 180;
+
+        function drawPlane(c, ax, ay, s) {
+          const T = PLANE[S.type];
+          c.save();
+          c.translate(ax, ay);
+          const gearH = T.gearH * s, fh = T.fh * s, by = -gearH, ty = by - fh;
+          const belly = f.crashKind === "belly" || f.crashKind === "collapse";
+          // collapse: the aircraft lands on its unlocked gear, which folds, so it drops onto its belly in a fraction of a second
+          const drop = crashDrop();
+          if (belly) c.translate(0, (gearH - 3 * s) * drop);
+          c.rotate((-f.pitch * Math.PI) / 180);
+          const sink = belly ? 0 : f.s * 0.3 * (gearH - T.wr * s);
+          c.translate(0, sink);
+          const x0 = T.x0 * s, x1 = T.x1 * s;
+
+          if (!belly) {
+            gearLeg(c, 0, by + 1, gearH - sink - 1, T, s, true);
+            gearLeg(c, T.noseX * s, by + 1, gearH - sink - 1, T, s, false);
+          } else if (st.x > 0.03) {
+            const gnd = -(gearH - 3 * s) * drop; // the runway surface in the aircraft's frame
+            brokenLeg(c, 0, by + 1, gearH - 1, T, s, true, gnd);
+            brokenLeg(c, T.noseX * s, by + 1, gearH - 1, T, s, false, gnd);
+          }
+          // tail fin
+          c.fillStyle = mix(T.body.length === 7 ? T.body : "#eef2f5", "#9aa8b3", 0.15);
+          const tx = x0 + 8 * s;
+          c.beginPath();
+          if (T.tail === "T") {
+            c.moveTo(tx, ty + 2 * s); c.lineTo(tx - 16 * s, ty - 44 * s); c.lineTo(tx + 6 * s, ty - 44 * s); c.lineTo(tx + 40 * s, ty + 2 * s);
+          } else {
+            c.moveTo(tx, ty + 2 * s); c.lineTo(tx - 20 * s, ty - 56 * s); c.lineTo(tx + 2 * s, ty - 56 * s); c.lineTo(tx + 52 * s, ty + 2 * s);
+          }
+          c.closePath(); c.fill();
+          c.fillStyle = T.stripe;
+          if (T.tail === "T") { c.fillRect(tx - 26 * s, ty - 47 * s, 44 * s, 5 * s); }
+          else { c.beginPath(); c.moveTo(tx - 12 * s, ty - 34 * s); c.lineTo(tx - 19 * s, ty - 54 * s); c.lineTo(tx + 2 * s, ty - 54 * s); c.lineTo(tx + 18 * s, ty - 34 * s); c.closePath(); c.fill(); }
+          // fuselage
+          c.fillStyle = T.body;
+          c.strokeStyle = "rgba(60,70,80,0.45)"; c.lineWidth = 1.2;
+          c.beginPath();
+          const up = S.type === "transport" ? fh * 0.55 : fh * 0.4;
+          c.moveTo(x0, ty + 2 * s);
+          c.lineTo(x1 - 40 * s, ty);
+          c.quadraticCurveTo(x1 - 4 * s, ty + 2 * s, x1, by - fh * 0.32);
+          c.quadraticCurveTo(x1 - 4 * s, by, x1 - 40 * s, by);
+          c.lineTo(x0 + (S.type === "transport" ? 70 : 56) * s, by);
+          c.lineTo(x0, ty + up);
+          c.closePath(); c.fill(); c.stroke();
+          c.fillStyle = T.stripe;
+          c.fillRect(x0 + 12 * s, ty + fh * 0.5, (x1 - x0) * 0.82, 3 * s);
+          // windows + cockpit
+          c.fillStyle = S.type === "transport" ? "#2c3437" : "#3b4a56";
+          const wstep = S.type === "transport" ? 28 : 9;
+          for (let x = x0 / s + 40; x < x1 / s - 50; x += wstep) { c.beginPath(); c.arc(x * s, ty + 10 * s, 2 * s, 0, 7); c.fill(); }
+          c.fillStyle = "#1d2a33";
+          c.beginPath(); c.moveTo(x1 - 26 * s, ty + 5 * s); c.lineTo(x1 - 10 * s, ty + 8 * s); c.lineTo(x1 - 7 * s, ty + 14 * s); c.lineTo(x1 - 26 * s, ty + 13 * s); c.closePath(); c.fill();
+          // wings + engines
+          if (T.wing === "low") {
+            c.fillStyle = "#b9c4cd";
+            c.beginPath(); c.moveTo(-34 * s, by - fh * 0.28); c.lineTo(36 * s, by - fh * 0.4); c.lineTo(30 * s, by - fh * 0.18); c.lineTo(-28 * s, by - fh * 0.1); c.closePath(); c.fill();
+          } else {
+            c.fillStyle = "#7d8971";
+            c.beginPath(); c.moveTo(-40 * s, ty + 2 * s); c.lineTo(40 * s, ty - 4 * s); c.lineTo(38 * s, ty + 6 * s); c.lineTo(-36 * s, ty + 8 * s); c.closePath(); c.fill();
+          }
+          if (T.eng === "rear") {
+            c.fillStyle = "#8693a0";
+            c.beginPath(); c.roundRect(x0 + 34 * s, ty - 4 * s, 40 * s, 13 * s, 6 * s); c.fill();
+            c.fillStyle = "#3b464c"; c.fillRect(x0 + 70 * s, ty - 2 * s, 4 * s, 9 * s);
+          } else if (T.eng === "wing") {
+            c.fillStyle = "#8693a0";
+            c.beginPath(); c.roundRect(18 * s, by - 6 * s, 54 * s, 18 * s, 8 * s); c.fill();
+            c.fillStyle = "#3b464c"; c.fillRect(68 * s, by - 4 * s, 4 * s, 14 * s);
+          } else {
+            c.fillStyle = "#6c7861";
+            c.beginPath(); c.roundRect(4 * s, ty + 2 * s, 44 * s, 12 * s, 5 * s); c.fill();
+            c.fillStyle = "rgba(40,40,40,0.55)";
+            const pa = st.t * 30;
+            c.beginPath(); c.ellipse(50 * s, ty + 8 * s, 2.5 * s, (16 + Math.sin(pa) * 1.5) * s, 0, 0, 7); c.fill();
+            // fuselage gear pod
+            c.fillStyle = mix("#8f9b80", "#5d6852", 0.3);
+            c.beginPath(); c.roundRect(-34 * s, by - 9 * s, 62 * s, 10 * s, 5 * s); c.fill();
+          }
+          c.fillStyle = "#c9d3db";
+          if (T.tail === "T") { c.beginPath(); c.ellipse(tx - 6 * s, ty - 43 * s, 22 * s, 3 * s, 0, 0, 7); c.fill(); }
+          else { c.beginPath(); c.ellipse(tx + 8 * s, ty + 6 * s, 24 * s, 3.5 * s, 0, 0, 7); c.fill(); }
+
+          // gear doors: hang open while the gear is out of its up-lock; bent or missing after an overspeed
+          if (!belly && !stowed()) {
+            c.lineWidth = 2.2 * s;
+            if (f.doorsTorn) {
+              /* doors gone */
+            } else if (f.doorDmg) {
+              c.strokeStyle = "#ff5d5d";
+              c.beginPath(); c.moveTo(-14 * s, by); c.lineTo(-22 * s, by + 8 * s); c.stroke();
+            } else {
+              c.strokeStyle = "#7f8d98";
+              c.beginPath(); c.moveTo(-14 * s, by); c.lineTo(-12 * s, by + 12 * s); c.stroke();
+            }
+            if (!f.doorsTorn) { c.strokeStyle = "#7f8d98"; c.beginPath(); c.moveTo((T.noseX - 6) * s, by - 1); c.lineTo((T.noseX - 4) * s, by + 9 * s); c.stroke(); }
+          }
+          if (belly) { c.fillStyle = "rgba(60,60,60,0.5)"; c.fillRect(x0 + 60 * s, by - 2, (x1 - x0) * 0.6, 3); }
+          c.restore();
+        }
+        function wheel(c, x, y, r, ang) {
+          c.fillStyle = "#1d2328"; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+          c.fillStyle = "#8693a0"; c.beginPath(); c.arc(x, y, r * 0.45, 0, 7); c.fill();
+          c.strokeStyle = "#cfd6dc"; c.lineWidth = Math.max(1, r * 0.12);
+          for (let i = 0; i < 3; i++) {
+            const a = ang + (i * Math.PI * 2) / 3;
+            c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * r * 0.8, y + Math.sin(a) * r * 0.8); c.stroke();
+          }
+        }
+        // a wrecked leg: snapped at the knee and folded back until the wheel rests on the runway
+        function brokenLeg(c, px, py, len, T, s, main, groundY) {
+          const wr = (main ? T.wr : T.wr * 0.85) * s;
+          const L = Math.max(4, len - wr);
+          const a = Math.acos(clamp((groundY - wr - py) / L, 0, 1));
+          const wx = px + FOLD * Math.sin(a) * L, wy = py + Math.cos(a) * L;
+          const k = crashDrop();
+          const kx = (px + wx) / 2 + 3 * s * k, ky = (py + wy) / 2 - 3 * s * k;
+          c.strokeStyle = "#5b6b7a"; c.lineWidth = (main ? 4 : 3) * s; c.lineCap = "round";
+          c.beginPath(); c.moveTo(px, py); c.lineTo(kx, ky);
+          if (!f.snapped) c.lineTo(wx, wy); // still whole: rolling on the unlocked leg
+          c.stroke();
+          c.lineCap = "butt";
+          if (f.snapped) {
+            // snapped stub: a jagged red break where the wheel tore away
+            c.strokeStyle = "#ff5d5d"; c.lineWidth = 1.5 * s;
+            c.beginPath(); c.moveTo(kx - 3 * s, ky - 2 * s); c.lineTo(kx, ky + 2 * s); c.lineTo(kx + 3 * s, ky - 1 * s); c.stroke();
+          } else wheel(c, wx, wy, wr, f.wheelAng);
+        }
+        // fold angle at which the wheel centre sits `rise` above the pivot (leg length L)
+        const stowAngle = (rise, L) => Math.PI / 2 + Math.asin(clamp(rise / Math.max(L, 1), 0, 0.95));
+        function gearLeg(c, px, py, len, T, s, main) {
+          if (st.x < 0.03 && st.lockUp) return; // tucked in the well
+          const wr = T.wr * s;
+          const L = len - wr;
+          // fold past horizontal so the wheel ends up fully above the belly, hidden inside the fuselage
+          const th = (1 - st.x) * stowAngle(wr + 1, L);
+          const dx = FOLD * Math.sin(th), dy = Math.cos(th);
+          const wx = px + dx * L, wy = py + dy * L;
+          c.strokeStyle = "#5b6b7a"; c.lineWidth = (main ? 4 : 3) * s; c.lineCap = "round";
+          c.beginPath(); c.moveTo(px, py); c.lineTo(wx, wy); c.stroke();
+          c.lineCap = "butt";
+          if (main && T.wheels > 1) {
+            const half = (T.wheels === 4 ? 1.25 : 1.1) * wr;
+            const ba = th + (Math.PI / 2) * (1 - st.x); // bogie beam turns to lie along the leg as it stows
+            const bx = Math.cos(ba), byy = Math.sin(ba);
+            c.strokeStyle = "#4a5866"; c.lineWidth = 3 * s;
+            c.beginPath(); c.moveTo(wx - bx * half, wy - byy * half); c.lineTo(wx + bx * half, wy + byy * half); c.stroke();
+            wheel(c, wx - bx * half, wy - byy * half, wr, f.wheelAng);
+            wheel(c, wx + bx * half, wy + byy * half, wr, f.wheelAng);
+          } else wheel(c, wx, wy, main ? wr : wr * 0.85, f.wheelAng);
+        }
+
+        /* ---------- flight conditions (right panel) ---------- */
+        const PHASE_NAME = {
+          ready: "Ready", pre: "Engine start", roll: "Take-off roll", climb: "Climb", skip: "Cruise", app: "Approach",
+          abort: "Returning", roll2: "Rollout", crash: "Crash", done: "Complete",
+        };
+        function flightPanel() {
+          const ph = f.phase;
+          const tag = ph === "done" ? (f.result ? "Landed" : "Failed") : PHASE_NAME[ph] || ph;
+          $("fcPhase").textContent = tag;
+          $("fcPhase").style.color = ph === "done" ? (f.result ? "var(--safe)" : "var(--fail)") : ["crash", "abort"].includes(ph) ? "var(--fail)" : "var(--sky)";
+
+          const out = !stowed();
+          const held = ph === "climb" && out && f.spd >= S.VLO - 0.01;
+          const over = !f.wow && out && f.spd > S.VLO + 0.01 && ph !== "skip";
+          const near = !f.wow && out && f.spd > S.VLO - 15;
+          const spdCol = over ? "var(--fail)" : held || near ? "var(--slow)" : "var(--txt)";
+          $("fcSpd").textContent = `${fmt(f.spd)} kt`;
+          $("fcSpd").style.color = spdCol;
+          const top = S.VLO + 60;
+          $("fcSpdBar").style.width = clamp((f.spd / top) * 100, 0, 100) + "%";
+          $("fcSpdBar").style.background = over ? "var(--fail)" : held || near ? "var(--slow)" : "var(--sky)";
+          const vloPct = (S.VLO / top) * 100 + "%";
+          $("fcVloTick").style.left = vloPct;
+          $("fcVloLab").style.left = vloPct;
+          $("fcVloLab").textContent = `VLO ${S.VLO}`;
+
+          $("fcAlt").textContent = `${fmt(f.alt)} ft`;
+          const vs = f.wow || ph === "skip" || ph === "ready" ? 0 : f.vs;
+          $("fcVs").textContent = `${vs > 0 ? "+" : ""}${fmt(vs)} ft/min`;
+          $("fcPitch").textContent = `${f.pitch.toFixed(1)}°`;
+          $("fcWow").textContent = f.wow ? "Ground" : "Air";
+          $("fcWow").style.color = f.wow ? "var(--slow)" : "var(--sky)";
+          $("fcWheel").textContent = f.wheelSpin > 1 ? `Spinning · ${fmt(f.wheelSpin)} kt` : f.wow || st.cmd !== "retract" ? "Stopped" : "Braked · stopped";
+
+          const warns = [];
+          const unstable = ph === "app" && f.gateMiss && !f.horn && !st.lockDown;
+          if (f.horn) warns.push(["TOO LOW · GEAR", "var(--fail)"]);
+          if (unstable) warns.push(["NO THREE GREENS · UNSTABLE", "var(--slow)"]);
+          if (f.gearAlarm) warns.push(["GEAR NOT UP · RETRACT", "var(--fail)"]);
+          if (ph === "crash") warns.push([f.crashKind === "belly" ? "BELLY LANDING" : f.snapped ? "GEAR COLLAPSED" : "GEAR NOT LOCKED · ON WHEELS", "var(--fail)"]);
+          if (held) warns.push([`SPEED HELD AT VLO · GEAR NOT UP${st.cmd === "extend" ? ` · ${Math.max(0, HOLD_MAX - f.holdT).toFixed(0)} s` : ""}`, "var(--slow)"]);
+          if (over) warns.push(["GEAR OVERSPEED · ABOVE VLO", "var(--fail)"]);
+          if (failed() && active()) warns.push(["GEAR STALLED · AIR LOAD", "var(--slow)"]);
+          if (f.doorDmg) warns.push(["GEAR DOOR OVERLOAD · INSPECT", "var(--slow)"]);
+          if (ph === "abort") warns.push(["RETURN TO LAND · GEAR DOWN", "var(--fail)"]);
+          // flashing outline on the flight view: red for a danger right now, amber for a caution
+          const run = ph !== "ready" && ph !== "done";
+          const lvl = !run ? "" : ph === "crash" || ph === "abort" || f.horn || f.gearAlarm || over ? "bad" : held || unstable || (failed() && active()) ? "warn" : "";
+          const wrap = scene.parentElement;
+          wrap.classList.toggle("al-bad", lvl === "bad");
+          wrap.classList.toggle("al-warn", lvl === "warn");
+          setHTML("warns", warns.length
+            ? warns.map(([t, col]) => `<div style="color:${col}"${col === "var(--fail)" && run ? ' class="blink"' : ""}>⚠ ${t}</div>`).join("")
+            : `<div class="none">No warnings</div>`);
+        }
+        function drawSkip(c, W, H) {
+          const w = Math.min(320, W - 40), x = (W - w) / 2, y = H * 0.84 - 66;
+          c.globalAlpha = clamp((f.cloudA || 0) * 3, 0, 1);
+          c.fillStyle = "rgba(15,22,27,0.85)";
+          c.beginPath(); c.roundRect(x, y, w, 58, 10); c.fill();
+          c.font = "700 10px 'Orbitron', sans-serif"; c.fillStyle = "rgba(238,243,246,0.7)"; c.textAlign = "center";
+          c.fillText(`CRUISE · ${S.fl} · TIME SKIP ⏩`, W / 2, y + 18);
+          const mins = Math.round((f.skipE || 0) * S.cruise);
+          c.font = "600 18px 'IBM Plex Mono', monospace"; c.fillStyle = "#eef3f6";
+          c.fillText(`+${Math.floor(mins / 60)} h ${String(mins % 60).padStart(2, "0")} min`, W / 2, y + 40);
+          c.fillStyle = "rgba(255,255,255,0.12)"; c.fillRect(x + 14, y + 48, w - 28, 4);
+          c.fillStyle = "#4da3ff"; c.fillRect(x + 14, y + 48, (w - 28) * clamp(f.skipT / SKIP_DUR, 0, 1), 4);
+          c.globalAlpha = 1;
+        }
+        function drawCallout(c, W, H) {
+          // one fixed spot (bottom centre, over the ground) so the call-out never jumps around
+          if (!f.call || f.call.t > 1.8) return;
+          const a = f.call.t < 0.2 ? f.call.t / 0.2 : f.call.t > 1.4 ? (1.8 - f.call.t) / 0.4 : 1;
+          c.globalAlpha = clamp(a, 0, 1);
+          c.font = `800 ${W < 500 ? 12 : 14}px 'Orbitron', sans-serif`;
+          const w = c.measureText(f.call.text).width + 30;
+          const x = W / 2, y = H - 32;
+          c.fillStyle = "rgba(15,22,27,0.85)";
+          c.beginPath(); c.roundRect(x - w / 2, y - 16, w, 28, 8); c.fill();
+          c.fillStyle = f.call.col; c.textAlign = "center";
+          c.fillText(f.call.text, x, y + 3);
+          c.globalAlpha = 1;
+        }
+
+        /* ---------- main gear close-up ---------- */
+        const B_ON_LEG = 0.6;
+        const ANCHOR = [-FOLD * 0.62, -0.12]; // actuator mounted ahead of the pivot
+        const BODY = 0.82, ROD = 0.45;
+        function actuatorLen(x) {
+          const th = (1 - x) * THETA_UP;
+          const bx = FOLD * B_ON_LEG * Math.sin(th), by = B_ON_LEG * Math.cos(th);
+          return Math.hypot(bx - ANCHOR[0], by - ANCHOR[1]);
+        }
+        const LEN_DOWN = actuatorLen(1), LEN_UP = actuatorLen(0);
+        const pistonPos = () => (actuatorLen(st.x) - LEN_DOWN) / (LEN_UP - LEN_DOWN);
+        function pistonDir() {
+          if (st.rate === 0) return 0;
+          return Math.sign(actuatorLen(clamp(st.x + st.rate * 0.01, 0, 1)) - actuatorLen(st.x));
+        }
+
+        function drawCloseup(c, X, Y, W, H) {
+          c.save();
+          c.beginPath(); c.rect(X, Y, W, H); c.clip();
+          c.translate(X, Y);
+          const T = PLANE[S.type];
+          const k = clamp(visAlt() / 2500, 0, 1);
+          const [s0, s1] = skyColors(k);
+          const sky = c.createLinearGradient(0, 0, 0, H);
+          sky.addColorStop(0, s0); sky.addColorStop(1, s1);
+          c.fillStyle = sky; c.fillRect(0, 0, W, H);
+
+          // geometry: fuselage band at the top, leg hangs from the pivot P
+          const fy = H * 0.06, fhh = H * 0.3, belly = fy + fhh;
+          const L = Math.min(H * 0.42, W * 0.26) * (S.type === "transport" ? 0.78 : 1);
+          const P = { x: W * 0.5, y: belly - 6 };
+          const comp = 1 - 0.3 * f.s; // the oleo shortens as it compresses
+          const wr = L * (T.wheels === 4 ? 0.16 : T.wheels === 2 ? 0.18 : 0.21);
+          const toPx = (u, v) => ({ x: P.x + u * L, y: P.y + v * L });
+          // stowed: the leg folds past horizontal so the wheels sit fully inside the bay, above the belly
+          const thUp = stowAngle(wr + 10, L);
+          const th = (1 - st.x) * thUp;
+          const W1 = toPx(FOLD * Math.sin(th) * comp, Math.cos(th) * comp);
+
+          // ground: placed so the tyres touch it exactly when the gear is down and the aircraft is on the runway
+          const contactY = P.y + L * comp + wr;
+          const bellyHit = f.crashKind === "belly" || f.crashKind === "collapse";
+          // collapse: the wheels touch first (ground under the tyres), then it drops onto the belly as the legs snap
+          const tyreY = f.crashKind === "collapse" ? Math.max(W1.y + wr, belly + 1) : belly + 1;
+          const groundY = (bellyHit ? tyreY + (belly + 1 - tyreY) * crashDrop() : contactY) + (f.wow ? 0 : f.alt * 6);
+          if (groundY < H + 10 && f.phase !== "skip") {
+            const surf = S.surface === "gravel" ? "#a28d6a" : S.surface === "wet" ? "#30363e" : "#555e64";
+            c.fillStyle = surf; c.fillRect(0, groundY, W, H - groundY + 10);
+            const off = ((-f.dist * 8) % 90 + 90) % 90;
+            if (S.surface === "gravel") {
+              c.fillStyle = "rgba(70,58,40,0.55)";
+              for (let x = off - 90; x < W; x += 9) c.fillRect(x, groundY + 4 + ((x * 7) % 11), 3, 2);
+            } else {
+              c.fillStyle = "#f2f2f2";
+              for (let x = off - 90; x < W; x += 90) c.fillRect(x, groundY + 10, 45, 4);
+              if (S.surface === "wet") { c.fillStyle = "rgba(170,200,235,0.18)"; c.fillRect(0, groundY, W, 4); }
+            }
+          }
+
+          // fuselage (nose to the right)
+          c.fillStyle = T.body;
+          c.beginPath();
+          c.moveTo(-20, fy);
+          c.lineTo(W * 0.82, fy);
+          c.quadraticCurveTo(W * 1.02, fy + fhh * 0.1, W * 1.05, fy + fhh * 0.55);
+          c.quadraticCurveTo(W * 0.98, belly, W * 0.82, belly);
+          c.lineTo(-20, belly);
+          c.closePath(); c.fill();
+          c.strokeStyle = "rgba(60,70,80,0.5)"; c.lineWidth = 1.5; c.stroke();
+          c.fillStyle = T.stripe; c.fillRect(-20, fy + fhh * 0.34, W * 0.84, 5);
+
+          // cutaway around the wheel bay
+          const cut = { x: P.x - L * 1.5, y: belly - fhh * 0.85, w: L * 2.35, h: fhh * 0.85 };
+          c.fillStyle = "#2f3b44";
+          c.beginPath(); c.roundRect(cut.x, cut.y, cut.w, cut.h, 6); c.fill();
+          // gear bay outline: dashed at rest, glowing while the hydraulics move the gear
+          const gearBusy = st.rate !== 0 || st.unlockT > 0;
+          if (gearBusy) {
+            c.strokeStyle = `rgba(232,89,12,${0.7 + 0.3 * Math.sin(performance.now() / 260)})`; c.lineWidth = 3;
+            c.shadowColor = "rgba(232,89,12,0.8)"; c.shadowBlur = 12;
+          } else { c.strokeStyle = "#e8590c"; c.setLineDash([5, 4]); c.lineWidth = 1.5; }
+          c.beginPath(); c.roundRect(cut.x, cut.y, cut.w, cut.h, 6); c.stroke();
+          c.setLineDash([]); c.shadowBlur = 0;
+          c.fillStyle = "#1a2228"; c.fillRect(P.x - L * 1.12 + 4, belly - 4, L * 1.12, 8);
+
+          // actuator (gear hydraulics)
+          const B = toPx(FOLD * B_ON_LEG * Math.sin(th), B_ON_LEG * Math.cos(th));
+          const A = toPx(ANCHOR[0], ANCHOR[1]);
+          const dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy), ux = dx / d, uy = dy / d;
+          const bodyEnd = { x: A.x + ux * BODY * L, y: A.y + uy * BODY * L };
+          const pist = { x: A.x + ux * (d - ROD * L), y: A.y + uy * (d - ROD * L) };
+          const bw = Math.max(8, L * 0.12);
+          const perp = { x: -uy, y: ux };
+          const quad = (p1, p2, w, col) => {
+            c.fillStyle = col;
+            c.beginPath();
+            c.moveTo(p1.x + (perp.x * w) / 2, p1.y + (perp.y * w) / 2);
+            c.lineTo(p2.x + (perp.x * w) / 2, p2.y + (perp.y * w) / 2);
+            c.lineTo(p2.x - (perp.x * w) / 2, p2.y - (perp.y * w) / 2);
+            c.lineTo(p1.x - (perp.x * w) / 2, p1.y - (perp.y * w) / 2);
+            c.closePath(); c.fill();
+          };
+          const extending = st.cmd === "extend";
+          const hot = "rgba(255,138,61,0.95)", cool = "rgba(77,163,255,0.85)", idle = "rgba(77,163,255,0.45)";
+          const live = f.pumpsOn && !atTarget() && !(f.wow && !extending);
+          quad(A, bodyEnd, bw + 6, "#8693a0");
+          quad(A, pist, bw, live ? (extending ? cool : hot) : idle);
+          quad(pist, bodyEnd, bw, live ? (extending ? hot : cool) : idle);
+          quad(pist, B, bw * 0.38, "#d7dee4");
+          quad({ x: pist.x - ux * 3, y: pist.y - uy * 3 }, { x: pist.x + ux * 3, y: pist.y + uy * 3 }, bw + 2, "#2b3338");
+          c.fillStyle = "#5b6b7a"; c.beginPath(); c.arc(A.x, A.y, 5, 0, 7); c.fill();
+
+          // leg = oleo strut: outer cylinder + sliding chrome piston
+          if (f.snapped) {
+            // collapsed: the strut snapped and the wheels tore away, leaving a broken stub
+            c.lineCap = "round";
+            const stub = { x: P.x + FOLD * Math.sin(th) * L * 0.55, y: P.y + Math.cos(th) * L * 0.55 };
+            c.strokeStyle = "#5b6b7a"; c.lineWidth = Math.max(8, L * 0.1);
+            c.beginPath(); c.moveTo(P.x, P.y); c.lineTo(stub.x, stub.y); c.stroke();
+            c.lineCap = "butt";
+            c.strokeStyle = "#ff5d5d"; c.lineWidth = 2.5;
+            c.beginPath(); c.moveTo(stub.x - 7, stub.y - 6); c.lineTo(stub.x - 1, stub.y + 5); c.lineTo(stub.x + 4, stub.y - 4); c.lineTo(stub.x + 9, stub.y + 6); c.stroke();
+            pill(c, "STRUT SNAPPED", stub.x + 4, stub.y + 24, "rgba(120,20,20,0.9)");
+          } else if (!(bellyHit && f.crashKind === "belly")) {
+            c.lineCap = "round";
+            const outerEnd = { x: P.x + FOLD * Math.sin(th) * L * 0.6, y: P.y + Math.cos(th) * L * 0.6 };
+            c.strokeStyle = "#c7cfd6"; c.lineWidth = Math.max(5, L * 0.065);
+            c.beginPath(); c.moveTo(outerEnd.x, outerEnd.y); c.lineTo(W1.x, W1.y); c.stroke();
+            c.strokeStyle = "#5b6b7a"; c.lineWidth = Math.max(8, L * 0.1);
+            c.beginPath(); c.moveTo(P.x, P.y); c.lineTo(outerEnd.x, outerEnd.y); c.stroke();
+            c.lineCap = "butt";
+            if (T.wheels > 1) {
+              const half = (T.wheels === 4 ? 1.3 : 1.15) * wr;
+              const ba = th + (Math.PI / 2) * (1 - st.x); // beam turns to lie along the leg as it stows
+              const bx = Math.cos(ba), byy = Math.sin(ba);
+              c.strokeStyle = "#4a5866"; c.lineWidth = Math.max(4, L * 0.05);
+              c.beginPath(); c.moveTo(W1.x - bx * half, W1.y - byy * half); c.lineTo(W1.x + bx * half, W1.y + byy * half); c.stroke();
+              wheel(c, W1.x - bx * half, W1.y - byy * half, wr, f.wheelAng);
+              wheel(c, W1.x + bx * half, W1.y + byy * half, wr, f.wheelAng);
+            } else wheel(c, W1.x, W1.y, wr, f.wheelAng);
+          }
+          c.fillStyle = "#e8590c"; c.beginPath(); c.arc(P.x, P.y, 6, 0, 7); c.fill();
+          // gear doors close over the well once the gear is up and locked
+          if (stowed()) { c.fillStyle = "#7f8d98"; c.fillRect(P.x - L * 1.12 + 4, belly - 3, L * 1.12, 5); }
+
+          const narrow = W < 420;
+          drawLock(c, P.x - 22, P.y - 22, st.lockDown, "DOWN-LOCK", narrow, 24);
+          const UPpos = toPx(FOLD * Math.sin(thUp), Math.cos(thUp));
+          drawLock(c, UPpos.x - 6, P.y - 22, st.lockUp, "UP-LOCK", narrow, 42);
+
+          if (live && st.rate !== 0) {
+            const into = extending ? bodyEnd : A;
+            const ph = (st.t * 2) % 1;
+            for (let k2 = 0; k2 < 3; k2++) {
+              const fr = (k2 + ph) / 3;
+              c.fillStyle = "#ff8a3d";
+              c.beginPath(); c.arc(into.x + perp.x * (bw + 12) * (1 - fr) + (extending ? -ux : ux) * 4, into.y + perp.y * (bw + 12) * (1 - fr) + (extending ? -uy : uy) * 4, 3.5, 0, 7); c.fill();
+            }
+          }
+          if (st.rate !== 0) {
+            const sgn = pistonDir() > 0 ? 1 : -1;
+            const mx = (A.x + bodyEnd.x) / 2 + perp.x * (bw + 16), my = (A.y + bodyEnd.y) / 2 + perp.y * (bw + 16);
+            c.strokeStyle = "#fff"; c.lineWidth = 2.5;
+            c.beginPath(); c.moveTo(mx - ux * 16 * sgn, my - uy * 16 * sgn); c.lineTo(mx + ux * 16 * sgn, my + uy * 16 * sgn); c.stroke();
+            c.fillStyle = "#fff"; c.beginPath();
+            c.moveTo(mx + ux * 22 * sgn, my + uy * 22 * sgn);
+            c.lineTo(mx + ux * 12 * sgn + perp.x * 6, my + uy * 12 * sgn + perp.y * 6);
+            c.lineTo(mx + ux * 12 * sgn - perp.x * 6, my + uy * 12 * sgn - perp.y * 6);
+            c.closePath(); c.fill();
+          }
+          if (S.rain && f.phase !== "skip") rain(c, W, H, 30);
+          pill(c, "MAIN GEAR", 40, H - 12);
+          const rpill = (txt, bg) => { c.font = "700 8.5px 'Orbitron', sans-serif"; pill(c, txt, W - 10 - (c.measureText(txt).width + 12) / 2, H - 12, bg); };
+          if (f.wow && st.lockDown && !bellyHit) rpill(`OLEO ${Math.round(f.s * 100)}% · ${fmt(f.sLoad)} kN`);
+          c.restore();
+        }
+        function drawLock(c, x, y, on, name, narrow, dy) {
+          c.fillStyle = on ? "rgba(63,207,142,0.95)" : "rgba(255,93,93,0.95)";
+          c.beginPath(); c.roundRect(x - 10, y - 8, 20, 16, 4); c.fill();
+          c.strokeStyle = "#fff"; c.lineWidth = 2;
+          c.beginPath();
+          if (on) c.arc(x, y - 8, 5, Math.PI, 0);
+          else c.arc(x + 4, y - 9, 5, Math.PI, -0.2);
+          c.stroke();
+          pill(c, narrow ? name : name + (on ? " · LOCKED" : " · OPEN"), x, y - dy);
+        }
+
+        /* ---------- gear hydraulics box (pump + selector valve + actuator) ---------- */
+        function actState() {
+          if (f.phase === "ready") return ["idle", "PUMPS OFF"];
+          if (f.phase === "pre") return ["active", "PUMPS STARTING"];
+          if (f.crashKind) return ["idle", f.crashKind === "belly" ? "GEAR CRUSHED" : f.snapped ? "GEAR COLLAPSED" : "NOT LOCKED · LOADING"];
+          if (st.unlockT > 0) return ["active", st.lockUp ? "RELEASING UP-LOCK" : "RELEASING DOWN-LOCK"];
+          if (!atTarget() && !(f.wow && st.cmd === "retract")) return ["active", failed() ? "STALLED · AIR LOAD" : st.cmd === "extend" ? "EXTENDING" : "RETRACTING"];
+          if (st.lastCycle != null) return ["done", st.cmd === "extend" ? "✓ EXTEND COMPLETE" : "✓ RETRACT COMPLETE"];
+          return ["idle", `STANDBY · ${Math.round(st.press)} BAR`];
+        }
+        function drawCircuit(c, x0, y0, W, H) {
+          c.save();
+          c.beginPath(); c.rect(x0, y0, W, H); c.clip();
+          c.fillStyle = "#151d22"; c.fillRect(x0, y0, W, H);
+          const [state, tag] = actState();
+          boxFrame(c, x0, y0, W, H, "GEAR HYDRAULICS", state, tag);
+          const run = f.pumpsOn;
+          const act = state === "active" && f.phase !== "pre";
+          const flowing = act && st.rate !== 0;
+          const extending = st.cmd === "extend";
+          const top = y0 + 48, hh = H - 48;
+          const yM = top + hh * 0.45;
+          const res = { x: x0 + W * 0.03, y: yM - hh * 0.2, w: W * 0.1, h: hh * 0.42 };
+          const pump = { x: x0 + W * 0.27, y: yM, r: Math.min(hh * 0.14, W * 0.07, 24) };
+          const valve = { x: x0 + W * 0.4, y: yM - hh * 0.2, w: W * 0.17, h: hh * 0.4 };
+          const cyl = { x: x0 + W * 0.66, y: yM - hh * 0.1, w: W * 0.27, h: hh * 0.2 };
+
+          const pipe = (pts, kind, live) => {
+            c.lineJoin = "round";
+            c.strokeStyle = "#3b464c"; c.lineWidth = 8;
+            c.beginPath(); pts.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]))); c.stroke();
+            c.strokeStyle = kind === "p" ? (st.press > 20 ? "rgba(255,138,61,0.85)" : "rgba(255,138,61,0.3)") : "rgba(77,163,255,0.7)";
+            c.lineWidth = 4;
+            c.beginPath(); pts.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]))); c.stroke();
+            if (live) {
+              c.strokeStyle = "rgba(255,255,255,0.9)"; c.lineWidth = 2.5;
+              c.setLineDash([6, 12]); c.lineDashOffset = -st.flow * 40;
+              c.beginPath(); pts.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]))); c.stroke();
+              c.setLineDash([]); c.lineDashOffset = 0;
+            }
+          };
+          pipe([[res.x + res.w, yM + hh * 0.12], [pump.x, yM + hh * 0.12], [pump.x, yM + pump.r]], "r", run);
+          pipe([[pump.x + pump.r, yM], [valve.x, yM]], "p", run);
+          const retY = top + hh * 0.86;
+          pipe([[valve.x + valve.w * 0.5, valve.y + valve.h], [valve.x + valve.w * 0.5, retY], [res.x + res.w * 0.5, retY], [res.x + res.w * 0.5, res.y + res.h]], "r", flowing);
+          const capY = cyl.y + cyl.h * 0.5;
+          const lineA = [[valve.x + valve.w, valve.y + valve.h * 0.3], [cyl.x - 10, valve.y + valve.h * 0.3], [cyl.x - 10, capY], [cyl.x, capY]];
+          const lineB = [[valve.x + valve.w, valve.y + valve.h * 0.7], [valve.x + valve.w + 8, valve.y + valve.h * 0.7], [valve.x + valve.w + 8, top + hh * 0.72], [cyl.x + cyl.w + 9, top + hh * 0.72], [cyl.x + cyl.w + 9, capY], [cyl.x + cyl.w, capY]];
+          const aPress = !extending, bPress = extending;
+          pipe(aPress ? lineA : lineA.slice().reverse(), act ? (aPress ? "p" : "r") : "r", flowing);
+          pipe(bPress ? lineB : lineB.slice().reverse(), act ? (bPress ? "p" : "r") : "r", flowing);
+
+          c.fillStyle = "#26343b"; c.strokeStyle = "#7f929d"; c.lineWidth = 2;
+          c.beginPath(); c.roundRect(res.x, res.y, res.w, res.h, 6); c.fill(); c.stroke();
+          c.fillStyle = "rgba(77,163,255,0.7)";
+          c.fillRect(res.x + 3, res.y + res.h * 0.35, res.w - 6, res.h * 0.65 - 3);
+          label(c, "TANK", res.x + res.w / 2, res.y - 6);
+          c.fillStyle = "#26343b"; c.strokeStyle = f.phase === "pre" ? "#e8590c" : "#7f929d";
+          c.beginPath(); c.arc(pump.x, pump.y, pump.r, 0, 7); c.fill(); c.stroke();
+          c.save(); c.translate(pump.x, pump.y); c.rotate(run ? st.pumpAng : 0);
+          c.strokeStyle = "#ff8a3d"; c.lineWidth = 3;
+          for (let i = 0; i < 4; i++) { c.rotate(Math.PI / 2); c.beginPath(); c.moveTo(0, 0); c.lineTo(pump.r * 0.75, 0); c.stroke(); }
+          c.restore();
+          label(c, run ? `${Math.round(st.press)} BAR` : "OFF", pump.x, pump.y - pump.r - 6, run ? "#ff8a3d" : null);
+          label(c, run ? "AUTO PUMP" : "PUMP", pump.x, pump.y - pump.r - 17);
+          c.fillStyle = "#26343b"; c.strokeStyle = "#7f929d"; c.lineWidth = 2;
+          c.beginPath(); c.roundRect(valve.x, valve.y, valve.w, valve.h, 6); c.fill(); c.stroke();
+          c.font = `700 ${valve.w < 60 ? 7 : 9}px 'Orbitron', sans-serif`; c.textAlign = "center";
+          c.fillStyle = extending ? "#ff8a3d" : "rgba(238,243,246,0.4)";
+          c.fillText(valve.w < 60 ? "EXT" : "EXTEND", valve.x + valve.w / 2, valve.y + valve.h * 0.36);
+          c.fillStyle = !extending ? "#ff8a3d" : "rgba(238,243,246,0.4)";
+          c.fillText(valve.w < 60 ? "RET" : "RETRACT", valve.x + valve.w / 2, valve.y + valve.h * 0.74);
+          label(c, "VALVE", valve.x + valve.w / 2, valve.y - 6);
+          const pp = pistonPos();
+          const px = cyl.x + 8 + (cyl.w * 0.55 - 8) * pp;
+          c.fillStyle = "#8693a0";
+          c.beginPath(); c.roundRect(cyl.x - 3, cyl.y - 3, cyl.w + 6, cyl.h + 6, 5); c.fill();
+          c.fillStyle = act ? (extending ? "rgba(77,163,255,0.85)" : "rgba(255,138,61,0.95)") : "rgba(77,163,255,0.45)";
+          c.fillRect(cyl.x, cyl.y, px - cyl.x, cyl.h);
+          c.fillStyle = act ? (extending ? "rgba(255,138,61,0.95)" : "rgba(77,163,255,0.85)") : "rgba(77,163,255,0.45)";
+          c.fillRect(px, cyl.y, cyl.x + cyl.w - px, cyl.h);
+          c.fillStyle = "#2b3338"; c.fillRect(px - 4, cyl.y, 8, cyl.h);
+          c.fillStyle = "#d7dee4"; c.fillRect(px + 4, cyl.y + cyl.h * 0.38, cyl.x + cyl.w + 14 - px, cyl.h * 0.24);
+          label(c, "ACTUATOR", cyl.x + cyl.w / 2, cyl.y - 8);
+          label(c, `${S.area} cm²`, cyl.x + cyl.w / 2, cyl.y + cyl.h + 15);
+          c.font = "600 10.5px 'Rajdhani', sans-serif"; c.textAlign = "right";
+          c.fillStyle = "#ff8a3d"; c.fillText("■ pressure", x0 + W - 58, y0 + H - 8);
+          c.fillStyle = "#4da3ff"; c.fillText("■ return", x0 + W - 10, y0 + H - 8);
+          c.restore();
+        }
+
+        /* ---------- suspension box (oleo strut) ---------- */
+        function susState() {
+          if (f.phase === "roll") return ["active", "CARRYING WEIGHT"];
+          if (f.phase === "roll2") return f.seq.td === "now" ? ["active", "ABSORBING TOUCHDOWN"] : ["active", "ROLLOUT · BUMPS"];
+          if (f.phase === "done" && f.result) return ["done", "✓ LANDING ABSORBED"];
+          if (f.phase === "crash" || (f.phase === "done" && !f.result && f.landed)) return ["idle", "NO GEAR ON GROUND"];
+          if (!f.wow) return f.seq.roll === "done" ? ["done", "✓ UNLOADED · EXTENDED"] : ["idle", "NO LOAD"];
+          return ["idle", "STATIC WEIGHT"];
+        }
+        function drawSusp(c, x0, y0, W, H) {
+          c.save();
+          c.beginPath(); c.rect(x0, y0, W, H); c.clip();
+          c.fillStyle = "#151d22"; c.fillRect(x0, y0, W, H);
+          const tag = susState()[1];
+          boxFrame(c, x0, y0, W, H, "SUSPENSION · OLEO", "idle", tag); // no highlight: only the gear hydraulics glow
+          const top = y0 + 50, bottom = y0 + H - 14;
+          const hh = bottom - top;
+          const cx = x0 + Math.min(W * 0.32, 60);
+          const cw = clamp(W * 0.17, 20, 34);
+          const r = cw * 0.55;
+          const gearOn = f.wow && st.lockDown && f.crashKind == null;
+          const gY = bottom - 2;
+          const axle = gY - r;
+          const innerLen = hh * 0.42;
+          const cylH = hh * 0.5;
+          const pT = axle - innerLen; // top of the sliding piston
+          const oTop = pT - cylH * (0.85 - 0.5 * f.s); // outer cylinder moves down as it compresses
+          // weight arrow on top
+          const loadK = clamp(f.sLoad / (S.oleo.weight * 2.5), 0, 1);
+          if (f.sLoad > 1) {
+            const len = 10 + loadK * 26;
+            c.strokeStyle = "#ff8a3d"; c.lineWidth = 3;
+            c.beginPath(); c.moveTo(cx, oTop - 4 - len); c.lineTo(cx, oTop - 6); c.stroke();
+            c.fillStyle = "#ff8a3d"; c.beginPath(); c.moveTo(cx, oTop - 2); c.lineTo(cx - 6, oTop - 10); c.lineTo(cx + 6, oTop - 10); c.closePath(); c.fill();
+          }
+          // outer cylinder: nitrogen above, oil below
+          c.fillStyle = "#8693a0";
+          c.beginPath(); c.roundRect(cx - cw / 2 - 3, oTop - 3, cw + 6, cylH + 6, 4); c.fill();
+          const gasB = oTop + cylH * 0.32 * (1 - 0.7 * f.s);
+          c.fillStyle = "rgba(170,205,235,0.55)"; c.fillRect(cx - cw / 2, oTop, cw, gasB - oTop);
+          c.fillStyle = "rgba(255,170,60,0.85)"; c.fillRect(cx - cw / 2, gasB, cw, pT - gasB);
+          // sliding piston tube with oil + orifice plate
+          const iw = cw * 0.7;
+          c.fillStyle = "#d7dee4"; c.fillRect(cx - iw / 2 - 2, pT, iw + 4, axle - pT);
+          c.fillStyle = "rgba(255,170,60,0.7)"; c.fillRect(cx - iw / 2 + 1, pT + 3, iw - 2, Math.max(0, Math.min(axle - 6, oTop + cylH) - (pT + 3)));
+          c.fillStyle = "#2b3338"; c.fillRect(cx - iw / 2 - 2, pT - 2, iw / 2 - 2, 5); c.fillRect(cx + 4, pT - 2, iw / 2 - 2, 5);
+          // oil squirting through the orifice while compressing (up) or rebounding (down)
+          if (Math.abs(f.sv) > 0.08 && gearOn) {
+            const up = f.sv > 0, ph = (performance.now() / 300) % 1;
+            c.fillStyle = "#ffcf5a";
+            for (let i = 0; i < 3; i++) {
+              const fr = (i + ph) / 3;
+              const yy = up ? pT + 8 - fr * 22 : pT - 14 + fr * 22;
+              c.beginPath(); c.arc(cx, yy, 2.5, 0, 7); c.fill();
+            }
+          }
+          // wheel + ground
+          wheel(c, cx, axle, r, f.wheelAng);
+          if (gearOn || f.phase === "ready") {
+            c.fillStyle = S.surface === "gravel" ? "#a28d6a" : "#555e64"; c.fillRect(x0, gY, W, y0 + H - gY);
+            if (f.sLoad > 1) {
+              c.strokeStyle = "#3fcf8e"; c.lineWidth = 3;
+              c.beginPath(); c.moveTo(cx + r + 8, gY - 2); c.lineTo(cx + r + 8, gY - 14 - loadK * 16); c.stroke();
+              c.fillStyle = "#3fcf8e"; c.beginPath(); c.moveTo(cx + r + 8, gY - 18 - loadK * 16); c.lineTo(cx + r + 3, gY - 10 - loadK * 16); c.lineTo(cx + r + 13, gY - 10 - loadK * 16); c.closePath(); c.fill();
+            }
+          }
+          // labels next to the strut
+          const lx = cx + cw / 2 + 8;
+          c.textAlign = "left"; c.font = "700 7.5px 'Orbitron', sans-serif";
+          c.fillStyle = "rgba(170,205,235,0.95)"; c.fillText("N₂ GAS", lx, oTop + 9);
+          c.fillStyle = "rgba(255,170,60,0.95)"; c.fillText("OIL", lx, Math.min(pT - 4, oTop + cylH * 0.62));
+          // readouts on the right
+          const rx = x0 + W - 8;
+          c.textAlign = "right";
+          const rows = [["LOAD", `${fmt(f.sLoad)} kN`, "#ff8a3d"], ["PRESSURE", `${fmt(strutP())} bar`, "#4da3ff"], ["STROKE", `${Math.round(f.s * 100)}%`, "#3fcf8e"]];
+          rows.forEach(([k2, v, col], i) => {
+            const yy = top + 8 + i * 30;
+            c.font = "700 7.5px 'Orbitron', sans-serif"; c.fillStyle = "rgba(238,243,246,0.55)"; c.fillText(k2, rx, yy);
+            c.font = "600 12px 'IBM Plex Mono', monospace"; c.fillStyle = col; c.fillText(v, rx, yy + 14);
+          });
+          if (f.bottomed) { c.font = "700 8px 'Orbitron', sans-serif"; c.fillStyle = "#ff5d5d"; c.fillText("BOTTOMED OUT", rx, top + 104); }
+          c.restore();
+        }
+
+        /* ================= time window pop-up ================= */
+        const twCache = { key: "" };
+        function updateTW() {
+          const tw = $("tw");
+          const ph = f.phase;
+          let row = null;
+          if ((ph === "roll" && f.spd > S.VLOF * 0.5) || ph === "climb") row = "ret";
+          else if (ph === "app") row = "ext";
+          tw.classList.toggle("show", !!row);
+          if (!row) { tw.classList.remove("open"); return; }
+          const isRet = row === "ret";
+          const Wn = isRet ? f.win.ret : f.win.ext;
+          const now = ph === "roll" ? 0 : f.tP;
+          const span = Wn.span;
+          const pct = (t) => clamp((t / span) * 100, 0, 100);
+          const segs = isRet
+            ? [[0, Wn.open, "early"], [Wn.open, Wn.close, "ok"], [Wn.close, Wn.vlo, "late"], [Wn.vlo, span, "bad"]]
+            : [[0, Wn.open, "bad"], [Wn.open, Wn.close, "ok"], [Wn.close, Wn.late, "late"], [Wn.late, Wn.lockTd, "bad"], [Wn.lockTd, Wn.half, "worse"], [Wn.half, span, "crash"]];
+          const key = row + S.id + span.toFixed(2);
+          if (twCache.key !== key) {
+            twCache.key = key;
+            $("twSegs").innerHTML = segs.map(([a, b, cl]) => `<div class="seg ${cl}" style="left:${pct(a)}%;width:${pct(b) - pct(a)}%"></div>`).join("");
+            $("twWhat").textContent = isRet ? "RETRACT" : "EXTEND";
+            $("twL").textContent = isRet ? "lift-off" : `${fmt(APP_ALT)} ft`;
+            $("twR").textContent = isRet ? `VLO ${S.VLO} kt` : "touchdown";
+          }
+          const real = (sec) => (sec / tsNow()).toFixed(1); // sim seconds shown as wall-clock seconds
+          $("twNow").style.left = pct(now) + "%";
+          const selT = isRet ? f.tRetract : f.tExtend;
+          $("twSel").style.display = selT != null ? "block" : "none";
+          if (selT != null) $("twSel").style.left = pct(selT) + "%";
+
+          let txt, col, open = false;
+          if (selT != null) {
+            const inWin = selT >= Wn.open && selT <= Wn.close + (isRet ? 0 : 0.1);
+            const lock = isRet ? st.lockUp : st.lockDown;
+            if (inWin) { txt = `✓ Selected in the window${lock ? " · locked" : " · moving…"}`; col = "var(--safe)"; }
+            else if (selT < Wn.open) { txt = isRet ? "! Selected too early — no positive rate yet" : "! Selected above VLO — air load too high"; col = "var(--slow)"; }
+            else if (isRet) { txt = lock ? "! Selected late — up & locked now" : "! Selected late — GEAR NOT UP warning · speed held at VLO"; col = "var(--slow)"; }
+            else if (selT <= Wn.late) { txt = lock ? "! Late — locked below 1,000 ft · firm landing" : "! Late — greens below 1,000 ft · unstable, firm landing"; col = "var(--slow)"; }
+            else if (selT <= Wn.lockTd) { txt = "✗ Too late — locks below 500 ft → hard landing"; col = "var(--fail)"; }
+            else if (selT <= Wn.half) { txt = "✗ Too late — gear won't lock → collapse on impact"; col = "var(--fail)"; }
+            else { txt = "✗ Too late — gear under half out → belly drag landing"; col = "var(--fail)"; }
+          } else if (ph === "roll") {
+            txt = "Opens after lift-off and positive rate"; col = "var(--mut)";
+          } else if (now < Wn.open) {
+            txt = isRet ? `Wait for positive rate · opens in ${real(Wn.open - now)} s` : `Too fast for the gear (${Math.round(f.spd)} kt) · opens in ${real(Wn.open - now)} s`;
+            col = "var(--fail)";
+          } else if (now <= Wn.close) {
+            txt = `OPEN · select ${isRet ? "RETRACT" : "EXTEND"} · ${real(Wn.close - now)} s left`; col = "var(--safe)"; open = true;
+          } else if (isRet && now < Wn.vlo) {
+            txt = `LATE · GEAR NOT UP warning · can't lock before VLO`; col = "var(--slow)";
+          } else if (isRet) {
+            txt = `SPEED HELD AT VLO · retract now (${Math.max(0, HOLD_MAX - f.holdT).toFixed(0)} s left)`; col = "var(--fail)";
+          } else if (now <= Wn.late) {
+            txt = `LATE · must lock by 500 ft · ${real(Wn.late - now)} s left`; col = "var(--slow)";
+          } else if (now <= Wn.lockTd) {
+            txt = "TOO LATE · locks below 500 ft → hard landing"; col = "var(--fail)";
+          } else if (now <= Wn.half) {
+            txt = "TOO LATE TO LOCK · the gear will collapse on impact"; col = "var(--fail)";
+          } else {
+            txt = "GEAR UP · belly landing ahead"; col = "var(--fail)";
+          }
+          $("twStatus").textContent = txt;
+          $("twStatus").style.color = col;
+          tw.classList.toggle("open", open);
+        }
+
+        /* ================= readouts ================= */
+        const setBadge = (id, text, col) => { const b = $(id); b.textContent = text; b.style.color = col; };
+        const setHTML = (() => { const cache = {}; return (id, html) => { if (cache[id] !== html) { cache[id] = html; $(id).innerHTML = html; } }; })();
+
+        function narrate() {
+          const ph = f.phase;
+          if (ph === "ready") return ["Choose a scenario, then press Start — the pumps start by themselves.", false];
+          if (ph === "done") return [f.result ? "Mission complete — see the debrief on the right." : "Mission failed — see the debrief on the right.", !f.result];
+          if (!st.running && ph !== "skip") return ["Paused — press Resume (Enter).", false];
+          if (ph === "crash" || ph === "abort") return [f.reason, true];
+          if (ph === "skip") return ["Cruising… skipping ahead to the approach.", false];
+          const pct = Math.round(st.x * 100);
+          if (ph === "pre") return [`Hydraulic pumps starting… ${Math.round(st.press)} bar — brakes release at ${Math.round(0.7 * S.P)} bar.`, false];
+          if (ph === "roll") return [f.spd >= S.VLOF - 10 ? "Rotate… lifting off. Get ready to RETRACT." : "Take-off roll — the oleo struts carry the weight. Wait for positive rate.", false];
+          if (ph === "climb") {
+            if (failed()) return [`Gear stalled at ${100 - pct}% retracted — the air load is too high!`, true];
+            if (f.tPR == null) return ["Lifting off… wait for positive rate.", false];
+            if (st.cmd === "extend" && !st.lockUp) return [f.spd >= S.VLO ? `Speed held at VLO ${S.VLO} kt — the gear is still down! RETRACT (G)` : f.gearAlarm ? "GEAR NOT UP warning — RETRACT (G) now!" : "Positive rate — RETRACT (G)!", true];
+            if (!st.lockUp) return [st.unlockT > 0 ? "Releasing the down-lock…" : f.spd >= S.VLO ? `Retracting… ${100 - pct}% — speed held at VLO until the gear is up` : `Retracting… ${100 - pct}% — beat VLO ${S.VLO} kt!`, f.spd > S.VLO - 10];
+            return ["✓ Up & locked — climbing to cruise.", false];
+          }
+          if (ph === "app") {
+            if (failed()) return [`Gear stalled at ${pct}% — too fast, the air load beats the piston force!`, true];
+            if (st.lockDown) return [f.alt < 50 && !f.stabMiss ? "Flare… touchdown." : f.stabMiss ? "✗ Greens below 500 ft — no time to settle, brace for a hard landing!" : f.gateMiss ? "! Three greens, but late — brace for a firm landing." : "✓ Three greens — cleared to land.", f.stabMiss];
+            if (stowed() && st.cmd !== "extend") {
+              if (f.spd > S.VLO) return [`Slowing to VLO ${S.VLO} kt before you extend… ${Math.round(f.spd)} kt`, false];
+              return [f.alt < GATE ? `TOO LOW, GEAR! ${fmt(f.alt)} ft — EXTEND (G) or it's a belly landing!` : "Below VLO — EXTEND (G)!", true];
+            }
+            return [st.unlockT > 0 ? "Releasing the up-lock…" : f.alt < GATE ? `Extending… ${pct}% — ${fmt(f.alt)} ft and no greens yet!` : `Extending… ${pct}%`, f.alt < GATE];
+          }
+          if (ph === "roll2") return [f.tP < 1.8 ? "Touchdown — the oleo struts are absorbing the impact." : f.spd > 0 ? `Autobrake slowing the aircraft · ${Math.round(f.spd)} kt` : "Stopped. Nicely done.", false];
+          return ["", false];
+        }
+
+        function readouts() {
+          const pct = Math.round(st.x * 100);
+          $("posFill").style.width = pct + "%";
+          $("posPct").textContent = failed() ? `Stalled · ${pct}% down` : `${pct}% down`;
+          $("posPct").style.color = failed() ? "var(--fail)" : "";
+          const tr = !locked() || st.unlockT > 0;
+          $("lgDown").className = "light" + (st.lockDown && st.unlockT === 0 ? " green" : "");
+          $("lgTransit").className = "light" + (tr ? " red" : "");
+          $("lgUp").className = "light" + (st.lockUp && st.unlockT === 0 ? " amber" : "");
+
+          // hydraulics: gear actuator + oleo strut in one box
+          $("actTag").textContent = actState()[1];
+          const P = st.press, F = pistonF();
+          const dir = st.cmd === "extend" ? 1 : -1;
+          const moving = f.phase !== "ready" && !f.crashKind && !atTarget() && !(f.wow && dir < 0);
+          const R = moving ? gearLoad(st.x, dir, f.spd, f.wow) : 0;
+          $("pBar").style.width = clamp((P / 360) * 100, 0, 100) + "%";
+          $("pBar").style.background = P >= 0.7 * S.P ? "var(--safe)" : P >= 60 ? "var(--slow)" : "var(--fail)";
+          $("pVal").textContent = Math.round(P) + " bar";
+          const scale = Fmax() * 1.2;
+          $("fBar").style.width = Math.min(100, (F / scale) * 100) + "%";
+          $("rBar").style.width = Math.min(100, (R / scale) * 100) + "%";
+          $("rBar").style.background = R > F && R > 0 ? "var(--fail)" : "var(--idle)";
+          $("fVal").textContent = F.toFixed(0) + " kN";
+          $("rVal").textContent = R ? R.toFixed(0) + " kN" : "—";
+          $("sBar").style.width = clamp((f.sLoad / (S.oleo.weight * 2.5)) * 100, 0, 100) + "%";
+          $("sVal").textContent = fmt(f.sLoad) + " kN";
+          // one formula at a time: the strut while it carries load, the actuator otherwise
+          $("formula").textContent = f.sLoad > 1
+            ? `Oleo P = ${fmt(f.sLoad)} kN ÷ ${S.oleo.area} cm² = ${fmt(strutP())} bar`
+            : `F = ${Math.round(P)} bar × ${S.area} cm² = ${F.toFixed(1)} kN`;
+
+          const [msg, urgent] = narrate();
+          $("modeChip").textContent = msg;
+          $("modeChip").style.color = urgent ? "#ffb38a" : "";
+          flightPanel();
+          $("cmdToggle").querySelectorAll("button").forEach((b) => { b.disabled = !active(); });
+
+          // sequence list
+          const icon = { done: "✓", fail: "✗", warn: "!" };
+          setHTML("seqList", SEQ_VIEW.map(([t, who, keys], i) => {
+            const s = groupState(keys);
+            return `<li class="${s}"><i>${icon[s] || i + 1}</i><span>${t}<small class="${who}">${who === "you" ? "YOU" : "AUTO"}</small></span></li>`;
+          }).join(""));
+
+          // the flight log is only shown in the debrief
+          $("logWrap").hidden = f.phase !== "done";
+          if (logDirty && f.phase === "done") {
+            logDirty = false;
+            const mark = { ok: "✓", warn: "!", bad: "✗", info: "·" };
+            const list = f.log.slice().reverse();
+            setHTML("log", list.length ? list.map((l) => `<li><b class="ev-${l.kind}">${mark[l.kind]}</b><span>${l.msg}</span></li>`).join("") : "<li><b class='ev-info'>—</b><span>No events yet.</span></li>");
+          }
+          updateTW();
+        }
+
+        /* ================= loop ================= */
+        let last = performance.now();
+        function frame(now) {
+          requestAnimationFrame(frame); // queue the next frame first, so one bad frame can never freeze the sim
+          const dt = Math.min(0.05, (now - last) / 1000);
+          last = now;
+          if (st.running && f.phase !== "ready" && f.phase !== "done") stepCall(dt); // call-outs run on wall-clock time
+          if (st.running) {
+            // small sub-steps, so the faster phases stay as smooth and stable as real time
+            const sdt = dt * tsNow(), n = Math.max(1, Math.ceil(sdt / 0.02));
+            for (let i = 0; i < n; i++) step(sdt / n);
+          }
+          drawScene();
+          readouts();
+        }
+        reset();
+        renderScenarios();
+        syncHints();
+        syncStart();
+        requestAnimationFrame(frame);
+      })();
+    </script>
+
+    <script>
+      /* Universal Floating, Draggable & Resizable How-to-Use & Guide System */
+      (function initUniversalHelpFloatwin() {
+        var bar = document.getElementById("helpbar");
+        if (!bar) return;
+
+        if (!bar.classList.contains("floatwin")) {
+          bar.classList.add("floatwin");
+          bar.setAttribute("role", "dialog");
+          bar.setAttribute("aria-label", "Help Guide");
+
+          var head = document.createElement("div");
+          head.className = "fw-head";
+
+          var title = document.createElement("span");
+          title.className = "fw-title";
+          title.textContent = "How To Use";
+          head.appendChild(title);
+
+          var actions = document.createElement("div");
+          actions.className = "fw-head-actions";
+
+          var origPanels = bar.querySelectorAll(".tabpanel");
+          if (origPanels.length > 1) {
+            origPanels.forEach(function (p) {
+              var t = p.dataset.panel;
+              var b = document.createElement("button");
+              b.type = "button";
+              b.className = "fw-tab-btn";
+              b.dataset.tab = t;
+              b.textContent = t === "use" ? "How To Use" : t === "learn" ? "What To Learn" : t;
+              actions.appendChild(b);
+            });
+          }
+
+          var closeBtn = document.createElement("button");
+          closeBtn.type = "button";
+          closeBtn.className = "fw-close";
+          closeBtn.title = "Close Guide";
+          closeBtn.setAttribute("aria-label", "Close");
+          closeBtn.textContent = "✕";
+          actions.appendChild(closeBtn);
+          head.appendChild(actions);
+
+          var body = document.createElement("div");
+          body.className = "fw-body";
+          while (bar.firstChild) body.appendChild(bar.firstChild);
+
+          var grip = document.createElement("div");
+          grip.className = "fw-grip";
+          grip.title = "Drag to resize";
+
+          bar.appendChild(head);
+          bar.appendChild(body);
+          bar.appendChild(grip);
+          document.body.appendChild(bar);
+        }
+
+        var btns = document.querySelectorAll(".helpbtn");
+        var tabBtns = bar.querySelectorAll(".fw-tab-btn");
+        var titleEl = bar.querySelector(".fw-title");
+        var closeBtnEl = bar.querySelector(".fw-close");
+        var headEl = bar.querySelector(".fw-head");
+        var gripEl = bar.querySelector(".fw-grip");
+        var topZ = 10000;
+        var posInit = false;
+
+        function toFront() {
+          bar.style.zIndex = ++topZ;
+        }
+        function closeAll() {
+          bar.classList.remove("show");
+          btns.forEach(function (b) { b.classList.remove("on"); });
+          tabBtns.forEach(function (b) { b.classList.remove("on"); });
+        }
+        function openTab(tab) {
+          toFront();
+          if (!posInit) {
+            var w = Math.min(460, window.innerWidth - 32);
+            var h = Math.min(580, window.innerHeight - 80);
+            bar.style.width = w + "px";
+            bar.style.height = h + "px";
+            bar.style.top = "65px";
+            bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
+            posInit = true;
+          }
+          bar.classList.add("show");
+          btns.forEach(function (b) { b.classList.toggle("on", b.dataset.tab === tab); });
+          tabBtns.forEach(function (b) { b.classList.toggle("on", b.dataset.tab === tab); });
+          bar.querySelectorAll(".tabpanel").forEach(function (p) { p.classList.toggle("on", p.dataset.panel === tab); });
+          if (titleEl) titleEl.textContent = tab === "use" ? "How To Use" : tab === "learn" ? "What You'll Learn" : "Guide";
+        }
+
+        btns.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var tab = btn.dataset.tab || "use";
+            if (bar.classList.contains("show") && btn.classList.contains("on")) closeAll();
+            else openTab(tab);
+          });
+        });
+        tabBtns.forEach(function (tb) {
+          tb.addEventListener("click", function (e) {
+            e.stopPropagation();
+            openTab(tb.dataset.tab);
+          });
+        });
+        if (closeBtnEl) closeBtnEl.addEventListener("click", closeAll);
+        bar.addEventListener("pointerdown", toFront);
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && bar.classList.contains("show")) closeAll();
+        });
+
+        if (headEl) {
+          headEl.addEventListener("pointerdown", function (e) {
+            if (e.target.closest(".fw-head-actions")) return;
+            e.preventDefault();
+            toFront();
+            headEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var dx = e.clientX - r.left, dy = e.clientY - r.top;
+            bar.classList.add("dragging");
+            function onMove(ev) {
+              bar.style.left = Math.max(8, Math.min(window.innerWidth - bar.offsetWidth - 8, ev.clientX - dx)) + "px";
+              bar.style.top = Math.max(8, Math.min(window.innerHeight - 40, ev.clientY - dy)) + "px";
+            }
+            function onUp() {
+              bar.classList.remove("dragging");
+              headEl.removeEventListener("pointermove", onMove);
+              headEl.removeEventListener("pointerup", onUp);
+              headEl.removeEventListener("pointercancel", onUp);
+            }
+            headEl.addEventListener("pointermove", onMove);
+            headEl.addEventListener("pointerup", onUp);
+            headEl.addEventListener("pointercancel", onUp);
+          });
+        }
+
+        if (gripEl) {
+          gripEl.addEventListener("pointerdown", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toFront();
+            gripEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var sx = e.clientX, sy = e.clientY, sw = r.width, sh = r.height;
+            function onMove(ev) {
+              bar.style.width = Math.max(280, Math.min(window.innerWidth - r.left - 8, sw + (ev.clientX - sx))) + "px";
+              bar.style.height = Math.max(200, Math.min(window.innerHeight - r.top - 8, sh + (ev.clientY - sy))) + "px";
+            }
+            function onUp() {
+              gripEl.removeEventListener("pointermove", onMove);
+              gripEl.removeEventListener("pointerup", onUp);
+              gripEl.removeEventListener("pointercancel", onUp);
+            }
+            gripEl.addEventListener("pointermove", onMove);
+            gripEl.addEventListener("pointerup", onUp);
+            gripEl.addEventListener("pointercancel", onUp);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
