@@ -4708,35 +4708,8 @@
             if (UT.turn <= 0) UT.yaw = Math.atan2(-fx, -fz);
             ute.rotation.y = UT.yaw;
             UT.wheels.forEach((w) => (w.rotation.x -= (sp / 2.2) * dt));
-            // dust from the rear wheels, thrown back and up
-            UT.dust = (UT.dust || 0) + dt * 50;
-            while (UT.dust > 1) {
-              UT.dust -= 1;
-              const side = rnd() < 0.5 ? -5.3 : 5.3;
-              const bx = _rv.x - fx * 5.6 - fz * side,
-                bz = _rv.y - fz * 5.6 + fx * side;
-              kick(bx, ground(bx, bz) + 0.3, bz, -fx * rr(1.5, 4.5) + rr(-1, 1), rr(2.5, 6), -fz * rr(1.5, 4.5) + rr(-1, 1), rr(0.2, 0.45), 2.2);
-            }
           }
           uteStep(0); // set it on the road before the first frame
-
-          /* --- the test rover's own wheels throw up fine dust from the deck --- */
-          const _w = new THREE.Vector3(),
-            _f = new THREE.Vector3();
-          let roverDust = 0;
-          function roverDustStep(dt) {
-            const R = S.rv;
-            const sp = Math.abs(R.v) + Math.abs(R.w) * 1.4;
-            if (sp < 0.3) return;
-            roverDust += dt * sp * 45;
-            _f.set(-Math.sin(R.yaw), 0, -Math.cos(R.yaw)).multiplyScalar(Math.sign(R.v || 1));
-            while (roverDust > 1) {
-              roverDust -= 1;
-              const wh = wheels[Math.floor(rnd() * wheels.length)];
-              wh.hub.getWorldPosition(_w);
-              kick(_w.x + rr(-0.15, 0.15), 0.06, _w.z + rr(-0.15, 0.15), -_f.x * rr(0.4, 1.6) * sp + rr(-0.3, 0.3), rr(0.8, 2.6), -_f.z * rr(0.4, 1.6) * sp + rr(-0.3, 0.3), rr(0.07, 0.15), 1.6);
-            }
-          }
 
           /* --- a few motes of levitated dust drifting through the sunlight over the pad --- */
           const MOTES = 140;
@@ -4806,7 +4779,6 @@
             if (dt > 0) {
               astroStep(dt);
               uteStep(dt);
-              roverDustStep(dt);
               dustStep(dt);
               moteStep(dt);
             }
