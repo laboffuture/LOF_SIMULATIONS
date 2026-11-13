@@ -19,9 +19,10 @@ const PROJECTS = [
   { id: "lost-bot-navigator-rover", title: "Lost Bot Navigation", category: "robotics", status: "live", url: "../sims/robotics/lost-bot-navigator-rover/simulation.html", description: "Navigate obstacles using distance sensor feedback with adaptive speed and emergency stops." },
   { id: "stability-scout-rover", title: "Stability Scout", category: "robotics", status: "live", url: "../sims/robotics/StabilityScoutRover/simulation.html", description: "Analyze terrain stability with compass heading disturbances and manage rover balance and speed." },
   { id: "magnetic-heading-patrol", title: "Magnetic Heading Patrol", category: "robotics", status: "live", url: "../sims/robotics/magnet-security-rover/index.html", description: "Guard two zones of a space base: a magnetometer keeps the rover on its heading while an AMG8833 thermal sensor spots intruders and sounds the alarm." },
-  ...Array.from({ length: 16 }, (_, i) => ({
-    id: `robotics-coming-soon-${i + 15}`,
-    title: `Robotics Project ${String(i + 14).padStart(2, "0")}`,
+  { id: "axes-6", title: "Axes 6", category: "robotics", status: "live", url: "../sims/robotics/Axes6/simulation.html", description: "Command a six-axis robotic arm: send BASE, SHOULDER, ELBOW, WRIST and GRIPPER commands or set exact servo angles, then pick, rotate and place an object on its target outline." },
+  ...Array.from({ length: 15 }, (_, i) => ({
+    id: `robotics-coming-soon-${i + 16}`,
+    title: `Robotics Project ${String(i + 15).padStart(2, "0")}`,
     category: "robotics",
     status: "coming-soon",
     description: "Coming soon.",
