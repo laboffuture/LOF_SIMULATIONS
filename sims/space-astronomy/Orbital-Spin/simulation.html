@@ -517,6 +517,84 @@ body.mode-full .simple-only{display:none!important}
     #panel { border-left: 1px solid rgba(160, 200, 255, .28) !important; }
     #panel .modebtn:not(.on), #panel .linkbtn { background: #DEDBD2; }
   </style>
+    <style id="lof-scrollbars">
+      /* Thin scrollbars everywhere; the colours are set by the script below from each panel's own colours. */
+      :where(html, body *) {
+        scrollbar-width: thin;
+      }
+    </style>
+    <script id="lof-scrollbars-js">
+      /* Scrollbars that match the UI: for every scroll area, the track is the background it actually shows
+         and the thumb is that background blended toward the simulation's text colour (or white/black when the
+         text colour does not stand out). Re-checked when the page changes, so panels opened later match too. */
+      (function () {
+        function rgb(s) {
+          var m = s && s.match(/rgba?\(([^)]+)\)/);
+          if (!m) return null;
+          var p = m[1].split(/[ ,\/]+/).filter(Boolean).map(parseFloat);
+          return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+        }
+        function bgOf(el) {
+          for (; el && el.nodeType === 1; el = el.parentElement) {
+            var cs = getComputedStyle(el);
+            var c = rgb(cs.backgroundColor);
+            if (c && c.a > 0.5) return c;
+            if (cs.backgroundImage && cs.backgroundImage.indexOf("gradient") >= 0) {
+              var g = rgb(cs.backgroundImage);
+              if (g && g.a > 0.5) return g;
+            }
+          }
+          return { r: 255, g: 255, b: 255, a: 1 };
+        }
+        function lum(c) {
+          return (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) / 255;
+        }
+        function mix(a, b, t) {
+          return "rgb(" + Math.round(a.r + (b.r - a.r) * t) + "," + Math.round(a.g + (b.g - a.g) * t) + "," + Math.round(a.b + (b.b - a.b) * t) + ")";
+        }
+        function colours(el, bgEl) {
+          var bg = bgOf(bgEl || el);
+          var ink = rgb(getComputedStyle(el === document.documentElement ? document.body : el).color);
+          if (!ink || Math.abs(lum(ink) - lum(bg)) < 0.35) ink = lum(bg) < 0.5 ? { r: 255, g: 255, b: 255 } : { r: 0, g: 0, b: 0 };
+          return mix(bg, ink, 0.4) + " " + mix(bg, ink, 0.04);
+        }
+        function paint(el, bgEl) {
+          var v = colours(el, bgEl);
+          if (el.__lofSb !== v) {
+            el.__lofSb = v;
+            el.style.setProperty("scrollbar-color", v, "important");
+          }
+        }
+        function scan() {
+          if (!document.body) return;
+          paint(document.documentElement, document.body);
+          var all = document.body.getElementsByTagName("*");
+          for (var i = 0; i < all.length; i++) {
+            var el = all[i];
+            var cs = getComputedStyle(el);
+            var ox = cs.overflowX,
+              oy = cs.overflowY;
+            if (ox === "auto" || ox === "scroll" || oy === "auto" || oy === "scroll" || el.tagName === "TEXTAREA" || el.tagName === "SELECT") paint(el);
+          }
+        }
+        var t = 0;
+        function later() {
+          if (t) return;
+          t = setTimeout(function () {
+            t = 0;
+            scan();
+          }, 400);
+        }
+        function start() {
+          scan();
+          setTimeout(scan, 1200);
+          new MutationObserver(later).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "hidden", "open"] });
+          window.addEventListener("resize", later);
+        }
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+        else start();
+      })();
+    </script>
 </head>
 <body class="mode-simple">
 <header class="top">
