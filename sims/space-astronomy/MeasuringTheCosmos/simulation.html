@@ -1273,6 +1273,104 @@
         else start();
       })();
     </script>
+    <style id="lof-help">
+      .lof-i { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; margin: 0 0 0 6px; border-radius: 50%; border: 1.3px solid currentColor; font: 700 10px/1 system-ui, -apple-system, "Segoe UI", sans-serif; font-style: normal; text-transform: none; letter-spacing: 0; opacity: 0.72; cursor: help; vertical-align: -2px; flex: none; user-select: none; -webkit-user-select: none; }
+      .lof-i:hover, .lof-i[aria-expanded="true"] { opacity: 1; }
+      .lof-i.corner { position: absolute; top: -7px; right: -7px; margin: 0; width: 18px; height: 18px; background: inherit; opacity: 0.9; z-index: 2; }
+      .lof-i:focus-visible { opacity: 1; outline: 2px solid currentColor; outline-offset: 2px; }
+      #lof-tip { position: fixed; left: 0; top: 0; z-index: 2147483000; max-width: min(300px, calc(100vw - 24px)); padding: 9px 11px; border-radius: 8px; border: 1px solid; font: 500 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; text-transform: none; letter-spacing: 0; text-align: left; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 0.12s; }
+      #lof-tip.show { opacity: 1; visibility: visible; }
+      #lof-tip b { display: block; margin-bottom: 3px; font-weight: 700; }
+    </style>
+    <script id="lof-help-js">
+      /* Settings help: an (i) next to every setting's label explains what it does and why. Hover, focus or tap it. */
+      (() => {
+        const HELP = {"The same trip in three scales": "Slide between textbook, true and log scales. Textbook pictures squash distances; true scale shows how empty space is; a log scale fits it all on one strip.", "Anchor fact · your own scale model": "Choose how far apart the Sun and Earth are in your model. Every other distance scales by the same factor."};
+        const norm = (s) => s.replace(/\s+/g, " ").trim().replace(/[:：]$/, "").trim().toLowerCase();
+        const byText = new Map(), bySel = [];
+        let SKIP = "script,style,svg,canvas,button,#lof-tip,.lof-i,p,li,td,th,h1,h2,.lof-nohelp";
+        for (const [k, v] of Object.entries(HELP)) (k === "__skip" ? (SKIP += "," + v) : k[0] === "@" ? bySel.push([k.slice(1), v]) : byText.set(norm(k), [k, v]));
+        const ownText = (el) => { let t = ""; for (const n of el.childNodes) if (n.nodeType === 3) t += n.nodeValue; return t; };
+        let tip = null, cur = null, pinned = false;
+        const parse = (c) => { const m = c && c.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(",").map(parseFloat); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+        function bgOf(el) {
+          for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+            const cs = getComputedStyle(n), c = parse(cs.backgroundColor);
+            if (c && c.a > 0.5) return c;
+            const g = cs.backgroundImage && cs.backgroundImage.match(/rgba?\([^)]+\)/);
+            if (g) { const c2 = parse(g[0]); if (c2 && c2.a > 0.5) return c2; }
+          }
+          return { r: 20, g: 24, b: 32, a: 1 };
+        }
+        function place(icon) {
+          const fg = parse(getComputedStyle(icon).color) || { r: 230, g: 235, b: 245 }, bg = bgOf(icon.parentElement);
+          const mix = (a, b, k) => Math.round(a + (b - a) * k);
+          tip.style.background = `rgb(${mix(bg.r, fg.r, 0.07)},${mix(bg.g, fg.g, 0.07)},${mix(bg.b, fg.b, 0.07)})`;
+          tip.style.color = `rgb(${fg.r},${fg.g},${fg.b})`;
+          tip.style.borderColor = `rgba(${fg.r},${fg.g},${fg.b},0.35)`;
+          const r = icon.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight, vw = innerWidth, vh = innerHeight;
+          let x = Math.min(Math.max(12, r.left + r.width / 2 - w / 2), vw - w - 12), y = r.bottom + 8;
+          if (y + h > vh - 8 && r.top - h - 8 > 8) y = r.top - h - 8;
+          tip.style.left = x + "px"; tip.style.top = Math.max(8, y) + "px";
+        }
+        function show(icon) {
+          if (!tip) { tip = document.createElement("div"); tip.id = "lof-tip"; tip.setAttribute("role", "tooltip"); document.body.appendChild(tip); }
+          if (cur && cur !== icon) cur.setAttribute("aria-expanded", "false");
+          cur = icon; icon.setAttribute("aria-expanded", "true");
+          tip.innerHTML = "<b></b><span></span>";
+          tip.firstChild.textContent = icon.dataset.t; tip.lastChild.textContent = icon.dataset.h;
+          tip.classList.add("show"); place(icon);
+        }
+        function hide() { if (tip) tip.classList.remove("show"); if (cur) cur.setAttribute("aria-expanded", "false"); cur = null; pinned = false; }
+        function make(title, text) {
+          const i = document.createElement("span");
+          i.className = "lof-i"; i.textContent = "i"; i.tabIndex = 0;
+          i.setAttribute("role", "button"); i.setAttribute("aria-label", "About " + title + ": " + text); i.setAttribute("aria-expanded", "false");
+          i.dataset.t = title; i.dataset.h = text;
+          const stop = (e) => { e.preventDefault(); e.stopPropagation(); };
+          i.addEventListener("mouseenter", () => { if (!pinned) show(i); });
+          i.addEventListener("mouseleave", () => { if (!pinned) hide(); });
+          i.addEventListener("focus", () => show(i));
+          i.addEventListener("blur", () => { if (!pinned) hide(); });
+          i.addEventListener("pointerdown", (e) => e.stopPropagation());
+          i.addEventListener("mousedown", (e) => e.stopPropagation());
+          i.addEventListener("click", (e) => { stop(e); if (cur === i && pinned) hide(); else { show(i); pinned = true; } });
+          i.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { stop(e); if (cur === i && pinned) hide(); else { show(i); pinned = true; } } else if (e.key === "Escape") hide(); });
+          return i;
+        }
+        function attach(el, title, text, corner) {
+          if (!el || (el.lastElementChild && el.lastElementChild.classList.contains("lof-i")) || el.querySelector(":scope > .lof-i")) return;
+          let after = null;
+          for (const n of el.childNodes) if (n.nodeType === 3 && n.nodeValue.trim()) after = n;
+          const i = make(title, text);
+          if (corner) i.classList.add("corner");
+          if (after && after.nextSibling) el.insertBefore(i, after.nextSibling); else el.appendChild(i);
+        }
+        // only labels that sit next to a real control (not readouts or help text)
+        const nearCtrl = (el) => { for (let n = el, i = 0; n && i < 3; n = n.parentElement, i++) if (n.querySelector("input:not([type=hidden]),select,[role=slider]") || n.querySelectorAll("button").length >= 2) return true; return false; };
+        function scan() {
+          if (!document.body) return;
+          for (const [sel, v] of bySel) document.querySelectorAll(sel).forEach((el) => attach(el, v[0], v[1], v[2] === "corner"));
+          if (!byText.size) return;
+          const all = document.body.getElementsByTagName("*");
+          for (let k = 0; k < all.length; k++) {
+            const el = all[k], t = ownText(el);
+            if (!t || t.length > 70) continue;
+            const hit = byText.get(norm(t));
+            if (!hit || el.closest(SKIP) || !nearCtrl(el)) continue;
+            attach(el, hit[0], hit[1]);
+          }
+        }
+        let due = 0;
+        const later = () => { if (!due) due = setTimeout(() => { due = 0; scan(); if (cur && !document.contains(cur)) hide(); }, 400); };
+        new MutationObserver((recs) => { for (const r of recs) if (!(r.target.id === "lof-tip" || (r.target.closest && r.target.closest("#lof-tip")))) return later(); }).observe(document.documentElement, { childList: true, subtree: true });
+        document.addEventListener("click", (e) => { if (pinned && !(e.target.closest && e.target.closest(".lof-i"))) hide(); }, true);
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape" && cur) hide(); });
+        addEventListener("scroll", () => { if (cur) (pinned ? place(cur) : hide()); }, true);
+        addEventListener("resize", () => cur && place(cur));
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", scan); else scan();
+      })();
+    </script>
   </head>
   <body>
     <header class="top">

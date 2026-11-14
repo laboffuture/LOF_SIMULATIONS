@@ -480,6 +480,12 @@
       .hint b {
         color: var(--txt);
       }
+      .ctrl input.rng {
+        width: 100%;
+        accent-color: var(--accent);
+        cursor: pointer;
+        margin: 2px 0 0;
+      }
       .ctrl.inline {
         display: grid;
         grid-template-columns: auto 1fr;
@@ -2158,6 +2164,104 @@
         else start();
       })();
     </script>
+    <style id="lof-help">
+      .lof-i { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; margin: 0 0 0 6px; border-radius: 50%; border: 1.3px solid currentColor; font: 700 10px/1 system-ui, -apple-system, "Segoe UI", sans-serif; font-style: normal; text-transform: none; letter-spacing: 0; opacity: 0.72; cursor: help; vertical-align: -2px; flex: none; user-select: none; -webkit-user-select: none; }
+      .lof-i:hover, .lof-i[aria-expanded="true"] { opacity: 1; }
+      .lof-i.corner { position: absolute; top: -7px; right: -7px; margin: 0; width: 18px; height: 18px; background: inherit; opacity: 0.9; z-index: 2; }
+      .lof-i:focus-visible { opacity: 1; outline: 2px solid currentColor; outline-offset: 2px; }
+      #lof-tip { position: fixed; left: 0; top: 0; z-index: 2147483000; max-width: min(300px, calc(100vw - 24px)); padding: 9px 11px; border-radius: 8px; border: 1px solid; font: 500 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; text-transform: none; letter-spacing: 0; text-align: left; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 0.12s; }
+      #lof-tip.show { opacity: 1; visibility: visible; }
+      #lof-tip b { display: block; margin-bottom: 3px; font-weight: 700; }
+    </style>
+    <script id="lof-help-js">
+      /* Settings help: an (i) next to every setting's label explains what it does and why. Hover, focus or tap it. */
+      (() => {
+        const HELP = {"Volume": "How loud the sound effects are. It changes nothing in the simulation itself.", "Expo": "Softens the sticks around the centre, so small corrections give small movements while full stick still gives the full rate. Turn it up if the plane feels twitchy.", "Mode": "What to do: Learn has guided lessons, Free is open flying, Course flies through gates, Tricks teaches aerobatics, and Aero Ace is a run of graded missions.", "Flight mode": "Trainer levels the plane when you let go of the sticks. Gyro holds whatever bank you leave it at and damps gusts. Manual is a plain RC plane with no help.", "Rates": "Like a transmitter's dual-rate switch: how far the control surfaces move at full stick. Low (30%) is gentle for learning, Mid (50%) is for everyday flying, High (80%) is for tricks.", "Wind": "Calm air, a mild breeze, or a gusty crosswind across the runway. A crosswind pushes the plane sideways, so you must point slightly into it to land straight.", "Assist": "Small automatic corrections, like an instructor: keeps the runway centre line, coordinates the rudder, holds height and protects against stalls.", "Path": "Draws the trail the plane has flown, so you can see your turns and approaches afterwards.", "Plane": "Trainer: a high wing, slow and very stable, for learning. Aerobat: a low wing with more power and a fast roll, built for tricks but less forgiving.", "Camera": "Chase follows behind. Pilot shows the view from the flight line, as real RC pilots fly. FPV is the camera on the plane's nose.", "Drag view": "On: drag the 3D view with the mouse to look from any angle (double-click to go back). Off: the camera follows its normal view.", "Time": "Moves the sun. Morning and sunset light comes in low, so it can dazzle you when you face it; midday gives the clearest view."};
+        const norm = (s) => s.replace(/\s+/g, " ").trim().replace(/[:：]$/, "").trim().toLowerCase();
+        const byText = new Map(), bySel = [];
+        let SKIP = "script,style,svg,canvas,button,#lof-tip,.lof-i,p,li,td,th,h1,h2,.lof-nohelp";
+        for (const [k, v] of Object.entries(HELP)) (k === "__skip" ? (SKIP += "," + v) : k[0] === "@" ? bySel.push([k.slice(1), v]) : byText.set(norm(k), [k, v]));
+        const ownText = (el) => { let t = ""; for (const n of el.childNodes) if (n.nodeType === 3) t += n.nodeValue; return t; };
+        let tip = null, cur = null, pinned = false;
+        const parse = (c) => { const m = c && c.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(",").map(parseFloat); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+        function bgOf(el) {
+          for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+            const cs = getComputedStyle(n), c = parse(cs.backgroundColor);
+            if (c && c.a > 0.5) return c;
+            const g = cs.backgroundImage && cs.backgroundImage.match(/rgba?\([^)]+\)/);
+            if (g) { const c2 = parse(g[0]); if (c2 && c2.a > 0.5) return c2; }
+          }
+          return { r: 20, g: 24, b: 32, a: 1 };
+        }
+        function place(icon) {
+          const fg = parse(getComputedStyle(icon).color) || { r: 230, g: 235, b: 245 }, bg = bgOf(icon.parentElement);
+          const mix = (a, b, k) => Math.round(a + (b - a) * k);
+          tip.style.background = `rgb(${mix(bg.r, fg.r, 0.07)},${mix(bg.g, fg.g, 0.07)},${mix(bg.b, fg.b, 0.07)})`;
+          tip.style.color = `rgb(${fg.r},${fg.g},${fg.b})`;
+          tip.style.borderColor = `rgba(${fg.r},${fg.g},${fg.b},0.35)`;
+          const r = icon.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight, vw = innerWidth, vh = innerHeight;
+          let x = Math.min(Math.max(12, r.left + r.width / 2 - w / 2), vw - w - 12), y = r.bottom + 8;
+          if (y + h > vh - 8 && r.top - h - 8 > 8) y = r.top - h - 8;
+          tip.style.left = x + "px"; tip.style.top = Math.max(8, y) + "px";
+        }
+        function show(icon) {
+          if (!tip) { tip = document.createElement("div"); tip.id = "lof-tip"; tip.setAttribute("role", "tooltip"); document.body.appendChild(tip); }
+          if (cur && cur !== icon) cur.setAttribute("aria-expanded", "false");
+          cur = icon; icon.setAttribute("aria-expanded", "true");
+          tip.innerHTML = "<b></b><span></span>";
+          tip.firstChild.textContent = icon.dataset.t; tip.lastChild.textContent = icon.dataset.h;
+          tip.classList.add("show"); place(icon);
+        }
+        function hide() { if (tip) tip.classList.remove("show"); if (cur) cur.setAttribute("aria-expanded", "false"); cur = null; pinned = false; }
+        function make(title, text) {
+          const i = document.createElement("span");
+          i.className = "lof-i"; i.textContent = "i"; i.tabIndex = 0;
+          i.setAttribute("role", "button"); i.setAttribute("aria-label", "About " + title + ": " + text); i.setAttribute("aria-expanded", "false");
+          i.dataset.t = title; i.dataset.h = text;
+          const stop = (e) => { e.preventDefault(); e.stopPropagation(); };
+          i.addEventListener("mouseenter", () => { if (!pinned) show(i); });
+          i.addEventListener("mouseleave", () => { if (!pinned) hide(); });
+          i.addEventListener("focus", () => show(i));
+          i.addEventListener("blur", () => { if (!pinned) hide(); });
+          i.addEventListener("pointerdown", (e) => e.stopPropagation());
+          i.addEventListener("mousedown", (e) => e.stopPropagation());
+          i.addEventListener("click", (e) => { stop(e); if (cur === i && pinned) hide(); else { show(i); pinned = true; } });
+          i.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { stop(e); if (cur === i && pinned) hide(); else { show(i); pinned = true; } } else if (e.key === "Escape") hide(); });
+          return i;
+        }
+        function attach(el, title, text, corner) {
+          if (!el || (el.lastElementChild && el.lastElementChild.classList.contains("lof-i")) || el.querySelector(":scope > .lof-i")) return;
+          let after = null;
+          for (const n of el.childNodes) if (n.nodeType === 3 && n.nodeValue.trim()) after = n;
+          const i = make(title, text);
+          if (corner) i.classList.add("corner");
+          if (after && after.nextSibling) el.insertBefore(i, after.nextSibling); else el.appendChild(i);
+        }
+        // only labels that sit next to a real control (not readouts or help text)
+        const nearCtrl = (el) => { for (let n = el, i = 0; n && i < 3; n = n.parentElement, i++) if (n.querySelector("input:not([type=hidden]),select,[role=slider]") || n.querySelectorAll("button").length >= 2) return true; return false; };
+        function scan() {
+          if (!document.body) return;
+          for (const [sel, v] of bySel) document.querySelectorAll(sel).forEach((el) => attach(el, v[0], v[1], v[2] === "corner"));
+          if (!byText.size) return;
+          const all = document.body.getElementsByTagName("*");
+          for (let k = 0; k < all.length; k++) {
+            const el = all[k], t = ownText(el);
+            if (!t || t.length > 70) continue;
+            const hit = byText.get(norm(t));
+            if (!hit || el.closest(SKIP) || !nearCtrl(el)) continue;
+            attach(el, hit[0], hit[1]);
+          }
+        }
+        let due = 0;
+        const later = () => { if (!due) due = setTimeout(() => { due = 0; scan(); if (cur && !document.contains(cur)) hide(); }, 400); };
+        new MutationObserver((recs) => { for (const r of recs) if (!(r.target.id === "lof-tip" || (r.target.closest && r.target.closest("#lof-tip")))) return later(); }).observe(document.documentElement, { childList: true, subtree: true });
+        document.addEventListener("click", (e) => { if (pinned && !(e.target.closest && e.target.closest(".lof-i"))) hide(); }, true);
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape" && cur) hide(); });
+        addEventListener("scroll", () => { if (cur) (pinned ? place(cur) : hide()); }, true);
+        addEventListener("resize", () => cur && place(cur));
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", scan); else scan();
+      })();
+    </script>
   </head>
   <body>
     <header class="top">
@@ -2194,8 +2298,8 @@
           <h4>Before you fly</h4>
           <ol>
             <li>Pick the <b>Plane</b>: the <b>Trainer</b> (high wing, very stable) or the <b>Aerobat</b> (low wing, more power, fast roll: built for tricks).</li>
-            <li>Pick a <b>Flight mode</b>. <b>Trainer</b> works like a gyro-stabilised receiver on a real trainer plane: the sticks set the bank and pitch angle, and when you let go the plane levels itself. <b>Manual</b> is a plain RC plane: the control surfaces move only while you hold the stick, and nothing levels the plane for you.</li>
-            <li>Pick the <b>Rates</b> switch. <b>Low</b> gives small, gentle surface movements for precise flying. <b>High</b> gives full movements for sharp manoeuvres.</li>
+            <li>Pick a <b>Flight mode</b>. <b>Trainer</b> works like a gyro-stabilised receiver on a real trainer plane: the sticks set the bank and pitch angle, and when you let go the plane levels itself. <b>Gyro</b> works like a stabilising receiver in rate mode: the sticks set how fast the plane rolls and pitches, and when you let go it holds whatever bank it has, with gusts damped out, but it does not level itself. <b>Manual</b> is a plain RC plane: the control surfaces move only while you hold the stick, and nothing levels the plane or fights the wind for you.</li>
+            <li>Pick the <b>Rates</b> switch, like the dual-rate switch on a transmitter. <b>Low</b> (30% of full surface movement) is gentle and best for learning, <b>Mid</b> (50%) for everyday flying, <b>High</b> (80%) for sharp manoeuvres and tricks. <b>Expo</b> softens the sticks around the centre: at 40% a half stick gives about a third of the movement, while full stick still gives the full rate. Turn it up if small corrections feel twitchy.</li>
             <li>Pick the <b>Wind</b>, the <b>Camera</b> and the <b>Time</b> of day. <b>Chase</b> follows behind the plane. <b>Pilot</b> shows what you see standing at the flight line with the transmitter, the way real RC pilots fly; it zooms in as the plane flies away so you can still see it. <b>FPV</b> (first-person view) is the picture from a small camera on top of the plane, like FPV goggles. With <b>Drag view</b> on, drag the 3D view with the mouse to look from any angle; double-click it to go back. Morning and Sunset put the sun low, so it can dazzle you when you fly towards it.</li>
             <li>Press <b>Start</b> <kbd>Enter</kbd>.</li>
           </ol>
@@ -2279,21 +2383,25 @@
           <button type="button" class="btn reset" id="resetBtn">↺ Reset</button>
         </div>
         <h3 class="sec">Flight Setup</h3>
-        <div class="pair">
-          <div class="ctrl">
-            <div class="row"><label>Flight mode</label></div>
-            <div class="toggle" id="modeToggle">
-              <button type="button" data-v="trainer" class="on">Trainer</button>
-              <button type="button" data-v="manual">Manual</button>
-            </div>
+        <div class="ctrl">
+          <div class="row"><label>Flight mode</label></div>
+          <div class="toggle" id="modeToggle">
+            <button type="button" data-v="trainer" class="on">Trainer</button>
+            <button type="button" data-v="gyro">Gyro</button>
+            <button type="button" data-v="manual">Manual</button>
           </div>
-          <div class="ctrl">
-            <div class="row"><label>Rates</label></div>
-            <div class="toggle" id="rateToggle">
-              <button type="button" data-v="low" class="on">Low</button>
-              <button type="button" data-v="high">High</button>
-            </div>
+        </div>
+        <div class="ctrl">
+          <div class="row"><label>Rates</label><span class="val" id="rateVal"></span></div>
+          <div class="toggle" id="rateToggle">
+            <button type="button" data-v="low" class="on">Low</button>
+            <button type="button" data-v="mid">Mid</button>
+            <button type="button" data-v="high">High</button>
           </div>
+        </div>
+        <div class="ctrl">
+          <div class="row"><label for="expoSlider">Expo</label><span class="val" id="expoVal">40%</span></div>
+          <input type="range" class="rng" id="expoSlider" min="0" max="70" step="5" value="40" aria-label="Stick expo" />
         </div>
         <p class="hint setnote" id="modeHint"></p>
         <div class="ctrl">
@@ -2639,12 +2747,24 @@
         };
         const MODE_HINT = {
           trainer: "sticks set the bank and pitch angle; let go and the plane levels itself.",
+          gyro: "sticks set the roll and pitch speed; let go and the plane holds its bank, with gusts damped, but it does not level itself.",
           manual: "sticks move the surfaces directly; nothing levels the plane for you.",
         };
-        const RATE_HINT = {
-          low: "gentle surface moves for precise flying.",
-          high: "full surface moves for sharp manoeuvres.",
+        const MODE_NAME = { trainer: "Trainer", gyro: "Gyro", manual: "Manual" };
+        // dual rates: share of full surface movement, and the Trainer mode's bank / pitch limits
+        const RATES = {
+          low: { k: 0.3, bank: 30, pitch: 18, name: "Low" },
+          mid: { k: 0.5, bank: 38, pitch: 22, name: "Mid" },
+          high: { k: 0.8, bank: 45, pitch: 25, name: "High" },
         };
+        const RATE_HINT = {
+          low: "gentle, for learning and precise flying.",
+          mid: "everyday flying.",
+          high: "sharp manoeuvres and tricks.",
+        };
+        // the autopilot demos fly with full surface movement and the expo they were tuned with
+        const rateK = () => (GAME.demo ? 1 : RATES[settings.rates].k);
+        const expoK = () => (GAME.demo ? (settings.rates === "low" ? 0.35 : 0.15) : settings.expo);
 
         function CL(a) {
           const lin = P.CL0 + P.CLa * a;
@@ -2656,7 +2776,7 @@
         const CD = (a, cl) => P.CD0 + P.K * cl * cl + 0.9 * Math.sin(a) ** 2;
 
         /* ================= state ================= */
-        const settings = { mode: "trainer", rates: "low", wind: "none", cam: "chase", tod: "midday", sound: true, volume: 0.7, plane: "trainer", smoke: false, assist: true, path: true, drag: true };
+        const settings = { mode: "trainer", rates: "low", expo: 0.4, wind: "none", cam: "chase", tod: "midday", sound: true, volume: 0.7, plane: "trainer", smoke: false, assist: true, path: true, drag: true };
         // extra view angle from dragging the 3D view with the mouse (radians)
         const VIEW = { yaw: 0, pitch: 0, drag: null };
         // mission hooks (set by the Course / Tricks / Aero Ace modes)
@@ -2688,6 +2808,7 @@
           S.Vg = 0;
           setBasis(S.psi, 0, 0);
           S.p = S.q = S.yr = 0;
+          S.gyroPhi = null;
           S.ground = true;
           S.hasFlown = false;
           S.crashed = false;
@@ -2797,8 +2918,8 @@
 
         /* ================= physics ================= */
         function controls() {
-          // expo (real transmitter feature): softer around centre on Low rates for precise control
-          const ex = settings.rates === "low" ? 0.35 : 0.15;
+          // expo (real transmitter feature): softer around the centre, full rate still at full stick
+          const ex = expoK();
           const xp = (v) => (1 - ex) * v + ex * v * v * v;
           const c = { thr: GAME.motorOff ? 0 : input.thr, elev: clamp(xp(input.elev) + input.trim, -1, 1), rud: xp(input.rud), ail: xp(input.ail) };
           if (settings.assist && !GAME.demo && !S.lost) {
@@ -2840,7 +2961,7 @@
           }
           a.rud = clamp(S.beta * 2.5, -0.25, 0.25);
           if (Math.abs(a.rud) > 0.06) a.msg.push("coordinating the rudder");
-          if (settings.mode === "manual" && Math.abs(input.ail) < 0.08 && Math.abs(e.phi) < 100 * D2R) {
+          if (settings.mode !== "trainer" && Math.abs(input.ail) < 0.08 && Math.abs(e.phi) < 100 * D2R) {
             a.ail = clamp(-e.phi * 0.9 - S.p * 0.15, -0.35, 0.35);
             if (Math.abs(e.phi) > 3 * D2R) a.msg.push("levelling the wings");
           }
@@ -2951,14 +3072,27 @@
           const e = euler();
           const eff = clamp(V / 12, 0.12, 1.5);
           const effTail = clamp((V + c.thr * 7) / 12, 0.15, 1.6); // prop wash blows over the tail
-          const rate = settings.rates === "low" && !GAME.demo ? 0.6 : 1;
+          const rate = rateK();
+          // the autopilot's tricks are flown as plain Manual
+          const mode = GAME.demo && settings.mode === "gyro" ? "manual" : settings.mode;
           let pC, qC, rC;
-          if (settings.mode === "manual") {
+          if (mode === "manual") {
+            S.gyroPhi = null;
             pC = (c.ail * P.pMax * rate - P.kDih * beta) * eff;
             qC = c.elev * P.qMax * rate * effTail - P.kA * (aC - P.aTrim) * eff;
+          } else if (mode === "gyro") {
+            // rate mode: the stick sets a roll rate; centred, the gyro holds the bank it has
+            const ok = Math.min(1, eff * 1.4);
+            if (Math.abs(c.ail) > 0.03 || S.gyroPhi == null || S.ground) {
+              S.gyroPhi = e.phi;
+              pC = c.ail * P.pMax * rate * Math.min(eff, 1);
+            } else pC = clamp(4 * wrapPi(S.gyroPhi - e.phi), -1.5, 1.5) * ok;
+            qC = c.elev * P.qMax * rate * Math.min(effTail, 1) - P.kA * (aC - P.aTrim) * eff;
           } else {
-            const bankLim = (rate < 1 ? 30 : 45) * D2R,
-              pitchLim = (rate < 1 ? 18 : 25) * D2R;
+            S.gyroPhi = null;
+            const R = GAME.demo ? RATES.high : RATES[settings.rates];
+            const bankLim = R.bank * D2R,
+              pitchLim = R.pitch * D2R;
             pC = clamp(4.5 * (c.ail * bankLim - e.phi), -2.4, 2.4) * Math.min(1, eff * 1.4) - P.kDih * beta * eff * 0.3;
             qC = (clamp(3.5 * (c.elev * pitchLim - e.theta), -1.4, 1.4) / Math.max(Math.cos(e.phi), 0.45)) * Math.min(1, eff * 1.4);
           }
@@ -2967,7 +3101,7 @@
             qC -= 3.2 * (aC - P.aStall);
             pC += S.dropDir * 6 * (aC - P.aStall) * eff;
           }
-          if (settings.wind === "cross") pC += 0.14 * Math.sin(S.t * 2.3) + 0.08 * Math.sin(S.t * 5.1 + 1);
+          if (settings.wind === "cross") pC += (mode === "gyro" ? 0.3 : 1) * (0.14 * Math.sin(S.t * 2.3) + 0.08 * Math.sin(S.t * 5.1 + 1));
           else if (settings.wind === "mild") pC += 0.05 * Math.sin(S.t * 2.1);
           const k = 1 - Math.exp(-dt * 9);
           S.p += (pC - S.p) * k;
@@ -3513,15 +3647,21 @@
         bindToggle("modeToggle", (v) => {
           settings.mode = v;
           setupHint();
-          if (S.started) addLog("Flight mode: " + (v === "trainer" ? "Trainer (self-level)" : "Manual"), "");
+          if (S.started) addLog("Flight mode: " + MODE_NAME[v] + (v === "trainer" ? " (self-level)" : v === "gyro" ? " (holds bank)" : ""), "");
         });
         bindToggle("rateToggle", (v) => {
           settings.rates = v;
           setupHint();
         });
         function setupHint() {
-          $("modeHint").innerHTML = "<b>" + (settings.mode === "trainer" ? "Trainer" : "Manual") + ":</b> " + MODE_HINT[settings.mode] + " <b>" + (settings.rates === "low" ? "Low" : "High") + " rates:</b> " + RATE_HINT[settings.rates];
+          const R = RATES[settings.rates];
+          $("rateVal").textContent = Math.round(R.k * 100) + "% throw" + (settings.mode === "trainer" ? " · bank ≤ " + R.bank + "°" : "");
+          $("modeHint").innerHTML = "<b>" + MODE_NAME[settings.mode] + ":</b> " + MODE_HINT[settings.mode] + " <b>" + R.name + " rates:</b> " + RATE_HINT[settings.rates];
         }
+        $("expoSlider").addEventListener("input", (e) => {
+          settings.expo = +e.target.value / 100;
+          $("expoVal").textContent = e.target.value + "%";
+        });
         bindToggle("windToggle", (v) => {
           settings.wind = v;
           $("windVal").textContent = WINDS[v].label;
@@ -3605,7 +3745,7 @@
             flightNo++;
             $("startOv").hidden = true;
             sfx.init();
-            addLog("Flight " + flightNo + " started · " + (settings.mode === "trainer" ? "Trainer" : "Manual") + " · " + WINDS[settings.wind].label, "");
+            addLog("Flight " + flightNo + " started · " + MODE_NAME[settings.mode] + " · " + RATES[settings.rates].name + " rates · " + WINDS[settings.wind].label, "");
           } else {
             S.paused = !S.paused;
           }
@@ -5972,7 +6112,7 @@
           plane.position.y += 0.012;
           if (!S.crashed) S.lastVel = S.vel.clone();
           // control surfaces follow the sticks (+ trim)
-          const def = settings.rates === "low" ? 0.6 : 1;
+          const def = rateK();
           surf.ailR.rotation.x = -c.ail * 22 * D2R * def;
           surf.ailL.rotation.x = c.ail * 22 * D2R * def;
           surf.elev.rotation.x = -c.elev * 22 * D2R * def;
@@ -6864,7 +7004,7 @@
           const tips = coachTips(kind, smooth, stars);
           const run = {
             n: flightNo,
-            mode: settings.mode === "trainer" ? "Trainer" : "Manual",
+            mode: MODE_NAME[settings.mode],
             wind: WINDS[settings.wind].label,
             time: S.t,
             maxAlt: m.maxAlt,
@@ -7413,6 +7553,7 @@
           S.V = V;
           S.ground = false;
           S.hasFlown = true;
+          S.gyroPhi = null;
           S.lastPsi = psi;
           input.thr = thr;
           if (window.__vis) window.__vis.snapCam = true;
@@ -8491,7 +8632,7 @@
         const FINAL_WP = [[-150, 12, 0], [-45, 3, 0], [-12, 0.5, 0], [35, 0.4, 0]];
         // stick position that gives command v after the transmitter's expo curve
         function unExpo(v) {
-          const ex = settings.rates === "low" ? 0.35 : 0.15;
+          const ex = expoK();
           v = clamp(v, -1, 1);
           let x = v;
           for (let i = 0; i < 6; i++) x -= ((1 - ex) * x + ex * x * x * x - v) / (1 - ex + 3 * ex * x * x);

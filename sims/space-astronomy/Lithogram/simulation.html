@@ -683,6 +683,104 @@
         else start();
       })();
     </script>
+    <style id="lof-help">
+      .lof-i { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; margin: 0 0 0 6px; border-radius: 50%; border: 1.3px solid currentColor; font: 700 10px/1 system-ui, -apple-system, "Segoe UI", sans-serif; font-style: normal; text-transform: none; letter-spacing: 0; opacity: 0.72; cursor: help; vertical-align: -2px; flex: none; user-select: none; -webkit-user-select: none; }
+      .lof-i:hover, .lof-i[aria-expanded="true"] { opacity: 1; }
+      .lof-i.corner { position: absolute; top: -7px; right: -7px; margin: 0; width: 18px; height: 18px; background: inherit; opacity: 0.9; z-index: 2; }
+      .lof-i:focus-visible { opacity: 1; outline: 2px solid currentColor; outline-offset: 2px; }
+      #lof-tip { position: fixed; left: 0; top: 0; z-index: 2147483000; max-width: min(300px, calc(100vw - 24px)); padding: 9px 11px; border-radius: 8px; border: 1px solid; font: 500 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; text-transform: none; letter-spacing: 0; text-align: left; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 0.12s; }
+      #lof-tip.show { opacity: 1; visibility: visible; }
+      #lof-tip b { display: block; margin-bottom: 3px; font-weight: 700; }
+    </style>
+    <script id="lof-help-js">
+      /* Settings help: an (i) next to every setting's label explains what it does and why. Hover, focus or tap it. */
+      (() => {
+        const HELP = {"@#modeSeg": ["Mode", "Campaign is the full survey mission. Lab Bench lets you test each formula on its own. Sandbox lets you build an asteroid and see what every instrument would read."], "Show Equation: brightness and size": "Shows the formula that turns brightness (H) and albedo into a diameter.", "Show Equation: rocket equation": "Shows the rocket equation, which turns delta-v into the propellant needed.", "Show Equation: temperature": "Shows how a dark rock's temperature follows from its distance from the Sun.", "Show Equation: Bayes' rule": "Shows how each measurement updates the class probabilities.", "Show Equation: escape speed and yield": "Shows the escape-speed formula and how the ore yield depends on strike energy.", "Show Equation": "Shows the formula behind this bench.", "How sure are you?": "Your confidence in the class you pick. It is scored with the Brier score: being confident and right scores best, being confident and wrong scores worst.", "Strike energy": "How hard the tool hits. Too little frees little ore; too much throws ore faster than the tiny escape speed, so it is lost to space.", "Strike energy (kJ)": "How hard the tool hits. Too little frees little ore; too much throws ore faster than the tiny escape speed, so it is lost to space.", "Anchor to the surface (harpoon)": "A harpoon holds the ship down. On a body with almost no gravity, the tool's push would otherwise shove the ship away.", "Anchor on": "A harpoon holds the ship down. On a body with almost no gravity, the tool's push would otherwise shove the ship away.", "Tool": "Drills heat the rock, chisels break it mechanically, magnets pull out metal. Each suits a different asteroid class.", "Start from a typical": "Loads typical values for a C-type (dark, carbon-rich), S-type (stony) or M-type (metallic) asteroid.", "Propulsion": "Chemical rockets have a slow exhaust (4.2 km/s), so they need much more propellant for the same delta-v; ion engines are about 7 times faster but have low thrust.", "Propellant load": "How much propellant to carry. The rocket equation is exponential, so each extra km/s of delta-v costs more propellant than the last.", "Absolute magnitude H": "Brightness standardised to 1 AU from both Sun and observer. Each 5 magnitudes is a factor of 100 in brightness and 10 in diameter.", "Albedo pV": "The fraction of light the surface reflects. A dark rock (low albedo) must be bigger to look as bright as a shiny one.", "Olivine fraction": "Share of olivine versus pyroxene, the iron-bearing minerals that make the 1 µm and 2 µm absorption bands.", "Band I depth": "How deep the 1-micron dip is. Deeper bands mean more iron-bearing silicate.", "Slope s (per µm)": "How much redder the spectrum gets with wavelength. Space weathering reddens surfaces.", "Slope (per µm)": "How much redder the spectrum gets with wavelength. Space weathering reddens surfaces.", "Space weathering": "Solar wind and micrometeorites darken and redden surfaces over time and weaken the absorption bands.", "Grain density (g/cm³)": "Density of the solid rock or metal itself, before counting empty pores.", "Porosity φ": "The fraction of the asteroid that is empty space. Rubble piles are very porous, so bulk density = grain density × (1 − φ).", "Spin period (h)": "How long one rotation takes. Faster than about 2.2 h, a rubble pile would fly apart (the spin barrier).", "Prior P(C)": "The starting odds of a C-type before any measurement: how common C-types are in this sector.", "Prior P(S)": "The starting odds of an S-type before any measurement.", "Prior P(M)": "The starting odds of an M-type before any measurement.", "Measured albedo": "The albedo reading to feed into Bayes' rule. It shifts the odds toward classes that are usually that bright.", "Measured band I depth": "The 1-micron band depth to feed into Bayes' rule. Deep bands favour S-types.", "Measured density (g/cm³)": "The density reading to feed into Bayes' rule. High density favours metal (M-types).", "Measured radar albedo": "The radar reading to feed into Bayes' rule. Metal reflects radar strongly.", "Radar albedo": "How strongly the surface reflects radar. Metal-rich surfaces reflect much more than rock.", "Radar was fired": "Whether the radar reading counts. Unfired instruments add nothing to the evidence.", "Load a sector's prior": "Fills in the class mix of a real belt sector as the starting odds.", "Exhaust speed v_e (km/s)": "How fast the engine throws propellant out. A faster exhaust needs less propellant for the same delta-v.", "Δv budget (km/s)": "The total change in velocity the mission needs. Mass ratio = e^(Δv / v_e).", "Diameter (km)": "Asteroid size. Surface gravity and escape speed both grow in proportion to size.", "Bulk density (g/cm³)": "Average density including pores. Escape speed grows with the square root of density.", "True class": "The real class of the test asteroid, so you can see how each tool performs on it.", "Distance from Sun (AU)": "Distance in astronomical units (1 AU = Earth–Sun distance). Sunlight falls with 1/r², so temperature falls as 1/√r.", "Emissivity ε": "How well the surface radiates heat. Lower emissivity holds heat in and runs warmer.", "Jupiter's orbit (AU)": "Moves Jupiter. The Kirkwood gaps sit where an asteroid's orbit is a simple fraction of Jupiter's period, so they move with it.", "Jupiter's mass (× real)": "A heavier Jupiter tugs harder and clears wider gaps at its resonances.", "Your call": "The class you think this asteroid is. Commit once the evidence is good enough."};
+        const norm = (s) => s.replace(/\s+/g, " ").trim().replace(/[:：]$/, "").trim().toLowerCase();
+        const byText = new Map(), bySel = [];
+        let SKIP = "script,style,svg,canvas,button,#lof-tip,.lof-i,p,li,td,th,h1,h2,.lof-nohelp";
+        for (const [k, v] of Object.entries(HELP)) (k === "__skip" ? (SKIP += "," + v) : k[0] === "@" ? bySel.push([k.slice(1), v]) : byText.set(norm(k), [k, v]));
+        const ownText = (el) => { let t = ""; for (const n of el.childNodes) if (n.nodeType === 3) t += n.nodeValue; return t; };
+        let tip = null, cur = null, pinned = false;
+        const parse = (c) => { const m = c && c.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(",").map(parseFloat); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+        function bgOf(el) {
+          for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+            const cs = getComputedStyle(n), c = parse(cs.backgroundColor);
+            if (c && c.a > 0.5) return c;
+            const g = cs.backgroundImage && cs.backgroundImage.match(/rgba?\([^)]+\)/);
+            if (g) { const c2 = parse(g[0]); if (c2 && c2.a > 0.5) return c2; }
+          }
+          return { r: 20, g: 24, b: 32, a: 1 };
+        }
+        function place(icon) {
+          const fg = parse(getComputedStyle(icon).color) || { r: 230, g: 235, b: 245 }, bg = bgOf(icon.parentElement);
+          const mix = (a, b, k) => Math.round(a + (b - a) * k);
+          tip.style.background = `rgb(${mix(bg.r, fg.r, 0.07)},${mix(bg.g, fg.g, 0.07)},${mix(bg.b, fg.b, 0.07)})`;
+          tip.style.color = `rgb(${fg.r},${fg.g},${fg.b})`;
+          tip.style.borderColor = `rgba(${fg.r},${fg.g},${fg.b},0.35)`;
+          const r = icon.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight, vw = innerWidth, vh = innerHeight;
+          let x = Math.min(Math.max(12, r.left + r.width / 2 - w / 2), vw - w - 12), y = r.bottom + 8;
+          if (y + h > vh - 8 && r.top - h - 8 > 8) y = r.top - h - 8;
+          tip.style.left = x + "px"; tip.style.top = Math.max(8, y) + "px";
+        }
+        function show(icon) {
+          if (!tip) { tip = document.createElement("div"); tip.id = "lof-tip"; tip.setAttribute("role", "tooltip"); document.body.appendChild(tip); }
+          if (cur && cur !== icon) cur.setAttribute("aria-expanded", "false");
+          cur = icon; icon.setAttribute("aria-expanded", "true");
+          tip.innerHTML = "<b></b><span></span>";
+          tip.firstChild.textContent = icon.dataset.t; tip.lastChild.textContent = icon.dataset.h;
+          tip.classList.add("show"); place(icon);
+        }
+        function hide() { if (tip) tip.classList.remove("show"); if (cur) cur.setAttribute("aria-expanded", "false"); cur = null; pinned = false; }
+        function make(title, text) {
+          const i = document.createElement("span");
+          i.className = "lof-i"; i.textContent = "i"; i.tabIndex = 0;
+          i.setAttribute("role", "button"); i.setAttribute("aria-label", "About " + title + ": " + text); i.setAttribute("aria-expanded", "false");
+          i.dataset.t = title; i.dataset.h = text;
+          const stop = (e) => { e.preventDefault(); e.stopPropagation(); };
+          i.addEventListener("mouseenter", () => { if (!pinned) show(i); });
+          i.addEventListener("mouseleave", () => { if (!pinned) hide(); });
+          i.addEventListener("focus", () => show(i));
+          i.addEventListener("blur", () => { if (!pinned) hide(); });
+          i.addEventListener("pointerdown", (e) => e.stopPropagation());
+          i.addEventListener("mousedown", (e) => e.stopPropagation());
+          i.addEventListener("click", (e) => { stop(e); if (cur === i && pinned) hide(); else { show(i); pinned = true; } });
+          i.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { stop(e); if (cur === i && pinned) hide(); else { show(i); pinned = true; } } else if (e.key === "Escape") hide(); });
+          return i;
+        }
+        function attach(el, title, text, corner) {
+          if (!el || (el.lastElementChild && el.lastElementChild.classList.contains("lof-i")) || el.querySelector(":scope > .lof-i")) return;
+          let after = null;
+          for (const n of el.childNodes) if (n.nodeType === 3 && n.nodeValue.trim()) after = n;
+          const i = make(title, text);
+          if (corner) i.classList.add("corner");
+          if (after && after.nextSibling) el.insertBefore(i, after.nextSibling); else el.appendChild(i);
+        }
+        // only labels that sit next to a real control (not readouts or help text)
+        const nearCtrl = (el) => { for (let n = el, i = 0; n && i < 3; n = n.parentElement, i++) if (n.querySelector("input:not([type=hidden]),select,[role=slider]") || n.querySelectorAll("button").length >= 2) return true; return false; };
+        function scan() {
+          if (!document.body) return;
+          for (const [sel, v] of bySel) document.querySelectorAll(sel).forEach((el) => attach(el, v[0], v[1], v[2] === "corner"));
+          if (!byText.size) return;
+          const all = document.body.getElementsByTagName("*");
+          for (let k = 0; k < all.length; k++) {
+            const el = all[k], t = ownText(el);
+            if (!t || t.length > 70) continue;
+            const hit = byText.get(norm(t));
+            if (!hit || el.closest(SKIP) || !nearCtrl(el)) continue;
+            attach(el, hit[0], hit[1]);
+          }
+        }
+        let due = 0;
+        const later = () => { if (!due) due = setTimeout(() => { due = 0; scan(); if (cur && !document.contains(cur)) hide(); }, 400); };
+        new MutationObserver((recs) => { for (const r of recs) if (!(r.target.id === "lof-tip" || (r.target.closest && r.target.closest("#lof-tip")))) return later(); }).observe(document.documentElement, { childList: true, subtree: true });
+        document.addEventListener("click", (e) => { if (pinned && !(e.target.closest && e.target.closest(".lof-i"))) hide(); }, true);
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape" && cur) hide(); });
+        addEventListener("scroll", () => { if (cur) (pinned ? place(cur) : hide()); }, true);
+        addEventListener("resize", () => cur && place(cur));
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", scan); else scan();
+      })();
+    </script>
   </head>
   <body>
     <header class="top">
