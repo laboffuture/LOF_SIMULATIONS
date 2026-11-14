@@ -63,10 +63,9 @@ const PROJECTS = [
   { id: "orbit-hunter", title: "Orbit Hunter", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/orbit-hunter/simulation.html", description: "Explore orbital mechanics by adjusting satellite altitude, speed, period, and eccentricity." },
   { id: "stargazers-portal", title: "Stargazer's Portal", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/Stargazer's Portal/simulation.html", description: "Pan a real night sky map, identify authentic constellation patterns, and collect them in your Star-Map Scrapbook." },
   { id: "measuring-the-cosmos", title: "Measuring the Cosmos", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/MeasuringTheCosmos/simulation.html", description: "Jump from the Sun to Neptune in equal, real, and log scale to feel how unevenly the planets are spaced." },
-  { id: "lithogram", title: "Lithogram: Belt Survey", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/Lithogram/simulation.html", description: "Fly a survey ship inward through the asteroid belt: read brightness, spectra, density and radar, classify each asteroid with Bayes' rule, mine it against tiny gravity, and file a Field Report." },
-  ...Array.from({ length: 18 }, (_, i) => ({
-    id: `space-astronomy-coming-soon-${i + 13}`,
-    title: `Space & Astronomy Project ${String(i + 13).padStart(2, "0")}`,
+  ...Array.from({ length: 19 }, (_, i) => ({
+    id: `space-astronomy-coming-soon-${i + 12}`,
+    title: `Space & Astronomy Project ${String(i + 12).padStart(2, "0")}`,
     category: "space-astronomy",
     status: "coming-soon",
     description: "Coming soon.",
