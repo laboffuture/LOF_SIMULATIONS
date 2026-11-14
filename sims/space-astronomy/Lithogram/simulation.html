@@ -1,0 +1,3631 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Lithogram: Belt Survey</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Outfit:wght@400;500;600;700;800&family=Rajdhani:wght@500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-dark: #070a12;
+        --bg-stage: #05070f;
+        --panel-bg: #0e1320;
+        --panel-card: rgba(22, 30, 48, 0.85);
+        --border-color: rgba(255, 255, 255, 0.12);
+        --border-highlight: rgba(0, 242, 254, 0.5);
+        --accent-cyan: #00f2fe;
+        --accent-blue: #4facfe;
+        --accent-orange: #ff6b35;
+        --accent-purple: #a855f7;
+        --accent-pink: #ff2a85;
+        --accent-green: #22c55e;
+        --accent-amber: #eab308;
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-muted: #8391a7;
+        --cC: #94a3b8;
+        --cS: #f59e0b;
+        --cM: #38bdf8;
+        --mono: "Roboto Mono", ui-monospace, monospace;
+        --sans: "Outfit", system-ui, sans-serif;
+        --head: "Orbitron", var(--sans);
+        --font-sub: "Rajdhani", var(--sans);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        height: 100%;
+        background: var(--bg-dark);
+        color: var(--text-primary);
+        font-family: var(--sans);
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+        display: flex;
+        flex-direction: column;
+      }
+      button { font-family: inherit; }
+      #app {
+        display: grid;
+        grid-template-columns: 1fr 390px;
+        flex: 1 1 0;
+        min-height: 0;
+      }
+
+      /* ================= HEADER ================= */
+      header.top {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 18px;
+        background: rgba(10, 14, 26, 0.94);
+        border-bottom: 1px solid var(--border-color);
+        flex: 0 0 auto;
+        position: relative;
+        z-index: 50;
+      }
+      .title { grid-column: 2; text-align: center; min-width: 0; }
+      .title h1 {
+        font-family: var(--head);
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        color: #e2e8f0;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .modes { grid-column: 1; grid-row: 1; justify-self: start; display: flex; gap: 6px; }
+      .modes button {
+        font-family: var(--head);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 7px 11px;
+        cursor: pointer;
+      }
+      .modes button.on { background: linear-gradient(135deg, var(--accent-cyan), #0284c7); color: #04121c; border-color: transparent; }
+      .helpbtns { grid-column: 3; justify-self: end; display: flex; gap: 8px; }
+      .helpbtn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head);
+        font-weight: 700;
+        font-size: 11.5px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #fff;
+        background: #2a78d6;
+        border: 1px solid #2a78d6;
+        border-radius: 8px;
+        padding: 8px 14px;
+        box-shadow: 0 6px 14px rgba(42, 120, 214, 0.24);
+        transition: transform 0.15s ease;
+      }
+      .helpbtn:hover { transform: translateY(-1px); }
+      .helpbtn.on { background: #e8590c !important; border-color: #e8590c !important; }
+      .helpbar { display: none; }
+      .tabpanel { display: none; }
+      .tabpanel.on { display: block; }
+      .tabpanel ol, .tabpanel ul { margin: 0; padding-left: 20px; }
+      .tabpanel li { margin-bottom: 6px; color: #000; }
+      .tabpanel b { color: #2a78d6; }
+      .helpbar.floatwin {
+        position: fixed !important;
+        z-index: 10000 !important;
+        display: none;
+        flex-direction: column !important;
+        background: #fcfdfe !important;
+        border: 1px solid #dbe2e8 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 18px 45px rgba(23, 41, 59, 0.28) !important;
+        overflow: hidden !important;
+        min-width: 280px !important;
+        min-height: 200px !important;
+        max-width: calc(100vw - 16px) !important;
+        max-height: calc(100vh - 16px) !important;
+        container-type: inline-size;
+      }
+      .helpbar.floatwin.show { display: flex !important; }
+      .fw-head {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 12px;
+        background: #f3f6f8;
+        border-bottom: 1px solid #dbe2e8;
+        cursor: move;
+        user-select: none;
+        touch-action: none;
+        flex: 0 0 auto;
+      }
+      .fw-title { position: absolute; left: 12px; font-size: 13px; color: #8a949d; }
+      .fw-title::before { content: "⠿"; }
+      .fw-head-actions { flex: 1; display: flex; justify-content: center; gap: 6px; }
+      .fw-tab-btn {
+        cursor: pointer;
+        font-family: var(--head);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 4px 8px;
+        border-radius: 5px;
+        border: 1px solid #dbe2e8;
+        background: #fff;
+        color: #4c5c6b;
+      }
+      .fw-tab-btn.on { background: #e8590c; border-color: #e8590c; color: #fff; }
+      .fw-close {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        border: 1px solid #dbe2e8;
+        background: #fff;
+        color: #4c5c6b;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .fw-close:hover { background: #fbe7e7; color: #8a1f1f; }
+      .fw-body { flex: 1 1 auto; min-height: 0; padding: 14px 16px; overflow-y: auto; font-size: 13px; line-height: 1.5; color: #17293b; }
+      .fw-grip {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 16px;
+        height: 16px;
+        cursor: nwse-resize;
+        touch-action: none;
+        background: linear-gradient(135deg, transparent 50%, #8a949d 50%, #8a949d 58%, transparent 58%, transparent 70%, #8a949d 70%, #8a949d 78%, transparent 78%);
+      }
+      @container (max-width: 340px) {
+        .fw-head-actions { justify-content: flex-start; padding: 0 32px 0 20px; }
+      }
+
+      /* ================= STAGE ================= */
+      #stage { position: relative; overflow: hidden; background: var(--bg-stage); min-width: 0; }
+      #run { display: block; width: 100%; height: 100%; touch-action: none; }
+      .hudchip {
+        position: absolute;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-secondary);
+        background: rgba(8, 12, 22, 0.82);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 7px 11px;
+        z-index: 4;
+        white-space: nowrap;
+      }
+      #hudSector { top: 12px; left: 12px; }
+      #hudSector b { color: var(--accent-cyan); font-family: var(--head); font-size: 11px; letter-spacing: 0.05em; }
+      #hudQuota { top: 12px; right: 12px; display: flex; gap: 8px; align-items: center; }
+      .qchip { font-weight: 700; padding: 2px 7px; border-radius: 5px; background: rgba(255, 255, 255, 0.06); }
+      .qchip.done { background: rgba(34, 197, 94, 0.22); color: #86efac; }
+      #hudPause { top: 50px; left: 12px; cursor: pointer; font-weight: 700; }
+      #hudPause:hover { border-color: var(--accent-cyan); color: #fff; }
+      #hudSound { top: 50px; right: 12px; cursor: pointer; font-weight: 700; }
+      #hudSound:hover { border-color: var(--accent-cyan); color: #fff; }
+      #steer { position: absolute; left: 0; right: 0; bottom: 14px; display: flex; justify-content: space-between; padding: 0 14px; z-index: 4; pointer-events: none; }
+      #steer button {
+        pointer-events: auto;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-primary);
+        background: rgba(8, 12, 22, 0.8);
+        border: 1px solid var(--border-highlight);
+        border-radius: 10px;
+        padding: 12px 16px;
+        cursor: pointer;
+        touch-action: none;
+        user-select: none;
+      }
+      #steer button.on { background: rgba(0, 242, 254, 0.25); }
+      #tagCard {
+        position: absolute;
+        right: 12px;
+        bottom: 66px;
+        width: 250px;
+        z-index: 4;
+        background: rgba(8, 12, 22, 0.9);
+        border: 1px solid var(--border-highlight);
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        color: var(--text-secondary);
+        display: none;
+      }
+      #tagCard.show { display: block; }
+      #tagCard h4 { font-family: var(--head); font-size: 10.5px; letter-spacing: 0.08em; color: var(--accent-cyan); margin-bottom: 6px; }
+      #tagCard .tc-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+      #tagCard .sw { width: 26px; height: 26px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.25); flex: none; }
+      #tagCard canvas { width: 100%; height: 44px; display: block; margin-bottom: 6px; }
+      #tagCard .hint { color: var(--text-muted); font-size: 10px; line-height: 1.4; white-space: normal; }
+      #toast {
+        position: absolute;
+        left: 50%;
+        top: 14px;
+        transform: translateX(-50%);
+        z-index: 6;
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: #fff;
+        background: rgba(8, 12, 22, 0.92);
+        border: 1px solid var(--border-highlight);
+        border-radius: 8px;
+        padding: 8px 14px;
+        opacity: 0;
+        transition: opacity 0.25s;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      #toast.show { opacity: 1; }
+
+      /* overlays that sit on the stage */
+      .overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 8;
+        background: #05070e;
+        display: none;
+        overflow-y: auto;
+        padding: 14px 16px 18px;
+      }
+      .overlay.show { display: block; }
+      .ovhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+      .ovhead h2 { font-family: var(--head); font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-cyan); white-space: nowrap; }
+      .ovhead .sub { font-family: var(--mono); font-size: 10.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+      /* survey lab */
+      #survey .grid { display: grid; grid-template-columns: 300px 1fr; gap: 14px; }
+      .card {
+        background: var(--panel-card);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 10px 12px;
+        min-width: 0;
+      }
+      .card h3 {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
+      }
+      .card h3 .cost { color: var(--accent-amber); letter-spacing: 0.02em; font-weight: 700; }
+      #astCv { width: 100%; height: 240px; display: block; border-radius: 8px; background: #03050b; }
+      .budget { margin: 10px 0 4px; }
+      .bar { height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden; }
+      .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent-amber), var(--accent-orange)); transition: width 0.3s; }
+      .lbl { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--text-muted); margin-bottom: 4px; gap: 8px; }
+      .lbl b { color: var(--text-primary); }
+      .freebox { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+      .freebox canvas { width: 100%; height: 74px; display: block; }
+      .swatch { height: 46px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2); }
+      .mini { font-family: var(--mono); font-size: 10px; color: var(--text-secondary); margin-top: 4px; line-height: 1.45; }
+      .insts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .inst .body { display: none; }
+      .inst.fired .body { display: block; }
+      .inst.fired .fire { display: none; }
+      .inst .what { font-size: 12px; color: var(--text-secondary); line-height: 1.45; margin-bottom: 8px; }
+      .inst canvas { width: 100%; height: 150px; display: block; border-radius: 6px; background: #06080e; border: 1px solid var(--border-color); }
+      .readout { font-family: var(--mono); font-size: 11px; color: var(--text-primary); margin-top: 8px; line-height: 1.6; }
+      .readout b { color: var(--accent-cyan); }
+      .fire, .btn {
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+        border-radius: 8px;
+        padding: 9px 12px;
+        cursor: pointer;
+        border: 1px solid var(--border-highlight);
+        background: rgba(0, 242, 254, 0.1);
+        color: var(--text-primary);
+        width: 100%;
+      }
+      .fire:hover, .btn:hover { background: rgba(0, 242, 254, 0.22); }
+      .fire:disabled, .btn:disabled { opacity: 0.4; cursor: not-allowed; background: transparent; }
+      .btn.primary { background: linear-gradient(90deg, #00f2fe, #4facfe); color: #04121c; border: none; font-weight: 800; }
+      .btn.primary:disabled { background: rgba(255, 255, 255, 0.1); color: var(--text-muted); }
+      .btn.warm { background: linear-gradient(90deg, #ff6b35, #ff8c42); color: #1a0b02; border: none; font-weight: 800; }
+      .eqtog {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text-secondary);
+        margin-top: 8px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .eqtog input, .tog input {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 30px;
+        height: 16px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        position: relative;
+        cursor: pointer;
+        flex: none;
+      }
+      .eqtog input:checked, .tog input:checked { background: var(--accent-cyan); }
+      .eqtog input::after, .tog input::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 12px;
+        height: 12px;
+        background: var(--bg-dark);
+        border-radius: 50%;
+        transition: 0.2s;
+      }
+      .eqtog input:checked::after, .tog input:checked::after { left: 16px; }
+      .eq {
+        display: none;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        line-height: 1.7;
+        color: var(--text-primary);
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid var(--border-color);
+        border-left: 3px solid var(--accent-purple);
+        padding: 6px 10px;
+        border-radius: 6px;
+        margin-top: 6px;
+        overflow-x: auto;
+      }
+      .eq.show { display: block; }
+      .eq div { white-space: nowrap; }
+      .eq .note { color: var(--text-muted); }
+
+      /* lab bench */
+      #bench .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+      #bench .tabs button {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        padding: 7px 10px;
+        border-radius: 7px;
+        border: 1px solid var(--border-color);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-secondary);
+        cursor: pointer;
+      }
+      #bench .tabs button.on { background: linear-gradient(90deg, #a855f7, #c084fc); color: #fff; border-color: transparent; }
+      .bgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .bgrid.one { grid-template-columns: 1fr; }
+      .bgrid canvas { width: 100%; height: 300px; display: block; border-radius: 8px; background: #06080e; border: 1px solid var(--border-color); }
+      .cap { font-family: var(--mono); font-size: 10px; color: var(--text-muted); margin-top: 5px; }
+      #bRead { margin-top: 12px; }
+      #bRead .readout { font-size: 11.5px; }
+      .disc {
+        margin-top: 10px;
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--text-secondary);
+        border-left: 3px solid var(--accent-amber);
+        padding: 6px 10px;
+        background: rgba(234, 179, 8, 0.06);
+        border-radius: 6px;
+      }
+      table.cm { border-collapse: collapse; font-family: var(--mono); font-size: 10.5px; margin-top: 6px; }
+      table.cm td, table.cm th { border: 1px solid var(--border-color); padding: 4px 8px; text-align: center; }
+      table.cm th { color: var(--text-muted); font-weight: 600; }
+      table.cm td.hit { background: rgba(34, 197, 94, 0.18); }
+
+      /* cards (briefings, sector gates, field report) */
+      #cardwrap {
+        position: absolute;
+        inset: 0;
+        z-index: 12;
+        background: rgba(3, 5, 10, 0.88);
+        display: none;
+        align-items: flex-start;
+        justify-content: center;
+        overflow-y: auto;
+        padding: 24px 16px;
+      }
+      #cardwrap.show { display: flex; }
+      .bigcard {
+        background: var(--panel-bg);
+        border: 1px solid var(--border-highlight);
+        border-radius: 14px;
+        width: 100%;
+        max-width: 700px;
+        padding: 22px 26px;
+        margin: auto 0;
+      }
+      .bigcard.wide { max-width: 900px; }
+      .bigcard h2 { font-family: var(--head); font-size: 18px; letter-spacing: 0.06em; color: var(--accent-cyan); margin-bottom: 4px; }
+      .bigcard .kicker { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-bottom: 14px; }
+      .bigcard p { font-size: 14px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 10px; }
+      .bigcard p b { color: var(--text-primary); }
+      .bigcard .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 10px 0; }
+      .bigcard canvas { width: 100%; height: 200px; display: block; border-radius: 8px; background: #06080e; border: 1px solid var(--border-color); }
+      .bigcard .acts { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+      .bigcard .acts .btn { width: auto; padding: 10px 18px; }
+      .mixbars { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+      .mixbar { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; }
+      .mixbar .n { width: 64px; color: var(--text-secondary); font-weight: 700; }
+      .mixbar .track { flex: 1; height: 10px; background: rgba(255, 255, 255, 0.08); border-radius: 5px; overflow: hidden; position: relative; }
+      .mixbar .track i { display: block; height: 100%; border-radius: 5px; transition: width 0.35s ease; }
+      .mixbar .track s { position: absolute; top: -2px; bottom: -2px; width: 2px; background: #fff; opacity: 0.8; }
+      .mixbar .v { width: 44px; text-align: right; font-weight: 700; }
+      .seg { display: flex; border: 1px solid var(--border-color); border-radius: 7px; background: rgba(0, 0, 0, 0.4); overflow: hidden; }
+      .seg button { flex: 1; font-family: var(--mono); font-size: 10.5px; font-weight: 700; background: transparent; border: none; color: var(--text-secondary); padding: 8px 4px; cursor: pointer; }
+      .seg button.on { background: linear-gradient(90deg, #00f2fe, #4facfe); color: #04121c; font-weight: 800; }
+      .seg button:disabled { opacity: 0.4; cursor: not-allowed; }
+      .rep { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .rep .card p:not(.note) { font-size: 12.5px; margin: 4px 0 0; }
+      .bigcard .note { font-family: var(--mono); font-size: 10.5px; line-height: 1.5; color: var(--text-muted); margin: 6px 0 0; }
+      .analog { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 6px; }
+      .analog div { font-family: var(--mono); font-size: 10.5px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; color: var(--text-secondary); line-height: 1.45; }
+      .analog b { color: var(--text-primary); display: block; }
+
+      /* ================= PANEL ================= */
+      #panel { background: var(--panel-bg); border-left: 1px solid var(--border-color); overflow-y: auto; display: flex; flex-direction: column; }
+      #panel::-webkit-scrollbar { width: 6px; }
+      #panel::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
+      .sec { padding: 14px 16px; border-bottom: 1px solid var(--border-color); display: none; }
+      .sec.show { display: block; }
+      .sec-h {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-primary);
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .sec-h span { color: var(--accent-cyan); letter-spacing: 0.04em; font-weight: 700; }
+      .sec.c1 { background: linear-gradient(135deg, rgba(0, 242, 254, 0.07), rgba(14, 19, 32, 0.95)); border-left: 3px solid var(--accent-cyan); }
+      .sec.c2 { background: linear-gradient(135deg, rgba(255, 107, 53, 0.07), rgba(14, 19, 32, 0.95)); border-left: 3px solid var(--accent-orange); }
+      .sec.c3 { background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(14, 19, 32, 0.95)); border-left: 3px solid var(--accent-purple); }
+      .sec.c4 { background: linear-gradient(135deg, rgba(34, 197, 94, 0.07), rgba(14, 19, 32, 0.95)); border-left: 3px solid var(--accent-green); }
+      .rows { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+      .row { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--mono); font-size: 11px; padding: 5px 0; border-bottom: 1px dotted rgba(255, 255, 255, 0.1); gap: 6px; }
+      .row dt { color: var(--text-secondary); white-space: nowrap; }
+      .row dd { font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .row.wide { grid-column: 1 / -1; }
+      .ctl { margin-bottom: 12px; }
+      .ctl-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 6px; }
+      .ctl-name { font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); }
+      .ctl-val { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--accent-cyan); margin-left: auto; white-space: nowrap; }
+      .rst {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text-muted);
+        background: transparent;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        padding: 1px 6px;
+        cursor: pointer;
+      }
+      .rst:hover { color: #fff; border-color: var(--accent-cyan); }
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.15);
+        cursor: pointer;
+        outline: none;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        background: var(--accent-orange);
+        border-radius: 50%;
+        border: 2px solid var(--bg-dark);
+        box-shadow: 0 0 10px rgba(255, 107, 53, 0.55);
+      }
+      input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; background: var(--accent-orange); border-radius: 50%; border: 2px solid var(--bg-dark); }
+      input[type="range"]:disabled { opacity: 0.4; }
+      .tog { display: flex; align-items: center; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; padding: 6px 0; cursor: pointer; color: var(--text-secondary); gap: 8px; }
+      .pcv { width: 100%; height: 140px; display: block; border: 1px solid var(--border-color); border-radius: 6px; background: #06080e; margin-top: 8px; }
+      .note { font-family: var(--mono); font-size: 10px; color: var(--text-muted); line-height: 1.5; margin-top: 6px; }
+      details.more { margin-top: 8px; border-top: 1px dashed var(--border-color); padding-top: 6px; }
+      details.more > summary { cursor: pointer; list-style: none; font-family: var(--mono); font-size: 10.5px; color: var(--text-muted); letter-spacing: 0.04em; padding: 3px 0; user-select: none; }
+      details.more > summary::-webkit-details-marker { display: none; }
+      details.more > summary::before { content: "▸ "; color: var(--accent-cyan); }
+      details.more[open] > summary::before { content: "▾ "; }
+      details.more > summary:hover { color: var(--text-primary); }
+      details.more[open] > summary { margin-bottom: 6px; }
+      .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+      .chips span { font-family: var(--mono); font-size: 10px; padding: 3px 7px; border-radius: 5px; background: rgba(255, 255, 255, 0.06); color: var(--text-secondary); white-space: nowrap; }
+      .result {
+        font-family: var(--mono);
+        font-size: 11px;
+        line-height: 1.6;
+        padding: 9px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.4);
+        margin-bottom: 10px;
+      }
+      .result.good { border-left: 4px solid var(--accent-green); }
+      .result.bad { border-left: 4px solid var(--accent-pink); }
+      .loglist { display: flex; flex-direction: column; gap: 5px; max-height: 180px; overflow-y: auto; }
+      .loglist div { font-family: var(--mono); font-size: 10px; color: var(--text-secondary); padding: 4px 6px; border-radius: 5px; background: rgba(255, 255, 255, 0.04); }
+      .loglist div.ok { border-left: 3px solid var(--accent-green); }
+      .loglist div.no { border-left: 3px solid var(--accent-pink); }
+      .gap8 { height: 8px; }
+
+      @media (max-width: 1080px) {
+        html, body { height: auto; overflow: auto; }
+        #app { grid-template-columns: 1fr; flex: 0 0 auto; }
+        #stage { height: clamp(460px, 80vh, 720px); }
+        #panel { overflow-y: visible; }
+        #survey .grid { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 760px) {
+        header.top { grid-template-columns: 1fr; gap: 6px; padding: 8px 12px; }
+        .modes, .helpbtns, .title { grid-column: 1; justify-self: center; }
+        .modes { grid-row: 2; }
+        .title { grid-row: 1; }
+        .helpbtns { grid-row: 3; }
+        .title h1 { font-size: 14px; }
+        .insts, .bgrid, .rep, .bigcard .row2 { grid-template-columns: 1fr; }
+        .analog { grid-template-columns: 1fr 1fr; }
+        #tagCard { width: 200px; }
+      }
+    </style>
+    <style id="lof-scrollbars">
+      /* Thin scrollbars everywhere; the colours are set by the script below from each panel's own colours. */
+      :where(html, body *) {
+        scrollbar-width: thin;
+      }
+    </style>
+    <script id="lof-scrollbars-js">
+      /* Scrollbars that match the UI: for every scroll area, the track is the background it actually shows
+         and the thumb is that background blended toward the simulation's text colour (or white/black when the
+         text colour does not stand out). Re-checked when the page changes, so panels opened later match too. */
+      (function () {
+        function rgb(s) {
+          var m = s && s.match(/rgba?\(([^)]+)\)/);
+          if (!m) return null;
+          var p = m[1].split(/[ ,\/]+/).filter(Boolean).map(parseFloat);
+          return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+        }
+        function bgOf(el) {
+          for (; el && el.nodeType === 1; el = el.parentElement) {
+            var cs = getComputedStyle(el);
+            var c = rgb(cs.backgroundColor);
+            if (c && c.a > 0.5) return c;
+            if (cs.backgroundImage && cs.backgroundImage.indexOf("gradient") >= 0) {
+              var g = rgb(cs.backgroundImage);
+              if (g && g.a > 0.5) return g;
+            }
+          }
+          return { r: 255, g: 255, b: 255, a: 1 };
+        }
+        function lum(c) {
+          return (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) / 255;
+        }
+        function mix(a, b, t) {
+          return "rgb(" + Math.round(a.r + (b.r - a.r) * t) + "," + Math.round(a.g + (b.g - a.g) * t) + "," + Math.round(a.b + (b.b - a.b) * t) + ")";
+        }
+        function colours(el, bgEl) {
+          var bg = bgOf(bgEl || el);
+          var ink = rgb(getComputedStyle(el === document.documentElement ? document.body : el).color);
+          if (!ink || Math.abs(lum(ink) - lum(bg)) < 0.35) ink = lum(bg) < 0.5 ? { r: 255, g: 255, b: 255 } : { r: 0, g: 0, b: 0 };
+          return mix(bg, ink, 0.4) + " " + mix(bg, ink, 0.04);
+        }
+        function paint(el, bgEl) {
+          var v = colours(el, bgEl);
+          if (el.__lofSb !== v) {
+            el.__lofSb = v;
+            el.style.setProperty("scrollbar-color", v, "important");
+          }
+        }
+        function scan() {
+          if (!document.body) return;
+          paint(document.documentElement, document.body);
+          var all = document.body.getElementsByTagName("*");
+          for (var i = 0; i < all.length; i++) {
+            var el = all[i];
+            var cs = getComputedStyle(el);
+            var ox = cs.overflowX,
+              oy = cs.overflowY;
+            if (ox === "auto" || ox === "scroll" || oy === "auto" || oy === "scroll" || el.tagName === "TEXTAREA" || el.tagName === "SELECT") paint(el);
+          }
+        }
+        var t = 0;
+        function later() {
+          if (t) return;
+          t = setTimeout(function () {
+            t = 0;
+            scan();
+          }, 400);
+        }
+        function start() {
+          scan();
+          setTimeout(scan, 1200);
+          new MutationObserver(later).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "hidden", "open"] });
+          window.addEventListener("resize", later);
+        }
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+        else start();
+      })();
+    </script>
+  </head>
+  <body>
+    <header class="top">
+      <div class="modes" id="modeSeg">
+        <button data-m="camp" class="on">Campaign</button>
+        <button data-m="bench">Lab Bench</button>
+        <button data-m="sand">Sandbox</button>
+      </div>
+      <div class="title"><h1>Lithogram: Belt Survey</h1></div>
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">What You'll Learn</button>
+      </div>
+      <div class="helpbar" id="helpbar">
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li><b>Plan the ship</b>: pick <b>Chemical</b> or <b>Ion</b> propulsion and a propellant load. The curve shows how much propellant your delta-v budget needs.</li>
+            <li><b>Fly the run</b>: steer with <b>A / D</b>, the <b>arrow keys</b>, the on-screen <b>Thrust</b> buttons, or by holding the left or right half of the view. Every sideways move burns a little propellant.</li>
+            <li>Rocks ringed in cyan are <b>tagged</b>. As one approaches, its <b>free scan</b> (brightness, colour, spectrum squiggle and probability bars) appears bottom-right. Steer into it to open the <b>Survey Lab</b>, or let it pass if your contract does not need that class.</li>
+            <li>In the Survey Lab, fire extra instruments (<b>Thermal IR</b>, <b>Spectrometer</b>, <b>Density probe</b>, <b>Radar</b>) from your survey budget. The probability bars on the right update after each one.</li>
+            <li><b>Commit</b> a class (C, S or M) and a confidence, then <b>extract</b>: choose a tool, the strike energy and whether to anchor. Watch which fragments escape.</li>
+            <li>Read the <b>debrief</b> and return to the run. Each sector's gate opens when its <b>contract quota</b> (top-right) is met. After Sector 5 you get the <b>Field Report</b>.</li>
+            <li>Turn on any <b>Show Equation</b> toggle to see the model behind a readout. Open the <b>Lab Bench</b> to move every parameter by hand, or the <b>Sandbox</b> to build your own asteroid and survey it.</li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <ul>
+            <li><b>Brightness is not size:</b> a small shiny rock and a large dark one can look equally bright. D = 1329 / √p<sub>V</sub> × 10<sup>−H/5</sup>.</li>
+            <li><b>Spectra are fingerprints:</b> the dip near 1 micron comes from iron-bearing silicates, so it separates S-types from C-types. M-types are nearly featureless.</li>
+            <li><b>Density from an orbit:</b> a probe skimming the surface has a period that depends only on density, ρ = 3π / (G T²). Low density means a porous rubble pile.</li>
+            <li><b>Classifying is inference:</b> you combine readings with the base rate of the sector (Bayes' rule), and say how confident you are.</li>
+            <li><b>The belt has a gradient:</b> S-types dominate the warm inner belt, C-types the cold outer belt. Jupiter's resonances carve gaps such as the Kirkwood gap at 2.5 AU.</li>
+            <li><b>Tiny gravity:</b> on a 1 km asteroid the escape speed is about half a metre per second, so a hard strike throws ore away for good.</li>
+            <li><b>Fuel is exponential:</b> the rocket equation Δv = v<sub>e</sub> ln(m<sub>0</sub>/m<sub>f</sub>) decides whether a mining plan is affordable.</li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <div id="app">
+      <div id="stage">
+        <canvas id="run"></canvas>
+        <div class="hudchip" id="hudSector"></div>
+        <div class="hudchip" id="hudQuota"></div>
+        <div class="hudchip" id="hudPause" role="button" tabindex="0">❚❚ Pause</div>
+        <div class="hudchip" id="hudSound" role="button" tabindex="0">♪ Sound: On</div>
+        <div id="toast"></div>
+        <div id="tagCard">
+          <h4 id="tcHead">Incoming tag · free scan</h4>
+          <div class="tc-row"><div class="sw" id="tcSw"></div><div id="tcTxt"></div></div>
+          <canvas id="tcSq"></canvas>
+          <div class="mixbars" id="tcBars"></div>
+          <div class="hint" id="tcHint"></div>
+        </div>
+        <div id="steer">
+          <button id="stL">◀ Thrust left</button>
+          <button id="stR">Thrust right ▶</button>
+        </div>
+
+        <!-- SURVEY LAB -->
+        <div class="overlay" id="survey">
+          <div class="ovhead">
+            <h2 id="svTitle">Survey Lab</h2>
+            <div class="sub" id="svSub"></div>
+          </div>
+          <div class="grid">
+            <div>
+              <div class="card">
+                <h3>Target <span class="cost" id="svPhase">Surveying</span></h3>
+                <canvas id="astCv"></canvas>
+                <div class="budget">
+                  <div class="lbl"><span>Survey budget</span><b id="budTxt">100 / 100</b></div>
+                  <div class="bar"><i id="budBar" style="width: 100%"></i></div>
+                </div>
+                <h3 style="margin-top: 12px">Free scan <span class="cost">always on</span></h3>
+                <div class="freebox">
+                  <div><canvas id="dialCv"></canvas><div class="mini" id="dialTxt"></div></div>
+                  <div><div class="swatch" id="svSw"></div><div class="mini" id="swTxt"></div></div>
+                </div>
+                <canvas id="sqCv" style="width: 100%; height: 70px; display: block; margin-top: 8px"></canvas>
+                <div class="mini">Spectral squiggle (visible light only, noisy)</div>
+                <label class="eqtog"><span>Show Equation: brightness and size</span><input type="checkbox" data-eq="eqPhot" /></label>
+                <div class="eq" id="eqPhot"></div>
+              </div>
+            </div>
+            <div class="insts" id="insts"></div>
+          </div>
+        </div>
+
+        <!-- LAB BENCH -->
+        <div class="overlay" id="bench">
+          <div class="tabs" id="bTabs"></div>
+          <div class="bgrid" id="bGrid">
+            <div><canvas id="bA"></canvas><div class="cap" id="bAcap"></div></div>
+            <div><canvas id="bB"></canvas><div class="cap" id="bBcap"></div></div>
+          </div>
+          <div id="bRead"></div>
+        </div>
+
+        <div id="cardwrap"><div class="bigcard" id="bigcard"></div></div>
+      </div>
+
+      <div id="panel">
+        <!-- CAMPAIGN: SHIP -->
+        <div class="sec c1" id="secShip">
+          <div class="sec-h">Ship <span id="shipProp">Chemical</span></div>
+          <div class="lbl"><span>Propellant</span><b id="propTxt"></b></div>
+          <div class="bar"><i id="propBar" style="width: 100%; background: linear-gradient(90deg, #00f2fe, #4facfe)"></i></div>
+          <div class="rows" style="margin-top: 8px">
+            <div class="row"><dt>Δv left</dt><dd id="dvLeft"></dd></div>
+            <div class="row"><dt>Hull</dt><dd id="hullTxt"></dd></div>
+          </div>
+          <details class="more"><summary>More: mass ratio, mission day, rocket equation</summary>
+            <div class="rows">
+              <div class="row"><dt>Mass ratio</dt><dd id="mRatio"></dd></div>
+              <div class="row"><dt>Mission day</dt><dd id="dayTxt"></dd></div>
+            </div>
+            <label class="eqtog"><span>Show Equation: rocket equation</span><input type="checkbox" data-eq="eqRocket" /></label>
+            <div class="eq" id="eqRocket"></div>
+            <canvas class="pcv" id="rocketCv" style="display: none"></canvas>
+          </details>
+        </div>
+        <!-- CAMPAIGN: PLACE -->
+        <div class="sec c3" id="secPlace">
+          <div class="sec-h">Position <span id="placeAU"></span></div>
+          <details class="more"><summary>More: orbit speed, temperature, ice</summary>
+            <div class="rows">
+              <div class="row"><dt>From the Sun</dt><dd id="rTxt"></dd></div>
+              <div class="row"><dt>Orbit speed</dt><dd id="vcTxt"></dd></div>
+              <div class="row"><dt>Dark rock temp</dt><dd id="tTxt"></dd></div>
+              <div class="row"><dt>Surface ice</dt><dd id="iceTxt"></dd></div>
+            </div>
+            <label class="eqtog"><span>Show Equation: temperature</span><input type="checkbox" data-eq="eqTemp" /></label>
+            <div class="eq" id="eqTemp"></div>
+            <canvas class="pcv" id="tempCv" style="display: none"></canvas>
+          </details>
+        </div>
+        <!-- CAMPAIGN: CONTRACT -->
+        <div class="sec c2" id="secContract">
+          <div class="sec-h">Contract <span id="conSec"></span></div>
+          <div class="note" style="margin-top: 0">How common each class is here (your starting odds):</div>
+          <div class="mixbars" id="conMix"></div>
+          <div class="chips" id="conQuota"></div>
+        </div>
+        <div class="sec" id="secLog">
+          <details class="more" style="margin-top: 0; border-top: 0; padding-top: 0"><summary>Survey log <span id="logCount"></span></summary>
+            <div class="loglist" id="logList"></div>
+          </details>
+        </div>
+
+        <!-- SANDBOX BUILDER -->
+        <div class="sec c4" id="secBuild">
+          <div class="sec-h">Build an asteroid <span>Sandbox</span></div>
+          <div class="ctl"><div class="ctl-top"><span class="ctl-name">Start from a typical</span></div>
+            <div class="seg" id="sbType"><button data-t="C">C-type</button><button data-t="S" class="on">S-type</button><button data-t="M">M-type</button></div>
+          </div>
+          <div id="sbSliders"></div>
+          <button class="btn primary" id="sbGo">Survey this asteroid</button>
+          <div class="note">Every instrument is free here and every equation is open.</div>
+        </div>
+
+        <!-- SURVEY: CLASSIFY -->
+        <div class="sec c3" id="secClass">
+          <div class="sec-h">Classify <span id="clsPrior"></span></div>
+          <div class="mixbars" id="postBars"></div>
+          <div class="note" style="margin-top: 2px">Chance of each class from what you have measured. White tick: this sector's base rate.</div>
+          <div class="chips" id="measChips"></div>
+          <label class="eqtog"><span>Show Equation: Bayes' rule</span><input type="checkbox" data-eq="eqBayes" /></label>
+          <div class="eq" id="eqBayes"></div>
+          <div class="gap8"></div>
+          <div class="ctl"><div class="ctl-top"><span class="ctl-name">Your call</span></div>
+            <div class="seg" id="callSeg"><button data-t="C">C-type</button><button data-t="S">S-type</button><button data-t="M">M-type</button></div>
+          </div>
+          <div class="ctl"><div class="ctl-top"><span class="ctl-name">How sure are you?</span><span class="ctl-val" id="confVal">70%</span></div>
+            <input type="range" id="conf" min="34" max="99" step="1" value="70" />
+          </div>
+          <button class="btn primary" id="commitBtn" disabled>Commit classification</button>
+        </div>
+
+        <!-- SURVEY: EXTRACT -->
+        <div class="sec c2" id="secExtract">
+          <div class="sec-h">Extract <span id="exBody"></span></div>
+          <div class="ctl"><div class="ctl-top"><span class="ctl-name">Tool</span></div>
+            <div class="seg" id="toolSeg"><button data-t="drill">Thermal drill</button><button data-t="chisel" class="on">Chisel</button><button data-t="magnet">Magnet</button></div>
+          </div>
+          <div class="ctl"><div class="ctl-top"><span class="ctl-name">Strike energy</span><span class="ctl-val" id="eVal"></span></div>
+            <input type="range" id="eSl" min="1" max="100" step="1" value="20" />
+          </div>
+          <label class="tog"><span>Anchor to the surface (harpoon)</span><input type="checkbox" id="anchor" /></label>
+          <div class="rows">
+            <div class="row"><dt>Escape speed</dt><dd id="exV"></dd></div>
+            <div class="row"><dt>Ore escaping</dt><dd id="exLost"></dd></div>
+            <div class="row"><dt>Fuel cost</dt><dd id="exFuel"></dd></div>
+          </div>
+          <canvas class="pcv" id="yieldCv"></canvas>
+          <div class="note">Yield (solid) and ore lost to space (dashed) against strike energy: the best yield is in the middle, not at full power.</div>
+          <details class="more"><summary>More: surface gravity, tool push, time, equation</summary>
+            <div class="rows">
+              <div class="row"><dt>Surface g</dt><dd id="exG"></dd></div>
+              <div class="row"><dt>Tool push</dt><dd id="exA"></dd></div>
+              <div class="row"><dt>Time</dt><dd id="exTime"></dd></div>
+            </div>
+            <div class="note">Tool efficiencies and ore fractions are design values, not measurements.</div>
+            <label class="eqtog"><span>Show Equation: escape speed and yield</span><input type="checkbox" data-eq="eqMine" /></label>
+            <div class="eq" id="eqMine"></div>
+          </details>
+          <div class="gap8"></div>
+          <button class="btn warm" id="extractBtn">Start extraction</button>
+        </div>
+
+        <!-- SURVEY: DEBRIEF -->
+        <div class="sec c4" id="secDebrief">
+          <div class="sec-h">Debrief</div>
+          <div class="result" id="debTxt"></div>
+          <button class="btn primary" id="debGo">Back to the run</button>
+        </div>
+
+        <!-- LAB BENCH SLIDERS -->
+        <div class="sec c3" id="secBench">
+          <div class="sec-h">Lab Bench <span id="benchName"></span></div>
+          <div id="benchCtl"></div>
+          <label class="eqtog"><span>Show Equation</span><input type="checkbox" id="benchEq" checked /></label>
+          <div class="gap8"></div>
+          <button class="btn" id="benchReset">Reset every slider</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      "use strict";
+      const $ = (id) => document.getElementById(id);
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const TAU = Math.PI * 2;
+      const G = 6.674e-11;
+      const CLS = ["C", "S", "M"];
+      const CCOL = { C: "#94a3b8", S: "#f59e0b", M: "#38bdf8" };
+
+      /* =================== GENERATOR TABLE ===================
+         One editable table drives the whole game (design section 11: curriculum staff can change
+         these numbers without touching the code below). Albedo is drawn lognormally inside its range. */
+      const DATA = {
+        types: {
+          C: {
+            label: "C-type", desc: "carbonaceous, dark",
+            albedo: { mu: 0.055, sdLog: 0.28, lo: 0.03, hi: 0.1 },
+            density: { mu: 1.7, sd: 0.25, lo: 1.3, hi: 2.2 },
+            slope: { mu: 0.02, sd: 0.05 },
+            band1: { mu: 0.012, sd: 0.012, lo: 0, hi: 0.04 },
+            band2: { lo: 0, hi: 0 },
+            radar: { mu: 0.1, sd: 0.025, lo: 0.05, hi: 0.16 },
+            grain: { lo: 2.6, hi: 3.1 },
+            ore: { lo: 0.05, hi: 0.2, what: "water-bearing minerals" },
+            hydrated: 0.5,
+            uv: { lo: 0.06, hi: 0.14 },
+          },
+          S: {
+            label: "S-type", desc: "stony silicate",
+            albedo: { mu: 0.2, sdLog: 0.3, lo: 0.1, hi: 0.35 },
+            density: { mu: 2.5, sd: 0.25, lo: 2.0, hi: 3.0 },
+            slope: { mu: 0.32, sd: 0.08 },
+            band1: { mu: 0.14, sd: 0.05, lo: 0.05, hi: 0.25 },
+            band2: { lo: 0.03, hi: 0.1 },
+            radar: { mu: 0.14, sd: 0.03, lo: 0.08, hi: 0.22 },
+            grain: { lo: 3.2, hi: 3.6 },
+            ore: { lo: 0.3, hi: 0.6, what: "silicate minerals" },
+            hydrated: 0,
+            uv: { lo: 0.02, hi: 0.05 },
+          },
+          M: {
+            label: "M-type", desc: "metal-rich",
+            albedo: { mu: 0.155, sdLog: 0.22, lo: 0.1, hi: 0.25 },
+            density: { mu: 4.0, sd: 0.6, lo: 3.0, hi: 5.5 },
+            slope: { mu: 0.26, sd: 0.08 },
+            band1: { mu: 0.02, sd: 0.018, lo: 0, hi: 0.06 },
+            band2: { lo: 0, hi: 0 },
+            radar: { mu: 0.36, sd: 0.08, lo: 0.25, hi: 0.6 },
+            grain: { lo: 5.5, hi: 7.8 },
+            ore: { lo: 0.5, hi: 0.85, what: "iron-nickel metal" },
+            hydrated: 0,
+            uv: { lo: 0.02, hi: 0.05 },
+          },
+        },
+        sectors: [
+          { n: 1, name: "Outer Field", lo: 3.0, hi: 3.3, mix: [0.9, 0.05, 0.05], quota: { C: 2, S: 0, M: 0 }, feature: "Sparse, cold, volatile-rich", speed: 13, hazard: 0.75, drift: 0, rv: 100 },
+          { n: 2, name: "Rocky Belt", lo: 2.8, hi: 3.0, mix: [0.75, 0.2, 0.05], quota: { C: 2, S: 2, M: 0 }, feature: "S-types appear: first spectrum lesson", speed: 14, hazard: 1.0, drift: 0, rv: 100 },
+          { n: 3, name: "Mixed Belt", lo: 2.5, hi: 2.8, mix: [0.6, 0.3, 0.1], quota: { C: 2, S: 2, M: 2 }, feature: "M-types appear: first S-or-M ambiguity", speed: 15, hazard: 1.2, drift: 0, rv: 100 },
+          { n: 4, name: "Kirkwood Gap", lo: 2.45, hi: 2.55, mix: [0.45, 0.45, 0.1], quota: { C: 3, S: 3, M: 3 }, feature: "Few stable orbits: eccentric asteroids, faster relative speeds", speed: 19, hazard: 0.95, drift: 1.6, rv: 180 },
+          { n: 5, name: "Belt's Edge", lo: 2.1, hi: 2.4, mix: [0.25, 0.65, 0.1], quota: { C: 4, S: 4, M: 4 }, feature: "Inner belt, warmest; the station is near the inner edge", speed: 15, hazard: 1.1, drift: 0, rv: 100 },
+        ],
+        beltWide: [0.75, 0.17, 0.08], // rough real belt-wide proportions (C, S, M and others)
+        tools: {
+          drill: { name: "Thermal drill", eta: { C: 0.85, S: 0.2, M: 0.1 }, F: 300 },
+          chisel: { name: "Chisel", eta: { C: 0.3, S: 0.8, M: 0.25 }, F: 500 },
+          magnet: { name: "Magnet", eta: { C: 0.1, S: 0.15, M: 0.9 }, F: 80 },
+        },
+        instruments: {
+          thermal: { name: "Thermal IR", cost: 20, days: 0.15 },
+          spec: { name: "Spectrometer", cost: 30, days: 0.25 },
+          probe: { name: "Density probe", cost: 35, days: 0.5 },
+          radar: { name: "Radar", cost: 55, days: 0.3 },
+        },
+        budget: 100,
+        props: {
+          chem: { name: "Chemical", ve: 4200, thrust: 2000, lat: 16 },
+          ion: { name: "Ion thruster", ve: 30000, thrust: 1.0, lat: 5 },
+        },
+        dry: 1500, // kg, the empty survey ship
+        digVolume: 500, // m^3 worked per visit
+        workSeconds: 1000, // tool-on time per visit
+        lateralCost: 2, // m/s of delta-v per unit of sideways speed change (game scale)
+        iceLine: 110, // K: below this, bare surface ice survives for billions of years (approximate)
+      };
+
+      /* =================== RANDOM NUMBERS =================== */
+      let seedV = (Date.now() % 2147483646) + 1;
+      function rnd() {
+        seedV = (seedV * 16807) % 2147483647;
+        return (seedV - 1) / 2147483646;
+      }
+      const U = (a, b) => a + (b - a) * rnd();
+      function gauss() {
+        let u = 0;
+        while (!u) u = rnd();
+        return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * rnd());
+      }
+      const Nrm = (m, s) => m + s * gauss();
+      function truncN(m, s, lo, hi) {
+        for (let i = 0; i < 50; i++) {
+          const x = Nrm(m, s);
+          if (x >= lo && x <= hi) return x;
+        }
+        return clamp(m, lo, hi);
+      }
+      function truncLogN(m, sl, lo, hi) {
+        for (let i = 0; i < 50; i++) {
+          const x = m * Math.exp(sl * gauss());
+          if (x >= lo && x <= hi) return x;
+        }
+        return clamp(m, lo, hi);
+      }
+      function erf(x) {
+        const s = Math.sign(x);
+        x = Math.abs(x);
+        const t = 1 / (1 + 0.3275911 * x);
+        const y = 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+        return s * y;
+      }
+      const normCDF = (z) => 0.5 * (1 + erf(z / Math.SQRT2));
+
+      /* =================== PHYSICS MODELS =================== */
+      // 6.1 photometer
+      const diameter = (H, pV) => (1329 / Math.sqrt(pV)) * Math.pow(10, -H / 5);
+      const absMag = (D, pV) => 5 * Math.log10(1329 / (D * Math.sqrt(pV)));
+      // 6.2 spectrum, normalised to 1 at 0.55 micron
+      function specRaw(p, lam) {
+        const g = (c, w) => Math.exp(-((lam - c) * (lam - c)) / (2 * w * w));
+        const bands = 1 - p.d1 * g(p.l1, p.w1) - p.d2 * g(p.l2, p.w2) - (p.hyd || 0) * g(0.7, 0.045);
+        const uv = 1 - (p.uv || 0) * Math.exp(-(lam - 0.4) / 0.05);
+        return (1 + p.s * (lam - 0.55)) * bands * uv;
+      }
+      const spectrum = (p, lam) => specRaw(p, lam) / specRaw(p, 0.55);
+      const bandCentre = (fol) => 0.93 + 0.12 * fol;
+      // space weathering: reddens the slope and shallows the bands
+      function weathered(p, w) {
+        return Object.assign({}, p, { s: p.s + 0.25 * w, d1: p.d1 * (1 - 0.6 * w), d2: p.d2 * (1 - 0.6 * w) });
+      }
+      // 6.3 density from a surface-grazing orbit, rho in kg/m^3, T in s
+      const rhoFromT = (T) => (3 * Math.PI) / (G * T * T);
+      const tFromRho = (rho) => Math.sqrt((3 * Math.PI) / (G * rho));
+      // 6.6 rocket equation
+      const massRatio = (dv, ve) => Math.exp(dv / ve);
+      // 6.7 surface gravity and escape speed of a uniform sphere (SI)
+      const surfG = (rho, R) => (4 / 3) * Math.PI * G * rho * R;
+      const vEsc = (rho, R) => R * Math.sqrt((8 * Math.PI * G * rho) / 3);
+      // 6.8 equilibrium temperature
+      const tempEq = (r, A, eps) => 278 * Math.pow(1 - A, 0.25) * Math.pow(eps, -0.25) * Math.pow(r, -0.5);
+      const bondFromGeo = (pV) => 0.39 * pV; // phase integral q of about 0.39
+      const resonanceAU = (p, q, aJ) => aJ * Math.pow(q / p, 2 / 3);
+      const circSpeed = (a) => 29.78 / Math.sqrt(a);
+
+      // tagged-asteroid mix at any heliocentric distance (interpolated between the sector mixes)
+      const MIXPTS = [[2.0, [0.25, 0.65, 0.1]], [2.25, [0.25, 0.65, 0.1]], [2.5, [0.45, 0.45, 0.1]], [2.65, [0.6, 0.3, 0.1]], [2.9, [0.75, 0.2, 0.05]], [3.15, [0.9, 0.05, 0.05]], [3.4, [0.9, 0.05, 0.05]]];
+      function mixAt(r) {
+        for (let i = 0; i < MIXPTS.length - 1; i++) {
+          const [a, ma] = MIXPTS[i], [b, mb] = MIXPTS[i + 1];
+          if (r <= b) {
+            const t = clamp((r - a) / (b - a), 0, 1);
+            return ma.map((v, k) => lerp(v, mb[k], t));
+          }
+        }
+        return MIXPTS[MIXPTS.length - 1][1].slice();
+      }
+
+      /* =================== ASTEROID GENERATOR (section 8) =================== */
+      function drawDiameter() {
+        const b = 2, lo = 0.2, hi = 20;
+        const u = rnd();
+        return lo * Math.pow(1 - u * (1 - Math.pow(lo / hi, b)), -1 / b);
+      }
+      function drawType(mix) {
+        const u = rnd();
+        return u < mix[0] ? "C" : u < mix[0] + mix[1] ? "S" : "M";
+      }
+      function buildAsteroid(T, o) {
+        o = o || {};
+        const d = DATA.types[T];
+        const a = { type: T };
+        a.pV = o.pV != null ? o.pV : truncLogN(d.albedo.mu, d.albedo.sdLog, d.albedo.lo, d.albedo.hi);
+        a.rho = o.rho != null ? o.rho : truncN(d.density.mu, d.density.sd, d.density.lo, d.density.hi);
+        a.D = o.D != null ? o.D : drawDiameter();
+        a.s = o.s != null ? o.s : clamp(Nrm(d.slope.mu, d.slope.sd), -0.08, 0.6);
+        a.d1 = o.d1 != null ? o.d1 : truncN(d.band1.mu, d.band1.sd, d.band1.lo, d.band1.hi);
+        a.fol = o.fol != null ? o.fol : U(0.1, 0.9);
+        a.d2 = o.d2 != null ? o.d2 : d.band2.hi > 0 ? U(d.band2.lo, d.band2.hi) : 0;
+        a.hyd = o.hyd != null ? o.hyd : rnd() < d.hydrated ? U(0.01, 0.04) : 0;
+        a.uv = o.uv != null ? o.uv : U(d.uv.lo, d.uv.hi);
+        a.radar = o.radar != null ? o.radar : truncN(d.radar.mu, d.radar.sd, d.radar.lo, d.radar.hi);
+        a.grain = o.grain != null ? o.grain : U(d.grain.lo, d.grain.hi);
+        a.ore = o.ore != null ? o.ore : U(d.ore.lo, d.ore.hi);
+        a.spin = o.spin != null ? o.spin : clamp(Math.exp(Nrm(Math.log(6), 0.45)), 2.3, 20);
+        a.r = o.r != null ? o.r : 2.7;
+        a.seed = (rnd() * 1e6) | 0;
+        return derive(a);
+      }
+      function derive(a) {
+        a.l1 = bandCentre(a.fol);
+        a.w1 = 0.11;
+        a.l2 = 1.95;
+        a.w2 = 0.22;
+        a.H = absMag(a.D, a.pV);
+        a.R = a.D * 500; // m
+        const rho = a.rho * 1000;
+        a.phi = Math.max(0, 1 - a.rho / a.grain);
+        a.mass = rho * (Math.PI / 6) * Math.pow(a.D * 1000, 3);
+        a.g = surfG(rho, a.R);
+        a.vesc = vEsc(rho, a.R);
+        a.Torb = tFromRho(rho);
+        a.Teq = tempEq(a.r, bondFromGeo(a.pV), 0.9);
+        return a;
+      }
+
+      /* =================== MEASUREMENTS AND BAYES (6.5) =================== */
+      // P(x|T): independent Gaussians per measurement; the type spread and the instrument noise add in quadrature
+      function typeStat(T, k) {
+        const d = DATA.types[T];
+        if (k === "albedo") return { mu: Math.log(d.albedo.mu), sd: d.albedo.sdLog };
+        if (k === "density") return { mu: d.density.mu, sd: d.density.sd };
+        if (k === "slope") return { mu: d.slope.mu, sd: d.slope.sd };
+        if (k === "band1") return { mu: d.band1.mu, sd: d.band1.sd };
+        if (k === "radar") return { mu: d.radar.mu, sd: d.radar.sd };
+      }
+      function logLike(T, k, m) {
+        const st = typeStat(T, k);
+        const x = k === "albedo" ? Math.log(m.v) : m.v;
+        const sd = Math.sqrt(st.sd * st.sd + m.sig * m.sig);
+        const z = (x - st.mu) / sd;
+        return -0.5 * z * z - Math.log(sd);
+      }
+      function posterior(meas, prior) {
+        const ll = CLS.map((T, i) => {
+          let s = Math.log(Math.max(prior[i], 1e-9));
+          for (const k in meas) s += logLike(T, k, meas[k]);
+          return s;
+        });
+        const mx = Math.max(...ll);
+        const e = ll.map((v) => Math.exp(v - mx));
+        const sum = e.reduce((a, b) => a + b, 0);
+        return e.map((v) => v / sum);
+      }
+      const MEASNAME = { slope: "colour slope", band1: "1-micron band", albedo: "albedo", density: "density", radar: "radar albedo" };
+      function fmtMeas(k, m) {
+        if (k === "albedo") return "albedo " + m.v.toFixed(3);
+        if (k === "density") return "density " + m.v.toFixed(2) + " g/cm³";
+        if (k === "slope") return "slope " + m.v.toFixed(2) + " /µm";
+        if (k === "band1") return "band I " + (m.v * 100).toFixed(0) + "%";
+        if (k === "radar") return "radar " + m.v.toFixed(2);
+      }
+
+      /* =================== EXTRACTION MODEL (6.7) =================== */
+      function shipMass() {
+        return DATA.dry + Math.max(0, S.propKg);
+      }
+      function extraction(a, tool, E, anchored, propKey, mShip) {
+        const pr = DATA.props[propKey];
+        const rho = a.rho * 1000;
+        const g = surfG(rho, a.R);
+        const ve = vEsc(rho, a.R);
+        const F = DATA.tools[tool].F;
+        const eta = DATA.tools[tool].eta[a.type];
+        const vmed = 0.06 * Math.sqrt(E); // median fragment speed, m/s
+        const sig = 0.45 + 0.9 * a.phi; // rubble piles spray less predictably
+        const lost = 1 - normCDF((Math.log(ve) - Math.log(vmed)) / sig);
+        const lib = 1 - Math.exp(-E / 25); // harder strikes break more rock per strike
+        const aPush = F / mShip;
+        const hold = mShip * g; // the asteroid's own pull on the ship
+        let work = 1, dv = 0, days = 0.3, note = "";
+        if (anchored) {
+          days += 0.25;
+          const slip = a.phi > 0.35 ? (a.phi - 0.35) * 1.4 : 0;
+          work = 1 - slip;
+          note = slip > 0 ? "harpoon slipped in loose rubble" : "harpoon held";
+        } else {
+          const net = Math.max(0, F - hold);
+          if (pr.thrust >= net) {
+            dv = (net / mShip) * DATA.workSeconds;
+            note = "thrusters cancelled the push";
+          } else {
+            dv = (pr.thrust / mShip) * DATA.workSeconds;
+            work = clamp((pr.thrust + hold) / F, 0.02, 1);
+            days += 1.2;
+            note = "engine too weak to hold: ship kept drifting off";
+          }
+        }
+        const haul = rho * DATA.digVolume * a.ore * eta * lib * (1 - lost) * work; // kg
+        const bodyOre = rho * (Math.PI / 6) * Math.pow(a.D * 1000, 3) * a.ore * eta;
+        return { g, ve, F, eta, vmed, sig, lost, lib, aPush, hold, work, dv, days, haul, bodyOre, note };
+      }
+
+      /* =================== PLOTTING =================== */
+      function prep(cv) {
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        const w = cv.clientWidth, h = cv.clientHeight;
+        if (!w || !h) return null;
+        const W = Math.round(w * dpr), H = Math.round(h * dpr);
+        if (cv.width !== W || cv.height !== H) {
+          cv.width = W;
+          cv.height = H;
+        }
+        const ctx = cv.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+        return { ctx, w, h };
+      }
+      function niceStep(range, n) {
+        const raw = range / n;
+        const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+        const k = raw / mag;
+        return (k < 1.5 ? 1 : k < 3 ? 2 : k < 7 ? 5 : 10) * mag;
+      }
+      function ticks(a, b, log, n) {
+        const out = [];
+        if (log) {
+          for (let e = Math.floor(Math.log10(a)); e <= Math.ceil(Math.log10(b)); e++)
+            for (const m of [1, 2, 5]) {
+              const v = m * Math.pow(10, e);
+              if (v >= a * 0.999 && v <= b * 1.001) out.push(v);
+            }
+          return out;
+        }
+        const st = niceStep(b - a, n || 5);
+        for (let v = Math.ceil(a / st) * st; v <= b + st * 1e-6; v += st) out.push(+v.toPrecision(10));
+        return out;
+      }
+      function fmtT(v) {
+        const a = Math.abs(v);
+        if (a >= 1000) return (v / 1000).toFixed(0) + "k";
+        if (a >= 10) return v.toFixed(0);
+        if (a >= 1) return (+v.toFixed(1)).toString();
+        if (a === 0) return "0";
+        return (+v.toPrecision(2)).toString();
+      }
+      function plot(cv, o) {
+        const P = prep(cv);
+        if (!P) return null;
+        const { ctx, w, h } = P;
+        const m = Object.assign({ l: 46, r: 12, t: 12, b: 32 }, o.m || {});
+        const [x0, x1] = o.x, [y0, y1] = o.y;
+        const pw = w - m.l - m.r, ph = h - m.t - m.b;
+        const fx = o.logx ? (v) => m.l + ((Math.log(v) - Math.log(x0)) / (Math.log(x1) - Math.log(x0))) * pw : (v) => m.l + ((v - x0) / (x1 - x0)) * pw;
+        const fy = o.logy ? (v) => m.t + ph - ((Math.log(v) - Math.log(y0)) / (Math.log(y1) - Math.log(y0))) * ph : (v) => m.t + ph - ((v - y0) / (y1 - y0)) * ph;
+        const ix = o.logx ? (px) => Math.exp(Math.log(x0) + ((px - m.l) / pw) * (Math.log(x1) - Math.log(x0))) : (px) => x0 + ((px - m.l) / pw) * (x1 - x0);
+        const iy = o.logy ? (py) => Math.exp(Math.log(y0) + ((m.t + ph - py) / ph) * (Math.log(y1) - Math.log(y0))) : (py) => y0 + ((m.t + ph - py) / ph) * (y1 - y0);
+        ctx.font = "9.5px 'Roboto Mono', monospace";
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(m.l, m.t, pw, ph);
+        ctx.clip();
+        for (const b of o.vb || []) {
+          ctx.fillStyle = b.c;
+          ctx.fillRect(fx(b.a), m.t, fx(b.b) - fx(b.a), ph);
+        }
+        for (const b of o.hb || []) {
+          ctx.fillStyle = b.c;
+          ctx.fillRect(m.l, fy(b.b), pw, fy(b.a) - fy(b.b));
+        }
+        ctx.restore();
+        // grid and ticks
+        ctx.strokeStyle = "rgba(255,255,255,0.07)";
+        ctx.fillStyle = "#8391a7";
+        ctx.lineWidth = 1;
+        const xt = o.xt || ticks(x0, x1, o.logx, o.nx || 6);
+        const yt = o.yt || ticks(y0, y1, o.logy, o.ny || 5);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        for (const v of xt) {
+          const X = fx(v);
+          ctx.beginPath();
+          ctx.moveTo(X, m.t);
+          ctx.lineTo(X, m.t + ph);
+          ctx.stroke();
+          ctx.fillText(o.fxt ? o.fxt(v) : fmtT(v), X, m.t + ph + 4);
+        }
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        for (const v of yt) {
+          const Y = fy(v);
+          ctx.beginPath();
+          ctx.moveTo(m.l, Y);
+          ctx.lineTo(m.l + pw, Y);
+          ctx.stroke();
+          ctx.fillText(o.fyt ? o.fyt(v) : fmtT(v), m.l - 5, Y);
+        }
+        ctx.strokeStyle = "rgba(255,255,255,0.25)";
+        ctx.strokeRect(m.l + 0.5, m.t + 0.5, pw, ph);
+        ctx.fillStyle = "#a9b6c8";
+        if (o.xl) {
+          ctx.textAlign = "center";
+          ctx.textBaseline = "bottom";
+          ctx.fillText(o.xl, m.l + pw / 2, h - 2);
+        }
+        if (o.yl) {
+          ctx.save();
+          ctx.translate(11, m.t + ph / 2);
+          ctx.rotate(-Math.PI / 2);
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(o.yl, 0, 0);
+          ctx.restore();
+        }
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(m.l, m.t, pw, ph);
+        ctx.clip();
+        for (const L of o.vl || []) {
+          ctx.strokeStyle = L.c;
+          ctx.setLineDash(L.dash || [4, 4]);
+          ctx.lineWidth = L.w || 1.2;
+          ctx.beginPath();
+          ctx.moveTo(fx(L.x), m.t);
+          ctx.lineTo(fx(L.x), m.t + ph);
+          ctx.stroke();
+        }
+        for (const L of o.hl || []) {
+          ctx.strokeStyle = L.c;
+          ctx.setLineDash(L.dash || [4, 4]);
+          ctx.lineWidth = L.w || 1.2;
+          ctx.beginPath();
+          ctx.moveTo(m.l, fy(L.y));
+          ctx.lineTo(m.l + pw, fy(L.y));
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        for (const s of o.fills || []) {
+          ctx.fillStyle = s.c;
+          ctx.beginPath();
+          s.top.forEach(([x, y], i) => (i ? ctx.lineTo(fx(x), fy(y)) : ctx.moveTo(fx(x), fy(y))));
+          for (let i = s.bot.length - 1; i >= 0; i--) ctx.lineTo(fx(s.bot[i][0]), fy(s.bot[i][1]));
+          ctx.closePath();
+          ctx.fill();
+        }
+        for (const s of o.series || []) {
+          ctx.strokeStyle = s.c;
+          ctx.lineWidth = s.w || 1.6;
+          ctx.setLineDash(s.dash || []);
+          ctx.beginPath();
+          let pen = false;
+          for (const [x, y] of s.pts) {
+            if (!isFinite(x) || !isFinite(y) || (o.logy && y <= 0)) {
+              pen = false;
+              continue;
+            }
+            const X = fx(x), Y = fy(y);
+            if (pen) ctx.lineTo(X, Y);
+            else ctx.moveTo(X, Y);
+            pen = true;
+          }
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        for (const d of o.dots || []) {
+          const X = fx(d.x), Y = fy(d.y);
+          ctx.beginPath();
+          ctx.arc(X, Y, d.r || 3, 0, TAU);
+          if (d.ring) {
+            ctx.strokeStyle = d.c;
+            ctx.lineWidth = d.lw || 2;
+            ctx.stroke();
+          } else {
+            ctx.fillStyle = d.c;
+            ctx.globalAlpha = d.a || 1;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+        }
+        ctx.restore();
+        // labels drawn last, unclipped
+        ctx.font = "10px 'Roboto Mono', monospace";
+        ctx.textBaseline = "middle";
+        for (const s of o.series || []) {
+          if (!s.label) continue;
+          const pts = s.pts.filter(([x, y]) => isFinite(x) && isFinite(y) && x >= Math.min(x0, x1) && x <= Math.max(x0, x1) && y >= Math.min(y0, y1) && y <= Math.max(y0, y1));
+          if (!pts.length) continue;
+          const [x, y] = s.lpos != null ? pts[Math.min(pts.length - 1, Math.floor(s.lpos * (pts.length - 1)))] : pts[pts.length - 1];
+          ctx.fillStyle = s.c;
+          ctx.textAlign = s.lalign || "right";
+          ctx.fillText(s.label, fx(x) + (s.ldx || -4), fy(y) + (s.ldy || -9));
+        }
+        for (const t of o.text || []) {
+          ctx.fillStyle = t.c || "#cbd5e1";
+          ctx.textAlign = t.al || "left";
+          ctx.fillText(t.s, fx(t.x) + (t.dx || 0), fy(t.y) + (t.dy || 0));
+        }
+        return { ctx, fx, fy, ix, iy, m, w, h, pw, ph };
+      }
+
+      /* =================== DRAWING ROCKS =================== */
+      const shapeCache = new Map();
+      function rockShape(seed) {
+        if (shapeCache.has(seed)) return shapeCache.get(seed);
+        let s = seed % 2147483646 || 7;
+        const r = () => ((s = (s * 16807) % 2147483647), (s - 1) / 2147483646);
+        const n = 22, pts = [];
+        const elong = 0.75 + r() * 0.3;
+        const ph1 = r() * TAU, ph2 = r() * TAU;
+        for (let i = 0; i < n; i++) {
+          const t = (i / n) * TAU;
+          const k = 1 + 0.1 * Math.sin(2 * t + ph1) + 0.07 * Math.sin(3 * t + ph2) + (r() - 0.5) * 0.12;
+          pts.push([Math.cos(t) * k, Math.sin(t) * k * elong]);
+        }
+        const craters = [];
+        for (let i = 0; i < 7; i++) craters.push([(r() - 0.5) * 1.2, (r() - 0.5) * 0.9 * elong, 0.06 + r() * 0.14]);
+        const sh = { pts, craters, elong };
+        shapeCache.set(seed, sh);
+        return sh;
+      }
+      // rocks are drawn with tint from their colour slope but a fixed brightness:
+      // at a glance you cannot read albedo (that is the photometer lesson)
+      function rockTint(a) {
+        const R = spectrum(a, 0.66), B = spectrum(a, 0.45);
+        const base = 128;
+        return [clamp(base * (1 + 1.5 * (R - 1)), 40, 230), clamp(base * (1 + 0.15 * (R - 1)), 40, 230), clamp(base * (1 + 1.5 * (B - 1)), 40, 230)];
+      }
+      function drawRock(ctx, x, y, rad, seed, rot, rgb, glow) {
+        const sh = rockShape(seed);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rot);
+        ctx.beginPath();
+        sh.pts.forEach(([px, py], i) => (i ? ctx.lineTo(px * rad, py * rad) : ctx.moveTo(px * rad, py * rad)));
+        ctx.closePath();
+        const gr = ctx.createRadialGradient(-rad * 0.45, -rad * 0.45, rad * 0.1, 0, 0, rad * 1.15);
+        const [r, g, b] = rgb;
+        gr.addColorStop(0, `rgb(${Math.min(255, r * 1.35) | 0},${Math.min(255, g * 1.35) | 0},${Math.min(255, b * 1.35) | 0})`);
+        gr.addColorStop(0.55, `rgb(${r * 0.7 | 0},${g * 0.7 | 0},${b * 0.7 | 0})`);
+        gr.addColorStop(1, `rgb(${r * 0.18 | 0},${g * 0.18 | 0},${b * 0.2 | 0})`);
+        ctx.fillStyle = gr;
+        ctx.fill();
+        if (rad > 6) {
+          ctx.clip();
+          for (const [cx, cy, cr] of sh.craters) {
+            ctx.beginPath();
+            ctx.arc(cx * rad, cy * rad, cr * rad, 0, TAU);
+            ctx.fillStyle = "rgba(0,0,0,0.22)";
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(cx * rad + cr * rad * 0.25, cy * rad + cr * rad * 0.25, cr * rad * 0.8, 0, TAU);
+            ctx.fillStyle = "rgba(255,255,255,0.05)";
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+        if (glow) {
+          ctx.save();
+          ctx.strokeStyle = glow;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([6, 5]);
+          ctx.beginPath();
+          ctx.arc(x, y, rad * 1.45 + 4, 0, TAU);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      /* =================== STATE =================== */
+      const S = {
+        mode: "camp",
+        phase: "title", // title, plan, run, survey, report
+        sector: 0,
+        propKey: "chem",
+        propKg: 6000,
+        propLoad: 6000,
+        hull: 100,
+        day: 0,
+        quota: { C: 0, S: 0, M: 0 },
+        results: [],
+        tankers: 0,
+        fuelKg: 0,
+        log: [],
+        sound: true,
+        paused: false,
+        tagN: 0,
+        tagsSeen: [0, 0, 0],
+        r: 3.3,
+        cardOpen: false,
+      };
+      function logEv(ev, data) {
+        S.log.push(Object.assign({ day: +S.day.toFixed(2), ev }, data || {}));
+      }
+      const sec = () => DATA.sectors[S.sector];
+      const dvLeft = () => DATA.props[S.propKey].ve * Math.log(shipMass() / DATA.dry);
+      function spendDv(dv) {
+        if (dv <= 0) return 0;
+        const ve = DATA.props[S.propKey].ve;
+        const m0 = shipMass();
+        let used = m0 - m0 / Math.exp(dv / ve);
+        used = Math.min(used, S.propKg);
+        S.propKg -= used;
+        S.fuelKg += used;
+        return used;
+      }
+
+      /* =================== SOUND =================== */
+      let AC = null;
+      function beep(f, d, type, vol, slide) {
+        if (!S.sound) return;
+        try {
+          AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+          const o = AC.createOscillator(), g = AC.createGain();
+          o.type = type || "sine";
+          o.frequency.setValueAtTime(f, AC.currentTime);
+          if (slide) o.frequency.exponentialRampToValueAtTime(slide, AC.currentTime + d);
+          g.gain.setValueAtTime(vol || 0.05, AC.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + d);
+          o.connect(g).connect(AC.destination);
+          o.start();
+          o.stop(AC.currentTime + d + 0.02);
+        } catch (e) {}
+      }
+      const SFX = {
+        tag: () => (beep(880, 0.12, "sine", 0.04), setTimeout(() => beep(1320, 0.14, "sine", 0.04), 110)),
+        hit: () => beep(140, 0.35, "sawtooth", 0.07, 50),
+        fire: () => beep(520, 0.25, "triangle", 0.05, 1040),
+        commit: () => beep(660, 0.18, "square", 0.03),
+        crunch: () => beep(90, 0.5, "sawtooth", 0.06, 40),
+        good: () => (beep(660, 0.12, "sine", 0.05), setTimeout(() => beep(990, 0.2, "sine", 0.05), 120)),
+        bad: () => beep(300, 0.3, "triangle", 0.05, 180),
+      };
+
+      let toastT = null;
+      function toast(msg, ms) {
+        const t = $("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(toastT);
+        toastT = setTimeout(() => t.classList.remove("show"), ms || 2200);
+      }
+
+      /* =================== RUNNER =================== */
+      const R = { objs: [], x: 0, vx: 0, keyL: false, keyR: false, ptr: 0, btn: 0, nextRock: 0.5, nextTag: 2.5, t: 0, shake: 0, puff: 0, stars: [] };
+      for (let i = 0; i < 260; i++) R.stars.push({ x: rnd(), y: rnd(), z: 0.2 + rnd() * 0.8, tw: rnd() * TAU });
+      const CAMH = 2.0;
+      let RW = 0, RH = 0, rctx = null;
+      function sizeRun() {
+        const cv = $("run");
+        const P = prep(cv);
+        if (!P) return;
+        rctx = P.ctx;
+        RW = P.w;
+        RH = P.h;
+      }
+      function proj(x, z, y) {
+        const zc = z + 3.2;
+        const f = Math.min(RW, RH * 1.4) * 0.55;
+        const camX = R.x * 0.75;
+        return { sx: RW / 2 + ((x - camX) * f) / zc, sy: RH * 0.36 + ((CAMH - (y || 0)) * f) / zc, s: f / zc };
+      }
+      function quotaNeed(T) {
+        return Math.max(0, sec().quota[T] - S.quota[T]);
+      }
+      function quotaDone() {
+        return CLS.every((T) => quotaNeed(T) === 0);
+      }
+      function progress() {
+        const q = sec().quota;
+        const tot = q.C + q.S + q.M;
+        const got = CLS.reduce((s, T) => s + Math.min(q[T], S.quota[T]), 0);
+        return tot ? got / tot : 1;
+      }
+      function spawnTag() {
+        const sc = sec();
+        const T = drawType(sc.mix);
+        const a = buildAsteroid(T, { r: S.r });
+        a.free = { slope: a.s + Nrm(0, 0.12), band1: a.d1 + Nrm(0, 0.06), H: a.H + Nrm(0, 0.06) };
+        a.sq = [];
+        for (let l = 0.45; l <= 1.001; l += 0.025) a.sq.push([l, spectrum(a, l) + Nrm(0, 0.03)]);
+        a.id = ++S.tagN;
+        S.tagsSeen[CLS.indexOf(T)]++;
+        R.objs.push({ kind: "tag", x: U(-4.3, 4.3), z: 72, r: U(1.0, 1.5), rot: rnd() * TAU, spin: U(-0.6, 0.6), seed: a.seed, a, vx: sc.drift ? U(-sc.drift, sc.drift) * 0.5 : 0 });
+      }
+      function spawnRock(x, z, small) {
+        const sc = sec();
+        R.objs.push({ kind: "rock", x: x != null ? x : U(-6, 6), z: z || 72, r: small ? U(0.18, 0.35) : U(0.35, 1.1), rot: rnd() * TAU, spin: U(-1.2, 1.2), seed: (rnd() * 1e6) | 0, vx: sc.drift ? U(-sc.drift, sc.drift) : 0, tint: [U(95, 125), U(88, 112), U(80, 100)], debris: !!small });
+      }
+      function freePost(a) {
+        return posterior({ slope: { v: a.free.slope, sig: 0.12 }, band1: { v: a.free.band1, sig: 0.06 } }, sec().mix);
+      }
+      function runStep(dt) {
+        const sc = sec();
+        R.t += dt;
+        S.day += dt * 0.4;
+        // steering: sideways thrust burns propellant (rocket equation), and so does stopping again
+        const want = (R.keyR || R.btn > 0 || R.ptr > 0 ? 1 : 0) - (R.keyL || R.btn < 0 || R.ptr < 0 ? 1 : 0);
+        const pr = DATA.props[S.propKey];
+        const A = S.propKg > 0 ? pr.lat : 0;
+        const target = want * 6;
+        const dvx = clamp(target - R.vx, -A * dt, A * dt);
+        if (dvx) {
+          R.vx += dvx;
+          spendDv(Math.abs(dvx) * DATA.lateralCost);
+          R.puff = Math.sign(dvx);
+        } else R.puff = 0;
+        R.x += R.vx * dt;
+        if (Math.abs(R.x) > 5) {
+          R.x = Math.sign(R.x) * 5;
+          R.vx = 0;
+        }
+        // spawn
+        R.nextRock -= dt;
+        if (R.nextRock <= 0) {
+          R.nextRock = U(0.5, 1.3) / sc.hazard;
+          spawnRock();
+        }
+        R.nextTag -= dt;
+        if (R.nextTag <= 0) {
+          R.nextTag = U(4.2, 6.2);
+          spawnTag();
+        }
+        for (const o of R.objs) {
+          o.z -= sc.speed * dt;
+          o.x += o.vx * dt;
+          o.rot += o.spin * dt;
+          if (o.done) continue;
+          if (o.kind === "rock" && o.z < 0.7 && o.z > -0.4) {
+            if (Math.abs(o.x - R.x) < o.r * 0.8 + 0.45) {
+              o.done = true;
+              S.hull = Math.max(0, S.hull - (o.debris ? 4 : 9));
+              S.day += 0.6;
+              R.shake = 0.45;
+              SFX.hit();
+              logEv("collision", { hull: S.hull });
+              toast(o.debris ? "Debris strike: hull dented, 0.6 day of repairs" : "Collision: hull dented, 0.6 day of repairs");
+              if (S.hull <= 30) {
+                S.hull = 100;
+                S.day += 5;
+                toast("Hull patched at a repair stop: +5 days", 2600);
+              }
+            }
+          } else if (o.kind === "tag" && o.z < 0.8) {
+            o.done = true;
+            if (Math.abs(o.x - R.x) < 1.6) {
+              o.gone = true;
+              rendezvous(o.a);
+              return;
+            } else {
+              logEv("passed", { id: o.a.id });
+              toast("Tag passed without a survey");
+            }
+          }
+        }
+        R.objs = R.objs.filter((o) => o.z > -4 && !o.gone);
+        S.r = lerp(S.r, sc.hi - (sc.hi - sc.lo) * progress(), clamp(dt * 0.6, 0, 1));
+        if (R.shake > 0) R.shake -= dt;
+        if (dvLeft() < 120 && !S.cardOpen) tankerCard();
+      }
+
+      function drawRun() {
+        if (!rctx) return;
+        const ctx = rctx, W = RW, H = RH;
+        ctx.save();
+        if (R.shake > 0) ctx.translate((rnd() - 0.5) * 10 * R.shake, (rnd() - 0.5) * 10 * R.shake);
+        // space
+        const bg = ctx.createLinearGradient(0, 0, 0, H);
+        bg.addColorStop(0, "#02030a");
+        bg.addColorStop(0.36, "#070b1c");
+        bg.addColorStop(1, "#03040a");
+        ctx.fillStyle = bg;
+        ctx.fillRect(-20, -20, W + 40, H + 40);
+        // the Sun ahead: brighter and bigger the further inward the ship flies (1/r^2)
+        const sunX = W * 0.3 - R.x * 4, sunY = H * 0.3;
+        const k = 9 / (S.r * S.r);
+        const sg = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 140 * k + 40);
+        sg.addColorStop(0, "rgba(255,248,225,0.95)");
+        sg.addColorStop(0.08, "rgba(255,226,170,0.55)");
+        sg.addColorStop(0.35, "rgba(255,180,90,0.10)");
+        sg.addColorStop(1, "rgba(255,160,60,0)");
+        ctx.fillStyle = sg;
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, 140 * k + 40, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = "#fffbe8";
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, 2.2 + 2.6 * k, 0, TAU);
+        ctx.fill();
+        // stars drift with the ship's sideways motion
+        for (const s of R.stars) {
+          s.x = (s.x - R.vx * 0.0004 * s.z + 1) % 1;
+          const tw = 0.55 + 0.45 * Math.sin(R.t * 2 + s.tw);
+          ctx.fillStyle = `rgba(220,230,255,${0.25 + 0.6 * s.z * tw})`;
+          ctx.fillRect(s.x * W, s.y * H, s.z * 1.6, s.z * 1.6);
+        }
+        // faint zodiacal band along the belt plane
+        const hz = H * 0.36;
+        const zb = ctx.createLinearGradient(0, hz - 40, 0, hz + 40);
+        zb.addColorStop(0, "rgba(140,120,90,0)");
+        zb.addColorStop(0.5, "rgba(140,120,90,0.10)");
+        zb.addColorStop(1, "rgba(140,120,90,0)");
+        ctx.fillStyle = zb;
+        ctx.fillRect(0, hz - 40, W, 80);
+        // speed streaks
+        ctx.strokeStyle = "rgba(160,190,255,0.10)";
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 18; i++) {
+          const zz = (72 - ((R.t * sec().speed + i * 4) % 72));
+          const xx = ((i * 37) % 13) - 6.5;
+          const a = proj(xx, zz, -1.2), b = proj(xx, zz - 1.5, -1.2);
+          ctx.beginPath();
+          ctx.moveTo(a.sx, a.sy);
+          ctx.lineTo(b.sx, b.sy);
+          ctx.stroke();
+        }
+        // objects, far to near
+        const objs = R.objs.slice().sort((a, b) => b.z - a.z);
+        for (const o of objs) {
+          if (o.z < -1.5) continue;
+          const p = proj(o.x, o.z, 0.6);
+          const rad = o.r * p.s;
+          if (rad < 0.6) continue;
+          const fade = clamp((72 - o.z) / 10, 0, 1);
+          ctx.globalAlpha = fade;
+          if (o.kind === "tag") {
+            const pulse = 0.5 + 0.5 * Math.sin(R.t * 5);
+            drawRock(ctx, p.sx, p.sy, rad, o.seed, o.rot, rockTint(o.a), `rgba(0,242,254,${0.5 + 0.5 * pulse})`);
+          } else drawRock(ctx, p.sx, p.sy, rad, o.seed, o.rot, o.tint, null);
+          ctx.globalAlpha = 1;
+        }
+        // the survey ship
+        const sp = proj(R.x, 0.2, 0.35);
+        const s = sp.s * 0.3;
+        ctx.save();
+        ctx.translate(sp.sx, sp.sy);
+        ctx.rotate(clamp(R.vx * 0.05, -0.3, 0.3));
+        const fl = ctx.createRadialGradient(0, s * 0.9, 0, 0, s * 0.9, s * 1.2);
+        fl.addColorStop(0, S.propKey === "ion" ? "rgba(120,190,255,0.9)" : "rgba(255,190,90,0.9)");
+        fl.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = fl;
+        ctx.beginPath();
+        ctx.arc(0, s * 0.9, s * 1.2, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = "#c9d3e3";
+        ctx.beginPath();
+        ctx.moveTo(0, -s * 1.1);
+        ctx.lineTo(s * 0.55, s * 0.55);
+        ctx.lineTo(s * 0.2, s * 0.8);
+        ctx.lineTo(-s * 0.2, s * 0.8);
+        ctx.lineTo(-s * 0.55, s * 0.55);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#5b6b85";
+        ctx.fillRect(-s * 1.35, s * 0.05, s * 0.75, s * 0.32);
+        ctx.fillRect(s * 0.6, s * 0.05, s * 0.75, s * 0.32);
+        ctx.fillStyle = "#00f2fe";
+        ctx.beginPath();
+        ctx.arc(0, -s * 0.25, s * 0.16, 0, TAU);
+        ctx.fill();
+        if (R.puff) {
+          ctx.fillStyle = "rgba(220,235,255,0.75)";
+          const sx = -R.puff * s * 0.7;
+          ctx.beginPath();
+          ctx.arc(sx, s * 0.2, s * 0.22, 0, TAU);
+          ctx.arc(sx - R.puff * s * 0.3, s * 0.2, s * 0.15, 0, TAU);
+          ctx.fill();
+        }
+        ctx.restore();
+        ctx.restore();
+        if (S.paused && S.phase === "run" && !S.cardOpen) {
+          ctx.fillStyle = "rgba(0,0,0,0.45)";
+          ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = "#e2e8f0";
+          ctx.font = "700 16px Orbitron, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("PAUSED", W / 2, H / 2);
+        }
+      }
+
+      /* incoming-tag card: the free scan, readable before deciding to rendezvous */
+      function updateTagCard() {
+        const c = $("tagCard");
+        if (S.mode !== "camp" || S.phase !== "run" || S.cardOpen) return c.classList.remove("show");
+        let best = null;
+        for (const o of R.objs) if (o.kind === "tag" && !o.done && o.z < 60 && (!best || o.z < best.z)) best = o;
+        if (!best) return c.classList.remove("show");
+        c.classList.add("show");
+        const a = best.a;
+        if (c.dataset.id !== String(a.id)) {
+          c.dataset.id = a.id;
+          const p = freePost(a);
+          $("tcSw").style.background = swatchCss(a.free.slope);
+          $("tcTxt").innerHTML = `H = ${a.free.H.toFixed(1)} · ${slopeWord(a.free.slope)}`;
+          bars($("tcBars"), p, sec().mix, true);
+          drawSquiggle($("tcSq"), a.sq, true);
+          const top = CLS[p.indexOf(Math.max(...p))];
+          const full = quotaNeed(top) === 0;
+          $("tcHint").innerHTML = (full ? `Probably ${top}-type, and your contract already has enough of those. ` : `Probably ${top}-type. `) + `Steer into the ring to survey it (rendezvous: ${sec().rv} m/s).`;
+        }
+      }
+      function slopeWord(s) {
+        return s < 0.1 ? "neutral grey" : s < 0.22 ? "slightly red" : "reddish";
+      }
+      function swatchCss(slope) {
+        const p = { s: slope, d1: 0, d2: 0, l1: 1, w1: 0.1, l2: 2, w2: 0.2 };
+        const r = spectrum(p, 0.66), b = spectrum(p, 0.45);
+        const base = 150;
+        return `rgb(${clamp(base * (1 + 1.6 * (r - 1)), 30, 255) | 0},${clamp(base * (1 + 0.2 * (r - 1)), 30, 255) | 0},${clamp(base * (1 + 1.6 * (b - 1)), 30, 255) | 0})`;
+      }
+      function bars(el, p, prior, compact) {
+        el.innerHTML = CLS.map(
+          (T, i) => `<div class="mixbar"><span class="n" style="color:${CCOL[T]}${compact ? ";width:44px" : ""}">${T}-type</span><span class="track"><i style="width:${(p[i] * 100).toFixed(1)}%;background:${CCOL[T]}"></i>${prior ? `<s style="left:calc(${(prior[i] * 100).toFixed(1)}% - 1px)"></s>` : ""}</span><span class="v" style="color:${CCOL[T]}">${(p[i] * 100).toFixed(0)}%</span></div>`,
+        ).join("");
+      }
+      function drawSquiggle(cv, pts, small) {
+        plot(cv, {
+          x: [0.43, 1.02],
+          y: [0.7, 1.35],
+          m: small ? { l: 4, r: 4, t: 4, b: 4 } : { l: 30, r: 6, t: 6, b: 18 },
+          xt: small ? [] : [0.5, 0.7, 0.9],
+          yt: small ? [] : [0.8, 1, 1.2],
+          series: [{ pts, c: "#e2e8f0", w: 1.4 }],
+          hl: [{ y: 1, c: "rgba(255,255,255,0.18)" }],
+        });
+      }
+
+      function rendezvous(a) {
+        const sc = sec();
+        const pr = DATA.props[S.propKey];
+        const m = shipMass();
+        const used = spendDv(sc.rv);
+        const tDays = (sc.rv * m) / pr.thrust / 86400;
+        S.day += tDays + 0.1;
+        R.vx = 0;
+        SFX.tag();
+        logEv("rendezvous", { id: a.id, dv: sc.rv, kg: +used.toFixed(1), days: +tDays.toFixed(2) });
+        VC = newSurvey(a, false);
+        VC.kg = used;
+        VC.days = tDays + 0.1;
+        VC.rvNote = `${sc.rv} m/s rendezvous (${used.toFixed(0)} kg, ${tDays < 0.05 ? (tDays * 24 * 60).toFixed(0) + " min" : tDays.toFixed(1) + " days"} of thrusting)`;
+        S.phase = "survey";
+        openSurveyUI();
+      }
+
+      /* =================== SURVEY LAB =================== */
+      let VC = null, VS = null; // campaign and sandbox surveys
+      const curV = () => (S.mode === "sand" ? VS : VC);
+      function newSurvey(a, sandbox) {
+        const prior = sandbox ? mixAt(a.r) : sec().mix.slice();
+        const V = { a, sandbox, prior, meas: {}, fired: {}, budget: DATA.budget, hist: [], kg: 0, days: 0, call: null, conf: 70, committed: false, done: false, fx: null, t: 0, tool: "chisel", E: 20, anchored: false };
+        V.meas.slope = { v: a.free ? a.free.slope : a.s + Nrm(0, 0.12), sig: 0.12, src: "free scan (colour)" };
+        V.meas.band1 = { v: a.free ? a.free.band1 : a.d1 + Nrm(0, 0.06), sig: 0.06, src: "free scan (squiggle)" };
+        V.Hm = a.free ? a.free.H : a.H + Nrm(0, 0.06);
+        V.freeSlope = V.meas.slope.v;
+        if (!a.sq) {
+          a.sq = [];
+          for (let l = 0.45; l <= 1.001; l += 0.025) a.sq.push([l, spectrum(a, l) + Nrm(0, 0.03)]);
+        }
+        V.post = posterior(V.meas, prior);
+        V.hist.push({ inst: "free", post: V.post.slice() });
+        logEv("survey-open", { id: a.id, sandbox });
+        return V;
+      }
+      const INST = {
+        thermal: { what: "Reads the heat glow (dark rocks glow warmer). Gives the albedo, and so the true size." },
+        spec: { what: "Looks for the silicate dip near 1 micron (band I) and 2 microns (band II)." },
+        probe: { what: "Times one orbit that skims the surface. The period gives the density." },
+        radar: { what: "Metal echoes radio waves far more strongly than rock." },
+      };
+      function fireInst(k) {
+        const V = curV();
+        if (!V || V.fired[k] || V.committed) return;
+        const I = DATA.instruments[k];
+        if (!V.sandbox && V.budget < I.cost) return;
+        const a = V.a;
+        const f = (V.fired[k] = {});
+        if (k === "thermal") {
+          f.alb = a.pV * Math.exp(Nrm(0, 0.1));
+          V.meas.albedo = { v: f.alb, sig: 0.1, src: "Thermal IR" };
+          f.D = diameter(V.Hm, f.alb);
+        } else if (k === "spec") {
+          f.pts = [];
+          for (let l = 0.4; l <= 2.501; l += 0.03) f.pts.push([l, spectrum(a, l) + Nrm(0, 0.008)]);
+          f.s = a.s + Nrm(0, 0.03);
+          f.d1 = Math.max(0, a.d1 + Nrm(0, 0.015));
+          f.l1 = a.l1 + Nrm(0, 0.008);
+          f.d2 = Math.max(0, a.d2 + Nrm(0, 0.01));
+          V.meas.slope = { v: f.s, sig: 0.03, src: "Spectrometer" };
+          V.meas.band1 = { v: f.d1, sig: 0.015, src: "Spectrometer" };
+        } else if (k === "probe") {
+          f.T = a.Torb * (1 + Nrm(0, 0.015));
+          f.rho = rhoFromT(f.T) / 1000;
+          V.meas.density = { v: f.rho, sig: 0.03 * f.rho, src: "Density probe" };
+        } else if (k === "radar") {
+          f.rad = Math.max(0.01, a.radar + Nrm(0, 0.03));
+          f.D = a.D * (1 + Nrm(0, 0.04));
+          V.meas.radar = { v: f.rad, sig: 0.03, src: "Radar" };
+        }
+        if (!V.sandbox) V.budget -= I.cost;
+        V.days += I.days;
+        if (!V.sandbox) S.day += I.days;
+        V.post = posterior(V.meas, V.prior);
+        V.hist.push({ inst: k, post: V.post.slice() });
+        V.fx = { k, t: 0 };
+        SFX.fire();
+        logEv("instrument", { id: a.id, inst: k, post: V.post.map((v) => +v.toFixed(3)) });
+        renderSurvey();
+        updateClassify();
+      }
+
+      function openSurveyUI() {
+        renderSurvey();
+        refreshVisibility();
+        updateClassify();
+        updateExtract();
+        // redraw the free-scan dial once the Survey Lab is laid out (it has no size while hidden)
+        requestAnimationFrame(() => {
+          const V = curV();
+          if (V) drawFree(V);
+        });
+      }
+      function renderSurvey() {
+        const V = curV();
+        if (!V) return;
+        const a = V.a;
+        $("svTitle").textContent = V.sandbox ? "Survey Lab · Sandbox asteroid" : `Survey Lab · Target ${a.id}`;
+        $("svSub").textContent = V.sandbox ? `Built by hand at ${a.r.toFixed(2)} AU · prior from the belt mix there` : `Sector ${sec().n} · ${sec().name} · ${V.rvNote || ""}`;
+        $("svPhase").textContent = V.done ? "Debrief" : V.committed ? "Extracting" : "Surveying";
+        $("budTxt").textContent = V.sandbox ? "unlimited (sandbox)" : `${V.budget} / ${DATA.budget}`;
+        $("budBar").style.width = (V.sandbox ? 100 : V.budget) + "%";
+        const fs = V.freeSlope;
+        $("svSw").style.background = swatchCss(fs);
+        $("swTxt").innerHTML = `Colour: <b>${slopeWord(fs)}</b><br>Flat (grey) spectra mean little reddening.`;
+        const box = $("insts");
+        box.innerHTML = "";
+        for (const k of Object.keys(DATA.instruments)) {
+          const I = DATA.instruments[k];
+          const f = V.fired[k];
+          const can = V.sandbox || V.budget >= I.cost;
+          const div = document.createElement("div");
+          div.className = "card inst" + (f ? " fired" : "");
+          div.innerHTML = `<h3>${I.name} <span class="cost">${V.sandbox ? "free" : "cost " + I.cost}</span></h3>
+            <div class="what">${INST[k].what}</div>
+            <button class="fire" ${can && !V.committed ? "" : "disabled"}>${V.committed ? "Survey closed" : can ? "Fire " + I.name : "Not enough budget left"}</button>
+            <div class="body"><canvas></canvas><div class="readout"></div>
+            <label class="eqtog"><span>Show Equation</span><input type="checkbox" ${V.sandbox || eqOpen["i_" + k] ? "checked" : ""} /></label><div class="eq ${V.sandbox || eqOpen["i_" + k] ? "show" : ""}"></div></div>`;
+          div.querySelector(".fire").onclick = () => fireInst(k);
+          const tg = div.querySelector(".eqtog input");
+          tg.onchange = () => {
+            eqOpen["i_" + k] = tg.checked;
+            div.querySelector(".eq").classList.toggle("show", tg.checked);
+            logEv("show-equation", { panel: k, on: tg.checked });
+          };
+          box.appendChild(div);
+          if (f) fillInst(k, div, V);
+        }
+        drawFree(V);
+        const pe = $("eqPhot");
+        if (V.sandbox) {
+          pe.classList.add("show");
+          document.querySelector('[data-eq="eqPhot"]').checked = true;
+        }
+      }
+      const eqOpen = {};
+      function fillInst(k, div, V) {
+        const a = V.a, f = V.fired[k];
+        const cv = div.querySelector("canvas"), rd = div.querySelector(".readout"), eq = div.querySelector(".eq");
+        requestAnimationFrame(() => {
+          if (k === "thermal") {
+            const pts = [];
+            for (let p = 0.02; p <= 0.5; p *= 1.05) pts.push([p, diameter(V.Hm, p)]);
+            plot(cv, {
+              x: [0.02, 0.5], y: [Math.max(0.05, diameter(V.Hm, 0.5) * 0.6), diameter(V.Hm, 0.02) * 1.5], logx: true, logy: true,
+              xl: "albedo pV", yl: "diameter D (km)",
+              vb: [{ a: f.alb * Math.exp(-0.1), b: f.alb * Math.exp(0.1), c: "rgba(0,242,254,0.12)" }],
+              series: [{ pts, c: "#a855f7", w: 2, label: `H = ${V.Hm.toFixed(1)}` }],
+              dots: [{ x: f.alb, y: f.D, c: "#00f2fe", r: 5 }],
+            });
+          } else if (k === "spec") {
+            const tm = (T) => {
+              const d = DATA.types[T];
+              const p = { s: d.slope.mu, d1: d.band1.mu, l1: 0.99, w1: 0.11, d2: (d.band2.lo + d.band2.hi) / 2, l2: 1.95, w2: 0.22, uv: (d.uv.lo + d.uv.hi) / 2 };
+              const out = [];
+              for (let l = 0.4; l <= 2.5; l += 0.02) out.push([l, spectrum(p, l)]);
+              return out;
+            };
+            plot(cv, {
+              x: [0.4, 2.5], y: [0.7, 1.8], xl: "wavelength (µm)", yl: "reflectance",
+              vb: [{ a: 0.85, b: 1.15, c: "rgba(245,158,11,0.07)" }],
+              series: CLS.map((T) => ({ pts: tm(T), c: CCOL[T], w: 1.1, dash: [4, 3], label: T, lpos: 1 })).concat([{ pts: f.pts, c: "#f8fafc", w: 1.6 }]),
+            });
+          } else if (k === "probe") {
+            const pts = [];
+            for (let r = 1.0; r <= 6; r += 0.05) pts.push([r, tFromRho(r * 1000) / 3600]);
+            plot(cv, {
+              x: [1, 6], y: [1.2, 3.4], xl: "bulk density (g/cm³)", yl: "orbit period (h)",
+              vb: CLS.map((T) => ({ a: DATA.types[T].density.lo, b: DATA.types[T].density.hi, c: CCOL[T] + "22" })),
+              series: [{ pts, c: "#a855f7", w: 2 }],
+              dots: [{ x: f.rho, y: f.T / 3600, c: "#00f2fe", r: 5 }],
+              hl: [{ y: f.T / 3600, c: "rgba(0,242,254,0.5)" }],
+            });
+          } else if (k === "radar") {
+            plot(cv, {
+              x: [0, 0.6], y: [0, 1], yt: [], xl: "radar albedo", m: { l: 14, r: 12, t: 12, b: 32 },
+              vb: [{ a: 0.1, b: 0.15, c: "rgba(148,163,184,0.25)" }, { a: 0.25, b: 0.6, c: "rgba(56,189,248,0.15)" }],
+              vl: [{ x: f.rad, c: "#00f2fe", dash: [], w: 3 }],
+              text: [{ x: 0.125, y: 0.85, s: "typical rock", al: "center", c: "#cbd5e1" }, { x: 0.42, y: 0.85, s: "metal-rich", al: "center", c: "#7dd3fc" }],
+            });
+          }
+        });
+        if (k === "thermal") {
+          rd.innerHTML = `Albedo p<sub>V</sub> = <b>${f.alb.toFixed(3)}</b> · diameter D = <b>${f.D.toFixed(2)} km</b>`;
+          eq.innerHTML = `<div>D = 1329 / √p<sub>V</sub> × 10^(−H/5)</div><div>D = 1329 / √${f.alb.toFixed(3)} × 10^(−${V.Hm.toFixed(2)}/5) = ${f.D.toFixed(2)} km</div>`;
+        } else if (k === "spec") {
+          const fol = clamp((f.l1 - 0.93) / 0.12, 0, 1);
+          rd.innerHTML = `Slope <b>${f.s.toFixed(2)} /µm</b> · band I depth <b>${(f.d1 * 100).toFixed(0)}%</b>` + (f.d1 > 0.04 ? ` at <b>${f.l1.toFixed(3)} µm</b> · band II <b>${(f.d2 * 100).toFixed(0)}%</b>` : " (no clear band)");
+          eq.innerHTML = `<div>R(λ) = [1 + s(λ − 0.55)] × [1 − d1·exp(−(λ − l1)²/(2w1²)) − d2·exp(−(λ − l2)²/(2w2²))]</div><div>s = ${f.s.toFixed(2)}, d1 = ${f.d1.toFixed(3)}, d2 = ${f.d2.toFixed(3)}</div>` + (f.d1 > 0.04 ? `<div>l1 = 0.93 + 0.12 × f<sub>ol</sub> → olivine fraction f<sub>ol</sub> ≈ (${f.l1.toFixed(3)} − 0.93) / 0.12 = ${fol.toFixed(2)}</div>` : `<div class="note">A band under about 4% is lost in the noise: nothing to absorb, as in C- and M-types.</div>`);
+        } else if (k === "probe") {
+          const phiS = Math.max(0, 1 - f.rho / 3.3);
+          rd.innerHTML = `Lap time T = <b>${(f.T / 3600).toFixed(2)} h</b> · bulk density ρ = <b>${f.rho.toFixed(2)} g/cm³</b>`;
+          eq.innerHTML = `<div>ρ = 3π / (G T²)</div><div>ρ = 3π / (6.674×10⁻¹¹ × ${f.T.toFixed(0)}²) = ${(f.rho * 1000).toFixed(0)} kg/m³</div><div>If the grains were solid silicate (3.3 g/cm³): porosity φ = 1 − ρ/ρ<sub>grain</sub> = ${(phiS * 100).toFixed(0)}%</div>`;
+        } else if (k === "radar") {
+          rd.innerHTML = `Radar albedo <b>${f.rad.toFixed(2)}</b> · echo size D = <b>${f.D.toFixed(2)} km</b>`;
+          eq.innerHTML = `<div>radar albedo = σ<sub>radar</sub> / (π R²) = ${f.rad.toFixed(2)}</div><div class="note">Game thresholds: rock 0.10 to 0.15, metal-rich above about 0.25. Approximate values.</div>`;
+        }
+      }
+      function drawFree(V) {
+        const a = V.a;
+        // brightness dial: H from 20 (faint) to 10 (bright)
+        const P = prep($("dialCv"));
+        if (P) {
+          const { ctx, w, h } = P;
+          const cx = w / 2, cy = h - 8, r = Math.min(w / 2 - 8, h - 16);
+          ctx.lineWidth = 8;
+          for (let i = 0; i < 20; i++) {
+            ctx.strokeStyle = `hsl(45,80%,${12 + i * 3.2}%)`;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, Math.PI + (i / 20) * Math.PI, Math.PI + ((i + 1) / 20) * Math.PI);
+            ctx.stroke();
+          }
+          const t = clamp((22 - V.Hm) / 12, 0, 1); // H 22 (faint) to 10 (bright)
+          const ang = Math.PI + t * Math.PI;
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(cx + Math.cos(ang) * (r - 4), cy + Math.sin(ang) * (r - 4));
+          ctx.stroke();
+          ctx.fillStyle = "#8391a7";
+          ctx.font = "9px 'Roboto Mono', monospace";
+          ctx.textAlign = "left";
+          ctx.fillText("faint", 2, h - 1);
+          ctx.textAlign = "right";
+          ctx.fillText("bright", w - 2, h - 1);
+        }
+        const Dlo = diameter(V.Hm, 0.35), Dhi = diameter(V.Hm, 0.03);
+        $("dialTxt").innerHTML = `Brightness H = <b>${V.Hm.toFixed(1)}</b><br>Size: ${V.fired.thermal || V.fired.radar ? "<b>" + (V.fired.thermal ? V.fired.thermal.D : V.fired.radar.D).toFixed(2) + " km</b>" : `${Dlo.toFixed(2)} to ${Dhi.toFixed(2)} km?`}`;
+        drawSquiggle($("sqCv"), a.sq, false);
+        const known = V.fired.thermal ? V.fired.thermal.alb : null;
+        $("eqPhot").innerHTML =
+          `<div>D = 1329 / √p<sub>V</sub> × 10^(−H/5)</div><div>H = ${V.Hm.toFixed(2)}: p<sub>V</sub> = 0.35 gives ${Dlo.toFixed(2)} km, p<sub>V</sub> = 0.03 gives ${Dhi.toFixed(2)} km</div>` +
+          (known ? `<div>Thermal IR p<sub>V</sub> = ${known.toFixed(3)} → D = ${diameter(V.Hm, known).toFixed(2)} km</div>` : `<div class="note">Same brightness, different sizes: albedo needs a second method (thermal IR or radar).</div>`);
+      }
+
+      /* the target in the Survey Lab: spinning rock, instrument effects, then the extraction scene */
+      let frags = [];
+      function drawTarget(dt) {
+        const V = curV();
+        const P = prep($("astCv"));
+        if (!P || !V) return;
+        const { ctx, w, h } = P;
+        const a = V.a;
+        V.t += dt;
+        ctx.fillStyle = "#03050b";
+        ctx.fillRect(0, 0, w, h);
+        for (let i = 0; i < 70; i++) {
+          const sx = (i * 97.13) % w, sy = (i * 53.71) % h;
+          ctx.fillStyle = `rgba(220,230,255,${0.15 + ((i * 7) % 10) / 20})`;
+          ctx.fillRect(sx, sy, 1.2, 1.2);
+        }
+        const tint = rockTint(a);
+        if (V.extract) {
+          drawExtraction(ctx, w, h, dt, V, tint);
+          return;
+        }
+        const cx = w / 2, cy = h / 2, rad = Math.min(w, h) * 0.3;
+        const rot = (V.t * TAU) / (a.spin * 6); // sped up: one turn every spin/10 minutes of play
+        drawRock(ctx, cx, cy, rad, a.seed, rot, tint, null);
+        const fx = V.fx;
+        if (fx) {
+          fx.t += dt;
+          const u = fx.t;
+          if (fx.k === "thermal") {
+            const g = ctx.createRadialGradient(cx, cy, rad * 0.2, cx, cy, rad * 1.5);
+            g.addColorStop(0, `rgba(255,80,40,${0.35 * Math.max(0, 1 - u / 2)})`);
+            g.addColorStop(1, "rgba(255,80,40,0)");
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, w, h);
+          } else if (fx.k === "spec") {
+            for (let i = 0; i < 7; i++) {
+              ctx.strokeStyle = `hsla(${i * 45},90%,60%,${0.5 * Math.max(0, 1 - u / 2)})`;
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(cx + rad * 0.6, cy - rad * 0.3);
+              ctx.lineTo(w, cy - rad * 0.8 + i * 6);
+              ctx.stroke();
+            }
+          } else if (fx.k === "probe") {
+            const ang = (u / 2.5) * TAU;
+            const pr = rad * 1.18;
+            ctx.strokeStyle = "rgba(0,242,254,0.35)";
+            ctx.setLineDash([3, 4]);
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, pr, pr * 0.35, -0.2, 0, TAU);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            const px = cx + Math.cos(ang) * pr * Math.cos(-0.2) - Math.sin(ang) * pr * 0.35 * Math.sin(-0.2);
+            const py = cy + Math.cos(ang) * pr * Math.sin(-0.2) + Math.sin(ang) * pr * 0.35 * Math.cos(-0.2);
+            ctx.fillStyle = "#00f2fe";
+            ctx.beginPath();
+            ctx.arc(px, py, 3.5, 0, TAU);
+            ctx.fill();
+            if (u > 5) V.fx = null;
+          } else if (fx.k === "radar") {
+            for (let i = 0; i < 3; i++) {
+              const rr = ((u * 120 + i * 50) % 160) + rad * 0.6;
+              ctx.strokeStyle = `rgba(56,189,248,${0.5 * Math.max(0, 1 - u / 2.5)})`;
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.arc(cx, cy, rr, 0, TAU);
+              ctx.stroke();
+            }
+          }
+          if (fx.k !== "probe" && u > 2.5) V.fx = null;
+        }
+        // scale bar only once size is actually known
+        const Dk = V.fired.thermal ? V.fired.thermal.D : V.fired.radar ? V.fired.radar.D : null;
+        ctx.font = "10px 'Roboto Mono', monospace";
+        ctx.fillStyle = "#a9b6c8";
+        ctx.textAlign = "left";
+        if (Dk) {
+          const pxPerKm = (2 * rad) / Dk;
+          let L = Math.pow(10, Math.floor(Math.log10(Dk)));
+          if (L * pxPerKm < 30) L *= 2;
+          ctx.fillRect(10, h - 14, L * pxPerKm, 2);
+          ctx.fillText(L + " km", 10, h - 20);
+        } else ctx.fillText("size unknown: brightness alone cannot tell", 10, h - 10);
+        ctx.textAlign = "right";
+        ctx.fillText(`spin ${a.spin.toFixed(1)} h`, w - 10, 16);
+      }
+
+      /* =================== CLASSIFY =================== */
+      function updateClassify() {
+        const V = curV();
+        if (!V) return;
+        $("clsPrior").textContent = V.sandbox ? "prior: belt mix at " + V.a.r.toFixed(2) + " AU" : "prior: Sector " + sec().n;
+        bars($("postBars"), V.post, V.prior);
+        $("measChips").innerHTML = Object.keys(V.meas).map((k) => `<span>${fmtMeas(k, V.meas[k])} · ${V.meas[k].src}</span>`).join("");
+        const L = CLS.map((T) => {
+          let s = 0;
+          for (const k in V.meas) s += logLike(T, k, V.meas[k]);
+          return s;
+        });
+        const mx = Math.max(...L);
+        $("eqBayes").innerHTML =
+          `<div>P(T | x) = P(x | T) · P(T) / Σ P(x | T′) · P(T′)</div>` +
+          CLS.map((T, i) => `<div>${T}: prior ${V.prior[i].toFixed(2)} × likelihood ${Math.exp(L[i] - mx).toExponential(1)} → ${V.post[i].toFixed(3)}</div>`).join("") +
+          `<div class="note">Likelihoods are relative (largest = 1). Each reading is a Gaussian around its type's average.</div>`;
+        document.querySelectorAll("#callSeg button").forEach((b) => {
+          b.classList.toggle("on", b.dataset.t === V.call);
+          b.disabled = V.committed;
+        });
+        $("conf").value = V.conf;
+        $("conf").disabled = V.committed;
+        $("confVal").textContent = V.conf + "%";
+        $("commitBtn").disabled = !V.call || V.committed;
+        $("commitBtn").textContent = V.committed ? `Committed: ${V.call}-type at ${V.conf}%` : V.call ? `Commit: ${V.call}-type at ${V.conf}%` : "Pick a class to commit";
+      }
+      document.querySelectorAll("#callSeg button").forEach((b) => {
+        b.onclick = () => {
+          const V = curV();
+          if (!V || V.committed) return;
+          V.call = b.dataset.t;
+          updateClassify();
+        };
+      });
+      $("conf").oninput = (e) => {
+        const V = curV();
+        if (!V) return;
+        V.conf = +e.target.value;
+        updateClassify();
+      };
+      $("commitBtn").onclick = () => {
+        const V = curV();
+        if (!V || !V.call || V.committed) return;
+        V.committed = true;
+        V.tool = V.call === "C" ? "drill" : V.call === "M" ? "magnet" : "chisel";
+        SFX.commit();
+        logEv("commit", { id: V.a.id, call: V.call, conf: V.conf });
+        updateClassify();
+        renderSurvey();
+        refreshVisibility();
+        updateExtract();
+        $("secExtract").scrollIntoView({ behavior: "smooth", block: "nearest" });
+      };
+
+      /* =================== EXTRACT =================== */
+      function updateExtract() {
+        const V = curV();
+        if (!V || !V.committed) return;
+        const a = V.a;
+        const mS = V.sandbox ? DATA.dry + 3000 : shipMass();
+        const pk = V.sandbox ? "chem" : S.propKey;
+        const X = extraction(a, V.tool, V.E, V.anchored, pk, mS);
+        V.X = X;
+        document.querySelectorAll("#toolSeg button").forEach((b) => {
+          b.classList.toggle("on", b.dataset.t === V.tool);
+          b.disabled = !!V.extract;
+        });
+        $("eSl").value = V.E;
+        $("eSl").disabled = !!V.extract;
+        $("anchor").checked = V.anchored;
+        $("anchor").disabled = !!V.extract;
+        $("eVal").textContent = V.E + " kJ per strike";
+        const Dk = V.fired.thermal || V.fired.radar ? "" : " (size assumed from your survey)";
+        $("exBody").textContent = `${a.D.toFixed(2)} km body`;
+        $("exG").textContent = (X.g * 1000).toFixed(3) + " mm/s²";
+        $("exV").textContent = X.ve.toFixed(2) + " m/s";
+        $("exLost").textContent = (X.lost * 100).toFixed(0) + "%";
+        $("exA").textContent = (X.aPush * 1000).toFixed(0) + " mm/s²";
+        const fuelKg = mS - mS / Math.exp(X.dv / DATA.props[pk].ve);
+        $("exFuel").textContent = V.anchored ? "0 kg (anchored)" : `${X.dv.toFixed(0)} m/s · ${fuelKg.toFixed(0)} kg`;
+        $("exTime").textContent = X.days.toFixed(2) + " days";
+        // yield and loss against strike energy, for this rock and tool
+        const ys = [], ls = [];
+        let ymax = 0;
+        for (let E = 1; E <= 100; E += 1) {
+          const Y = extraction(a, V.tool, E, V.anchored, pk, mS);
+          ys.push([E, Y.haul / 1000]);
+          ls.push([E, Y.lost]);
+          ymax = Math.max(ymax, Y.haul / 1000);
+        }
+        ymax = Math.max(ymax, 0.001) * 1.15;
+        plot($("yieldCv"), {
+          x: [1, 100], y: [0, ymax], xl: "strike energy (kJ)", yl: "yield (t)",
+          series: [{ pts: ys, c: "#22c55e", w: 2 }, { pts: ls.map(([E, l]) => [E, l * ymax]), c: "#ff2a85", w: 1.5, dash: [5, 4] }],
+          dots: [{ x: V.E, y: X.haul / 1000, c: "#fff", r: 4 }],
+          vl: [{ x: V.E, c: "rgba(255,255,255,0.3)" }],
+        });
+        $("eqMine").innerHTML =
+          `<div>v<sub>esc</sub> = R √(8πGρ/3) = ${a.R.toFixed(0)} × √(8π × 6.674×10⁻¹¹ × ${(a.rho * 1000).toFixed(0)} / 3) = ${X.ve.toFixed(2)} m/s</div>` +
+          `<div>g = (4/3) π G ρ R = ${(X.g * 1000).toFixed(3)} mm/s²</div>` +
+          `<div>a = F / m = ${X.F} N / ${mS.toFixed(0)} kg = ${(X.aPush * 1000).toFixed(0)} mm/s² (the tool pushes the ship away)</div>` +
+          `<div>lost = P(v > v<sub>esc</sub>), median fragment speed ${X.vmed.toFixed(2)} m/s → ${(X.lost * 100).toFixed(0)}% escapes</div>` +
+          `<div>body ore = ρ (π/6) D³ × f<sub>ore</sub> × η = ${(X.bodyOre / 1e9).toExponential(2)} Mt (η = ${X.eta.toFixed(2)})</div>` +
+          `<div>this visit = ρ × ${DATA.digVolume} m³ × f<sub>ore</sub> × η × broken × (1 − lost) × held = ${(X.haul / 1000).toFixed(1)} t</div>`;
+      }
+      document.querySelectorAll("#toolSeg button").forEach((b) => {
+        b.onclick = () => {
+          const V = curV();
+          if (!V || V.extract) return;
+          V.tool = b.dataset.t;
+          updateExtract();
+        };
+      });
+      $("eSl").oninput = (e) => {
+        const V = curV();
+        if (!V || V.extract) return;
+        V.E = +e.target.value;
+        updateExtract();
+      };
+      $("anchor").onchange = (e) => {
+        const V = curV();
+        if (!V || V.extract) return;
+        V.anchored = e.target.checked;
+        updateExtract();
+      };
+      $("extractBtn").onclick = () => {
+        const V = curV();
+        if (!V || !V.committed || V.extract) return;
+        V.extract = { t: 0, drift: 0 };
+        frags = [];
+        const n = 70;
+        const vr = V.X.vmed / V.X.ve;
+        for (let i = 0; i < n; i++) {
+          const v = vr * Math.exp(V.X.sig * gauss());
+          const ang = -Math.PI / 2 + Nrm(0, 0.5);
+          frags.push({ x: 0, y: -1, vx: Math.cos(ang) * v, vy: Math.sin(ang) * v, t0: (i / n) * 2.6, esc: v > 1, live: false });
+        }
+        SFX.crunch();
+        $("extractBtn").disabled = true;
+        updateExtract();
+        logEv("extract", { id: V.a.id, tool: V.tool, E: V.E, anchored: V.anchored });
+        setTimeout(() => finishExtraction(V), window.__lithoFast ? 30 : 4300);
+      };
+      function drawExtraction(ctx, w, h, dt, V, tint) {
+        const E = V.extract;
+        E.t += dt;
+        const R0 = Math.min(w, h) * 0.32;
+        const cx = w / 2, cy = h * 0.5 + R0 * 0.75;
+        drawRock(ctx, cx, cy, R0 * 1.15, V.a.seed, 0, tint, null);
+        // simulation units: radius 1, escape speed 1, so surface gravity GM = 0.5
+        const sc = R0;
+        const hold = V.anchored || (V.X.work > 0.9 && !V.anchored);
+        if (!V.anchored && V.X.work < 0.9) E.drift += dt * 14;
+        const shipY = cy - R0 * 1.15 - 18 - E.drift;
+        ctx.save();
+        ctx.translate(cx, shipY);
+        ctx.fillStyle = "#c9d3e3";
+        ctx.beginPath();
+        ctx.moveTo(-14, -6);
+        ctx.lineTo(14, -6);
+        ctx.lineTo(9, 6);
+        ctx.lineTo(-9, 6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#5b6b85";
+        ctx.fillRect(-30, -4, 14, 6);
+        ctx.fillRect(16, -4, 14, 6);
+        if (!V.anchored && V.X.work >= 0.9 && Math.sin(E.t * 30) > 0) {
+          ctx.fillStyle = "rgba(255,200,120,0.85)";
+          ctx.beginPath();
+          ctx.arc(0, -12, 4, 0, TAU);
+          ctx.fill();
+        }
+        ctx.restore();
+        ctx.strokeStyle = V.anchored ? "#eab308" : "rgba(0,242,254,0.6)";
+        ctx.lineWidth = V.anchored ? 2 : 1.5;
+        ctx.setLineDash(V.anchored ? [] : [3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(cx, shipY + 6);
+        ctx.lineTo(cx, cy - R0 * 1.0);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        const step = dt * 1.6;
+        let kept = 0, lostN = 0;
+        for (const f of frags) {
+          if (E.t < f.t0) continue;
+          if (!f.live) {
+            f.live = true;
+            f.x = (rnd() - 0.5) * 0.08;
+            f.y = -1.0;
+          }
+          if (!f.landed) {
+            for (let i = 0; i < 4; i++) {
+              const r2 = f.x * f.x + f.y * f.y, r = Math.sqrt(r2);
+              const acc = 0.5 / r2;
+              f.vx -= (acc * f.x) / r * (step / 4);
+              f.vy -= (acc * f.y) / r * (step / 4);
+              f.x += f.vx * (step / 4);
+              f.y += f.vy * (step / 4);
+              if (r < 1 && E.t - f.t0 > 0.15) {
+                f.landed = true;
+                break;
+              }
+            }
+          }
+          const px = cx + f.x * sc, py = cy + f.y * sc;
+          ctx.fillStyle = f.esc ? "#ff2a85" : f.landed ? "rgba(34,197,94,0.8)" : "#fde68a";
+          ctx.fillRect(px - 1.5, py - 1.5, 3, 3);
+          if (f.esc) lostN++;
+          else kept++;
+        }
+        ctx.font = "10px 'Roboto Mono', monospace";
+        ctx.textAlign = "left";
+        ctx.fillStyle = "#a9b6c8";
+        ctx.fillText(`v_esc ${V.X.ve.toFixed(2)} m/s · strike ${V.X.vmed.toFixed(2)} m/s`, 10, 16);
+        ctx.fillStyle = "#ff2a85";
+        ctx.fillText(`escaping: ${lostN}`, 10, 30);
+        ctx.fillStyle = "#22c55e";
+        ctx.fillText(`kept: ${kept}`, 110, 30);
+        ctx.fillStyle = "#a9b6c8";
+        ctx.fillText(V.X.note, 10, h - 10);
+      }
+      function finishExtraction(V) {
+        if (V.done) return;
+        const a = V.a, X = V.X;
+        let kg = 0;
+        if (!V.sandbox) {
+          kg = spendDv(X.dv);
+          S.day += X.days;
+          V.kg += kg;
+          V.days += X.days;
+        }
+        V.done = true;
+        const correct = V.call === a.type;
+        // the most informative reading: biggest log-likelihood lead of the true class over the best rival
+        let best = null;
+        for (const k in V.meas) {
+          const lt = logLike(a.type, k, V.meas[k]);
+          const lo = Math.max(...CLS.filter((T) => T !== a.type).map((T) => logLike(T, k, V.meas[k])));
+          if (!best || lt - lo > best.llr) best = { k, llr: lt - lo, m: V.meas[k] };
+        }
+        // the instrument that moved the committed class most
+        let tip = { inst: "free", d: -1 };
+        const ci = CLS.indexOf(V.call);
+        for (let i = 0; i < V.hist.length; i++) {
+          const prev = i ? V.hist[i - 1].post[ci] : V.prior[ci];
+          const d = Math.abs(V.hist[i].post[ci] - prev);
+          if (d > tip.d) tip = { inst: V.hist[i].inst, d };
+        }
+        V.res = { id: a.id, type: a.type, call: V.call, conf: V.conf / 100, correct, haul: X.haul, kg: V.kg, days: V.days, best: best.k, bestSrc: best.m.src, tip: tip.inst, sector: S.sector, alb: a.pV, rho: a.rho, lost: X.lost, inst: Object.keys(V.fired) };
+        const T = DATA.types[a.type];
+        $("debTxt").className = "result " + (correct ? "good" : "bad");
+        $("debTxt").innerHTML =
+          `<b>${correct ? "✓" : "✗"} True class: ${T.label}</b> (${T.desc}). You said ${V.call}-type at ${V.conf}%.<br>` +
+          `Best clue: <b>${fmtMeas(best.k, best.m)}</b> from the ${best.m.src}.<br>` +
+          `Yield: <b>${(X.haul / 1000).toFixed(1)} t</b> of ${T.ore.what}, ${(X.lost * 100).toFixed(0)}% of the broken ore escaped.<br>` +
+          (V.sandbox ? `Sandbox run: no fuel or time is charged.` : `Fuel this stop: <b>${V.kg.toFixed(0)} kg</b> · time <b>${V.days.toFixed(2)} days</b>.`);
+        $("debGo").textContent = V.sandbox ? "Build another asteroid" : "Back to the run";
+        (correct ? SFX.good : SFX.bad)();
+        logEv("debrief", V.res);
+        if (!V.sandbox) {
+          S.results.push(V.res);
+          S.quota[a.type]++;
+          addLog(V.res);
+        }
+        renderSurvey();
+        refreshVisibility();
+        $("secDebrief").scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+      function addLog(r) {
+        const d = document.createElement("div");
+        d.className = r.correct ? "ok" : "no";
+        d.textContent = `T${r.id}: ${r.type}-type, you said ${r.call} (${Math.round(r.conf * 100)}%) · ${(r.haul / 1000).toFixed(1)} t`;
+        $("logList").prepend(d);
+        $("logCount").textContent = S.results.length + " surveyed";
+      }
+      $("debGo").onclick = () => {
+        const V = curV();
+        if (!V || !V.done) return;
+        if (V.sandbox) {
+          VS = null;
+          $("survey").classList.remove("show");
+          refreshVisibility();
+          return;
+        }
+        // fragments that escaped are now loose rocks ahead
+        const nD = Math.round(V.X.lost * 8);
+        for (let i = 0; i < nD; i++) spawnRock(R.x + U(-2.5, 2.5), U(25, 60), true);
+        if (nD) toast(`${nD} escaped fragments drift ahead: watch for debris`, 2600);
+        VC = null;
+        $("extractBtn").disabled = false;
+        S.phase = "run";
+        refreshVisibility();
+        if (quotaDone()) sectorDone();
+      };
+
+      /* =================== CARDS: briefing, ship plan, sectors, field report =================== */
+      let cardDraw = null; // charts on a card are drawn once the card is actually visible
+      function showCard(html, wide, draw) {
+        cardDraw = draw || null;
+        const c = $("bigcard");
+        c.className = "bigcard" + (wide ? " wide" : "");
+        c.innerHTML = html;
+        S.cardOpen = true;
+        refreshVisibility();
+        $("cardwrap").scrollTop = 0;
+        if (cardDraw) requestAnimationFrame(cardDraw);
+      }
+      function closeCard() {
+        S.cardOpen = false;
+        cardDraw = null;
+        refreshVisibility();
+      }
+      function titleCard() {
+        S.phase = "title";
+        showCard(`<h2>Lithogram: Belt Survey</h2><div class="kicker">Space Science and Astronomy · one campaign through the asteroid belt</div>
+          <p>Fly inward through five sectors of the asteroid belt to the station at its inner edge. Pick out <b>tagged asteroids</b>, work out what each is made of, and mine it.</p>
+          <p>Brightness, colour and spectrum are noisy clues. Combine them with how common each class is here, then state a <b>class and how sure you are</b>.</p>
+          <p>Three classes matter: <b style="color:var(--cC)">C-types</b> (dark, carbon-rich, often holding water-bearing minerals), <b style="color:var(--cS)">S-types</b> (stony silicates) and <b style="color:var(--cM)">M-types</b> (metal-rich).</p>
+          <div class="acts"><button class="btn primary" id="goPlan">Plan the ship</button></div>`);
+        $("goPlan").onclick = planCard;
+      }
+      function planCard() {
+        S.phase = "plan";
+        showCard(`<h2>Plan the ship</h2><div class="kicker">Propulsion and propellant · rocket equation (Δv = v<sub>e</sub> ln(m₀/m<sub>f</sub>))</div>
+          <p>Every dodge, rendezvous and minute holding against a drill costs delta-v. The rocket equation turns delta-v into propellant, and the curve is exponential.</p>
+          <div class="row2">
+            <div>
+              <div class="ctl"><div class="ctl-top"><span class="ctl-name">Propulsion</span></div>
+                <div class="seg" id="plProp"><button data-p="chem">Chemical (v<sub>e</sub> 4.2 km/s)</button><button data-p="ion">Ion (v<sub>e</sub> 30 km/s)</button></div></div>
+              <div class="ctl"><div class="ctl-top"><span class="ctl-name">Propellant load</span><span class="ctl-val" id="plKgV"></span></div>
+                <input type="range" id="plKg" min="200" max="12000" step="100" /></div>
+              <div class="rows">
+                <div class="row wide"><dt>Ship when empty</dt><dd>${DATA.dry} kg</dd></div>
+                <div class="row wide"><dt>Δv budget</dt><dd id="plDv"></dd></div>
+                <div class="row wide"><dt>Rendezvous burn time</dt><dd id="plT"></dd></div>
+                <div class="row wide"><dt>Sideways agility</dt><dd id="plAg"></dd></div>
+              </div>
+              <div class="note">Rough campaign need: about 5 km/s if you anchor while mining, about 7 km/s if you hold position with thrusters. Run dry and a tanker refuels you, at a cost of 25 days.</div>
+            </div>
+            <div><canvas id="plCv" style="height:230px"></canvas><div class="cap">Mass ratio m₀/m<sub>f</sub> needed for a Δv, for each exhaust speed. Dot: your ship.</div></div>
+          </div>
+          <p class="note" style="font-size:11px">Context: Earth orbits the Sun at 29.8 km/s, and a circular orbit at 2.7 AU moves at 29.78/√2.7 ≈ 18 km/s. Leaving Earth's orbit for 2.7 AU takes about 6 km/s and matching the belt's orbit on arrival about 5 km/s more (before Earth's own gravity); your launcher has already paid that.</p>
+          <div class="acts"><button class="btn primary" id="plGo">Enter Sector 1</button></div>`, true);
+        const upd = () => {
+          if (!$("plKg")) return; // card already closed
+          const pr = DATA.props[S.propKey];
+          document.querySelectorAll("#plProp button").forEach((b) => b.classList.toggle("on", b.dataset.p === S.propKey));
+          $("plKg").value = S.propLoad;
+          $("plKgV").textContent = S.propLoad + " kg";
+          const m0 = DATA.dry + S.propLoad;
+          const dv = pr.ve * Math.log(m0 / DATA.dry);
+          $("plDv").textContent = (dv / 1000).toFixed(2) + " km/s";
+          const tb = (100 * m0) / pr.thrust;
+          $("plT").textContent = tb < 3600 ? (tb / 60).toFixed(1) + " min per 100 m/s" : (tb / 86400).toFixed(1) + " days per 100 m/s";
+          $("plAg").textContent = pr.lat > 10 ? "quick (high thrust)" : "sluggish (tiny thrust)";
+          const series = [3000, 4200, 20000, 30000, 50000].map((ve) => {
+            const pts = [];
+            for (let d = 0; d <= 12000; d += 200) pts.push([d / 1000, massRatio(d, ve)]);
+            const lab = ve === 3000 || ve === 4200 || ve === 30000 ? (ve === 30000 ? "ion 20 to 50" : `v_e ${ve / 1000}`) : null;
+            return { pts, c: ve === pr.ve ? "#00f2fe" : "rgba(203,213,225,0.45)", w: ve === pr.ve ? 2.4 : 1.2, label: lab, lpos: 1 };
+          });
+          plot($("plCv"), { x: [0, 12], y: [1, 60], logy: true, xl: "Δv (km/s)", yl: "mass ratio m₀/m_f", series, dots: [{ x: dv / 1000, y: m0 / DATA.dry, c: "#fff", r: 5 }], hl: [{ y: m0 / DATA.dry, c: "rgba(255,255,255,0.25)" }] });
+        };
+        document.querySelectorAll("#plProp button").forEach((b) => {
+          b.onclick = () => {
+            S.propKey = b.dataset.p;
+            S.propLoad = S.propKey === "ion" ? 600 : 6000;
+            upd();
+          };
+        });
+        $("plKg").oninput = (e) => {
+          S.propLoad = +e.target.value;
+          upd();
+        };
+        requestAnimationFrame(upd);
+        $("plGo").onclick = () => {
+          S.propKg = S.propLoad;
+          logEv("plan", { prop: S.propKey, kg: S.propLoad });
+          sectorCard(0);
+        };
+      }
+      const SECTOR_TXT = [
+        `You enter the belt from Jupiter's side. Out here it is cold and most tagged rocks are dark, volatile-rich C-types. The scanner gives every tag's brightness for free, but brightness mixes up size and albedo: at H = 15 a dark rock (p<sub>V</sub> 0.06) is about 5.4 km across, a bright one (p<sub>V</sub> 0.25) only 2.7 km. Dock lore says metal M-types are the "shiny" ones. Remember that rule; it will be tested.`,
+        `S-types start to appear. Their spectra dip near 1 micron, where iron-bearing silicates (olivine and pyroxene) absorb light, and again near 2 microns. C-type spectra are nearly flat. The spectrometer separates the two cleanly, and the free squiggle hints at it.`,
+        `M-types appear, and the "shiny" rule breaks. M-type albedos (about 0.10 to 0.25) sit inside the S-type range, so brightness and albedo cannot pick them out. What separates them is radar (metal echoes strongly) and a featureless spectrum with no silicate band.`,
+        `An asteroid here would circle the Sun exactly three times for each Jupiter orbit (the 3:1 resonance). Jupiter's tugs line up every time, stretch the orbit, and eventually throw the rock out, so few stable orbits remain. The rocks still crossing this zone are on eccentric paths and pass faster and at an angle.`,
+        `The warm inner belt, where stony S-types dominate. The station sits near the inner edge. Its contract is the largest yet: four of each class. M-types are still rare here, so think about which tags are worth a rendezvous.`,
+      ];
+      function sectorCard(i) {
+        S.sector = i;
+        const sc = DATA.sectors[i];
+        S.quota = { C: 0, S: 0, M: 0 };
+        S.r = sc.hi;
+        R.objs = [];
+        R.nextTag = 2;
+        const q = CLS.filter((T) => sc.quota[T]).map((T) => `${sc.quota[T]} ${T}`).join(", ");
+        showCard(`<h2>Sector ${sc.n} · ${sc.name}</h2><div class="kicker">${sc.lo === 2.45 ? "around 2.5" : sc.lo.toFixed(1) + " to " + sc.hi.toFixed(1)} AU from the Sun · ${sc.feature}</div>
+          <div class="row2"><div><p>${SECTOR_TXT[i]}</p>
+          <div class="note">Tagged-asteroid mix here (teaching values):</div><div class="mixbars" id="scMix"></div>
+          <p style="margin-top:8px"><b>Contract:</b> extract ${q}.</p></div>
+          <div><canvas id="scCv" style="height:220px"></canvas><div class="cap" id="scCap"></div></div></div>
+          <div class="acts"><button class="btn primary" id="scGo">Start Sector ${sc.n}</button></div>`, true);
+        bars($("scMix"), sc.mix, null);
+        requestAnimationFrame(() => sectorPlot(i));
+        $("scGo").onclick = () => {
+          closeCard();
+          S.phase = "run";
+          S.paused = false;
+          logEv("sector-start", { sector: sc.n });
+          refreshVisibility();
+        };
+      }
+      function sectorPlot(i) {
+        const cv = $("scCv");
+        if (i === 0) {
+          const ser = [];
+          for (const H of [13, 15, 17]) {
+            const pts = [];
+            for (let p = 0.02; p <= 0.5; p *= 1.05) pts.push([p, diameter(H, p)]);
+            ser.push({ pts, c: H === 15 ? "#a855f7" : "rgba(168,85,247,0.4)", w: H === 15 ? 2.2 : 1.2, label: "H " + H, lpos: 1 });
+          }
+          plot(cv, { x: [0.02, 0.5], y: [0.3, 30], logx: true, logy: true, xl: "albedo pV", yl: "diameter (km)", series: ser, dots: [{ x: 0.06, y: diameter(15, 0.06), c: CCOL.C, r: 5 }, { x: 0.25, y: diameter(15, 0.25), c: CCOL.S, r: 5 }] });
+          $("scCap").textContent = "Same brightness (H = 15): a dark rock is twice as wide as a bright one.";
+        } else if (i === 1) {
+          const t = (T) => {
+            const d = DATA.types[T];
+            const p = { s: d.slope.mu, d1: d.band1.mu, l1: 0.99, w1: 0.11, d2: (d.band2.lo + d.band2.hi) / 2, l2: 1.95, w2: 0.22, uv: 0.05 };
+            const o = [];
+            for (let l = 0.4; l <= 2.5; l += 0.02) o.push([l, spectrum(p, l)]);
+            return o;
+          };
+          plot(cv, { x: [0.4, 2.5], y: [0.7, 1.7], xl: "wavelength (µm)", yl: "reflectance", vb: [{ a: 0.88, b: 1.1, c: "rgba(245,158,11,0.1)" }], series: [{ pts: t("C"), c: CCOL.C, w: 2, label: "C" }, { pts: t("S"), c: CCOL.S, w: 2, label: "S" }] });
+          $("scCap").textContent = "The shaded dip near 1 micron is the silicate fingerprint of S-types.";
+        } else if (i === 2) {
+          const pdf = (T) => {
+            const d = DATA.types[T].albedo, o = [];
+            for (let p = 0.02; p <= 0.5; p *= 1.03) {
+              const z = (Math.log(p) - Math.log(d.mu)) / d.sdLog;
+              o.push([p, p >= d.lo && p <= d.hi ? Math.exp(-0.5 * z * z) : 0]);
+            }
+            return o;
+          };
+          plot(cv, { x: [0.02, 0.5], y: [0, 1.1], logx: true, yt: [], xl: "albedo pV", yl: "how common", series: CLS.map((T) => ({ pts: pdf(T), c: CCOL[T], w: 2, label: T, lpos: 0.5, ldy: -12 })) });
+          $("scCap").textContent = "M-type albedos overlap S-types almost completely: 'shiny' cannot tell them apart.";
+        } else if (i === 3) {
+          drawHistogram(cv, 5.203, 1, true);
+          $("scCap").textContent = "Asteroids by orbit size: Jupiter's resonances carve the Kirkwood gaps.";
+        } else {
+          const pts = [];
+          for (let r = 2; r <= 3.4; r += 0.02) pts.push([r, tempEq(r, 0.02, 1)]);
+          plot(cv, { x: [2, 3.4], y: [100, 210], xl: "distance from Sun (AU)", yl: "temperature (K)", series: [{ pts, c: "#ff6b35", w: 2 }], hl: [{ y: DATA.iceLine, c: "#7dd3fc", label: "ice" }], text: [{ x: 2.02, y: DATA.iceLine + 6, s: "bare surface ice lasts below this line", c: "#7dd3fc" }], dots: [{ x: 2.2, y: tempEq(2.2, 0.02, 1), c: "#fff", r: 5 }] });
+          $("scCap").textContent = "A dark rock at the inner edge sits near 190 K: surface ice is long gone, water hides underground.";
+        }
+      }
+      function tankerCard() {
+        S.paused = true;
+        S.tankers++;
+        logEv("tanker", {});
+        showCard(`<h2>Propellant low</h2><div class="kicker">Δv left: ${dvLeft().toFixed(0)} m/s</div>
+          <p>The tanks are nearly dry. A tanker meets you and refills to your launch load of ${S.propLoad} kg. The detour costs <b>25 days</b> of mission time, which will show in the Field Report's efficiency.</p>
+          <div class="acts"><button class="btn primary" id="tkGo">Refuel and continue</button></div>`);
+        $("tkGo").onclick = () => {
+          S.propKg = S.propLoad;
+          S.day += 25;
+          S.paused = false;
+          closeCard();
+        };
+      }
+      function sectorDone() {
+        const n = S.sector;
+        logEv("sector-done", { sector: n + 1 });
+        if (n === 4) return fieldReport();
+        if (n === 2) return realityCard();
+        sectorCard(n + 1);
+      }
+      function realityCard() {
+        showCard(`<h2>Reality check</h2><div class="kicker">How this game bends the truth</div>
+          <p>The run you have been flying is <b>physically wrong</b>, on purpose. Real asteroids are not packed together: NASA puts the average distance between them at roughly <b>1 million km</b> (about 600,000 miles), more than twice the distance to the Moon. Spacecraft cross the belt without ever seeing a rock up close.</p>
+          <p>And at belt speeds of several km/s, a real survey ship would never dodge. It would spend its delta-v matching the target's orbit and approaching slowly. The dodging keeps the game moving; the rocket equation, the spectra, the densities and the Bayes bars are the real physics.</p>
+          <div class="acts"><button class="btn primary" id="rcGo">On to Sector 4</button></div>`);
+        $("rcGo").onclick = () => sectorCard(3);
+      }
+
+      function fieldReport() {
+        S.phase = "report";
+        const rs = S.results;
+        const acc = CLS.map((T) => {
+          const r = rs.filter((x) => x.type === T);
+          return { T, n: r.length, ok: r.filter((x) => x.correct).length };
+        });
+        const brier = rs.length ? rs.reduce((s, r) => s + Math.pow(r.conf - (r.correct ? 1 : 0), 2), 0) / rs.length : 0;
+        const haul = rs.reduce((s, r) => s + r.haul, 0);
+        const tipC = {};
+        rs.forEach((r) => (tipC[r.tip] = (tipC[r.tip] || 0) + 1));
+        const nm = { free: "Free scan", thermal: "Thermal IR", spec: "Spectrometer", probe: "Density probe", radar: "Radar" };
+        const tipTxt = Object.keys(tipC).sort((a, b) => tipC[b] - tipC[a]).map((k) => `${nm[k]} ${tipC[k]}`).join(" · ");
+        const mix = CLS.map((T) => rs.filter((r) => r.type === T).length / Math.max(1, rs.length));
+        const seen = S.tagsSeen.map((v) => v / Math.max(1, S.tagsSeen.reduce((a, b) => a + b, 0)));
+        showCard(`<h2>Field Report</h2><div class="kicker">Filed with the inner-edge station team · mission day ${S.day.toFixed(0)} · ${rs.length} asteroid${rs.length === 1 ? "" : "s"} surveyed</div>
+          <div class="rep">
+            <div class="card"><h3>Accuracy</h3>${acc.map((a) => `<div class="row"><dt style="color:${CCOL[a.T]}">${a.T}-type</dt><dd>${a.n ? a.ok + " / " + a.n + " (" + Math.round((a.ok / a.n) * 100) + "%)" : "none"}</dd></div>`).join("")}
+              <p class="note">Overall ${rs.filter((r) => r.correct).length} of ${rs.length} classifications correct.</p></div>
+            <div class="card"><h3>Calibration <span class="cost">Brier ${brier.toFixed(3)}</span></h3><canvas id="frRel" style="height:170px"></canvas>
+              <p class="note">BS = mean((p − o)²): 0 is perfect, 0.25 is a coin-flip guesser who always says 50%. Dots on the diagonal mean your confidence matched how often you were right.</p></div>
+            <div class="card"><h3>Efficiency</h3>
+              <div class="row"><dt>Ore extracted</dt><dd>${(haul / 1000).toFixed(1)} t</dd></div>
+              <div class="row"><dt>Propellant burned</dt><dd>${S.fuelKg.toFixed(0)} kg</dd></div>
+              <div class="row"><dt>Fuel per tonne</dt><dd>${haul ? (S.fuelKg / (haul / 1000)).toFixed(1) + " kg/t" : "n/a"}</dd></div>
+              <div class="row"><dt>Days per 10 t</dt><dd>${haul ? (S.day / (haul / 10000)).toFixed(1) : "n/a"}</dd></div>
+              <div class="row"><dt>Tanker refuels</dt><dd>${S.tankers}</dd></div>
+              <p class="note">Propulsion: ${DATA.props[S.propKey].name}, ${S.propLoad} kg loaded.</p></div>
+            <div class="card"><h3>Instrument use</h3><p class="note" style="margin-top:0">Which reading moved your final answer most, counted over every survey:</p><p style="font-family:var(--mono);font-size:12px;color:var(--text-primary)">${tipTxt || "none"}</p>
+              <p class="note">Instruments fired: ${["thermal", "spec", "probe", "radar"].map((k) => nm[k] + " " + rs.filter((r) => r.inst.includes(k)).length).join(" · ")}</p></div>
+            <div class="card" style="grid-column:1/-1"><h3>Sample bias</h3><canvas id="frMix" style="height:150px"></canvas>
+              <p class="note">Your surveyed mix (solid), the tags you passed on your route (light), and the real belt-wide proportions (outline: about three quarters C, a sixth S, the rest M and other classes). Your route and your contract chose what you sampled, so your mix is not the belt's mix.</p></div>
+          </div>
+          <h3 style="font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;margin:14px 0 4px;color:var(--text-primary)">REAL-WORLD ANALOGS</h3>
+          <div class="analog">
+            <div><b style="color:var(--cC)">C-type: Ryugu</b>Sampled by JAXA's Hayabusa2; returned to Earth in 2020.</div>
+            <div><b style="color:var(--cC)">B-type: Bennu</b>A carbon-rich cousin of C-types, sampled by NASA's OSIRIS-REx.</div>
+            <div><b style="color:var(--cS)">S-type: Itokawa</b>A rubble-pile S-type sampled by JAXA's Hayabusa.</div>
+            <div><b style="color:var(--cM)">M-type: Psyche</b>NASA's Psyche mission is scheduled to arrive in 2029. Its density, about 4 g/cm³, is well below solid iron.</div>
+          </div>
+          <div class="acts"><button class="btn" id="frLog">Download survey log (JSON)</button><button class="btn" id="frSand">Replay in Sandbox</button><button class="btn primary" id="frNew">New campaign</button></div>`, true, () => {
+          const bins = [[0.34, 0.5], [0.5, 0.7], [0.7, 0.9], [0.9, 1.0001]];
+          const dots = [];
+          bins.forEach(([lo, hi]) => {
+            const r = rs.filter((x) => x.conf >= lo && x.conf < hi);
+            if (r.length) dots.push({ x: r.reduce((s, x) => s + x.conf, 0) / r.length, y: r.filter((x) => x.correct).length / r.length, c: "#00f2fe", r: 3 + Math.min(6, r.length) });
+          });
+          plot($("frRel"), { x: [0.3, 1], y: [0, 1], xl: "stated confidence", yl: "fraction right", series: [{ pts: [[0.3, 0.3], [1, 1]], c: "rgba(255,255,255,0.35)", dash: [4, 4] }], dots });
+          const P = prep($("frMix"));
+          if (P) {
+            const { ctx, w, h } = P;
+            const gw = (w - 40) / 3;
+            CLS.forEach((T, i) => {
+              const x0 = 20 + i * gw;
+              const bw = gw / 4.5;
+              const H = h - 40;
+              const draw = (v, k, style) => {
+                const bx = x0 + gw * 0.2 + k * (bw + 6), by = h - 22 - v * H;
+                if (style === "o") {
+                  ctx.strokeStyle = CCOL[T];
+                  ctx.lineWidth = 2;
+                  ctx.strokeRect(bx, by, bw, v * H);
+                } else {
+                  ctx.fillStyle = CCOL[T];
+                  ctx.globalAlpha = style === "l" ? 0.35 : 1;
+                  ctx.fillRect(bx, by, bw, v * H);
+                  ctx.globalAlpha = 1;
+                }
+                ctx.fillStyle = "#cbd5e1";
+                ctx.font = "9.5px 'Roboto Mono', monospace";
+                ctx.textAlign = "center";
+                ctx.fillText(Math.round(v * 100) + "%", bx + bw / 2, by - 4);
+              };
+              draw(mix[i], 0, "s");
+              draw(seen[i], 1, "l");
+              draw(DATA.beltWide[i], 2, "o");
+              ctx.fillStyle = CCOL[T];
+              ctx.font = "700 11px 'Roboto Mono', monospace";
+              ctx.textAlign = "center";
+              ctx.fillText(T + "-type", x0 + gw / 2, h - 6);
+            });
+          }
+        });
+        $("frLog").onclick = () => {
+          const blob = new Blob([JSON.stringify({ results: S.results, log: S.log }, null, 1)], { type: "application/json" });
+          const u = URL.createObjectURL(blob);
+          const aEl = document.createElement("a");
+          aEl.href = u;
+          aEl.download = "lithogram-survey-log.json";
+          aEl.click();
+          setTimeout(() => URL.revokeObjectURL(u), 1000);
+        };
+        $("frSand").onclick = () => setMode("sand");
+        $("frNew").onclick = newCampaign;
+      }
+      function newCampaign() {
+        Object.assign(S, { phase: "title", sector: 0, hull: 100, day: 0, quota: { C: 0, S: 0, M: 0 }, results: [], tankers: 0, fuelKg: 0, log: [], tagN: 0, tagsSeen: [0, 0, 0], r: 3.3, paused: false });
+        R.objs = [];
+        R.x = R.vx = 0;
+        VC = null;
+        $("logList").innerHTML = "";
+        $("logCount").textContent = "";
+        titleCard();
+      }
+
+      /* =================== CAMPAIGN PANEL AND HUD =================== */
+      function updateCampaignPanel() {
+        const pr = DATA.props[S.propKey];
+        $("shipProp").textContent = pr.name + " · v_e " + pr.ve / 1000 + " km/s";
+        $("propTxt").textContent = `${Math.max(0, S.propKg).toFixed(0)} / ${S.propLoad} kg`;
+        $("propBar").style.width = clamp((S.propKg / S.propLoad) * 100, 0, 100) + "%";
+        const dv = dvLeft();
+        $("dvLeft").textContent = (dv / 1000).toFixed(2) + " km/s";
+        $("mRatio").textContent = (shipMass() / DATA.dry).toFixed(2);
+        $("hullTxt").textContent = S.hull.toFixed(0) + "%";
+        $("dayTxt").textContent = S.day.toFixed(1);
+        $("eqRocket").innerHTML = `<div>Δv = v<sub>e</sub> ln(m₀ / m<sub>f</sub>) = ${(pr.ve / 1000).toFixed(1)} × ln(${shipMass().toFixed(0)} / ${DATA.dry}) = ${(dv / 1000).toFixed(2)} km/s</div><div class="note">Each sideways move and each rendezvous burns propellant at this exchange rate.</div>`;
+        const r = S.r;
+        const T = tempEq(r, bondFromGeo(0.05), 1);
+        $("placeAU").textContent = r.toFixed(2) + " AU";
+        $("rTxt").textContent = r.toFixed(2) + " AU";
+        $("vcTxt").textContent = circSpeed(r).toFixed(1) + " km/s";
+        $("tTxt").textContent = T.toFixed(0) + " K";
+        $("iceTxt").textContent = T > DATA.iceLine ? "unstable" : "stable";
+        $("eqTemp").innerHTML = `<div>T = 278 K × (1 − A)^(1/4) × ε^(−1/4) × r^(−1/2) = 278 × ${(1 - bondFromGeo(0.05)).toFixed(3)}^(1/4) × ${r.toFixed(2)}^(−1/2) = ${T.toFixed(0)} K</div><div>v = 29.78 / √a = 29.78 / √${r.toFixed(2)} = ${circSpeed(r).toFixed(1)} km/s</div><div class="note">Above about ${DATA.iceLine} K bare ice slowly vaporises, so C-type water is a drilling job, not a scooping one.</div>`;
+        const sc = sec();
+        $("conSec").textContent = `Sector ${sc.n} · ${sc.name}`;
+        bars($("conMix"), sc.mix, null);
+        $("conQuota").innerHTML = CLS.filter((Tt) => sc.quota[Tt]).map((Tt) => `<span style="color:${CCOL[Tt]}">${Tt}: ${Math.min(S.quota[Tt], sc.quota[Tt])} / ${sc.quota[Tt]}</span>`).join("") + `<span>tags seen ${S.tagN}</span>`;
+        $("hudSector").innerHTML = `<b>SECTOR ${sc.n} · ${sc.name.toUpperCase()}</b> &nbsp;${r.toFixed(2)} AU`;
+        $("hudQuota").innerHTML = "Contract " + CLS.filter((Tt) => sc.quota[Tt]).map((Tt) => `<span class="qchip ${S.quota[Tt] >= sc.quota[Tt] ? "done" : ""}" style="color:${CCOL[Tt]}">${Tt} ${Math.min(S.quota[Tt], sc.quota[Tt])}/${sc.quota[Tt]}</span>`).join("");
+        $("hudPause").textContent = S.paused ? "▶ Resume" : "❚❚ Pause";
+        if ($("rocketCv").style.display !== "none") {
+          const pts = [];
+          for (let d = 0; d <= 12000; d += 200) pts.push([d / 1000, massRatio(d, pr.ve)]);
+          plot($("rocketCv"), { x: [0, 12], y: [1, 30], logy: true, xl: "Δv (km/s)", yl: "m₀/m_f", series: [{ pts, c: "#00f2fe", w: 2 }], dots: [{ x: dv / 1000, y: shipMass() / DATA.dry, c: "#fff", r: 4 }] });
+        }
+        if ($("tempCv").style.display !== "none") {
+          const pts = [];
+          for (let x = 2; x <= 3.4; x += 0.02) pts.push([x, tempEq(x, bondFromGeo(0.05), 1)]);
+          plot($("tempCv"), { x: [2, 3.4], y: [100, 210], xl: "distance (AU)", yl: "T (K)", series: [{ pts, c: "#ff6b35", w: 2 }], hl: [{ y: DATA.iceLine, c: "#7dd3fc" }], dots: [{ x: r, y: T, c: "#fff", r: 4 }] });
+        }
+      }
+
+      /* =================== VISIBILITY AND MODES =================== */
+      const show = (id, on) => $(id).classList.toggle("show", !!on);
+      function refreshVisibility() {
+        const m = S.mode;
+        const camp = m === "camp", sand = m === "sand", bench = m === "bench";
+        const V = curV();
+        const inSurvey = !!((camp && S.phase === "survey" && VC) || (sand && VS));
+        const campPanel = camp && !inSurvey;
+        show("secShip", campPanel);
+        show("secPlace", campPanel);
+        show("secContract", campPanel);
+        show("secLog", campPanel);
+        show("secBuild", sand && !VS);
+        show("secClass", inSurvey);
+        show("secExtract", inSurvey && V && V.committed);
+        show("secDebrief", inSurvey && V && V.done);
+        show("secBench", bench);
+        $("survey").classList.toggle("show", inSurvey);
+        $("bench").classList.toggle("show", bench);
+        const wasCard = $("cardwrap").classList.contains("show");
+        $("cardwrap").classList.toggle("show", camp && S.cardOpen);
+        if (!wasCard && camp && S.cardOpen && cardDraw) requestAnimationFrame(cardDraw);
+        const hud = camp && !inSurvey;
+        ["hudSector", "hudQuota", "hudPause", "steer"].forEach((id) => ($(id).style.display = hud ? "" : "none"));
+        $("hudSound").style.display = bench ? "none" : "";
+        $("extractBtn").disabled = !(V && V.committed && !V.extract);
+        document.querySelectorAll("#modeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.m === m));
+      }
+      function setMode(m) {
+        S.mode = m;
+        R.keyL = R.keyR = false;
+        R.btn = R.ptr = 0;
+        refreshVisibility();
+        if (m === "bench") benchTab(B.tab);
+        if (m === "sand" && !VS) buildSandbox();
+        if ((m === "camp" && VC) || (m === "sand" && VS)) openSurveyUI();
+        logEv("mode", { mode: m });
+      }
+      document.querySelectorAll("#modeSeg button").forEach((b) => (b.onclick = () => setMode(b.dataset.m)));
+      // Show Equation toggles in the panel and the survey lab
+      document.querySelectorAll("[data-eq]").forEach((t) => {
+        t.onchange = () => {
+          $(t.dataset.eq).classList.toggle("show", t.checked);
+          if (t.dataset.eq === "eqRocket") $("rocketCv").style.display = t.checked ? "block" : "none";
+          if (t.dataset.eq === "eqTemp") $("tempCv").style.display = t.checked ? "block" : "none";
+          logEv("show-equation", { panel: t.dataset.eq, on: t.checked });
+          updateCampaignPanel();
+        };
+      });
+
+      // folded "More" sections: redraw their graphs when opened (a closed section has no size to draw into)
+      document.querySelectorAll("details.more").forEach((d) =>
+        d.addEventListener("toggle", () => {
+          updateCampaignPanel();
+          if (curV()) updateExtract();
+        })
+      );
+
+      /* =================== LAB BENCH (section 7) =================== */
+      const BDEF = { tab: "phot", H: 15, pV: 0.06, fol: 0.5, d1: 0.15, s: 0.3, weather: 0, grain: 3.3, phi: 0.3, spin: 6, pC: 0.6, pS: 0.3, pM: 0.1, mAlb: 0.15, mRho: 2.8, mBand: 0.05, mRad: 0.14, useRad: 0, aCut: 0.1, rCut: 3.0, ve: 3, dv: 6, mD: 1, mRho2: 2.0, mE: 20, mPhi: 0.3, mTool: "chisel", mType: "S", anchor: 0, r: 2.7, pV2: 0.05, eps: 1, aJ: 5.203, mJ: 1 };
+      const B = Object.assign({}, BDEF);
+      const BTABS = [
+        { k: "phot", n: "Brightness & size" },
+        { k: "spec", n: "Spectrum" },
+        { k: "dens", n: "Density & spin" },
+        { k: "bayes", n: "Classifier" },
+        { k: "fuel", n: "Fuel" },
+        { k: "mine", n: "Extraction" },
+        { k: "belt", n: "Heat & orbits" },
+      ];
+      const BSL = {
+        phot: [["H", "Absolute magnitude H", 10, 20, 0.1, (v) => v.toFixed(1)], ["pV", "Albedo pV", 0.02, 0.5, 0.005, (v) => v.toFixed(3)]],
+        spec: [["fol", "Olivine fraction", 0, 1, 0.01, (v) => v.toFixed(2)], ["d1", "Band I depth", 0, 0.3, 0.005, (v) => (v * 100).toFixed(0) + "%"], ["s", "Slope s (per µm)", -0.1, 0.6, 0.01, (v) => v.toFixed(2)], ["weather", "Space weathering", 0, 1, 0.01, (v) => v.toFixed(2)]],
+        dens: [["grain", "Grain density (g/cm³)", 2.5, 8, 0.05, (v) => v.toFixed(2)], ["phi", "Porosity φ", 0, 0.6, 0.01, (v) => (v * 100).toFixed(0) + "%"], ["spin", "Spin period (h)", 1, 12, 0.05, (v) => v.toFixed(2)]],
+        bayes: [["pC", "Prior P(C)", 0, 1, 0.01, (v) => v.toFixed(2)], ["pS", "Prior P(S)", 0, 1, 0.01, (v) => v.toFixed(2)], ["pM", "Prior P(M)", 0, 1, 0.01, (v) => v.toFixed(2)], ["mAlb", "Measured albedo", 0.02, 0.5, 0.005, (v) => v.toFixed(3)], ["mRho", "Measured density (g/cm³)", 1, 6, 0.05, (v) => v.toFixed(2)], ["mBand", "Measured band I depth", 0, 0.3, 0.005, (v) => (v * 100).toFixed(0) + "%"], ["mRad", "Measured radar albedo", 0, 0.6, 0.01, (v) => v.toFixed(2)]],
+        fuel: [["ve", "Exhaust speed v_e (km/s)", 3, 50, 0.5, (v) => v.toFixed(1)], ["dv", "Δv budget (km/s)", 0, 12, 0.1, (v) => v.toFixed(1)]],
+        mine: [["mD", "Diameter (km)", 0.2, 20, 0.1, (v) => v.toFixed(1)], ["mRho2", "Bulk density (g/cm³)", 1, 6, 0.05, (v) => v.toFixed(2)], ["mE", "Strike energy (kJ)", 1, 100, 1, (v) => v.toFixed(0)], ["mPhi", "Porosity φ", 0, 0.6, 0.01, (v) => (v * 100).toFixed(0) + "%"]],
+        belt: [["r", "Distance from Sun (AU)", 2.0, 3.4, 0.01, (v) => v.toFixed(2)], ["pV2", "Albedo pV", 0.02, 0.5, 0.005, (v) => v.toFixed(3)], ["eps", "Emissivity ε", 0.6, 1, 0.01, (v) => v.toFixed(2)], ["aJ", "Jupiter's orbit (AU)", 4.5, 6, 0.01, (v) => v.toFixed(2)], ["mJ", "Jupiter's mass (× real)", 0.25, 4, 0.05, (v) => v.toFixed(2)]],
+      };
+      function benchTab(k) {
+        B.tab = k;
+        $("bTabs").innerHTML = BTABS.map((t) => `<button data-k="${t.k}" class="${t.k === k ? "on" : ""}">${t.n}</button>`).join("");
+        $("bTabs").querySelectorAll("button").forEach((b) => (b.onclick = () => benchTab(b.dataset.k)));
+        $("benchName").textContent = BTABS.find((t) => t.k === k).n;
+        const box = $("benchCtl");
+        box.innerHTML = "";
+        if (k === "bayes") {
+          const d = document.createElement("div");
+          d.className = "ctl";
+          d.innerHTML = `<div class="ctl-top"><span class="ctl-name">Load a sector's prior</span></div><div class="seg"><button data-s="0">Sector 1 (outer)</button><button data-s="4">Sector 5 (inner)</button></div>`;
+          d.querySelectorAll("button").forEach((b) => (b.onclick = () => {
+            const mx = DATA.sectors[+b.dataset.s].mix;
+            B.pC = mx[0]; B.pS = mx[1]; B.pM = mx[2];
+            benchTab("bayes");
+          }));
+          box.appendChild(d);
+        }
+        if (k === "mine") {
+          const d = document.createElement("div");
+          d.innerHTML = `<div class="ctl"><div class="ctl-top"><span class="ctl-name">True class</span></div><div class="seg" id="bmType">${CLS.map((T) => `<button data-t="${T}" class="${B.mType === T ? "on" : ""}">${T}-type</button>`).join("")}</div></div>
+            <div class="ctl"><div class="ctl-top"><span class="ctl-name">Tool</span></div><div class="seg" id="bmTool">${Object.keys(DATA.tools).map((t) => `<button data-t="${t}" class="${B.mTool === t ? "on" : ""}">${DATA.tools[t].name}</button>`).join("")}</div></div>
+            <label class="tog"><span>Anchor on</span><input type="checkbox" id="bmAnc" ${B.anchor ? "checked" : ""}></label>`;
+          box.appendChild(d);
+          d.querySelectorAll("#bmType button").forEach((b) => (b.onclick = () => ((B.mType = b.dataset.t), benchTab("mine"))));
+          d.querySelectorAll("#bmTool button").forEach((b) => (b.onclick = () => ((B.mTool = b.dataset.t), benchTab("mine"))));
+          d.querySelector("#bmAnc").onchange = (e) => ((B.anchor = e.target.checked ? 1 : 0), benchDraw());
+        }
+        for (const [key, label, mn, mx, st, fmt] of BSL[k]) {
+          const d = document.createElement("div");
+          d.className = "ctl";
+          d.innerHTML = `<div class="ctl-top"><span class="ctl-name">${label}</span><span class="ctl-val">${fmt(B[key])}</span><button class="rst" title="Reset this slider">↺ Reset</button></div><input type="range" min="${mn}" max="${mx}" step="${st}" value="${B[key]}">`;
+          const inp = d.querySelector("input"), val = d.querySelector(".ctl-val");
+          inp.oninput = () => {
+            B[key] = +inp.value;
+            val.textContent = fmt(B[key]);
+            benchDraw();
+          };
+          inp.onchange = () => logEv("slider", { k: key, v: B[key] });
+          d.querySelector(".rst").onclick = () => {
+            B[key] = BDEF[key];
+            inp.value = B[key];
+            val.textContent = fmt(B[key]);
+            benchDraw();
+          };
+          box.appendChild(d);
+        }
+        if (k === "bayes") {
+          const d = document.createElement("label");
+          d.className = "tog";
+          d.innerHTML = `<span>Radar was fired</span><input type="checkbox" ${B.useRad ? "checked" : ""}>`;
+          d.querySelector("input").onchange = (e) => ((B.useRad = e.target.checked ? 1 : 0), benchDraw());
+          box.appendChild(d);
+        }
+        $("bGrid").className = "bgrid";
+        requestAnimationFrame(benchDraw);
+      }
+      $("benchEq").onchange = () => benchDraw();
+      $("benchReset").onclick = () => {
+        const t = B.tab;
+        Object.assign(B, BDEF, { tab: t });
+        benchTab(t);
+      };
+      // a fixed reference population for the classifier scatter (belt-wide mix)
+      const POP = (() => {
+        const keep = seedV;
+        seedV = 4242;
+        const out = [];
+        for (let i = 0; i < 360; i++) {
+          const T = drawType(DATA.beltWide);
+          const a = buildAsteroid(T, { D: 1 });
+          out.push({ T, alb: a.pV * Math.exp(Nrm(0, 0.1)), rho: a.rho * (1 + Nrm(0, 0.03)) });
+        }
+        seedV = keep;
+        return out;
+      })();
+      const APOP = (() => {
+        const keep = seedV;
+        seedV = 777;
+        const out = [];
+        for (let i = 0; i < 6000; i++) {
+          const u = rnd();
+          out.push({ a: 2.0 + 1.5 * Math.pow(u, 0.8), k: rnd() });
+        }
+        seedV = keep;
+        return out;
+      })();
+      function drawHistogram(cv, aJ, mJ, small) {
+        const res = [[4, 1, 0.02], [3, 1, 0.03], [5, 2, 0.018], [7, 3, 0.01], [2, 1, 0.035]];
+        const gaps = res.map(([p, q, w]) => ({ p, q, a: resonanceAU(p, q, aJ), w: w * Math.sqrt(mJ) }));
+        const bins = new Array(70).fill(0);
+        for (const o of APOP) {
+          if (gaps.some((g) => Math.abs(o.a - g.a) < g.w && o.k < 0.95)) continue;
+          const b = Math.floor((o.a - 2.0) / 0.02);
+          if (b >= 0 && b < 70) bins[b]++;
+        }
+        const mx = Math.max(...bins);
+        const pts = [];
+        bins.forEach((v, i) => {
+          pts.push([2.0 + i * 0.02, v]);
+          pts.push([2.0 + (i + 1) * 0.02, v]);
+        });
+        const mix = [[], [], []];
+        for (let r = 2.0; r <= 3.4; r += 0.02) mixAt(r).forEach((v, k) => mix[k].push([r, v * mx * 1.1]));
+        return plot(cv, {
+          x: [2.0, 3.4], y: [0, mx * 1.15], yt: [], xl: "orbit size, semi-major axis (AU)", yl: small ? "number" : "asteroids per bin",
+          fills: [{ c: "rgba(148,163,184,0.35)", top: pts, bot: pts.map(([x]) => [x, 0]) }],
+          series: small ? [] : CLS.map((T, k) => ({ pts: mix[k], c: CCOL[T], w: 1.6, dash: [5, 3], label: T + " share", lpos: 0.02, lalign: "left", ldx: 4 })),
+          vl: gaps.filter((g) => g.a > 2 && g.a < 3.4).map((g) => ({ x: g.a, c: "rgba(255,107,53,0.6)", dash: [2, 3] })),
+          text: gaps.filter((g) => g.a > 2.02 && g.a < 3.38).map((g) => ({ x: g.a, y: mx * 1.08, s: g.p + ":" + g.q, al: "center", c: "#ff8c42" })),
+        });
+      }
+      let bayesMap = null, bDrag = null, spinParts = [];
+      function benchDraw() {
+        if (S.mode !== "bench") return;
+        const k = B.tab, eqOn = $("benchEq").checked;
+        const A = $("bA"), Bc = $("bB");
+        let read = "", eq = "", disc = "";
+        if (k === "phot") {
+          const ser = [];
+          for (let H = 10; H <= 20; H += 2) {
+            const pts = [];
+            for (let p = 0.02; p <= 0.5; p *= 1.04) pts.push([p, diameter(H, p)]);
+            ser.push({ pts, c: "rgba(168,85,247,0.4)", w: 1, label: "H " + H, lpos: 1 });
+          }
+          const cur = [];
+          for (let p = 0.02; p <= 0.5; p *= 1.04) cur.push([p, diameter(B.H, p)]);
+          ser.push({ pts: cur, c: "#00f2fe", w: 2.4 });
+          const D = diameter(B.H, B.pV);
+          plot(A, { x: [0.02, 0.5], y: [0.02, 200], logx: true, logy: true, xl: "albedo pV", yl: "diameter D (km)", vb: CLS.map((T) => ({ a: DATA.types[T].albedo.lo, b: DATA.types[T].albedo.hi, c: CCOL[T] + "1c" })), series: ser, dots: [{ x: B.pV, y: D, c: "#fff", r: 5 }] });
+          $("bAcap").textContent = "Diameter against albedo for H = 10 to 20 (cyan: your H). Shaded: albedo ranges of C, S and M.";
+          const s2 = CLS.map((T) => {
+            const pts = [];
+            for (let H = 10; H <= 20; H += 0.2) pts.push([H, diameter(H, DATA.types[T].albedo.mu)]);
+            return { pts, c: CCOL[T], w: 1.8, label: T + " (pV " + DATA.types[T].albedo.mu + ")", lpos: 0.15, lalign: "left", ldx: 4 };
+          });
+          plot(Bc, { x: [10, 20], y: [0.05, 200], logy: true, xl: "absolute magnitude H", yl: "diameter D (km)", series: s2, vl: [{ x: B.H, c: "rgba(255,255,255,0.4)" }] });
+          $("bBcap").textContent = "The same H read as each class's typical albedo: one brightness, three sizes.";
+          read = `D = <b>${D.toFixed(2)} km</b> at H = ${B.H.toFixed(1)} and p<sub>V</sub> = ${B.pV.toFixed(3)} · mass at 2 g/cm³ ≈ ${(2000 * (Math.PI / 6) * Math.pow(D * 1000, 3)).toExponential(1)} kg`;
+          eq = `<div>D (km) = 1329 / √p<sub>V</sub> × 10^(−H/5) = 1329 / √${B.pV.toFixed(3)} × 10^(−${B.H.toFixed(1)}/5) = ${D.toFixed(2)} km</div><div>Worked example, H = 15: p<sub>V</sub> 0.06 → ${diameter(15, 0.06).toFixed(1)} km, p<sub>V</sub> 0.25 → ${diameter(15, 0.25).toFixed(1)} km</div>`;
+          disc = "A bright reading does not mean the rock is shiny. It could be a small bright rock or a large dark one. Albedo has to come from a second method (thermal infrared or radar) before the size is known.";
+        } else if (k === "spec") {
+          const base = { s: B.s, d1: B.d1, l1: bandCentre(B.fol), w1: 0.11, d2: B.d1 * 0.45 * (1 - 0.5 * B.fol), l2: 1.95, w2: 0.22, uv: 0.03 };
+          const wth = weathered(base, B.weather);
+          const pts = (p) => {
+            const o = [];
+            for (let l = 0.4; l <= 2.5; l += 0.01) o.push([l, spectrum(p, l)]);
+            return o;
+          };
+          const tm = (T) => {
+            const d = DATA.types[T];
+            return pts({ s: d.slope.mu, d1: d.band1.mu, l1: 0.99, w1: 0.11, d2: (d.band2.lo + d.band2.hi) / 2, l2: 1.95, w2: 0.22, uv: (d.uv.lo + d.uv.hi) / 2 });
+          };
+          plot(A, {
+            x: [0.4, 2.5], y: [0.5, 1.9], xl: "wavelength (µm)", yl: "reflectance (1 at 0.55 µm)",
+            series: CLS.map((T) => ({ pts: tm(T), c: CCOL[T], w: 1, dash: [4, 3], label: T + " template", lpos: 1 })).concat([{ pts: pts(base), c: "rgba(255,255,255,0.55)", w: 1.4, dash: B.weather > 0 ? [6, 3] : [] }, { pts: pts(wth), c: "#fff", w: 2.2 }]),
+            vl: [{ x: base.l1, c: "#a855f7" }],
+          });
+          $("bAcap").textContent = B.weather > 0 ? "White: your spectrum after weathering · dashed white: fresh surface · dashed colours: class templates." : "White: the spectrum you built · dashed colours: class templates · purple line: band I centre.";
+          const lp = [];
+          for (let f = 0; f <= 1.0001; f += 0.05) lp.push([f, bandCentre(f)]);
+          plot(Bc, { x: [0, 1], y: [0.9, 1.08], xl: "olivine fraction f_ol", yl: "band I centre (µm)", series: [{ pts: lp, c: "#a855f7", w: 2 }], dots: [{ x: B.fol, y: bandCentre(B.fol), c: "#fff", r: 5 }], text: [{ x: 0.02, y: 0.94, s: "pyroxene-rich", c: "#cbd5e1", dy: 12 }, { x: 0.98, y: 1.05, s: "olivine-rich", c: "#cbd5e1", al: "right", dy: -12 }] });
+          $("bBcap").textContent = "The band I centre moves with the olivine fraction of the silicate mix.";
+          read = `Band I at <b>${bandCentre(B.fol).toFixed(3)} µm</b> · depth <b>${(wth.d1 * 100).toFixed(0)}%</b> · slope <b>${wth.s.toFixed(2)}</b>${B.weather > 0 ? ` (fresh: ${(base.d1 * 100).toFixed(0)}%, ${base.s.toFixed(2)})` : ""}`;
+          eq = `<div>R(λ) = [1 + s(λ − 0.55)] × [1 − d1·exp(−(λ − l1)²/(2w1²)) − d2·exp(−(λ − l2)²/(2w2²))]</div><div>l1 = 0.93 + 0.12 × f<sub>ol</sub> = 0.93 + 0.12 × ${B.fol.toFixed(2)} = ${bandCentre(B.fol).toFixed(3)} µm</div><div>weathering w = ${B.weather.toFixed(2)}: s → s + 0.25w, d → d × (1 − 0.6w)</div>`;
+          disc = "The 1 micron band is a fingerprint of iron-bearing silicates, which is why it separates S from C. M-types have nothing there to absorb, so a spectrum alone cannot separate them from some featureless C- or P-like objects. Old, weathered surfaces look redder with weaker bands.";
+        } else if (k === "dens") {
+          const rb = B.grain * (1 - B.phi);
+          const ser = [3.3, 7.8].map((g) => ({ pts: [[0, g], [0.6, g * 0.4]], c: "rgba(203,213,225,0.35)", w: 1, dash: [4, 3], label: g === 3.3 ? "silicate grains" : "solid iron grains", lpos: 0.05, lalign: "left", ldx: 4 }));
+          ser.push({ pts: [[0, B.grain], [0.6, B.grain * 0.4]], c: "#00f2fe", w: 2.2 });
+          plot(A, { x: [0, 0.6], y: [0.8, 8.2], xl: "porosity φ", yl: "bulk density (g/cm³)", hb: CLS.map((T) => ({ a: DATA.types[T].density.lo, b: DATA.types[T].density.hi, c: CCOL[T] + "22" })), series: ser, dots: [{ x: B.phi, y: rb, c: "#fff", r: 5 }], fxt: (v) => Math.round(v * 100) + "%" });
+          $("bAcap").textContent = "ρ_bulk = ρ_grain (1 − φ). Bands: bulk-density ranges of C (grey), S (amber), M (blue).";
+          const Tc = tFromRho(rb * 1000) / 3600;
+          read = `Bulk density <b>${rb.toFixed(2)} g/cm³</b> · surface orbit period <b>${Tc.toFixed(2)} h</b> · spin <b>${B.spin.toFixed(2)} h</b>: <b style="color:${B.spin < Tc ? "#ff2a85" : "#22c55e"}">${B.spin < Tc ? "spinning faster than its surface orbit, so loose rubble flies off the equator" : "stable: gravity holds the rubble"}</b>`;
+          eq = `<div>ρ<sub>bulk</sub> = ρ<sub>grain</sub> (1 − φ) = ${B.grain.toFixed(2)} × (1 − ${B.phi.toFixed(2)}) = ${rb.toFixed(2)} g/cm³</div><div>T = √(3π / (G ρ)) = √(3π / (6.674×10⁻¹¹ × ${(rb * 1000).toFixed(0)})) = ${(Tc * 3600).toFixed(0)} s = ${Tc.toFixed(2)} h</div><div class="note">1300 kg/m³ → ${(tFromRho(1300) / 3600).toFixed(1)} h · 2000 → ${(tFromRho(2000) / 3600).toFixed(1)} h · 4000 → ${(tFromRho(4000) / 3600).toFixed(1)} h</div>`;
+          disc = "A C-type with a density near 1.3 is mostly empty space, not light rock. And a rubble pile cannot spin faster than its own surface orbit: this is the spin barrier near 2.2 hours seen in asteroids bigger than a few hundred metres.";
+          $("bBcap").textContent = "A rubble pile at your spin period. Red grains are leaving the equator.";
+        } else if (k === "bayes") {
+          const sum = B.pC + B.pS + B.pM || 1;
+          const prior = [B.pC / sum, B.pS / sum, B.pM / sum];
+          const meas = { albedo: { v: B.mAlb, sig: 0.1 }, density: { v: B.mRho, sig: 0.08 }, band1: { v: B.mBand, sig: 0.015 } };
+          if (B.useRad) meas.radar = { v: B.mRad, sig: 0.03 };
+          const post = posterior(meas, prior);
+          const cls = (alb, rho) => (rho > B.rCut ? "M" : alb < B.aCut ? "C" : "S");
+          const cm = { C: { C: 0, S: 0, M: 0 }, S: { C: 0, S: 0, M: 0 }, M: { C: 0, S: 0, M: 0 } };
+          const pts = POP.slice();
+          S.results.forEach((r) => pts.push({ T: r.type, alb: r.alb, rho: r.rho, mine: true }));
+          pts.forEach((p) => cm[p.T][cls(p.alb, p.rho)]++);
+          bayesMap = plot(A, {
+            x: [0.02, 0.5], y: [1, 6], logx: true, xl: "albedo pV (drag the vertical line)", yl: "density g/cm³ (drag the line)",
+            dots: pts.map((p) => ({ x: p.alb, y: p.rho, c: CCOL[p.T], r: p.mine ? 5 : 2.2, a: 0.75, ring: !!p.mine })).concat([{ x: B.mAlb, y: B.mRho, c: "#fff", r: 6, ring: true, lw: 2.5 }]),
+            vl: [{ x: B.aCut, c: "#fff", dash: [], w: 2 }],
+            hl: [{ y: B.rCut, c: "#fff", dash: [], w: 2 }],
+            text: [{ x: 0.022, y: 5.7, s: "M region", c: CCOL.M }, { x: 0.022, y: 1.2, s: "C region", c: CCOL.C }, { x: 0.48, y: 1.2, s: "S region", c: CCOL.S, al: "right" }],
+          });
+          $("bAcap").textContent = "Reference asteroids (dots) by class, your campaign's rocks (rings) and your measurement (white ring).";
+          const P = prep(Bc);
+          if (P) {
+            const { ctx, w, h } = P;
+            const bw = Math.min(70, w / 7);
+            CLS.forEach((T, i) => {
+              const x = w * 0.18 + i * (w * 0.28);
+              const H = h - 70;
+              ctx.fillStyle = CCOL[T] + "40";
+              ctx.fillRect(x, h - 40 - prior[i] * H, bw * 0.45, prior[i] * H);
+              ctx.fillStyle = CCOL[T];
+              ctx.fillRect(x + bw * 0.5, h - 40 - post[i] * H, bw * 0.45, post[i] * H);
+              ctx.font = "11px 'Roboto Mono', monospace";
+              ctx.textAlign = "center";
+              ctx.fillText((post[i] * 100).toFixed(0) + "%", x + bw * 0.72, h - 46 - post[i] * H);
+              ctx.fillStyle = "#cbd5e1";
+              ctx.fillText(T + "-type", x + bw * 0.47, h - 22);
+              ctx.fillStyle = "#8391a7";
+              ctx.font = "9.5px 'Roboto Mono', monospace";
+              ctx.fillText("prior  after", x + bw * 0.47, h - 8);
+            });
+          }
+          $("bBcap").textContent = "Faint bars: the prior. Solid bars: the probability after your four readings.";
+          const prec = (T) => {
+            const tp = cm[T][T], pp = CLS.reduce((s, X) => s + cm[X][T], 0);
+            return pp ? tp / pp : 0;
+          };
+          const rec = (T) => {
+            const tp = cm[T][T], n = CLS.reduce((s, X) => s + cm[T][X], 0);
+            return n ? tp / n : 0;
+          };
+          read = `<div class="readout">Your boundary: density above <b>${B.rCut.toFixed(2)}</b> → M, else albedo below <b>${B.aCut.toFixed(3)}</b> → C, else S.</div>
+            <table class="cm"><tr><th>true ↓ / called →</th>${CLS.map((T) => `<th>${T}</th>`).join("")}<th>recall</th></tr>
+            ${CLS.map((T) => `<tr><th style="color:${CCOL[T]}">${T}</th>${CLS.map((X) => `<td class="${X === T ? "hit" : ""}">${cm[T][X]}</td>`).join("")}<td>${(rec(T) * 100).toFixed(0)}%</td></tr>`).join("")}
+            <tr><th>precision</th>${CLS.map((T) => `<td>${(prec(T) * 100).toFixed(0)}%</td>`).join("")}<td></td></tr></table>`;
+          eq = `<div>P(T | x) = P(x | T) · P(T) / Σ P(x | T′) · P(T′)</div><div>prior (${prior.map((v) => v.toFixed(2)).join(", ")}) → posterior (${post.map((v) => v.toFixed(2)).join(", ")}) for C, S, M</div>`;
+          disc = "The same measurement can mean different things in different parts of the belt. Try albedo 0.15 and density 2.8 with the Sector 1 prior, then the Sector 5 prior: the base rate moved, so the answer moved.";
+        } else if (k === "fuel") {
+          const ser = [3, 4.5, 20, 50].map((ve) => {
+            const pts = [];
+            for (let d = 0; d <= 12; d += 0.1) pts.push([d, massRatio(d, ve)]);
+            return { pts, c: "rgba(203,213,225,0.45)", w: 1.2, label: "v_e " + ve, lpos: 1 };
+          });
+          const cur = [];
+          for (let d = 0; d <= 12; d += 0.1) cur.push([d, massRatio(d, B.ve)]);
+          ser.push({ pts: cur, c: "#00f2fe", w: 2.4 });
+          const mr = massRatio(B.dv, B.ve);
+          plot(A, { x: [0, 12], y: [1, 100], logy: true, xl: "Δv (km/s)", yl: "mass ratio m₀/m_f", series: ser, dots: [{ x: B.dv, y: mr, c: "#fff", r: 5 }] });
+          $("bAcap").textContent = "Mass ratio needed for each Δv. Grey: chemical (3, 4.5) and ion (20, 50) exhaust speeds.";
+          const fp = [];
+          for (let ve = 3; ve <= 50; ve += 0.5) fp.push([ve, 1 - 1 / massRatio(B.dv, ve)]);
+          plot(Bc, { x: [3, 50], y: [0, 1], xl: "exhaust speed v_e (km/s)", yl: "share of start mass that is fuel", series: [{ pts: fp, c: "#ff6b35", w: 2 }], dots: [{ x: B.ve, y: 1 - 1 / mr, c: "#fff", r: 5 }], fyt: (v) => Math.round(v * 100) + "%" });
+          $("bBcap").textContent = `For Δv = ${B.dv.toFixed(1)} km/s: how much of the ship must be propellant.`;
+          read = `Mass ratio <b>${mr.toFixed(2)}</b> · propellant is <b>${((1 - 1 / mr) * 100).toFixed(0)}%</b> of the starting mass`;
+          eq = `<div>Δv = v<sub>e</sub> ln(m₀ / m<sub>f</sub>)  ⇔  m₀ / m<sub>f</sub> = exp(Δv / v<sub>e</sub>) = exp(${B.dv.toFixed(1)} / ${B.ve.toFixed(1)}) = ${mr.toFixed(2)}</div><div class="note">v_e 3 km/s and 6 km/s → ${massRatio(6, 3).toFixed(1)}: most of the ship is fuel. An ion drive needs about ${massRatio(6, 25).toFixed(2)}, but its thrust is tiny, so every manoeuvre takes far longer.</div>`;
+          disc = "The ion drive wins on fuel and loses on time. In the campaign, time is the quota clock: a chemical ship dodges and matches orbits quickly but drinks propellant.";
+        } else if (k === "mine") {
+          const d = DATA.types[B.mType];
+          const a = { type: B.mType, rho: B.mRho2, R: B.mD * 500, D: B.mD, phi: B.mPhi, ore: (d.ore.lo + d.ore.hi) / 2 };
+          const mS = DATA.dry + 3000;
+          const X = extraction(a, B.mTool, B.mE, !!B.anchor, "chem", mS);
+          const ys = [], ls = [];
+          let ym = 0;
+          for (let E = 1; E <= 100; E++) {
+            const Y = extraction(a, B.mTool, E, !!B.anchor, "chem", mS);
+            ys.push([E, Y.haul / 1000]);
+            ls.push([E, Y.lost]);
+            ym = Math.max(ym, Y.haul / 1000);
+          }
+          ym = Math.max(ym, 0.001) * 1.15;
+          plot(A, { x: [1, 100], y: [0, ym], xl: "strike energy (kJ)", yl: "yield per visit (t)", series: [{ pts: ys, c: "#22c55e", w: 2.2, label: "yield", lpos: 0.5 }, { pts: ls.map(([E, l]) => [E, l * ym]), c: "#ff2a85", w: 1.6, dash: [5, 4], label: "share lost", lpos: 0.9 }], dots: [{ x: B.mE, y: X.haul / 1000, c: "#fff", r: 5 }] });
+          $("bAcap").textContent = "Harder strikes break more rock but throw more of it past escape speed: an optimum, not a maximum.";
+          const tt = [], free = [], fix = [];
+          const aNet = Math.max(0, X.aPush - X.g);
+          for (let t = 0; t <= 120; t += 1) {
+            tt.push(t);
+            free.push([t, 0.5 * aNet * t * t]);
+            const L = 10, tc = Math.sqrt((2 * L) / Math.max(aNet, 1e-9));
+            const tm = t % (2 * tc);
+            // drift out to 10 m, then the thrusters bring the ship back
+            fix.push([t, B.anchor ? 0 : tm < tc ? 0.5 * aNet * tm * tm : L * (1 - (tm - tc) / tc)]);
+          }
+          plot(Bc, { x: [0, 120], y: [0, 60], xl: "time (s)", yl: "distance from surface (m)", series: [{ pts: free, c: "#ff2a85", w: 2, label: "free-floating, no thrust", lpos: 0.85, lalign: "left", ldx: 8, ldy: 0 }, { pts: B.anchor ? tt.map((t) => [t, 0.3]) : fix, c: "#22c55e", w: 2, label: B.anchor ? "anchored" : "thrusters pull back at 10 m", lpos: 0.95, ldy: -22 }] });
+          $("bBcap").textContent = `The tool pushes the ship away at F/m = ${(X.aPush * 1000).toFixed(0)} mm/s²; the asteroid pulls back with only ${(X.g * 1000).toFixed(3)} mm/s².`;
+          read = `g = <b>${(X.g * 1000).toFixed(3)} mm/s²</b> · v<sub>esc</sub> = <b>${X.ve.toFixed(2)} m/s</b> · lost <b>${(X.lost * 100).toFixed(0)}%</b> · efficiency η = <b>${X.eta}</b> · yield <b>${(X.haul / 1000).toFixed(1)} t</b>`;
+          eq = `<div>g = (4/3) π G ρ R = ${(X.g * 1000).toFixed(3)} mm/s²   ·   v<sub>esc</sub> = R √(8πGρ/3) = ${X.ve.toFixed(3)} m/s</div><div>Check: 1 km, 2000 kg/m³ → g = ${(surfG(2000, 500) * 1000).toFixed(2)} mm/s², v<sub>esc</sub> = ${vEsc(2000, 500).toFixed(2)} m/s</div><div>Mass = ρ (π/6) D³ × f<sub>ore</sub> × η (tool efficiencies and ore fractions are design values, not measurements)</div>`;
+          disc = "On a 1 km asteroid a thrown stone leaves forever. Slow strikes keep material close; fast strikes are efficient but wasteful. Loose rubble piles (high porosity) spray fragments less predictably.";
+        } else if (k === "belt") {
+          const A2 = bondFromGeo(B.pV2);
+          const T = tempEq(B.r, A2, B.eps);
+          const pts = [];
+          for (let r = 2; r <= 3.4; r += 0.02) pts.push([r, tempEq(r, A2, B.eps)]);
+          plot(A, { x: [2, 3.4], y: [90, 230], xl: "distance from Sun r (AU)", yl: "temperature (K)", series: [{ pts, c: "#ff6b35", w: 2.2 }], hl: [{ y: DATA.iceLine, c: "#7dd3fc" }], dots: [{ x: B.r, y: T, c: "#fff", r: 5 }], text: [{ x: 2.02, y: DATA.iceLine - 8, s: "below: bare ice survives (approximate)", c: "#7dd3fc" }] });
+          $("bAcap").textContent = "Equilibrium temperature of a fast-spinning rock against distance.";
+          drawHistogram(Bc, B.aJ, B.mJ, false);
+          $("bBcap").textContent = "Asteroids by orbit size, with Jupiter's resonance gaps (orange) and the C, S, M share at each distance.";
+          read = `T = <b>${T.toFixed(0)} K</b> at ${B.r.toFixed(2)} AU · gaps: ${[[3, 1], [5, 2], [7, 3], [2, 1]].map(([p, q]) => p + ":" + q + " " + resonanceAU(p, q, B.aJ).toFixed(2) + " AU").join(" · ")}`;
+          eq = `<div>T = 278 K × (1 − A)^(1/4) × ε^(−1/4) × r^(−1/2) = 278 × ${(1 - A2).toFixed(3)}^(1/4) × ${B.eps.toFixed(2)}^(−1/4) × ${B.r.toFixed(2)}^(−1/2) = ${T.toFixed(0)} K</div><div>a = a<sub>J</sub> × (q/p)^(2/3): 3:1 → ${B.aJ.toFixed(2)} × (1/3)^(2/3) = ${resonanceAU(3, 1, B.aJ).toFixed(2)} AU</div><div class="note">Check: 2.7 AU, A = 0.02, ε = 1 gives ${tempEq(2.7, 0.02, 1).toFixed(0)} K. Bond albedo A ≈ 0.39 × p<sub>V</sub>.</div>`;
+          disc = "Surface ice is unstable at belt temperatures over long times, but ice under the surface survives, so C-type water is a drilling problem, not a scooping one. Move Jupiter and the gaps move with it; make it heavier and they widen.";
+        }
+        $("bRead").innerHTML = (read.startsWith("<div") || read.startsWith("<table") ? read : `<div class="readout">${read}</div>`) + `<div class="eq ${eqOn ? "show" : ""}">${eq}</div>` + `<div class="disc">${disc}</div>`;
+      }
+      function drawSpin(dt) {
+        const P = prep($("bB"));
+        if (!P) return;
+        const { ctx, w, h } = P;
+        const rb = B.grain * (1 - B.phi);
+        const Tc = tFromRho(rb * 1000) / 3600;
+        const cx = w / 2, cy = h / 2, R0 = Math.min(w, h) * 0.26;
+        const omega = TAU / (B.spin * 1.2); // display: 1 h of spin = 1.2 s
+        spinParts.ang = (spinParts.ang || 0) + omega * dt;
+        if (!spinParts.grains) {
+          spinParts.grains = [];
+          for (let i = 0; i < 160; i++) {
+            const r = Math.sqrt(rnd()) * R0, t = rnd() * TAU;
+            spinParts.grains.push({ r, t, s: 3 + rnd() * 5, off: false, x: 0, y: 0, vx: 0, vy: 0 });
+          }
+        }
+        const fast = B.spin < Tc;
+        ctx.fillStyle = "#03050b";
+        ctx.fillRect(0, 0, w, h);
+        for (const g of spinParts.grains) {
+          if (!g.off) {
+            if (fast && g.r > R0 * 0.82 && rnd() < dt * 0.6 * (Tc / B.spin - 1 + 0.2)) {
+              g.off = true;
+              const a = g.t + spinParts.ang;
+              g.x = cx + Math.cos(a) * g.r;
+              g.y = cy + Math.sin(a) * g.r * 0.9;
+              const v = omega * g.r;
+              g.vx = -Math.sin(a) * v;
+              g.vy = Math.cos(a) * v * 0.9;
+            } else {
+              const a = g.t + spinParts.ang;
+              ctx.fillStyle = `rgb(${120 + (g.s * 7) | 0},${112 + (g.s * 6) | 0},${100 + (g.s * 5) | 0})`;
+              ctx.beginPath();
+              ctx.arc(cx + Math.cos(a) * g.r, cy + Math.sin(a) * g.r * 0.9, g.s, 0, TAU);
+              ctx.fill();
+              continue;
+            }
+          }
+          g.x += g.vx * dt;
+          g.y += g.vy * dt;
+          ctx.fillStyle = "#ff2a85";
+          ctx.beginPath();
+          ctx.arc(g.x, g.y, g.s * 0.7, 0, TAU);
+          ctx.fill();
+          if (g.x < -20 || g.x > w + 20 || g.y < -20 || g.y > h + 20) {
+            g.off = false;
+            g.r = Math.sqrt(rnd()) * R0 * 0.8;
+          }
+        }
+        ctx.font = "11px 'Roboto Mono', monospace";
+        ctx.fillStyle = fast ? "#ff2a85" : "#22c55e";
+        ctx.textAlign = "left";
+        ctx.fillText(`spin ${B.spin.toFixed(2)} h · limit ${Tc.toFixed(2)} h`, 10, 18);
+      }
+
+      // drag the classifier's decision lines
+      $("bA").addEventListener("pointerdown", (e) => {
+        if (B.tab !== "bayes" || !bayesMap) return;
+        const r = $("bA").getBoundingClientRect();
+        const x = e.clientX - r.left, y = e.clientY - r.top;
+        const dx = Math.abs(x - bayesMap.fx(B.aCut)), dy = Math.abs(y - bayesMap.fy(B.rCut));
+        bDrag = dx < dy ? "a" : "r";
+        $("bA").setPointerCapture(e.pointerId);
+        moveCut(e);
+      });
+      function moveCut(e) {
+        if (!bDrag || !bayesMap) return;
+        const r = $("bA").getBoundingClientRect();
+        if (bDrag === "a") B.aCut = clamp(bayesMap.ix(e.clientX - r.left), 0.025, 0.45);
+        else B.rCut = clamp(bayesMap.iy(e.clientY - r.top), 1.1, 5.8);
+        benchDraw();
+      }
+      $("bA").addEventListener("pointermove", moveCut);
+      $("bA").addEventListener("pointerup", () => {
+        if (bDrag) logEv("boundary", { a: +B.aCut.toFixed(3), r: +B.rCut.toFixed(2) });
+        bDrag = null;
+      });
+
+      /* =================== SANDBOX =================== */
+      const SB = { type: "S" };
+      const SBSL = [["pV", "Albedo pV", 0.02, 0.5, 0.005, (v) => v.toFixed(3)], ["rho", "Bulk density (g/cm³)", 1, 6, 0.05, (v) => v.toFixed(2)], ["D", "Diameter (km)", 0.2, 20, 0.1, (v) => v.toFixed(1)], ["d1", "Band I depth", 0, 0.3, 0.005, (v) => (v * 100).toFixed(0) + "%"], ["fol", "Olivine fraction", 0, 1, 0.01, (v) => v.toFixed(2)], ["s", "Slope (per µm)", -0.1, 0.6, 0.01, (v) => v.toFixed(2)], ["radar", "Radar albedo", 0.02, 0.6, 0.01, (v) => v.toFixed(2)], ["spin", "Spin period (h)", 1, 12, 0.05, (v) => v.toFixed(2)], ["r", "Distance from Sun (AU)", 2.0, 3.4, 0.01, (v) => v.toFixed(2)]];
+      function sbDefaults(T) {
+        const d = DATA.types[T];
+        Object.assign(SB, { type: T, pV: d.albedo.mu, rho: d.density.mu, D: 2, d1: d.band1.mu, fol: 0.5, s: d.slope.mu, radar: d.radar.mu, spin: 6, r: SB.r || 2.7 });
+      }
+      function buildSandbox() {
+        if (SB.pV == null) sbDefaults("S");
+        document.querySelectorAll("#sbType button").forEach((b) => b.classList.toggle("on", b.dataset.t === SB.type));
+        const box = $("sbSliders");
+        box.innerHTML = "";
+        for (const [key, label, mn, mx, st, fmt] of SBSL) {
+          const d = document.createElement("div");
+          d.className = "ctl";
+          d.innerHTML = `<div class="ctl-top"><span class="ctl-name">${label}</span><span class="ctl-val">${fmt(SB[key])}</span><button class="rst">↺ Reset</button></div><input type="range" min="${mn}" max="${mx}" step="${st}" value="${SB[key]}">`;
+          const inp = d.querySelector("input"), val = d.querySelector(".ctl-val");
+          inp.oninput = () => {
+            SB[key] = +inp.value;
+            val.textContent = fmt(SB[key]);
+          };
+          d.querySelector(".rst").onclick = () => {
+            const keep = SB.type;
+            const tmp = {};
+            const dd = DATA.types[keep];
+            const defs = { pV: dd.albedo.mu, rho: dd.density.mu, D: 2, d1: dd.band1.mu, fol: 0.5, s: dd.slope.mu, radar: dd.radar.mu, spin: 6, r: 2.7 };
+            SB[key] = defs[key];
+            inp.value = SB[key];
+            val.textContent = fmt(SB[key]);
+          };
+          box.appendChild(d);
+        }
+      }
+      document.querySelectorAll("#sbType button").forEach((b) => (b.onclick = () => (sbDefaults(b.dataset.t), buildSandbox())));
+      function sbAsteroid() {
+        const d = DATA.types[SB.type];
+        return buildAsteroid(SB.type, { pV: SB.pV, rho: SB.rho, D: SB.D, d1: SB.d1, fol: SB.fol, s: SB.s, radar: SB.radar, spin: SB.spin, r: SB.r, grain: (d.grain.lo + d.grain.hi) / 2, ore: (d.ore.lo + d.ore.hi) / 2, hyd: 0, d2: d.band2.hi > 0 ? SB.d1 * 0.45 : 0 });
+      }
+      $("sbGo").onclick = () => {
+        const a = sbAsteroid();
+        a.id = "sandbox";
+        VS = newSurvey(a, true);
+        ["thermal", "spec", "probe", "radar"].forEach((k) => fireInst(k));
+        VS.fx = null;
+        openSurveyUI();
+      };
+      function drawSandboxPreview() {
+        if (!rctx) return;
+        const ctx = rctx, W = RW, H = RH;
+        ctx.fillStyle = "#03050b";
+        ctx.fillRect(0, 0, W, H);
+        for (const s of R.stars) {
+          ctx.fillStyle = `rgba(220,230,255,${0.2 + 0.5 * s.z})`;
+          ctx.fillRect(s.x * W, s.y * H, s.z * 1.5, s.z * 1.5);
+        }
+        if (SB.pV == null) return;
+        const a = sbAsteroid();
+        a.seed = 9137;
+        const t = performance.now() / 1000;
+        drawRock(ctx, W * 0.36, H * 0.48, Math.min(W, H) * 0.24, a.seed, (t * TAU) / (a.spin * 3), rockTint(a), null);
+        ctx.font = "12px 'Roboto Mono', monospace";
+        ctx.textAlign = "left";
+        const x = W * 0.64;
+        let y = H * 0.24;
+        const line = (k, v, c) => {
+          ctx.fillStyle = "#8391a7";
+          ctx.fillText(k, x, y);
+          ctx.fillStyle = c || "#f8fafc";
+          ctx.fillText(v, x + 150, y);
+          y += 22;
+        };
+        ctx.fillStyle = CCOL[SB.type];
+        ctx.font = "700 13px Orbitron, sans-serif";
+        ctx.fillText(DATA.types[SB.type].label + " (true class)", x, y);
+        y += 28;
+        ctx.font = "12px 'Roboto Mono', monospace";
+        line("brightness H", a.H.toFixed(2));
+        line("mass", a.mass.toExponential(2) + " kg");
+        line("porosity", (a.phi * 100).toFixed(0) + "%");
+        line("surface g", (a.g * 1000).toFixed(3) + " mm/s²");
+        line("escape speed", a.vesc.toFixed(2) + " m/s");
+        line("surface orbit", (a.Torb / 3600).toFixed(2) + " h", a.spin < a.Torb / 3600 ? "#ff2a85" : null);
+        line("temperature", a.Teq.toFixed(0) + " K");
+        const mx = mixAt(SB.r);
+        line("prior C/S/M", mx.map((v) => Math.round(v * 100)).join(" / ") + " %");
+        if (a.spin < a.Torb / 3600) {
+          ctx.fillStyle = "#ff2a85";
+          ctx.fillText("spinning faster than its surface orbit:", x, y + 6);
+          ctx.fillText("a rubble pile would shed material", x, y + 24);
+        }
+      }
+
+      /* =================== INPUT =================== */
+      const runActive = () => S.mode === "camp" && S.phase === "run" && !S.cardOpen;
+      window.addEventListener("keydown", (e) => {
+        if (!runActive()) return;
+        const k = e.key.toLowerCase();
+        if (k === "a" || k === "arrowleft") R.keyL = true;
+        else if (k === "d" || k === "arrowright") R.keyR = true;
+        else if (k === " " || k === "p") {
+          S.paused = !S.paused;
+        } else return;
+        e.preventDefault();
+      });
+      window.addEventListener("keyup", (e) => {
+        const k = e.key.toLowerCase();
+        if (k === "a" || k === "arrowleft") R.keyL = false;
+        if (k === "d" || k === "arrowright") R.keyR = false;
+      });
+      window.addEventListener("blur", () => (R.keyL = R.keyR = false));
+      const runCv = $("run");
+      runCv.addEventListener("pointerdown", (e) => {
+        if (!runActive()) return;
+        const r = runCv.getBoundingClientRect();
+        R.ptr = e.clientX - r.left < r.width / 2 ? -1 : 1;
+        runCv.setPointerCapture(e.pointerId);
+      });
+      const ptrUp = () => (R.ptr = 0);
+      runCv.addEventListener("pointerup", ptrUp);
+      runCv.addEventListener("pointercancel", ptrUp);
+      [["stL", -1], ["stR", 1]].forEach(([id, d]) => {
+        const b = $(id);
+        b.addEventListener("pointerdown", (e) => {
+          R.btn = d;
+          b.classList.add("on");
+          b.setPointerCapture(e.pointerId);
+        });
+        const up = () => {
+          if (R.btn === d) R.btn = 0;
+          b.classList.remove("on");
+        };
+        b.addEventListener("pointerup", up);
+        b.addEventListener("pointercancel", up);
+      });
+      $("hudPause").onclick = () => (S.paused = !S.paused);
+      $("hudSound").onclick = () => {
+        S.sound = !S.sound;
+        $("hudSound").textContent = "♪ Sound: " + (S.sound ? "On" : "Off");
+      };
+
+      /* =================== MAIN LOOP =================== */
+      let last = performance.now(), panelT = 0;
+      function loop(now) {
+        const dt = clamp((now - last) / 1000, 0, 0.05);
+        last = now;
+        if (runActive() && !S.paused) runStep(dt);
+        if (S.mode === "camp") drawRun();
+        else if (S.mode === "sand" && !VS) drawSandboxPreview();
+        if ($("survey").classList.contains("show")) drawTarget(dt);
+        if (S.mode === "bench" && B.tab === "dens") drawSpin(dt);
+        panelT -= dt;
+        if (panelT <= 0 && S.mode === "camp") {
+          panelT = 0.15;
+          updateCampaignPanel();
+        }
+        updateTagCard();
+        requestAnimationFrame(loop);
+      }
+      function onResize() {
+        sizeRun();
+        if (S.mode === "bench") benchDraw();
+        if ($("survey").classList.contains("show")) {
+          renderSurvey();
+          if (curV() && curV().committed) updateExtract();
+        }
+        if (S.cardOpen && S.phase === "plan") planCard();
+      }
+      window.addEventListener("resize", onResize);
+      new ResizeObserver(() => sizeRun()).observe($("stage"));
+
+      sizeRun();
+      refreshVisibility();
+      titleCard();
+      updateCampaignPanel();
+      requestAnimationFrame(loop);
+      window.__litho = { S, R, DATA, get VC() { return VC; }, get VS() { return VS; }, fireInst, rendezvous, spawnTag, sectorDone, fieldReport, setMode, benchTab, posterior, extraction, buildAsteroid };
+    </script>
+    <script>
+      /* Universal Floating, Draggable & Resizable How-to-Use & Guide System */
+      (function initUniversalHelpFloatwin() {
+        var bar = document.getElementById("helpbar");
+        if (!bar) return;
+
+        // Ensure floatwin markup structure
+        if (!bar.classList.contains("floatwin")) {
+          bar.classList.add("floatwin");
+          bar.setAttribute("role", "dialog");
+          bar.setAttribute("aria-label", "Help Guide");
+
+          var head = document.createElement("div");
+          head.className = "fw-head";
+
+          var title = document.createElement("span");
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
+          head.appendChild(title);
+
+          var actions = document.createElement("div");
+          actions.className = "fw-head-actions";
+
+          var tabBtns = [];
+          var origPanels = bar.querySelectorAll(".tabpanel");
+          if (origPanels.length > 1) {
+            origPanels.forEach(function (p) {
+              var t = p.dataset.panel;
+              var b = document.createElement("button");
+              b.type = "button";
+              b.className = "fw-tab-btn";
+              b.dataset.tab = t;
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What You'll Learn" : t);
+              actions.appendChild(b);
+              tabBtns.push(b);
+            });
+          }
+
+          var closeBtn = document.createElement("button");
+          closeBtn.type = "button";
+          closeBtn.className = "fw-close";
+          closeBtn.title = "Close Guide";
+          closeBtn.setAttribute("aria-label", "Close");
+          closeBtn.textContent = "✕";
+          actions.appendChild(closeBtn);
+          head.appendChild(actions);
+
+          var body = document.createElement("div");
+          body.className = "fw-body";
+          while (bar.firstChild) {
+            body.appendChild(bar.firstChild);
+          }
+
+          var grip = document.createElement("div");
+          grip.className = "fw-grip";
+          grip.title = "Drag to resize";
+
+          bar.appendChild(head);
+          bar.appendChild(body);
+          bar.appendChild(grip);
+
+          document.body.appendChild(bar);
+        }
+
+        var btns = document.querySelectorAll(".helpbtn");
+        var tabBtns = bar.querySelectorAll(".fw-tab-btn");
+        var closeBtn = bar.querySelector(".fw-close");
+        var headEl = bar.querySelector(".fw-head");
+        var gripEl = bar.querySelector(".fw-grip");
+        var topZ = 10000;
+        var posInit = false;
+        var userSized = false;
+
+        function toFront() {
+          bar.style.zIndex = ++topZ;
+        }
+
+        function closeAll() {
+          bar.classList.remove("show");
+          btns.forEach(function (b) { b.classList.remove("on"); });
+          tabBtns.forEach(function (b) { b.classList.remove("on"); });
+        }
+
+        function openTab(tab) {
+          toFront();
+          if (!posInit) {
+            var w = Math.min(440, window.innerWidth - 32);
+            bar.style.width = w + "px";
+            bar.style.top = "65px";
+            bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
+            posInit = true;
+          }
+          bar.classList.add("show");
+          btns.forEach(function (b) {
+            b.classList.toggle("on", b.dataset.tab === tab);
+          });
+          tabBtns.forEach(function (b) {
+            b.classList.toggle("on", b.dataset.tab === tab);
+          });
+          var panels = bar.querySelectorAll(".tabpanel");
+          panels.forEach(function (p) {
+            p.classList.toggle("on", p.dataset.panel === tab);
+          });
+          fitHeight();
+        }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        // Rotating a phone or resizing the window: keep the guide on screen and re-fit it.
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
+
+        btns.forEach(function (btn) {
+          var newBtn = btn.cloneNode(true);
+          btn.parentNode.replaceChild(newBtn, btn);
+          newBtn.addEventListener("click", function () {
+            var tab = newBtn.dataset.tab || "use";
+            if (bar.classList.contains("show") && newBtn.classList.contains("on")) {
+              closeAll();
+            } else {
+              openTab(tab);
+            }
+          });
+        });
+
+        // re-query cloned buttons
+        btns = document.querySelectorAll(".helpbtn");
+
+        tabBtns.forEach(function (tb) {
+          tb.addEventListener("click", function (e) {
+            e.stopPropagation();
+            openTab(tb.dataset.tab);
+          });
+        });
+
+        if (closeBtn) closeBtn.addEventListener("click", closeAll);
+        bar.addEventListener("pointerdown", toFront);
+
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && bar.classList.contains("show")) closeAll();
+        });
+
+        // Dragging by header
+        if (headEl) {
+          headEl.addEventListener("pointerdown", function (e) {
+            if (e.target.closest(".fw-head-actions")) return;
+            e.preventDefault();
+            toFront();
+            headEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var dx = e.clientX - r.left;
+            var dy = e.clientY - r.top;
+            bar.classList.add("dragging");
+            function onMove(ev) {
+              var nx = Math.max(8, Math.min(window.innerWidth - bar.offsetWidth - 8, ev.clientX - dx));
+              var ny = Math.max(8, Math.min(window.innerHeight - 40, ev.clientY - dy));
+              bar.style.left = nx + "px";
+              bar.style.top = ny + "px";
+            }
+            function onUp(ev) {
+              bar.classList.remove("dragging");
+              headEl.removeEventListener("pointermove", onMove);
+              headEl.removeEventListener("pointerup", onUp);
+              headEl.removeEventListener("pointercancel", onUp);
+            }
+            headEl.addEventListener("pointermove", onMove);
+            headEl.addEventListener("pointerup", onUp);
+            headEl.addEventListener("pointercancel", onUp);
+          });
+        }
+
+        // Resizing by grip
+        if (gripEl) {
+          gripEl.addEventListener("pointerdown", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toFront();
+            gripEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var startX = e.clientX;
+            var startY = e.clientY;
+            var startW = r.width;
+            var startH = r.height;
+            function onMove(ev) {
+              var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
+              var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
+              bar.style.width = nw + "px";
+              userSized = true;
+              bar.style.height = nh + "px";
+            }
+            function onUp(ev) {
+              gripEl.removeEventListener("pointermove", onMove);
+              gripEl.removeEventListener("pointerup", onUp);
+              gripEl.removeEventListener("pointercancel", onUp);
+            }
+            gripEl.addEventListener("pointermove", onMove);
+            gripEl.addEventListener("pointerup", onUp);
+            gripEl.addEventListener("pointercancel", onUp);
+          });
+        }
+      })();
+    </script>
+
+  </body>
+</html>
