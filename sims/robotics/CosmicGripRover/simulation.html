@@ -339,6 +339,7 @@
       }
       input[type="range"] {
         -webkit-appearance: none;
+        appearance: none;
         width: 100%;
         height: 8px;
         border-radius: 8px;
@@ -5261,6 +5262,7 @@
         const wheels = [];
         for (const [sx, sz] of [[-1, -1.0], [1, -1.0], [-1, 1.3], [1, 1.3]]) {
           const hub = new THREE.Group();
+          hub.rotation.order = "YXZ"; // steer (y) first, then roll (x)
           hub.position.set(sx * 1.38, WHEEL_R, sz);
           const tyre = rpart(cyl(WHEEL_R, WHEEL_R, 0.36, M(0xffffff, { map: tyreTex, roughness: 0.9 }), 28), "motors");
           tyre.rotation.z = Math.PI / 2;
@@ -5274,7 +5276,7 @@
           const motor = rpart(box(0.42, 0.24, 0.3, M(0xf5c518, { roughness: 0.5 })), "motors");
           motor.position.set(sx * 0.95, 0.5, sz);
           roverG.add(motor);
-          wheels.push({ hub, side: sx < 0 ? "L" : "R" });
+          wheels.push({ hub, side: sx < 0 ? "L" : "R", front: sz < 0 });
         }
         // electronics on the rear deck
         const esp = rpart(box(0.42, 0.05, 0.62, M(0x1e293b, { roughness: 0.6 })), "esp32");
@@ -5865,7 +5867,14 @@
           }
           R.wheelL += (vL * dt) / WHEEL_R;
           R.wheelR += (vR * dt) / WHEEL_R;
-          wheels.forEach((wh) => (wh.hub.rotation.x = -(wh.side === "L" ? R.wheelL : R.wheelR)));
+          // front wheels angle into the turn (toward the slower side), easing back to straight
+          const mSum = Math.abs(R.mL) + Math.abs(R.mR);
+          const steerT = mSum > 0.02 ? clamp(((R.mR - R.mL) / mSum) * 0.6, -0.45, 0.45) : 0;
+          R.steer = (R.steer || 0) + (steerT - (R.steer || 0)) * Math.min(1, dt * 8);
+          wheels.forEach((wh) => {
+            wh.hub.rotation.x = -(wh.side === "L" ? R.wheelL : R.wheelR);
+            wh.hub.rotation.y = wh.front ? R.steer : 0;
+          });
           roverG.position.set(R.x, 0, R.z);
           roverG.rotation.y = R.yaw;
           // suspension: lean out of a turn, dip forward when braking, squat when pulling away
