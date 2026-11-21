@@ -66,9 +66,11 @@ const PROJECTS = [
   { id: "lithogram", title: "Lithogram: Belt Survey", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/Lithogram/simulation.html", description: "Fly a survey ship inward through the asteroid belt: read brightness, spectra, density and radar, classify each asteroid with Bayes' rule, mine it against tiny gravity, and file a Field Report." },
   { id: "cosmic-eye", title: "Cosmic Eye", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/CosmicEye/simulation.html", description: "A spectrometer with real starlight inside: match the lines of the Sun, stars and a galaxy to elements, switch prism and grating, and see the Crab Nebula from radio to gamma rays." },
   { id: "terrain-trek", title: "Terrain Trek: Rover Operations", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/TerrainTrek/simulation.html", description: "Drive a faulty Mars rover, find what is wrong from telemetry alone, make one swap at the pit stop, and see what every swap would have done on the same ground." },
-  ...Array.from({ length: 16 }, (_, i) => ({
-    id: `space-astronomy-coming-soon-${i + 15}`,
-    title: `Space & Astronomy Project ${String(i + 15).padStart(2, "0")}`,
+  { id: "atmos-lab", title: "AtmosLab: Two Planets", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/AtmosLab/simulation.html", description: "Compare the air of Earth and Mars: see how distance, albedo, pressure, water vapour and ozone set each planet's temperature, its day-night swing and the UV reaching the ground." },
+  { id: "water-hunt-on-mars", title: "Water Hunt on Mars: Subsurface Survey", category: "space-astronomy", status: "live", url: "../sims/space-astronomy/WaterHuntOnMars/simulation.html", description: "Be the mission scientist: send Perseverance to drill a few chosen squares, use orbiter neutron and radar passes, and find the buried ice before the probes or the daylight run out." },
+  ...Array.from({ length: 14 }, (_, i) => ({
+    id: `space-astronomy-coming-soon-${i + 17}`,
+    title: `Space & Astronomy Project ${String(i + 17).padStart(2, "0")}`,
     category: "space-astronomy",
     status: "coming-soon",
     description: "Coming soon.",
