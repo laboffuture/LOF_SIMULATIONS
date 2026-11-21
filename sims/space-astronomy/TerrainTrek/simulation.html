@@ -5094,17 +5094,38 @@
           const q = root.quaternion;
           let pos, look, up = new V3(0, 1, 0), fov = 55, hardFollow = false;
           const yawS = rv.sm ? rv.sm.psi : st.psi;
-          cs.yaw = cs.yaw == null || dt <= 0 ? yawS : cs.yaw + (yawS - cs.yaw) * (1 - Math.exp(-dt * 2.5));
+          // wrapped difference, so a heading crossing ±180° never swings the long way round
+          const wrapD = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
+          cs.yaw = cs.yaw == null || dt <= 0 ? yawS : cs.yaw + wrapD(yawS, cs.yaw) * (1 - Math.exp(-dt * 2.5));
           const fh = new V3(Math.cos(cs.yaw), 0, -Math.sin(cs.yaw)),
             left = new V3(fh.z, 0, -fh.x);
           const c = root.position.clone().add(new V3(0, P.h, 0));
           if (view === "chase") {
-            const d = 3.4 * orbit.dist;
-            const ang = orbit.yaw;
-            const sideDir = left.clone().multiplyScalar(-1).applyAxisAngle(new V3(0, 1, 0), ang);
-            pos = c.clone().addScaledVector(sideDir, d * Math.cos(orbit.pitch * 0.6)).addScaledVector(fh, -0.9 * orbit.dist).add(new V3(0, 0.75 * orbit.dist + Math.sin(orbit.pitch) * d, 0));
-            look = c.clone().addScaledVector(fh, 0.5);
-            fov = 50;
+            // orbit camera: smooth the orbit angles and distance themselves (not the camera's xyz), so a drag
+            // always travels along the circle around the rover, however far out it is zoomed
+            const reset = !cs.oc || dt <= 0 || cs.oc.distanceTo(c) > 6;
+            if (reset) ((cs.oc = c.clone()), (cs.oy = orbit.yaw), (cs.op = orbit.pitch), (cs.od = orbit.dist));
+            else {
+              const ko = 1 - Math.exp(-dt * 14);
+              cs.oc.lerp(c, 1 - Math.exp(-dt * 8));
+              cs.oy += wrapD(orbit.yaw, cs.oy) * ko;
+              cs.op += (orbit.pitch - cs.op) * ko;
+              cs.od += (orbit.dist - cs.od) * (1 - Math.exp(-dt * 10));
+            }
+            const d = 3.4 * cs.od;
+            const sideDir = left.clone().multiplyScalar(-1).applyAxisAngle(new V3(0, 1, 0), cs.oy);
+            pos = cs.oc.clone().addScaledVector(sideDir, d * Math.cos(cs.op * 0.6)).addScaledVector(fh, -0.9 * cs.od).add(new V3(0, 0.75 * cs.od + Math.sin(cs.op) * d, 0));
+            look = cs.oc.clone().addScaledVector(fh, 0.5);
+            // keep it above the ground before aiming, so the clamp never fights the smoothing
+            if (world.Hv) pos.y = Math.max(pos.y, world.Hv(pos.x, -pos.z) + 0.25);
+            cs.p = pos.clone();
+            cs.l = look.clone();
+            cs.u = up.clone();
+            cam.position.copy(pos);
+            cam.up.copy(up);
+            if (cam.fov !== 50) ((cam.fov = 50), cam.updateProjectionMatrix());
+            cam.lookAt(look);
+            return;
           } else if (view === "hazcam") {
             // the front hazard camera: low on the nose, wide angle, looking at the ground the drive code checks
             const hz = rv.hazCam || new V3(0.37, rv.deckY - 0.05, 0);
@@ -5150,12 +5171,6 @@
           cam.up.copy(up);
           if (cam.fov !== fov) ((cam.fov = fov), cam.updateProjectionMatrix());
           cam.lookAt(cs.l);
-
-          // keep the chase camera above the ground
-          if (view === "chase" && world.Hv) {
-            const gy = world.Hv(cam.position.x, -cam.position.z) + 0.25;
-            if (cam.position.y < gy) cam.position.y = gy;
-          }
         }
         let W = 1,
           Hh = 1;
@@ -5197,6 +5212,7 @@
         }
         function resetCams() {
           camState[0].p = camState[1].p = null;
+          camState[0].oc = camState[1].oc = null;
         }
         return { World, render, resize, snapshot, resetCams, cams, orbit, setShake: (v) => (shake = v), PAL };
       })();
