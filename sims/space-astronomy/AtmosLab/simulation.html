@@ -1,0 +1,2437 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>AtmosLab: Two Planets</title>
+    <link rel="icon" type="image/png" href="../../../assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Outfit:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg-dark: #0b0807;
+        --bg-stage: #120c09;
+        --panel-bg: #14100e;
+        --panel-card: rgba(36, 27, 22, 0.85);
+        --border-color: rgba(255, 236, 220, 0.12);
+        --border-highlight: rgba(255, 138, 76, 0.55);
+        --accent: #ff8a4c;
+        --accent-2: #ffb36b;
+        --accent-cyan: #38d9f5;
+        --water: #5eead4;
+        --ice: #a5f3fc;
+        --accent-green: #34d399;
+        --accent-amber: #fbbf24;
+        --accent-red: #f43f5e;
+        --accent-purple: #b388ff;
+        --mars: #ff7a45;
+        --earth: #4ea8ff;
+        --text-primary: #fbf6f1;
+        --text-secondary: #d9cdc3;
+        --text-muted: #a3958a;
+        --mono: "Roboto Mono", ui-monospace, monospace;
+        --sans: "Outfit", system-ui, sans-serif;
+        --head: "Orbitron", var(--sans);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        height: 100%;
+        background: var(--bg-dark);
+        color: var(--text-primary);
+        font-family: var(--sans);
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+        display: flex;
+        flex-direction: column;
+      }
+      button { font-family: inherit; }
+      [hidden] { display: none !important; }
+      #app { display: grid; grid-template-columns: 1fr 390px; flex: 1 1 0; min-height: 0; }
+
+      /* ================= HEADER ================= */
+      header.top {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 18px;
+        background: rgba(20, 14, 11, 0.96);
+        border-bottom: 1px solid var(--border-color);
+        flex: 0 0 auto;
+        position: relative;
+        z-index: 50;
+      }
+      .title { grid-column: 2; text-align: center; min-width: 0; }
+      .title h1 { font-family: var(--head); font-size: 18px; font-weight: 800; letter-spacing: 1.5px; color: #f6e7da; text-transform: uppercase; white-space: nowrap; }
+      .modes { grid-column: 1; grid-row: 1; justify-self: start; display: flex; gap: 6px; }
+      .modes button {
+        font-family: var(--head);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 7px 11px;
+        cursor: pointer;
+      }
+      .modes button.on { background: linear-gradient(135deg, var(--accent), #e8590c); color: #1a0c04; border-color: transparent; }
+      .helpbtns { grid-column: 3; justify-self: end; display: flex; gap: 8px; }
+      .helpbtn {
+        appearance: none;
+        cursor: pointer;
+        font-family: var(--head);
+        font-weight: 700;
+        font-size: 11.5px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #fff;
+        background: #2a78d6;
+        border: 1px solid #2a78d6;
+        border-radius: 8px;
+        padding: 8px 14px;
+        box-shadow: 0 6px 14px rgba(42, 120, 214, 0.24);
+        transition: transform 0.15s ease;
+      }
+      .helpbtn:hover { transform: translateY(-1px); }
+      .helpbtn.on { background: #e8590c !important; border-color: #e8590c !important; }
+      .helpbar { display: none; }
+      .tabpanel { display: none; }
+      .tabpanel.on { display: block; }
+      .tabpanel ol, .tabpanel ul { margin: 0; padding-left: 20px; }
+      .tabpanel .credit { margin: 10px 0 0; font-size: 12px; color: #444; }
+      .tabpanel li { margin-bottom: 6px; color: #000; }
+      .tabpanel b { color: #2a78d6; }
+      .helpbar.floatwin {
+        position: fixed !important;
+        z-index: 10000 !important;
+        display: none;
+        flex-direction: column !important;
+        background: #fcfdfe !important;
+        border: 1px solid #dbe2e8 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 18px 45px rgba(23, 41, 59, 0.28) !important;
+        overflow: hidden !important;
+        min-width: 280px !important;
+        min-height: 200px !important;
+        max-width: calc(100vw - 16px) !important;
+        max-height: calc(100vh - 16px) !important;
+        container-type: inline-size;
+      }
+      .helpbar.floatwin.show { display: flex !important; }
+      .fw-head { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; background: #f3f6f8; border-bottom: 1px solid #dbe2e8; cursor: move; user-select: none; touch-action: none; flex: 0 0 auto; }
+      .fw-title { position: absolute; left: 12px; font-size: 13px; color: #8a949d; }
+      .fw-title::before { content: "⠿"; }
+      .fw-head-actions { flex: 1; display: flex; justify-content: center; gap: 6px; }
+      .fw-tab-btn { cursor: pointer; font-family: var(--head); font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 8px; border-radius: 5px; border: 1px solid #dbe2e8; background: #fff; color: #4c5c6b; }
+      .fw-tab-btn.on { background: #e8590c; border-color: #e8590c; color: #fff; }
+      .fw-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; width: 24px; height: 24px; border-radius: 6px; border: 1px solid #dbe2e8; background: #fff; color: #4c5c6b; font-size: 12px; font-weight: 700; }
+      .fw-close:hover { background: #fbe7e7; color: #8a1f1f; }
+      .fw-body { flex: 1 1 auto; min-height: 0; padding: 14px 16px; overflow-y: auto; font-size: 13px; line-height: 1.5; color: #17293b; }
+      .fw-grip { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize; touch-action: none; background: linear-gradient(135deg, transparent 50%, #8a949d 50%, #8a949d 58%, transparent 58%, transparent 70%, #8a949d 70%, #8a949d 78%, transparent 78%); }
+      @container (max-width: 340px) {
+        .fw-head-actions { justify-content: flex-start; padding: 0 32px 0 20px; }
+      }
+
+      /* ================= STAGE ================= */
+      #stage { position: relative; overflow: hidden; background: var(--bg-stage); min-width: 0; display: flex; flex-direction: column; }
+      #viewWrap { position: relative; flex: 1 1 auto; min-height: 0; }
+      .hudchip {
+        position: absolute;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-secondary);
+        background: rgba(18, 12, 9, 0.8);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 7px 11px;
+        z-index: 4;
+        white-space: nowrap;
+        backdrop-filter: blur(4px);
+      }
+      #hudTop { top: 12px; left: 12px; display: flex; flex-direction: column; gap: 5px; min-width: 250px; }
+      #hudTop .l1 { display: flex; gap: 10px; align-items: baseline; }
+      #hudTop b { color: var(--accent); font-family: var(--head); font-size: 11px; letter-spacing: 0.05em; }
+      #hudTop .sb { margin-left: auto; letter-spacing: 2px; color: var(--accent-red); }
+      #toast { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); z-index: 6; font-family: var(--mono); font-size: 12px; font-weight: 700; color: #fff; background: rgba(18, 12, 9, 0.92); border: 1px solid var(--border-highlight); border-radius: 8px; padding: 8px 14px; opacity: 0; transition: opacity 0.25s; pointer-events: none; white-space: nowrap; }
+      #toast.show { opacity: 1; }
+      /* graph area under the view (Test Yard and Twin Run) */
+      .garea { flex: 1 1 auto; min-height: 0; display: none; flex-direction: column; border-top: 1px solid var(--border-color); background: #0f0b09; padding: 8px 10px 10px; gap: 6px; }
+      body.mode-yard #yardGraphs { display: flex; }
+      body.mode-twin #twinGraphs { display: flex; }
+      .gtabs { display: flex; flex-wrap: wrap; gap: 4px; }
+      .gtabs button { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--text-secondary); background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+      .gtabs button.on { background: linear-gradient(90deg, var(--accent), #e8590c); color: #1a0c04; border-color: transparent; }
+      .gpair { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .gbox { position: relative; min-height: 0; display: flex; flex-direction: column; }
+      .gbox canvas { flex: 1 1 auto; min-height: 90px; width: 100%; display: block; border-radius: 8px; background: #0a0706; border: 1px solid var(--border-color); cursor: crosshair; }
+      .gcap { font-family: var(--mono); font-size: 10px; color: var(--text-muted); margin-top: 4px; line-height: 1.4; display: flex; gap: 8px; align-items: flex-start; }
+      .gcap span { flex: 1; }
+      .pinbtn { font-family: var(--mono); font-size: 9.5px; color: var(--text-muted); background: transparent; border: 1px solid var(--border-color); border-radius: 5px; padding: 1px 6px; cursor: pointer; flex: none; }
+      .pinbtn.on { color: var(--accent-amber); border-color: var(--accent-amber); }
+      .gtip { position: absolute; z-index: 7; pointer-events: none; font-family: var(--mono); font-size: 10px; color: #fff; background: rgba(0, 0, 0, 0.85); border: 1px solid var(--border-highlight); border-radius: 6px; padding: 4px 7px; white-space: nowrap; display: none; }
+      .geq { font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); background: rgba(0, 0, 0, 0.35); border: 1px dashed var(--border-color); border-radius: 6px; padding: 6px 8px; display: none; line-height: 1.6; overflow-x: auto; }
+      .geq.show { display: block; }
+      .geq div { white-space: nowrap; }
+
+      /* overlays */
+      .overlay { position: absolute; inset: 0; z-index: 8; background: rgba(12, 8, 6, 0.97); display: none; overflow-y: auto; padding: 16px 18px 22px; }
+      .overlay.show { display: block; }
+      .ovhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+      .ovhead h2 { font-family: var(--head); font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+      .ovhead .sub { font-family: var(--mono); font-size: 10.5px; color: var(--text-muted); }
+      .card { background: var(--panel-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+      .card h3 { font-family: var(--mono); font-size: 10.5px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-primary); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+      .card h3 .tag { color: var(--accent-amber); letter-spacing: 0.02em; font-weight: 700; }
+      .card p { font-size: 13px; line-height: 1.55; color: var(--text-secondary); margin-bottom: 8px; }
+      .card p b { color: var(--text-primary); }
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+      .mcard { cursor: pointer; transition: border-color 0.15s, transform 0.15s; position: relative; }
+      .mcard:hover { border-color: var(--accent); transform: translateY(-2px); }
+      .mcard .num { font-family: var(--head); font-size: 26px; color: var(--accent); opacity: 0.85; }
+      .mcard h4 { font-family: var(--head); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; margin: 4px 0 6px; }
+      .mcard .meta { font-family: var(--mono); font-size: 10px; color: var(--text-muted); line-height: 1.5; }
+      .mcard .best { position: absolute; top: 10px; right: 12px; font-family: var(--mono); font-size: 10px; color: var(--accent-green); }
+      .mcard canvas { width: 100%; height: 54px; display: block; margin-top: 8px; border-radius: 6px; }
+      .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+      .badge { font-family: var(--mono); font-size: 10px; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-color); color: var(--text-muted); }
+      .badge.got { color: #1a0c04; background: linear-gradient(90deg, var(--accent-amber), var(--accent)); border-color: transparent; font-weight: 700; }
+      .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+      .gallery figure { background: #000; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); }
+      .gallery img { width: 100%; display: block; aspect-ratio: 16/10; object-fit: cover; }
+      .gallery figcaption { font-family: var(--mono); font-size: 9.5px; color: var(--text-muted); padding: 5px 6px; line-height: 1.4; }
+
+      /* debrief */
+      .score { display: grid; grid-template-columns: repeat(4, 1fr) 1.2fr; gap: 8px; }
+      .score div { background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
+      .score b { display: block; font-family: var(--head); font-size: 20px; color: var(--text-primary); margin: 2px 0; }
+      .score .tot b { color: var(--accent); font-size: 26px; }
+      .dcv { width: 100%; height: 220px; display: block; border-radius: 8px; background: #0a0706; border: 1px solid var(--border-color); }
+      .bars { display: flex; flex-direction: column; gap: 6px; }
+      .barrow { display: grid; grid-template-columns: 150px 1fr 64px; gap: 8px; align-items: center; font-family: var(--mono); font-size: 11px; }
+      .barrow .track { position: relative; height: 14px; background: rgba(255, 255, 255, 0.06); border-radius: 4px; }
+      .barrow .track i { position: absolute; top: 0; bottom: 0; border-radius: 4px; }
+      .barrow .track s { position: absolute; top: -2px; bottom: -2px; left: 50%; width: 1px; background: rgba(255, 255, 255, 0.5); }
+      .barrow.pick .n { color: var(--accent-amber); font-weight: 700; }
+      .barrow .v { text-align: right; font-weight: 700; }
+      .principle { font-size: 14px; line-height: 1.6; color: var(--text-primary); border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; margin: 6px 0; }
+      .acts { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; margin-top: 12px; }
+      .acts .btn { width: auto; padding: 10px 16px; }
+      /* ================= PANEL ================= */
+      #panel { background: var(--panel-bg); border-left: 1px solid var(--border-color); overflow-y: auto; display: flex; flex-direction: column; }
+      .sec { padding: 13px 16px; border-bottom: 1px solid var(--border-color); display: none; }
+      .sec.show { display: block; }
+      .sec-h { font-family: var(--head); font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-primary); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+      .sec-h span { color: var(--accent); letter-spacing: 0.04em; font-weight: 700; font-family: var(--mono); font-size: 10.5px; text-transform: none; }
+      .sec.c1 { background: linear-gradient(135deg, rgba(255, 138, 76, 0.08), rgba(20, 16, 14, 0.95)); border-left: 3px solid var(--accent); }
+      .sec.c2 { background: linear-gradient(135deg, rgba(56, 217, 245, 0.07), rgba(20, 16, 14, 0.95)); border-left: 3px solid var(--accent-cyan); }
+      .sec.c3 { background: linear-gradient(135deg, rgba(179, 136, 255, 0.08), rgba(20, 16, 14, 0.95)); border-left: 3px solid var(--accent-purple); }
+      .sec.c4 { background: linear-gradient(135deg, rgba(52, 211, 153, 0.07), rgba(20, 16, 14, 0.95)); border-left: 3px solid var(--accent-green); }
+      #teleCv { width: 100%; height: 470px; display: block; border-radius: 8px; background: #0a0706; border: 1px solid var(--border-color); }
+      .loglist { display: flex; flex-direction: column; gap: 4px; max-height: 170px; overflow-y: auto; }
+      .loglist div { font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); padding: 4px 7px; border-radius: 5px; background: rgba(255, 255, 255, 0.04); display: flex; gap: 8px; }
+      .loglist div em { font-style: normal; color: var(--text-muted); min-width: 92px; }
+      .loglist div.sb { border-left: 3px solid var(--accent-red); }
+      .loglist .empty { color: var(--text-muted); background: none; }
+      .rows { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+      .row { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--mono); font-size: 11px; padding: 5px 0; border-bottom: 1px dotted rgba(255, 255, 255, 0.1); gap: 6px; }
+      .row dt { color: var(--text-secondary); white-space: nowrap; }
+      .row dd { font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .ctl { margin-bottom: 11px; }
+      .ctl.flash { animation: flash 1.2s ease; border-radius: 6px; }
+      @keyframes flash { 0%, 60% { box-shadow: 0 0 0 2px var(--accent-amber); background: rgba(251, 191, 36, 0.12); } 100% { box-shadow: none; background: none; } }
+      .ctl-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; gap: 6px; }
+      .ctl-name { font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); }
+      .ctl-val { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--accent); margin-left: auto; white-space: nowrap; }
+      .rst { font-family: var(--mono); font-size: 10px; color: var(--text-muted); background: transparent; border: 1px solid var(--border-color); border-radius: 5px; padding: 1px 6px; cursor: pointer; }
+      .rst:hover { color: #fff; border-color: var(--accent); }
+      input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.15); cursor: pointer; outline: none; }
+      input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: var(--accent); border-radius: 50%; border: 2px solid var(--bg-dark); box-shadow: 0 0 10px rgba(255, 138, 76, 0.55); }
+      input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; background: var(--accent); border-radius: 50%; border: 2px solid var(--bg-dark); }
+      input[type="range"]:disabled { opacity: 0.4; }
+      input[type="text"], input[type="color"] { font-family: var(--mono); font-size: 11px; color: var(--text-primary); background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); border-radius: 6px; padding: 6px 8px; }
+      input[type="color"] { padding: 2px; width: 44px; height: 30px; }
+      .seg { display: flex; border: 1px solid var(--border-color); border-radius: 7px; background: rgba(0, 0, 0, 0.4); overflow: hidden; }
+      .seg button { flex: 1; font-family: var(--mono); font-size: 10.5px; font-weight: 700; background: transparent; border: none; color: var(--text-secondary); padding: 7px 4px; cursor: pointer; }
+      .seg button.on { background: linear-gradient(90deg, var(--accent), #e8590c); color: #1a0c04; font-weight: 800; }
+      .seg button:disabled { opacity: 0.4; cursor: not-allowed; }
+      .tog, .eqtog { display: flex; align-items: center; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; padding: 6px 0; cursor: pointer; color: var(--text-secondary); gap: 8px; }
+      .tog input, .eqtog input { -webkit-appearance: none; appearance: none; width: 32px; height: 18px; border-radius: 9px; background: rgba(255, 255, 255, 0.15); position: relative; cursor: pointer; flex: none; transition: background 0.2s; }
+      .tog input:checked, .eqtog input:checked { background: var(--accent); }
+      .tog input::after, .eqtog input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: left 0.2s; }
+      .tog input:checked::after, .eqtog input:checked::after { left: 16px; }
+      .eq { font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); background: rgba(0, 0, 0, 0.35); border: 1px dashed var(--border-color); border-radius: 6px; padding: 8px 10px; margin-top: 4px; display: none; line-height: 1.65; overflow-x: auto; }
+      .eq.show { display: block; }
+      .eq div { white-space: nowrap; }
+      .eq .note { color: var(--text-muted); white-space: normal; }
+      .btn { display: block; width: 100%; font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--text-primary); background: rgba(255, 138, 76, 0.1); border: 1px solid var(--border-highlight); border-radius: 8px; padding: 9px 10px; cursor: pointer; letter-spacing: 0.03em; }
+      .btn:hover { background: rgba(255, 138, 76, 0.22); }
+      .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+      .btn.primary { background: linear-gradient(90deg, var(--accent), #e8590c); color: #1a0c04; border: none; font-weight: 800; }
+      .btn.cool { background: linear-gradient(90deg, #22d3ee, #0ea5e9); color: #03161d; border: none; font-weight: 800; }
+      .btns { display: flex; gap: 8px; margin-top: 8px; }
+      .btns .btn { flex: 1; }
+      .note { font-family: var(--mono); font-size: 10px; color: var(--text-muted); line-height: 1.5; margin-top: 6px; }
+      .gap8 { height: 8px; }
+      details.more { margin-top: 8px; border-top: 1px dashed var(--border-color); padding-top: 6px; }
+      details.more > summary { cursor: pointer; list-style: none; font-family: var(--mono); font-size: 10.5px; color: var(--text-muted); letter-spacing: 0.04em; padding: 3px 0; user-select: none; }
+      details.more > summary::-webkit-details-marker { display: none; }
+      details.more > summary::before { content: "▸ "; color: var(--accent); }
+      details.more[open] > summary::before { content: "▾ "; }
+      details.more[open] > summary { margin-bottom: 6px; }
+      .parts { display: grid; grid-template-columns: 1fr; gap: 8px; }
+      .part { display: grid; grid-template-columns: 92px 1fr; gap: 8px; align-items: center; }
+      .part .pn { font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); }
+      .part .seg button { font-size: 10px; padding: 6px 2px; }
+      .pred { margin-bottom: 10px; }
+      .pred .q { font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; line-height: 1.4; }
+      .pred.right .q::after { content: " ✓"; color: var(--accent-green); font-weight: 700; }
+      .pred.wrong .q::after { content: " ✗"; color: var(--accent-red); font-weight: 700; }
+      .diffcard { font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); line-height: 1.6; }
+      .diffcard b { color: var(--text-primary); }
+      .tbar { display: grid; grid-template-columns: 104px 1fr; gap: 6px; align-items: center; font-family: var(--mono); font-size: 10px; margin: 3px 0; color: var(--text-muted); }
+      .tbar .two { display: flex; flex-direction: column; gap: 2px; }
+      .tbar .two i { display: block; height: 7px; border-radius: 3px; }
+      .tbar .two i.m { background: var(--mars); }
+      .tbar .two i.e { background: var(--earth); }
+      .kbd { font-family: var(--mono); font-size: 10px; border: 1px solid var(--border-color); border-radius: 4px; padding: 0 4px; }
+
+      /* ================= ATMOSLAB ================= */
+      #app { grid-template-columns: 1fr 360px; }
+      #stage { overflow-y: auto; padding: 12px 14px 16px; gap: 10px; }
+      .bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .clock { font-family: var(--mono); font-size: 11px; color: var(--text-secondary); margin-right: auto; }
+      .clock b { color: #fff; }
+      .seg.spd { width: auto; }
+      .seg.spd button { padding: 6px 12px; }
+      .btn.sm { width: auto; padding: 7px 12px; }
+      .planets { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .pcard { display: grid; grid-template-columns: minmax(200px, 1.05fr) 1fr; gap: 12px; align-items: center; background: radial-gradient(circle at 25% 45%, #15100d, #0d0907 70%); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+      .globe { position: relative; min-width: 0; }
+      .expand { position: absolute; top: 4px; left: 4px; font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--text-secondary); background: rgba(10, 7, 6, 0.75); border: 1px solid var(--border-color); border-radius: 6px; padding: 3px 7px; cursor: pointer; }
+      .expand:hover { color: #fff; border-color: var(--accent); }
+      #big { position: fixed; inset: 0; z-index: 8500; background: radial-gradient(circle at 50% 40%, #16110e, #070504 75%); display: flex; flex-direction: column; padding: 14px 18px; }
+      #big[hidden] { display: none; }
+      .bighead { display: flex; align-items: baseline; gap: 12px; }
+      .bighead b { font-family: var(--head); font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-primary); }
+      .bighead span { font-family: var(--mono); font-size: 11px; color: var(--text-muted); flex: 1; }
+      .bigrow { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 10px; }
+      .bigp { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+      .bigp canvas { flex: 1 1 auto; min-height: 0; width: 100%; display: block; }
+      .bigr { font-family: var(--mono); font-size: 11.5px; color: var(--text-secondary); text-align: center; line-height: 1.6; padding: 6px 4px 0; }
+      .bigr b { font-family: var(--head); letter-spacing: 0.06em; }
+      .pcard[data-p="earth"] { border-top: 3px solid var(--earth); }
+      .pcard[data-p="mars"] { border-top: 3px solid var(--mars); }
+      .pcard.editing { box-shadow: 0 0 0 1px var(--border-highlight); }
+      .sphere { width: 100%; aspect-ratio: 1 / 1.1; display: block; cursor: pointer; }
+      .pread { min-width: 0; font-family: var(--mono); font-size: 11px; color: var(--text-secondary); }
+      .pread h3 { font-family: var(--head); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: baseline; gap: 8px; }
+      .pread h3 small { font-family: var(--mono); font-size: 10px; letter-spacing: 0; text-transform: none; color: var(--text-muted); }
+      .bigT { font-family: var(--head); font-size: 26px; color: #fff; line-height: 1.1; margin-bottom: 4px; }
+      .bigT small { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-left: 6px; }
+      .rl { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px dotted rgba(255, 255, 255, 0.1); }
+      .rl dt { white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+      .rl dd { font-weight: 700; color: var(--text-primary); white-space: nowrap; text-align: right; }
+      .ghbar { display: flex; height: 7px; border-radius: 4px; overflow: hidden; margin: 3px 0 2px; background: rgba(255, 255, 255, 0.06); }
+      .ghbar i { display: block; height: 100%; }
+      .ghkey { font-size: 9.5px; color: var(--text-muted); }
+      .uvchip { display: inline-block; font-weight: 800; padding: 1px 7px; border-radius: 6px; color: #120c09; margin-left: 4px; }
+      .uvbands { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+      .xbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: rgba(34, 211, 238, 0.06); border: 1px dashed rgba(34, 211, 238, 0.4); border-radius: 10px; padding: 8px 12px; }
+      .xbar .btn { width: auto; padding: 9px 14px; }
+      .xbar .btn.on { background: linear-gradient(90deg, #f59e0b, #e8590c); color: #1a0c04; }
+      .xnote { font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); flex: 1 1 240px; line-height: 1.45; }
+      .graphs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1 1 auto; min-height: 300px; }
+      .gbox { display: flex; flex-direction: column; min-height: 0; background: var(--panel-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 8px 10px; }
+      .gtitle { font-family: var(--head); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-primary); display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+      .gtitle span { font-family: var(--mono); font-size: 10px; letter-spacing: 0; text-transform: none; color: var(--text-muted); flex: 1; }
+      .gbox canvas { flex: 1 1 auto; min-height: 220px; width: 100%; display: block; border-radius: 8px; background: #0a0706; border: 1px solid var(--border-color); touch-action: none; }
+      #gProf { cursor: ns-resize; }
+      .gbox .gcap { display: block; font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); margin-top: 6px; line-height: 1.5; min-height: 32px; }
+      .gcap b { color: #fff; }
+      .why { flex: none; font-family: var(--mono); font-size: 9.5px; font-weight: 700; color: var(--accent-cyan); background: rgba(56, 217, 245, 0.08); border: 1px solid rgba(56, 217, 245, 0.45); border-radius: 10px; padding: 1px 7px; cursor: pointer; text-transform: none; letter-spacing: 0; }
+      .why:hover { background: rgba(56, 217, 245, 0.2); }
+      .ctl-top .why { margin-left: 2px; }
+      .ticks { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 9px; color: var(--text-muted); margin-top: 3px; }
+      .mixbar { position: relative; display: flex; height: 34px; border-radius: 8px; border: 1px solid var(--border-color); touch-action: none; user-select: none; -webkit-user-select: none; }
+      .mixbar .segm { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 10px; font-weight: 800; color: #0b0807; overflow: hidden; white-space: nowrap; cursor: pointer; min-width: 0; }
+      .mixbar .segm:first-child { border-radius: 7px 0 0 7px; }
+      .mixbar .segm:last-of-type { border-radius: 0 7px 7px 0; }
+      .mixbar .hnd { position: absolute; top: -6px; bottom: -6px; width: 18px; margin-left: -9px; cursor: ew-resize; z-index: 2; display: flex; justify-content: center; touch-action: none; }
+      .mixbar .hnd::before { content: ""; width: 4px; border-radius: 2px; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6); }
+      .mixbar .hnd:focus-visible::before { outline: 2px solid var(--accent); }
+      .mixin { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+      .mixin label { display: flex; flex-direction: column; gap: 3px; font-family: var(--mono); font-size: 10px; color: var(--text-secondary); }
+      .mixin label i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+      .mixin input { width: 100%; font-family: var(--mono); font-size: 11px; color: var(--text-primary); background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); border-radius: 6px; padding: 5px 6px; }
+      .mixin input.bad { border-color: var(--accent-red); }
+      .mixerr { margin-top: 6px; font-family: var(--mono); font-size: 10.5px; color: #fecdd3; background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.5); border-radius: 6px; padding: 6px 8px; }
+      .mixerr[hidden] { display: none; }
+      .tgl { -webkit-appearance: none; appearance: none; width: 34px; height: 19px; border-radius: 10px; background: rgba(255, 255, 255, 0.15); position: relative; cursor: pointer; flex: none; margin-left: auto; }
+      .tgl:checked { background: var(--accent); }
+      .tgl::after { content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: #fff; transition: left 0.2s; }
+      .tgl:checked::after { left: 17px; }
+      .tgl[hidden] { display: none; }
+      .lock { font-family: var(--mono); font-size: 10px; color: var(--accent-amber); background: transparent; border: 1px solid rgba(251, 191, 36, 0.5); border-radius: 6px; padding: 2px 7px; cursor: pointer; margin-left: auto; }
+      .lock[hidden] { display: none; }
+      select { font-family: var(--mono); font-size: 11px; color: var(--text-primary); background: rgba(0, 0, 0, 0.45); border: 1px solid var(--border-color); border-radius: 6px; padding: 5px 6px; margin-left: auto; }
+      .pop { position: fixed; z-index: 9000; max-width: min(360px, calc(100vw - 24px)); background: #1b1411; border: 1px solid var(--border-highlight); border-radius: 10px; padding: 12px 14px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55); color: var(--text-secondary); font-size: 13px; line-height: 1.55; }
+      .pop[hidden] { display: none; }
+      .pop b { display: block; font-family: var(--head); font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-2); margin: 0 26px 6px 0; }
+      .pop p { margin: 0; }
+      .pclose { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 11px; }
+      .chk { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-family: var(--mono); font-size: 10.5px; color: var(--text-secondary); margin-top: 4px; }
+      .chk b { color: var(--text-primary); text-align: right; white-space: nowrap; }
+      .gtip { position: fixed; z-index: 8000; }
+
+      @media (max-width: 1080px) {
+        html, body { height: auto; overflow: auto; }
+        #app { grid-template-columns: 1fr; flex: 0 0 auto; }
+        #stage { overflow: visible; }
+        #panel { overflow-y: visible; }
+      }
+      @media (max-width: 760px) {
+        header.top { grid-template-columns: 1fr; gap: 6px; padding: 8px 12px; }
+        .helpbtns, .title { grid-column: 1; justify-self: center; }
+        .title { grid-row: 1; }
+        .helpbtns { grid-row: 2; }
+        .modes { display: none; }
+        .title h1 { font-size: 14px; }
+        .planets, .graphs { grid-template-columns: 1fr; }
+        .pcard { grid-template-columns: 1fr; }
+        .globe { max-width: 320px; width: 100%; justify-self: center; }
+        .bigrow { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+        .mixin { grid-template-columns: repeat(2, 1fr); }
+        .gbox canvas { min-height: 240px; }
+      }
+    </style>
+    <style id="lof-scrollbars">
+      /* Thin scrollbars everywhere; the colours are set by the script below from each panel's own colours. */
+      :where(html, body *) {
+        scrollbar-width: thin;
+      }
+    </style>
+    <script id="lof-scrollbars-js">
+      /* Scrollbars that match the UI: for every scroll area, the track is the background it actually shows
+         and the thumb is that background blended toward the simulation's text colour (or white/black when the
+         text colour does not stand out). Re-checked when the page changes, so panels opened later match too. */
+      (function () {
+        function rgb(s) {
+          var m = s && s.match(/rgba?\(([^)]+)\)/);
+          if (!m) return null;
+          var p = m[1].split(/[ ,\/]+/).filter(Boolean).map(parseFloat);
+          return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+        }
+        function bgOf(el) {
+          for (; el && el.nodeType === 1; el = el.parentElement) {
+            var cs = getComputedStyle(el);
+            var c = rgb(cs.backgroundColor);
+            if (c && c.a > 0.5) return c;
+            if (cs.backgroundImage && cs.backgroundImage.indexOf("gradient") >= 0) {
+              var g = rgb(cs.backgroundImage);
+              if (g && g.a > 0.5) return g;
+            }
+          }
+          return { r: 255, g: 255, b: 255, a: 1 };
+        }
+        function lum(c) {
+          return (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) / 255;
+        }
+        function mix(a, b, t) {
+          return "rgb(" + Math.round(a.r + (b.r - a.r) * t) + "," + Math.round(a.g + (b.g - a.g) * t) + "," + Math.round(a.b + (b.b - a.b) * t) + ")";
+        }
+        function colours(el, bgEl) {
+          var bg = bgOf(bgEl || el);
+          var ink = rgb(getComputedStyle(el === document.documentElement ? document.body : el).color);
+          if (!ink || Math.abs(lum(ink) - lum(bg)) < 0.35) ink = lum(bg) < 0.5 ? { r: 255, g: 255, b: 255 } : { r: 0, g: 0, b: 0 };
+          return mix(bg, ink, 0.4) + " " + mix(bg, ink, 0.04);
+        }
+        function paint(el, bgEl) {
+          var v = colours(el, bgEl);
+          if (el.__lofSb !== v) {
+            el.__lofSb = v;
+            el.style.setProperty("scrollbar-color", v, "important");
+          }
+        }
+        function scan() {
+          if (!document.body) return;
+          paint(document.documentElement, document.body);
+          var all = document.body.getElementsByTagName("*");
+          for (var i = 0; i < all.length; i++) {
+            var el = all[i];
+            var cs = getComputedStyle(el);
+            var ox = cs.overflowX,
+              oy = cs.overflowY;
+            if (ox === "auto" || ox === "scroll" || oy === "auto" || oy === "scroll" || el.tagName === "TEXTAREA" || el.tagName === "SELECT") paint(el);
+          }
+        }
+        var t = 0;
+        function later() {
+          if (t) return;
+          t = setTimeout(function () {
+            t = 0;
+            scan();
+          }, 400);
+        }
+        function start() {
+          scan();
+          setTimeout(scan, 1200);
+          new MutationObserver(later).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "hidden", "open"] });
+          window.addEventListener("resize", later);
+        }
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+        else start();
+      })();
+    </script>
+    <style id="lof-help">
+      .lof-i { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; margin: 0 0 0 6px; border-radius: 50%; border: 1.3px solid currentColor; font: 700 10px/1 system-ui, -apple-system, "Segoe UI", sans-serif; font-style: normal; text-transform: none; letter-spacing: 0; opacity: 0.72; cursor: help; vertical-align: -2px; flex: none; user-select: none; -webkit-user-select: none; }
+      .lof-i:hover, .lof-i[aria-expanded="true"] { opacity: 1; }
+      .lof-i.corner { position: absolute; top: -7px; right: -7px; margin: 0; width: 18px; height: 18px; background: inherit; opacity: 0.9; z-index: 2; }
+      .lof-i:focus-visible { opacity: 1; outline: 2px solid currentColor; outline-offset: 2px; }
+      #lof-tip { position: fixed; left: 0; top: 0; z-index: 2147483000; max-width: min(300px, calc(100vw - 24px)); padding: 9px 11px; border-radius: 8px; border: 1px solid; font: 500 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; text-transform: none; letter-spacing: 0; text-align: left; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 0.12s; }
+      #lof-tip.show { opacity: 1; visibility: visible; }
+      #lof-tip b { display: block; margin-bottom: 3px; font-weight: 700; }
+    </style>
+    <script id="lof-help-js">
+      /* Settings help: an (i) next to every setting's label explains what it does and why. Hover, focus or tap it. */
+      (() => {
+        const HELP = {"__skip": ".sec-h,.rl,.gtitle,.pread,.xbar", "@#speedSeg": ["Sim speed", "How fast the shared clock runs. At 1× one Earth day passes in about 3 minutes; 5× and 20× speed both planets up together."], "Planet to edit": "Choose which planet the controls below change. Both planets always stay on screen; tapping a planet also selects it.", "Presets": "Earth defaults or Mars defaults load that real planet's values into the planet you are editing. Reset custom brings back your own last settings for it.", "Distance from the Sun": "How far the planet is from the Sun, in astronomical units (Earth's distance is 1 AU). Sunlight weakens with the square of the distance.", "Albedo": "The share of sunlight the planet reflects straight back to space: 0 absorbs everything, 1 reflects everything. Earth 0.306, Mars 0.25.", "Surface pressure": "How much air presses on the ground, which is how much atmosphere the planet has. The slider is on a log scale so Earth (101 kPa) and Mars (0.636 kPa) both have room.", "Gas mix": "What the air is made of. Drag a boundary to move share between two neighbouring gases, or type each percentage. The four must add up to 100%.", "Ozone layer": "Earth's ozone layer absorbs UVB and UVC and warms the air above about 20 km. Mars's switch is locked off because real Mars has almost no ozone.", "CO₂ baseline": "Earth's carbon dioxide level: 420 ppm today or 280 ppm before the industrial age. It sets the CO₂ share in an Earth-like mix.", "Show Equation: equilibrium temperature": "Shows how sunlight, distance and albedo set the temperature with no greenhouse, with the edited planet's numbers.", "Show Equation: greenhouse": "Shows how carbon dioxide and water vapour add warming, and which constants were fitted to what.", "Show Equation: day and night": "Shows the heat balance that makes the temperature rise by day and fall by night.", "Show Equation: surface UV": "Shows how much ultraviolet light reaches the ground once ozone and the air have filtered it.", "Show Equation: vertical structure": "Shows how temperature and pressure change with height."};
+        const norm = (s) => s.replace(/\s+/g, " ").trim().replace(/[:：]$/, "").trim().toLowerCase();
+        const byText = new Map(), bySel = [];
+        let SKIP = "script,style,svg,canvas,button,#lof-tip,.lof-i,p,li,td,th,h1,h2,.lof-nohelp";
+        for (const [k, v] of Object.entries(HELP)) (k === "__skip" ? (SKIP += "," + v) : k[0] === "@" ? bySel.push([k.slice(1), v]) : byText.set(norm(k), [k, v]));
+        const ownText = (el) => { let t = ""; for (const n of el.childNodes) if (n.nodeType === 3) t += n.nodeValue; return t; };
+        let tip = null, cur = null, pinned = false;
+        const parse = (c) => { const m = c && c.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(",").map(parseFloat); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+        function bgOf(el) {
+          for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+            const cs = getComputedStyle(n), c = parse(cs.backgroundColor);
+            if (c && c.a > 0.5) return c;
+            const g = cs.backgroundImage && cs.backgroundImage.match(/rgba?\([^)]+\)/);
+            if (g) { const c2 = parse(g[0]); if (c2 && c2.a > 0.5) return c2; }
+          }
+          return { r: 20, g: 24, b: 32, a: 1 };
+        }
+        function place(icon) {
+          const fg = parse(getComputedStyle(icon).color) || { r: 230, g: 235, b: 245 }, bg = bgOf(icon.parentElement);
+          const mix = (a, b, k) => Math.round(a + (b - a) * k);
+          tip.style.background = `rgb(${mix(bg.r, fg.r, 0.07)},${mix(bg.g, fg.g, 0.07)},${mix(bg.b, fg.b, 0.07)})`;
+          tip.style.color = `rgb(${fg.r},${fg.g},${fg.b})`;
+          tip.style.borderColor = `rgba(${fg.r},${fg.g},${fg.b},0.35)`;
+          const r = icon.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight, vw = innerWidth, vh = innerHeight;
+          let x = Math.min(Math.max(12, r.left + r.width / 2 - w / 2), vw - w - 12), y = r.bottom + 8;
+          if (y + h > vh - 8 && r.top - h - 8 > 8) y = r.top - h - 8;
+          tip.style.left = x + "px"; tip.style.top = Math.max(8, y) + "px";
+        }
+        function show(icon) {
+          if (!tip) { tip = document.createElement("div"); tip.id = "lof-tip"; tip.setAttribute("role", "tooltip"); document.body.appendChild(tip); }
+          if (cur && cur !== icon) cur.setAttribute("aria-expanded", "false");
+          cur = icon; icon.setAttribute("aria-expanded", "true");
+          tip.innerHTML = "<b></b><span></span>";
+          tip.firstChild.textContent = icon.dataset.t; tip.lastChild.textContent = icon.dataset.h;
+          tip.classList.add("show"); place(icon);
+        }
+        function hide() { if (tip) tip.classList.remove("show"); if (cur) cur.setAttribute("aria-expanded", "false"); cur = null; pinned = false; }
+        function make(title, text) {
+          const i = document.createElement("span");
+          i.className = "lof-i"; i.textContent = "i"; i.tabIndex = 0;
+          i.setAttribute("role", "button"); i.setAttribute("aria-label", "About " + title + ": " + text); i.setAttribute("aria-expanded", "false");
+          i.dataset.t = title; i.dataset.h = text;
+          const stop = (e) => { e.preventDefault(); e.stopPropagation(); };
+          i.addEventListener("mouseenter", () => { if (!pinned) show(i); });
+          i.addEventListener("mouseleave", () => { if (!pinned) hide(); });
+          i.addEventListener("focus", () => show(i));
+          i.addEventListener("blur", () => { if (!pinned) hide(); });
+          i.addEventListener("pointerdown", (e) => e.stopPropagation());
+          i.addEventListener("mousedown", (e) => e.stopPropagation());
+          i.addEventListener("click", (e) => { stop(e); if (cur === i && pinned) hide(); else { show(i); pinned = true; } });
+          i.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { stop(e); if (cur === i && pinned) hide(); else { show(i); pinned = true; } } else if (e.key === "Escape") hide(); });
+          return i;
+        }
+        function attach(el, title, text, corner) {
+          if (!el || (el.lastElementChild && el.lastElementChild.classList.contains("lof-i")) || el.querySelector(":scope > .lof-i")) return;
+          let after = null;
+          for (const n of el.childNodes) if (n.nodeType === 3 && n.nodeValue.trim()) after = n;
+          const i = make(title, text);
+          if (corner) i.classList.add("corner");
+          if (after && after.nextSibling) el.insertBefore(i, after.nextSibling); else el.appendChild(i);
+        }
+        // only labels that sit next to a real control (not readouts or help text)
+        const nearCtrl = (el) => { for (let n = el, i = 0; n && i < 3; n = n.parentElement, i++) if (n.querySelector("input:not([type=hidden]),select,[role=slider]") || n.querySelectorAll("button").length >= 2) return true; return false; };
+        function scan() {
+          if (!document.body) return;
+          for (const [sel, v] of bySel) document.querySelectorAll(sel).forEach((el) => attach(el, v[0], v[1], v[2] === "corner"));
+          if (!byText.size) return;
+          const all = document.body.getElementsByTagName("*");
+          for (let k = 0; k < all.length; k++) {
+            const el = all[k], t = ownText(el);
+            if (!t || t.length > 70) continue;
+            const hit = byText.get(norm(t));
+            if (!hit || el.closest(SKIP) || !nearCtrl(el)) continue;
+            attach(el, hit[0], hit[1]);
+          }
+        }
+        let due = 0;
+        const later = () => { if (!due) due = setTimeout(() => { due = 0; scan(); if (cur && !document.contains(cur)) hide(); }, 400); };
+        new MutationObserver((recs) => { for (const r of recs) if (!(r.target.id === "lof-tip" || (r.target.closest && r.target.closest("#lof-tip")))) return later(); }).observe(document.documentElement, { childList: true, subtree: true });
+        document.addEventListener("click", (e) => { if (pinned && !(e.target.closest && e.target.closest(".lof-i"))) hide(); }, true);
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape" && cur) hide(); });
+        addEventListener("scroll", () => { if (cur) (pinned ? place(cur) : hide()); }, true);
+        addEventListener("resize", () => cur && place(cur));
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", scan); else scan();
+      })();
+    </script>
+  </head>
+  <body>
+    <header class="top">
+      <div class="modes"></div>
+      <div class="title"><h1>AtmosLab: Two Planets</h1></div>
+      <div class="helpbtns">
+        <button type="button" class="helpbtn" data-tab="use">How To Use</button>
+        <button type="button" class="helpbtn" data-tab="learn">What You'll Learn</button>
+      </div>
+      <div class="helpbar" id="helpbar">
+        <div class="tabpanel" data-panel="use">
+          <ol>
+            <li><b>Two planets, one screen.</b> Earth and Mars sit side by side and share the same graphs. Their temperatures respond the moment you move a control.</li>
+            <li><b>Pick a planet to edit</b> at the top of the Controls panel, then change its <b>distance from the Sun</b>, <b>albedo</b> (how much sunlight it reflects), <b>surface pressure</b> and <b>gas mix</b>.</li>
+            <li><b>Gas mix:</b> drag the boundaries between the coloured segments, or type a percentage. The four gases always add up to 100%; if you type a mix that doesn't, the planet waits until you fix it.</li>
+            <li><b>The experiment reality cannot run:</b> press <b>Mars's air at Earth's pressure</b>. Mars keeps its 95% carbon dioxide but gets as much air as Earth.</li>
+            <li><b>Presets:</b> Earth defaults or Mars defaults load a known planet into the one you are editing; Reset custom brings back your own settings.</li>
+            <li><b>Day and night</b> run on a shared clock, sped up: one Earth day passes in about 3 minutes at 1×. Use 1× / 5× / 20× and Pause. The temperature graph shows a point on each planet's equator through its day.</li>
+            <li><b>Altitude:</b> drag the marker on the profile graph (0–60 km) to read the temperature and pressure at that height on both planets.</li>
+            <li><b>Tap anything marked Why?</b> (the sliders' names, the CO₂ segment, the greenhouse readout, the UV readout and both graphs) for the idea behind it.</li>
+            <li><b>Export CSV</b> saves the temperatures recorded during your run.</li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="learn">
+          <ul>
+            <li><b>Distance and albedo</b> set a planet's starting temperature: sunlight thins with the square of distance, and reflected light never warms anything.</li>
+            <li><b>Pressure beats percentage:</b> Mars's air is almost all carbon dioxide, yet it barely warms the planet, because there is so little air.</li>
+            <li><b>Earth's greenhouse</b> is mostly water vapour and clouds, not mostly carbon dioxide.</li>
+            <li><b>Day and night:</b> Earth and Mars have days of almost the same length but very different temperature swings. The atmosphere is the difference.</li>
+            <li><b>UV:</b> Mars gets dangerous UV despite weaker sunlight, because it has no ozone to filter it.</li>
+            <li><b>Vertical structure:</b> Earth's stratosphere is warmed by ozone; Mars has no ozone and so no stratosphere.</li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <div id="app">
+      <div id="stage">
+        <div class="bar" id="topBar">
+          <div class="clock" id="clock"></div>
+          <div class="seg spd" id="speedSeg"><button data-s="1" class="on">1×</button><button data-s="5">5×</button><button data-s="20">20×</button></div>
+          <button class="btn sm" id="pauseBtn">❚❚ Pause</button>
+          <button class="btn sm" id="csvBtn" hidden>⤓ Export CSV</button>
+        </div>
+        <div class="planets">
+          <div class="pcard" data-p="earth">
+            <div class="globe"><canvas class="sphere" data-p="earth"></canvas><button class="expand" data-p="earth" title="Show both planets full screen">⤢ Full view</button></div>
+            <div class="pread" data-p="earth"></div>
+          </div>
+          <div class="pcard" data-p="mars">
+            <div class="globe"><canvas class="sphere" data-p="mars"></canvas><button class="expand" data-p="mars" title="Show both planets full screen">⤢ Full view</button></div>
+            <div class="pread" data-p="mars"></div>
+          </div>
+        </div>
+        <div class="xbar">
+          <button class="btn cool" id="expBtn">Mars's air at Earth's pressure</button>
+          <span class="xnote" id="expNote">The experiment reality cannot run: keep Mars's 95% CO₂, give it as much air as Earth.</span>
+        </div>
+        <div class="graphs">
+          <div class="gbox">
+            <div class="gtitle">Day and night <span>temperature at a point on the equator</span><button class="why" data-why="swing">Why?</button></div>
+            <canvas id="gDay"></canvas>
+            <div class="gcap" id="gDayCap"></div>
+          </div>
+          <div class="gbox">
+            <div class="gtitle">Vertical profile <span>drag the marker to change altitude</span><button class="why" data-why="profile">Why?</button></div>
+            <canvas id="gProf"></canvas>
+            <div class="gcap" id="gProfCap"></div>
+          </div>
+        </div>
+        <div class="gtip" id="gTip"></div>
+      </div>
+
+      <div id="panel">
+        <div class="sec c1 show">
+          <div class="sec-h">Controls <span id="editTag"></span></div>
+          <div class="ctl"><div class="ctl-top"><span class="ctl-name">Planet to edit</span></div>
+            <div class="seg" id="planetSeg"><button data-p="earth" class="on">Earth</button><button data-p="mars">Mars</button></div>
+          </div>
+          <div class="ctl"><div class="ctl-top"><span class="ctl-name">Presets</span></div>
+            <div class="seg" id="presetSeg"><button data-k="earth">Earth defaults</button><button data-k="mars">Mars defaults</button><button data-k="custom">Reset custom</button></div>
+          </div>
+        </div>
+        <div class="sec show">
+          <div class="ctl" data-c="d"><div class="ctl-top"><span class="ctl-name">Distance from the Sun</span><button class="why" data-why="dist">Why?</button><span class="ctl-val" id="v_d"></span></div><input type="range" id="s_d" min="0.3" max="5" step="0.001" /></div>
+          <div class="ctl" data-c="A"><div class="ctl-top"><span class="ctl-name">Albedo</span><button class="why" data-why="dist">Why?</button><span class="ctl-val" id="v_A"></span></div><input type="range" id="s_A" min="0" max="1" step="0.001" /></div>
+          <div class="ctl" data-c="P"><div class="ctl-top"><span class="ctl-name">Surface pressure</span><span class="ctl-val" id="v_P"></span></div><input type="range" id="s_P" min="0" max="1000" step="1" />
+            <div class="ticks"><span>0.05</span><span>0.5</span><span>5</span><span>50</span><span>500 kPa</span></div>
+          </div>
+          <div class="ctl"><div class="ctl-top"><span class="ctl-name">Gas mix</span><button class="why" data-why="co2">Why?</button><span class="ctl-val" id="v_mix"></span></div>
+            <div class="mixbar" id="mixBar"></div>
+            <div class="mixin" id="mixIn"></div>
+            <div class="mixerr" id="mixErr" hidden></div>
+          </div>
+          <div class="ctl" id="ozCtl"><div class="ctl-top"><span class="ctl-name">Ozone layer</span><span class="lock" id="ozLock" hidden title="Locked: tap for why">🔒 locked</span><input type="checkbox" class="tgl" id="ozTog" /></div></div>
+          <div class="ctl" id="baseCtl"><div class="ctl-top"><span class="ctl-name">CO₂ baseline</span>
+            <select id="baseSel"><option value="420">420 ppm (today)</option><option value="280">280 ppm (pre-industrial)</option></select></div>
+          </div>
+        </div>
+        <div class="sec c2 show">
+          <div class="sec-h">The model <span>every number from these</span></div>
+          <label class="eqtog"><span>Show Equation: equilibrium temperature</span><input type="checkbox" data-eq="eqEq" /></label>
+          <div class="eq" id="eqEq"></div>
+          <label class="eqtog"><span>Show Equation: greenhouse</span><input type="checkbox" data-eq="eqGh" /></label>
+          <div class="eq" id="eqGh"></div>
+          <label class="eqtog"><span>Show Equation: day and night</span><input type="checkbox" data-eq="eqDay" /></label>
+          <div class="eq" id="eqDay"></div>
+          <label class="eqtog"><span>Show Equation: surface UV</span><input type="checkbox" data-eq="eqUv" /></label>
+          <div class="eq" id="eqUv"></div>
+          <label class="eqtog"><span>Show Equation: vertical structure</span><input type="checkbox" data-eq="eqProf" /></label>
+          <div class="eq" id="eqProf"></div>
+          <details class="more"><summary>Checks against real values</summary>
+            <div id="checks"></div>
+          </details>
+        </div>
+      </div>
+    </div>
+    <div id="big" hidden>
+      <div class="bighead"><b>Earth and Mars, full view</b><span>the same model, rendered large · Esc to close</span><button class="btn sm" id="bigClose">✕ Close</button></div>
+      <div class="bigrow">
+        <div class="bigp"><canvas data-p="earth"></canvas><div class="bigr" data-p="earth"></div></div>
+        <div class="bigp"><canvas data-p="mars"></canvas><div class="bigr" data-p="mars"></div></div>
+      </div>
+    </div>
+    <div class="pop" id="pop" hidden><button class="pclose" id="popClose" aria-label="Close">✕</button><b id="popT"></b><p id="popX"></p></div>
+
+    <script>
+/* ================= ATMOSLAB: THE PHYSICS =================
+   Every number traces to an equation below or to a measured value. Values that had to be fitted are named
+   "fitted" and say what they were fitted to. */
+const AL = (() => {
+  const M = {};
+  const SIGMA = 5.670e-8,
+    S0 = 1361,
+    RGAS = 8.314;
+  M.SIGMA = SIGMA;
+  M.S0 = S0;
+  const clamp = (x, a, b) => (x < a ? a : x > b ? b : x);
+  M.clamp = clamp;
+  const sstep = (a, b, x) => {
+    const t = clamp((x - a) / (b - a), 0, 1);
+    return t * t * (3 - 2 * t);
+  };
+  M.GASES = ["N2", "O2", "CO2", "Ar"];
+  M.GAS = {
+    N2: { name: "Nitrogen", f: "N₂", M: 0.028014, cp: 1040, col: "#7aa7ff" },
+    O2: { name: "Oxygen", f: "O₂", M: 0.031998, cp: 918, col: "#5eead4" },
+    CO2: { name: "Carbon dioxide", f: "CO₂", M: 0.04401, cp: 820, col: "#f59e0b" },
+    Ar: { name: "Argon", f: "Ar", M: 0.039948, cp: 520, col: "#c084fc" },
+  };
+  // the two planets (real measured values; Mars mix and pressure as given, final)
+  M.PRESET = {
+    earth: { d: 1.0, A: 0.306, P: 101.325, mix: { N2: 78.084, O2: 20.946, CO2: 0.042, Ar: 0.928 }, ozone: true, base: 420 },
+    mars: { d: 1.524, A: 0.25, P: 0.636, mix: { N2: 2.95, O2: 0.13, CO2: 95.32, Ar: 1.6 }, ozone: false, base: 420 },
+  };
+
+  // Mars: 95.32 % CO2, 2.7 % N2, 1.6 % Ar, 0.13 % O2 leave 0.25 % of other gases (mostly CO, close to N2 in mass),
+  // counted with N2 here so the four segments add to 100 %
+  M.BODY = {
+    earth: { name: "Earth", g: 9.81, day: 86400, lapse: 6.5, water: true, swing: 12.5 },
+    mars: { name: "Mars", g: 3.71, day: 88775, lapse: 2.5, water: false, swing: 65 },
+  };
+  M.normMix = (mix) => {
+    let s = 0;
+    for (const g of M.GASES) s += mix[g];
+    const o = {};
+    for (const g of M.GASES) o[g] = mix[g] / s;
+    return o; // fractions
+  };
+  M.molar = (mix) => {
+    const x = M.normMix(mix);
+    let m = 0;
+    for (const g of M.GASES) m += x[g] * M.GAS[g].M;
+    return m;
+  };
+  M.cp = (mix) => {
+    const x = M.normMix(mix),
+      m = M.molar(mix);
+    let c = 0;
+    for (const g of M.GASES) c += ((x[g] * M.GAS[g].M) / m) * M.GAS[g].cp;
+    return c;
+  };
+
+  /* ---------- equilibrium temperature ---------- */
+  M.S = (d) => S0 / (d * d);
+  M.Sabs = (d, A) => (M.S(d) * (1 - A)) / 4;
+  M.Teff = (d, A) => Math.pow(M.Sabs(d, A) / SIGMA, 0.25);
+
+  /* ---------- greenhouse ---------- */
+  // CO2: ΔT = k × ln(1 + pCO2 / p_ref) × (P / 101.325 kPa)^β  (pressure broadening: thin air absorbs less)
+  // fitted so that (1) at Earth (420 ppm, 101.325 kPa) CO2 gives 20 % of the 33 K greenhouse, (2) near Earth it
+  // changes like 0.8 × 5.35 × ln(C/420), and (3) real Mars (0.606 kPa CO2 in 0.636 kPa) gives 5.5 K
+  const LAMBDA = 0.8,
+    C0 = 420;
+  M.LAMBDA = LAMBDA;
+  {
+    // solve (1)+(2): ln(1+x)·(1+x)/x = 6.6 / (λ·5.35), x = pCO2_E / p_ref
+    const pE = (420e-6 * 101.325),
+      target = 6.6 / (LAMBDA * 5.35);
+    let lo = 0.01,
+      hi = 50;
+    for (let i = 0; i < 80; i++) {
+      const x = (lo + hi) / 2;
+      ((1 + x) * Math.log(1 + x)) / x < target ? (lo = x) : (hi = x);
+    }
+    const x = (lo + hi) / 2;
+    M.PREF = pE / x;
+    M.K = 6.6 / Math.log(1 + x);
+    const pM = 0.636 * 0.9532;
+    M.BETA = Math.log(5.5 / (M.K * Math.log(1 + pM / M.PREF))) / Math.log(0.636 / 101.325);
+  }
+  M.dT_CO2 = (pCO2, P) => (pCO2 <= 0 ? 0 : M.K * Math.log(1 + pCO2 / M.PREF) * Math.pow(P / 101.325, M.BETA));
+  // water vapour, clouds and trace gases (75 % + 5 % of Earth's greenhouse): only a planet with oceans has them,
+  // and they fade out as the air thins toward water's triple-point pressure (0.611 kPa), where liquid water and
+  // evaporation stop. Fitted so Earth's defaults give 288.15 K.
+  M.W_EARTH = 288.15 - M.Teff(1, 0.306) - 6.6;
+  M.dT_water = (P, hasWater) => (hasWater ? M.W_EARTH * sstep(0.611, 30, P) : 0);
+  M.greenhouse = (st, body) => {
+    const x = M.normMix(st.mix);
+    // Earth's CO2 baseline (420 or 280 ppm) sets the CO2 share of an Earth-like mix
+    const pCO2 = st.P * x.CO2;
+    const co2 = M.dT_CO2(pCO2, st.P);
+    const wat = M.dT_water(st.P, M.BODY[body].water);
+    return { co2, water: wat * (75 / 80), trace: wat * (5 / 80), total: co2 + wat, pCO2 };
+  };
+  M.surfaceT = (st, body) => M.Teff(st.d, st.A) + M.greenhouse(st, body).total;
+
+  /* ---------- day and night: C_eff dT/dt = S_abs(t) − εσT⁴ + G ---------- */
+  // a point on the equator: sunlight max(0, cos h), scaled so its daily mean is the planet's S(1−A)/4;
+  // G is the greenhouse back-radiation that keeps the daily mean at the surface temperature
+  M.CEFF = null; // {Cg, f} fitted at load (see fitCeff)
+  M.ceff = (st, body) => {
+    const a = (M.cp(st.mix) * st.P * 1000) / M.BODY[body].g; // heat capacity of the air column, J/(m² K)
+    return M.CEFF.Cg + M.CEFF.f * a + (M.BODY[body].water ? M.CEFF.Cw * sstep(0.611, 30, st.P) : 0);
+  };
+  M.solarAt = (st, phase) => Math.PI * M.Sabs(st.d, st.A) * Math.max(0, Math.cos(phase * 2 * Math.PI)); // phase 0 = noon
+  M.Gflux = (st, body) => SIGMA * Math.pow(M.surfaceT(st, body), 4) - M.Sabs(st.d, st.A);
+  M.step = (T, st, body, phase, dt, C, G) => {
+    const dT = (M.solarAt(st, phase) - SIGMA * T * T * T * T + G) / C;
+    return T + dT * dt;
+  };
+  // run several days and return the last day's curve
+  M.dayCurve = (st, body, C) => {
+    C = C || M.ceff(st, body);
+    const G = M.Gflux(st, body);
+    const day = M.BODY[body].day,
+      n = 720,
+      dt = day / n;
+    let T = M.surfaceT(st, body);
+    let curve = [];
+    for (let d = 0; d < 8; d++) {
+      curve = [];
+      for (let i = 0; i < n; i++) {
+        const ph = i / n - 0.5;
+        // small steps for stability when C is small
+        const sub = 4;
+        for (let s = 0; s < sub; s++) T = M.step(T, st, body, ph + s / (n * sub), dt / sub, C, G);
+        curve.push([((ph + 0.5 + 1) % 1) * 24, T]);
+      }
+    }
+    curve.sort((a, b) => a[0] - b[0]);
+    const ts = curve.map((p) => p[1]);
+    return { curve, min: Math.min(...ts), max: Math.max(...ts), swing: Math.max(...ts) - Math.min(...ts), mean: ts.reduce((a, b) => a + b, 0) / ts.length };
+  };
+  // fit the effective heat capacity so the real swings come out: Earth land 10–15 °C (12.5), Mars 60+ K (65)
+  M.fitCeff = () => {
+    const swingFor = (st, body, C) => M.dayCurve(st, body, C).swing;
+    const solveC = (st, body, target) => {
+      let lo = 1e3,
+        hi = 1e8;
+      for (let i = 0; i < 60; i++) {
+        const c = Math.sqrt(lo * hi);
+        swingFor(st, body, c) > target ? (lo = c) : (hi = c);
+      }
+      return Math.sqrt(lo * hi);
+    };
+    const E = M.PRESET.earth,
+      Ma = M.PRESET.mars;
+    const CE = solveC(E, "earth", M.BODY.earth.swing),
+      CM = solveC(Ma, "mars", M.BODY.mars.swing);
+    // C = Cg + f × (column heat capacity); Earth's land also stores heat in moist soil (Cw), Mars has none
+    const aE = (M.cp(E.mix) * E.P * 1000) / M.BODY.earth.g,
+      aM = (M.cp(Ma.mix) * Ma.P * 1000) / M.BODY.mars.g;
+    const f = 0.006; // fitted share of the air column that takes part in the daily cycle (a boundary layer ~ 0.6 % of the column mass)
+    const Cg = Math.max(1e3, CM - f * aM);
+    const Cw = Math.max(0, CE - Cg - f * aE);
+    M.CEFF = { Cg, f, Cw, CE, CM };
+    return M.CEFF;
+  };
+
+  /* ---------- UV at the surface: UV_top × exp(−k_O3 × O3 − k_scatter × P) ---------- */
+  // top-of-atmosphere UV at 1 AU, per band (W/m²), and the extinction constants: fitted so that Mars's surface gets
+  // the modelled ~50 W/m² (UVA 40, UVB 8, UVC 3) and Earth's clear-sky noon gets about UVA 62, UVB 1.5, UVC 0
+  M.UV = {
+    top: { A: 40 / 0.4306 / Math.exp(-0.004 * 0.636), B: 8 / 0.4306 / Math.exp(-0.006 * 0.636), C: 3 / 0.4306 / Math.exp(-0.008 * 0.636) },
+    ks: { A: 0.004, B: 0.006, C: 0.008 }, // per kPa (scattering by the air)
+    kO3: { A: 0, B: 0.0063, C: 0.1 }, // per Dobson unit
+    O3: 300, // Dobson units of Earth's ozone layer
+    w: { A: 0.0004, B: 0.15, C: 1.0 }, // erythemal (sunburn) weights
+  };
+  M.uv = (st) => {
+    const out = {},
+      U = M.UV,
+      f = 1 / (st.d * st.d);
+    for (const b of ["A", "B", "C"]) out[b] = U.top[b] * f * Math.exp(-(st.ozone ? U.kO3[b] * U.O3 : 0) - U.ks[b] * st.P);
+    out.total = out.A + out.B + out.C;
+    out.index = 40 * (out.A * U.w.A + out.B * U.w.B + out.C * U.w.C);
+    return out;
+  };
+
+  /* ---------- vertical structure ---------- */
+  // T(z): Earth — troposphere at 6.5 K/km to 11 km, isothermal to 20 km, then warming by ozone (+1 K/km to 32 km,
+  // +2.8 K/km to 47 km, as in the US Standard Atmosphere), isothermal to 51 km, cooling above.
+  // Mars — 2.5 K/km (varies with dust), no ozone, so no stratosphere; levels off near 140 K.
+  M.Tz = (st, body, z) => {
+    const Ts = M.surfaceT(st, body);
+    if (body === "earth") {
+      const Ttp = Ts - 6.5 * 11;
+      if (z <= 11) return Ts - 6.5 * z;
+      if (z <= 20 || !st.ozone) return Ttp;
+      if (z <= 32) return Ttp + (z - 20);
+      if (z <= 47) return Ttp + 12 + 2.8 * (z - 32);
+      if (z <= 51) return Ttp + 54;
+      return Ttp + 54 - 2.8 * (z - 51);
+    }
+    return Math.max(Math.min(Ts, 140), Ts - 2.5 * z);
+  };
+  M.layers = (st, body) =>
+    body === "earth"
+      ? [{ z: 11, name: "tropopause" }, ...(st.ozone ? [{ z: 20, name: "ozone warming begins" }, { z: 47, name: "stratopause" }] : [])]
+      : [];
+  // P(z) by integrating dlnP/dz = −g M / (R T(z)); in a constant-lapse layer this is P_s (T/T_s)^(gM/RL)
+  M.profile = (st, body, zmax = 60, dz = 0.25) => {
+    const g = M.BODY[body].g,
+      m = M.molar(st.mix);
+    const out = [];
+    let lnP = Math.log(st.P);
+    for (let z = 0; z <= zmax + 1e-9; z += dz) {
+      const T = M.Tz(st, body, z);
+      out.push({ z, T, P: Math.exp(lnP) });
+      const Tm = (T + M.Tz(st, body, z + dz)) / 2;
+      lnP -= ((g * m) / (RGAS * Tm)) * dz * 1000;
+    }
+    return out;
+  };
+  M.scaleHeight = (st, body) => (RGAS * M.surfaceT(st, body)) / (M.BODY[body].g * M.molar(st.mix)) / 1000; // km
+
+  M.fitCeff();
+  return M;
+})();
+if (typeof module !== "undefined") module.exports = AL;
+
+/* ================= WATER HUNT: GRAPHS =================
+   One small plotting helper used by every graph: linear or log axes, curves, bands, bars, dots, a pinned ghost,
+   and a hover readout. */
+const WHG = (() => {
+  const G = {};
+  const C = {
+    grid: "rgba(255,255,255,0.07)",
+    axis: "rgba(255,255,255,0.35)",
+    text: "#a3958a",
+    title: "#d9cdc3",
+  };
+  G.C = C;
+  G.fit = (cv) => {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const r = cv.getBoundingClientRect();
+    const w = Math.max(10, Math.round(r.width)),
+      h = Math.max(10, Math.round(r.height));
+    if (cv.width !== w * dpr || cv.height !== h * dpr) {
+      cv.width = w * dpr;
+      cv.height = h * dpr;
+    }
+    const ctx = cv.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx, w, h };
+  };
+  const nice = (lo, hi, n) => {
+    const span = hi - lo,
+      step0 = span / n;
+    const mag = Math.pow(10, Math.floor(Math.log10(step0)));
+    const st = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= step0) || mag * 10;
+    const out = [];
+    for (let v = Math.ceil(lo / st) * st; v <= hi + st * 1e-6; v += st) out.push(+v.toFixed(10));
+    return out;
+  };
+  const fmt = (v) => {
+    const a = Math.abs(v);
+    if (a === 0) return "0";
+    if (a >= 10000 || a < 0.01) return v.toExponential(0).replace("e+", "e");
+    if (a >= 100) return v.toFixed(0);
+    if (a >= 10) return v.toFixed(0);
+    if (a >= 1) return (+v.toFixed(1)).toString();
+    return (+v.toFixed(2)).toString();
+  };
+  G.fmt = fmt;
+  // spec: {x:{min,max,log,label,ticks}, y:{min,max,log,label,flip}, series:[{pts,color,width,dash,fill,band,label}],
+  //        bars:[{x,w,y0,y1,color}], dots:[{x,y,color,r,label}], vlines:[{x,color,label,dash}], hlines:[...],
+  //        legend:[{label,color,dash}], ghost: [series], note}
+  G.plot = (cv, spec) => {
+    const { ctx, w, h } = G.fit(cv);
+    ctx.clearRect(0, 0, w, h);
+    const padL = 46,
+      padR = 12,
+      padT = spec.legend && spec.legend.length ? 22 : 10,
+      padB = 30;
+    const X = spec.x,
+      Y = spec.y;
+    const pw = w - padL - padR,
+      ph = h - padT - padB;
+    const tx = (v) => {
+      const t = X.log ? (Math.log10(v) - Math.log10(X.min)) / (Math.log10(X.max) - Math.log10(X.min)) : (v - X.min) / (X.max - X.min);
+      return padL + t * pw;
+    };
+    const ty = (v) => {
+      let t = Y.log ? (Math.log10(Math.max(v, Y.min * 1e-3)) - Math.log10(Y.min)) / (Math.log10(Y.max) - Math.log10(Y.min)) : (v - Y.min) / (Y.max - Y.min);
+      if (Y.flip) t = 1 - t;
+      return padT + (1 - t) * ph;
+    };
+    const ix = (px) => {
+      const t = (px - padL) / pw;
+      return X.log ? Math.pow(10, Math.log10(X.min) + t * (Math.log10(X.max) - Math.log10(X.min))) : X.min + t * (X.max - X.min);
+    };
+    const iy = (py) => {
+      let t = 1 - (py - padT) / ph;
+      if (Y.flip) t = 1 - t;
+      return Y.log ? Math.pow(10, Math.log10(Y.min) + t * (Math.log10(Y.max) - Math.log10(Y.min))) : Y.min + t * (Y.max - Y.min);
+    };
+    cv._map = { tx, ty, ix, iy, padL, padT, pw, ph, spec };
+    // grid and ticks
+    ctx.font = "10px Roboto Mono, monospace";
+    ctx.lineWidth = 1;
+    const xt = X.ticks || (X.log ? logTicks(X.min, X.max) : nice(X.min, X.max, Math.max(3, Math.round(pw / 70))));
+    const yt = Y.ticks || (Y.log ? logTicks(Y.min, Y.max) : nice(Y.min, Y.max, Math.max(3, Math.round(ph / 40))));
+    ctx.fillStyle = C.text;
+    ctx.textAlign = "center";
+    for (const v of xt) {
+      const x = tx(v);
+      if (x < padL - 1 || x > padL + pw + 1) continue;
+      ctx.strokeStyle = C.grid;
+      ctx.beginPath();
+      ctx.moveTo(x, padT);
+      ctx.lineTo(x, padT + ph);
+      ctx.stroke();
+      ctx.fillText(X.fmt ? X.fmt(v) : fmt(v), x, padT + ph + 13);
+    }
+    ctx.textAlign = "right";
+    for (const v of yt) {
+      const y = ty(v);
+      if (y < padT - 1 || y > padT + ph + 1) continue;
+      ctx.strokeStyle = C.grid;
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(padL + pw, y);
+      ctx.stroke();
+      ctx.fillText(Y.fmt ? Y.fmt(v) : fmt(v), padL - 5, y + 3);
+    }
+    ctx.strokeStyle = C.axis;
+    ctx.strokeRect(padL + 0.5, padT + 0.5, pw, ph);
+    // axis labels
+    ctx.fillStyle = C.title;
+    ctx.textAlign = "center";
+    ctx.fillText(X.label || "", padL + pw / 2, h - 4);
+    ctx.save();
+    ctx.translate(11, padT + ph / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(Y.label || "", 0, 0);
+    ctx.restore();
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(padL, padT, pw, ph);
+    ctx.clip();
+    // shaded regions
+    (spec.regions || []).forEach((r) => {
+      ctx.fillStyle = r.color;
+      if (r.x0 != null) ctx.fillRect(tx(r.x0), padT, tx(r.x1) - tx(r.x0), ph);
+      else ctx.fillRect(padL, Math.min(ty(r.y0), ty(r.y1)), pw, Math.abs(ty(r.y1) - ty(r.y0)));
+    });
+    // bars
+    (spec.bars || []).forEach((b) => {
+      ctx.fillStyle = b.color;
+      const x0 = tx(b.x - b.w / 2),
+        x1 = tx(b.x + b.w / 2);
+      const y0 = ty(b.y0 != null ? b.y0 : Y.min),
+        y1 = ty(b.y1);
+      ctx.fillRect(x0, Math.min(y0, y1), Math.max(1, x1 - x0), Math.abs(y1 - y0));
+      if (b.stroke) {
+        ctx.strokeStyle = b.stroke;
+        ctx.strokeRect(x0 + 0.5, Math.min(y0, y1) + 0.5, Math.max(1, x1 - x0) - 1, Math.abs(y1 - y0) - 1);
+      }
+    });
+    const line = (s, ghost) => {
+      if (!s.pts || !s.pts.length) return;
+      if (s.band) {
+        ctx.fillStyle = s.band;
+        ctx.beginPath();
+        s.pts.forEach((p, i) => (i ? ctx.lineTo(tx(p[0]), ty(p[2])) : ctx.moveTo(tx(p[0]), ty(p[2]))));
+        for (let i = s.pts.length - 1; i >= 0; i--) ctx.lineTo(tx(s.pts[i][0]), ty(s.pts[i][3]));
+        ctx.fill();
+      }
+      ctx.strokeStyle = ghost ? "rgba(251,191,36,0.75)" : s.color;
+      ctx.lineWidth = s.width || 2;
+      ctx.setLineDash(ghost ? [5, 4] : s.dash || []);
+      ctx.beginPath();
+      let pen = false;
+      for (const p of s.pts) {
+        const ok = isFinite(p[1]) && (!Y.log || p[1] > 0);
+        if (!ok) {
+          pen = false;
+          continue;
+        }
+        const x = tx(p[0]),
+          y = ty(p[1]);
+        if (!pen) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+        pen = true;
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+    };
+    (spec.ghost || []).forEach((s) => line(s, true));
+    (spec.series || []).forEach((s) => line(s, false));
+    (spec.hlines || []).forEach((l) => {
+      ctx.strokeStyle = l.color || C.axis;
+      ctx.setLineDash(l.dash || [4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(padL, ty(l.y));
+      ctx.lineTo(padL + pw, ty(l.y));
+      ctx.stroke();
+      ctx.setLineDash([]);
+      if (l.label) {
+        ctx.fillStyle = l.color || C.text;
+        ctx.textAlign = "right";
+        ctx.fillText(l.label, padL + pw - 4, ty(l.y) - 4);
+      }
+    });
+    (spec.vlines || []).forEach((l) => {
+      ctx.strokeStyle = l.color || C.axis;
+      ctx.setLineDash(l.dash || [4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(tx(l.x), padT);
+      ctx.lineTo(tx(l.x), padT + ph);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      if (l.label) {
+        ctx.fillStyle = l.color || C.text;
+        ctx.textAlign = tx(l.x) > padL + pw * 0.7 ? "right" : "left";
+        ctx.fillText(l.label, tx(l.x) + (tx(l.x) > padL + pw * 0.7 ? -4 : 4), padT + 11);
+      }
+    });
+    (spec.dots || []).forEach((d) => {
+      ctx.fillStyle = d.color || "#fff";
+      ctx.beginPath();
+      ctx.arc(tx(d.x), ty(d.y), d.r || 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.6)";
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      if (d.label) {
+        ctx.fillStyle = d.color || "#fff";
+        ctx.textAlign = tx(d.x) > padL + pw * 0.7 ? "right" : "left";
+        ctx.fillText(d.label, tx(d.x) + (tx(d.x) > padL + pw * 0.7 ? -8 : 8), ty(d.y) - 7);
+      }
+    });
+    ctx.restore();
+    // legend
+    if (spec.legend) {
+      let x = padL;
+      ctx.textAlign = "left";
+      spec.legend.forEach((l) => {
+        ctx.strokeStyle = l.color;
+        ctx.fillStyle = l.color;
+        ctx.lineWidth = 2;
+        ctx.setLineDash(l.dash || []);
+        ctx.beginPath();
+        ctx.moveTo(x, 9);
+        ctx.lineTo(x + 14, 9);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = C.title;
+        ctx.fillText(l.label, x + 18, 12);
+        x += 26 + ctx.measureText(l.label).width;
+      });
+    }
+  };
+  const logTicks = (a, b) => {
+    const out = [];
+    for (let e = Math.floor(Math.log10(a)); e <= Math.ceil(Math.log10(b)); e++) out.push(Math.pow(10, e));
+    return out;
+  };
+  // hover readout: the value of every series at the pointer's x
+  G.hover = (cv, tip) => {
+    const show = (e) => {
+      const m = cv._map;
+      if (!m) return;
+      const r = cv.getBoundingClientRect();
+      const px = e.clientX - r.left;
+      if (px < m.padL || px > m.padL + m.pw) return hide();
+      const x = m.ix(px);
+      const parts = [(m.spec.x.label || "x").split(" (")[0] + " " + fmt(x)];
+      (m.spec.series || []).forEach((s) => {
+        if (!s.pts || s.pts.length < 2 || !s.label) return;
+        let best = s.pts[0];
+        for (const p of s.pts) if (Math.abs(p[0] - x) < Math.abs(best[0] - x)) best = p;
+        if (isFinite(best[1])) parts.push(s.label + " " + fmt(best[1]));
+      });
+      tip.textContent = parts.join(" · ");
+      tip.style.display = "block";
+      const host = tip.offsetParent ? tip.offsetParent.getBoundingClientRect() : { left: 0, top: 0 };
+      tip.style.left = Math.min(e.clientX - host.left + 12, (tip.offsetParent ? tip.offsetParent.clientWidth : 9999) - tip.offsetWidth - 6) + "px";
+      tip.style.top = e.clientY - host.top - 28 + "px";
+    };
+    const hide = () => (tip.style.display = "none");
+    cv.addEventListener("pointermove", show);
+    cv.addEventListener("pointerleave", hide);
+  };
+  G.range = (a, b, n) => Array.from({ length: n + 1 }, (_, i) => a + ((b - a) * i) / n);
+  G.logRange = (a, b, n) => Array.from({ length: n + 1 }, (_, i) => Math.pow(10, Math.log10(a) + ((Math.log10(b) - Math.log10(a)) * i) / n));
+  return G;
+})();
+
+/* ================= ATMOSLAB: THE APP ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const clamp = AL.clamp;
+const PLANETS = ["earth", "mars"];
+const COL = { earth: "#4ea8ff", mars: "#ff7a45" };
+const copy = (o) => JSON.parse(JSON.stringify(o));
+const K2C = (k) => k - 273.15;
+const fC = (k, d = 1) => (K2C(k) >= 0 ? "" : "−") + Math.abs(K2C(k)).toFixed(d) + " °C";
+const fSign = (v, d = 1) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d);
+const fP = (p) => (p >= 100 ? p.toFixed(0) : p >= 10 ? p.toFixed(1) : p >= 1 ? p.toFixed(2) : p.toFixed(3)) + " kPa";
+const store = {
+  get(k, d) {
+    try {
+      const v = localStorage.getItem(k);
+      return v == null ? d : JSON.parse(v);
+    } catch (e) {
+      return d;
+    }
+  },
+  set(k, v) {
+    try {
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch (e) {}
+  },
+};
+
+// one Earth day passes in 3 minutes at 1×
+const COMPRESS = 86400 / 180;
+const S = {
+  st: { earth: copy(AL.PRESET.earth), mars: copy(AL.PRESET.mars) },
+  custom: { earth: copy(AL.PRESET.earth), mars: copy(AL.PRESET.mars) },
+  edit: "earth",
+  speed: 1,
+  paused: false,
+  tSim: 6 * 3600, // start at dawn
+  T: {},
+  trace: { earth: [], mars: [] },
+  rec: [],
+  viewZ: 11,
+  exp: null, // the experiment: Mars's previous state while Mars has Earth's pressure
+  bad: { earth: null, mars: null }, // a typed gas mix that does not add to 100 %
+  cache: {},
+};
+
+/* ---------- derived values (cached per state) ---------- */
+const keyOf = (p) => JSON.stringify(S.st[p]);
+const derived = (p) => {
+  const k = keyOf(p);
+  if (S.cache[p] && S.cache[p].k === k) return S.cache[p];
+  const st = S.st[p];
+  const day = AL.dayCurve(st, p);
+  const d = {
+    k,
+    Teff: AL.Teff(st.d, st.A),
+    gh: AL.greenhouse(st, p),
+    Ts: AL.surfaceT(st, p),
+    day,
+    C: AL.ceff(st, p),
+    G: AL.Gflux(st, p),
+    uv: AL.uv(st),
+    prof: AL.profile(st, p),
+    H: AL.scaleHeight(st, p),
+  };
+  S.cache[p] = d;
+  return d;
+};
+const localHour = (p) => (((S.tSim / AL.BODY[p].day) % 1) * 24 + 24) % 24;
+// the point's temperature where the run would be in steady state at this hour (used to start the run)
+const steadyAt = (p, h) => {
+  const c = derived(p).day.curve;
+  let best = c[0];
+  for (const q of c) if (Math.abs(q[0] - h) < Math.abs(best[0] - h)) best = q;
+  return best[1];
+};
+PLANETS.forEach((p) => (S.T[p] = steadyAt(p, localHour(p))));
+
+/* ---------- the clock ---------- */
+let last = performance.now();
+const tick = (now) => {
+  const dtReal = Math.min(0.1, (now - last) / 1000);
+  last = now;
+  if (!S.paused) {
+    let dt = dtReal * COMPRESS * S.speed;
+    while (dt > 0) {
+      const h = Math.min(dt, 240);
+      PLANETS.forEach((p) => {
+        if (S.bad[p]) return;
+        const d = derived(p),
+          ph = S.tSim / AL.BODY[p].day - 0.5; // phase 0 = noon
+        S.T[p] = AL.step(S.T[p], S.st[p], p, ph, h, d.C, d.G);
+      });
+      S.tSim += h;
+      dt -= h;
+      // record every 10 simulated minutes
+      if (!S._lastRec || S.tSim - S._lastRec >= 600) {
+        S._lastRec = S.tSim;
+        S.rec.push([S.tSim / 3600, localHour("earth"), S.T.earth, localHour("mars"), S.T.mars]);
+        PLANETS.forEach((p) => {
+          const tr = S.trace[p];
+          const hr = localHour(p);
+          if (tr.length && hr < tr[tr.length - 1][0]) tr.length = 0; // a new day starts at midnight
+          tr.push([hr, S.T[p]]);
+        });
+        if (S.rec.length > 20000) S.rec.splice(0, 5000);
+      }
+    }
+  }
+  drawAll();
+  requestAnimationFrame(tick);
+};
+
+/* ---------- colours ---------- */
+const tempCol = (T) => {
+  const st = [
+    [150, [30, 58, 138]],
+    [210, [59, 130, 246]],
+    [255, [191, 219, 254]],
+    [273, [248, 250, 252]],
+    [300, [253, 186, 116]],
+    [330, [249, 115, 22]],
+    [420, [220, 38, 38]],
+  ];
+  if (T <= st[0][0]) return st[0][1];
+  for (let i = 1; i < st.length; i++)
+    if (T <= st[i][0]) {
+      const k = (T - st[i - 1][0]) / (st[i][0] - st[i - 1][0]);
+      return st[i - 1][1].map((c, j) => Math.round(c + (st[i][1][j] - c) * k));
+    }
+  return st[st.length - 1][1];
+};
+const rgb = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+const hexRgb = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const dominant = (mix) => AL.GASES.slice().sort((a, b) => mix[b] - mix[a])[0];
+
+/* ---------- canvas helper ---------- */
+const fit = (cv) => {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const r = cv.getBoundingClientRect();
+  const w = Math.max(10, Math.round(r.width)),
+    h = Math.max(10, Math.round(r.height));
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+    cv.width = Math.round(w * dpr);
+    cv.height = Math.round(h * dpr);
+  }
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h };
+};
+
+/* ---------- readouts ---------- */
+const uvLevel = (i) => (i < 3 ? ["low", "#4ade80"] : i < 6 ? ["moderate", "#facc15"] : i < 8 ? ["high", "#fb923c"] : i < 11 ? ["very high", "#f43f5e"] : ["extreme", "#c084fc"]);
+const uvOpen = { earth: false, mars: false };
+const readouts = (p) => {
+  const el = $(`.pread[data-p="${p}"]`);
+  const st = S.st[p],
+    d = derived(p),
+    gh = d.gh;
+  const ui = d.uv.index;
+  const [lv, lc] = uvLevel(ui);
+  const tot = Math.max(0.001, gh.total);
+  const seg = (v, c) => `<i style="width:${(100 * Math.max(0, v)) / tot}%;background:${c}"></i>`;
+  const html = `<h3 style="color:${COL[p]}">${AL.BODY[p].name}<small>${st.d.toFixed(3)} AU · ${fP(st.P)}${S.bad[p] ? " · waiting for a valid gas mix" : ""}</small></h3>
+    <div class="bigT">${fC(d.Ts)}<small>${d.Ts.toFixed(1)} K mean surface</small></div>
+    <div class="rl"><dt>Without greenhouse</dt><dd>${fC(d.Teff)}</dd></div>
+    <div class="rl"><dt>Greenhouse <button class="why" data-why="gh">Why?</button></dt><dd>${fSign(gh.total)} °C</dd></div>
+    <div class="ghbar">${seg(gh.water, "#38bdf8")}${seg(gh.co2, "#f59e0b")}${seg(gh.trace, "#a78bfa")}</div>
+    <div class="ghkey">water vapour and clouds ${gh.water.toFixed(1)} · CO₂ ${gh.co2.toFixed(1)} · trace ${gh.trace.toFixed(1)} K</div>
+    <div class="rl"><dt>Equator now · ${String(Math.floor(localHour(p))).padStart(2, "0")}:${String(Math.floor((localHour(p) % 1) * 60)).padStart(2, "0")}</dt><dd>${fC(S.T[p])}</dd></div>
+    <div class="rl"><dt>Day–night swing <button class="why" data-why="swing">Why?</button></dt><dd>${d.day.swing.toFixed(1)} °C</dd></div>
+    <div class="rl"><dt>UV index <button class="why" data-why="uv">Why?</button></dt><dd><button class="uvtap" data-p="${p}" style="all:unset;cursor:pointer">${ui >= 11 ? "11+" : ui.toFixed(0)}<span class="uvchip" style="background:${lc}">${lv}</span></button></dd></div>
+    ${uvOpen[p] ? `<div class="uvbands">total ${d.uv.total.toFixed(1)} W/m² · UVA ${d.uv.A.toFixed(1)} · UVB ${d.uv.B.toFixed(d.uv.B < 1 ? 2 : 1)} · UVC ${d.uv.C < 0.01 ? "0.00" : d.uv.C.toFixed(1)} W/m²${ui >= 11 ? ` · index ${ui.toFixed(0)}` : ""}</div>` : `<div class="uvbands">tap the number for W/m² by band</div>`}`;
+  if (el._h !== html) {
+    el.innerHTML = html;
+    el._h = html;
+  }
+};
+document.addEventListener("click", (e) => {
+  const u = e.target.closest(".uvtap");
+  if (u) {
+    uvOpen[u.dataset.p] = !uvOpen[u.dataset.p];
+    readouts(u.dataset.p);
+  }
+});
+
+/* ---------- graphs ---------- */
+const drawDay = () => {
+  const cv = $("#gDay");
+  const series = [],
+    dots = [];
+  let lo = 1e9,
+    hi = -1e9;
+  PLANETS.forEach((p) => {
+    const d = derived(p);
+    lo = Math.min(lo, d.day.min);
+    hi = Math.max(hi, d.day.max, S.T[p]);
+    series.push({ pts: d.day.curve.map((q) => [q[0], K2C(q[1])]), color: COL[p] + "77", width: 1.5, dash: [5, 4], label: AL.BODY[p].name + " (one full rotation)" });
+    if (S.trace[p].length > 1) series.push({ pts: S.trace[p].map((q) => [q[0], K2C(q[1])]), color: COL[p], width: 2.5, label: AL.BODY[p].name + " now" });
+    dots.push({ x: localHour(p), y: K2C(S.T[p]), color: COL[p], r: 5 });
+  });
+  const pad = Math.max(3, (hi - lo) * 0.08);
+  WHG.plot(cv, {
+    x: { min: 0, max: 24, label: "local time (h)", ticks: [0, 6, 12, 18, 24] },
+    y: { min: K2C(lo) - pad, max: K2C(hi) + pad, label: "temperature (°C)" },
+    regions: [{ x0: 0, x1: 6, color: "rgba(20,30,80,0.25)" }, { x0: 18, x1: 24, color: "rgba(20,30,80,0.25)" }],
+    series,
+    dots,
+    legend: [{ label: "Earth", color: COL.earth }, { label: "Mars", color: COL.mars }, { label: "full rotation", color: "#999", dash: [5, 4] }],
+  });
+  const e = derived("earth"),
+    m = derived("mars");
+  const cap = `Swing over one full rotation: <b>Earth ${e.day.swing.toFixed(1)} °C</b>, <b>Mars ${m.day.swing.toFixed(1)} °C</b>. Days last 24 h and 24.6 h. Time is sped up: one Earth day takes about 3 minutes at 1×.`;
+  if ($("#gDayCap")._h !== cap) ($("#gDayCap").innerHTML = cap), ($("#gDayCap")._h = cap);
+};
+const drawProf = () => {
+  const cv = $("#gProf");
+  const series = [],
+    hl = [];
+  let lo = 1e9,
+    hi = -1e9;
+  PLANETS.forEach((p) => {
+    const pr = derived(p).prof;
+    pr.forEach((q) => ((lo = Math.min(lo, q.T)), (hi = Math.max(hi, q.T))));
+    series.push({ pts: pr.map((q) => [q.T, q.z]), color: COL[p], width: 2.5, label: AL.BODY[p].name });
+  });
+  AL.layers(S.st.earth, "earth").forEach((l) => hl.push({ y: l.z, color: "rgba(78,168,255,0.55)", label: "Earth " + l.name, dash: [3, 4] }));
+  hl.push({ y: S.viewZ, color: "#fff", dash: [] });
+  const dots = PLANETS.map((p) => ({ x: AL.Tz(S.st[p], p, S.viewZ), y: S.viewZ, color: COL[p], r: 5 }));
+  WHG.plot(cv, {
+    x: { min: Math.floor((lo - 10) / 20) * 20, max: Math.ceil((hi + 10) / 20) * 20, label: "temperature (K)" },
+    y: { min: 0, max: 60, label: "altitude (km)", ticks: [0, 10, 20, 30, 40, 50, 60] },
+    series,
+    hlines: hl,
+    dots,
+    legend: [{ label: "Earth", color: COL.earth }, { label: "Mars (2.5 K/km, varies with dust)", color: COL.mars }],
+  });
+  const at = (p) => {
+    const pr = derived(p).prof;
+    const q = pr.reduce((a, b) => (Math.abs(b.z - S.viewZ) < Math.abs(a.z - S.viewZ) ? b : a));
+    return { T: AL.Tz(S.st[p], p, S.viewZ), P: q.P };
+  };
+  const a = at("earth"),
+    b = at("mars");
+  const cap = `At <b>${S.viewZ.toFixed(1)} km</b>: Earth <b>${a.T.toFixed(2)} K</b> (${fC(a.T)}), ${fP(a.P)} · Mars <b>${b.T.toFixed(1)} K</b> (${fC(b.T)}), ${fP(b.P)}. Scale height: Earth ${derived("earth").H.toFixed(1)} km, Mars ${derived("mars").H.toFixed(1)} km.`;
+  if ($("#gProfCap")._h !== cap) ($("#gProfCap").innerHTML = cap), ($("#gProfCap")._h = cap);
+};
+// the altitude marker: drag anywhere on the profile graph
+{
+  const cv = $("#gProf");
+  let drag = false;
+  const set = (e) => {
+    const m = cv._map;
+    if (!m || !m.iy) return;
+    const r = cv.getBoundingClientRect();
+    S.viewZ = clamp(m.iy(e.clientY - r.top), 0, 60);
+  };
+  cv.addEventListener("pointerdown", (e) => {
+    drag = true;
+    cv.setPointerCapture(e.pointerId);
+    set(e);
+  });
+  cv.addEventListener("pointermove", (e) => drag && set(e));
+  cv.addEventListener("pointerup", () => (drag = false));
+  cv.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowUp") S.viewZ = clamp(S.viewZ + 0.5, 0, 60);
+    if (e.key === "ArrowDown") S.viewZ = clamp(S.viewZ - 0.5, 0, 60);
+  });
+  cv.tabIndex = 0;
+}
+$("#gDay").addEventListener("click", (e) => openWhy("swing", e.currentTarget));
+
+/* ---------- drawing everything ---------- */
+let lastGlobe = 0;
+const drawAll = () => {
+  const now = performance.now();
+  if (now - lastGlobe > 66) {
+    lastGlobe = now;
+    if (BIG.open) PLANETS.forEach((p) => PL.draw($(`#big canvas[data-p="${p}"]`), p, { scale: true }));
+    else PLANETS.forEach((p) => drawSphere(p));
+  }
+  PLANETS.forEach((p) => readouts(p));
+  if (BIG.open) bigReadouts();
+  drawDay();
+  drawProf();
+  const h = localHour("earth");
+  const day = Math.floor(S.tSim / 86400) + 1;
+  $("#clock").innerHTML = `Earth day <b>${day}</b> · <b>${String(Math.floor(h)).padStart(2, "0")}:${String(Math.floor((h % 1) * 60)).padStart(2, "0")}</b> local · ${S.paused ? "paused" : S.speed + "×, 1 Earth day ≈ " + (3 / S.speed).toFixed(S.speed > 1 ? 2 : 0) + " min"}`;
+  $("#csvBtn").hidden = S.rec.length < 2;
+};
+
+/* ---------- controls ---------- */
+const logP = (v) => 0.05 * Math.pow(10, (4 * v) / 1000);
+const invP = (p) => (1000 * Math.log10(p / 0.05)) / 4;
+const syncControls = () => {
+  const p = S.edit,
+    st = S.st[p];
+  $$("#planetSeg button").forEach((b) => b.classList.toggle("on", b.dataset.p === p));
+  $$(".pcard").forEach((c) => c.classList.toggle("editing", c.dataset.p === p));
+  $("#editTag").textContent = "editing " + AL.BODY[p].name;
+  $("#s_d").value = st.d;
+  $("#v_d").textContent = st.d.toFixed(3) + " AU";
+  $("#s_A").value = st.A;
+  $("#v_A").textContent = st.A.toFixed(3);
+  $("#s_P").value = invP(st.P);
+  $("#v_P").textContent = `${fP(st.P)} · ${(st.P / 101.325).toPrecision(2)} × Earth`;
+  const isM = p === "mars";
+  $("#ozTog").hidden = isM;
+  $("#ozLock").hidden = !isM;
+  $("#ozTog").checked = !!st.ozone;
+  $("#baseCtl").style.display = isM ? "none" : "";
+  $("#baseSel").value = String(st.base || 420);
+  const same = (a, b) => a.d === b.d && a.A === b.A && a.P === b.P && AL.GASES.every((g) => Math.abs(a.mix[g] - b.mix[g]) < 1e-9) && !!a.ozone === !!b.ozone;
+  const asPreset = (k) => {
+    const q = copy(AL.PRESET[k]);
+    if (p === "mars") q.ozone = false;
+    return q;
+  };
+  const on = same(st, asPreset("earth")) ? "earth" : same(st, asPreset("mars")) ? "mars" : same(st, S.custom[p]) ? "custom" : "";
+  $$("#presetSeg button").forEach((b) => b.classList.toggle("on", b.dataset.k === on));
+  buildMix();
+  eqs();
+};
+$("#planetSeg").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  S.edit = b.dataset.p;
+  syncControls();
+});
+$$("canvas.sphere").forEach((c) => c.addEventListener("click", () => ((S.edit = c.dataset.p), syncControls())));
+
+/* ---------- full view: both planets rendered large, side by side ---------- */
+const BIG = { open: false };
+const bigReadouts = () => {
+  PLANETS.forEach((p) => {
+    const d = derived(p),
+      el = $(`#big .bigr[data-p="${p}"]`);
+    const html = `<b style="color:${COL[p]}">${AL.BODY[p].name}</b> · ${fC(d.Ts)} mean surface · ${fC(d.Teff)} without greenhouse · greenhouse ${fSign(d.gh.total)} °C · equator now ${fC(S.T[p])} · ${fP(S.st[p].P)}, ${(AL.normMix(S.st[p].mix).CO2 * 100).toFixed(1)}% CO₂`;
+    if (el._h !== html) (el.innerHTML = html), (el._h = html);
+  });
+};
+const openBig = (p) => {
+  BIG.open = true;
+  $("#big").hidden = false;
+  lastGlobe = 0;
+};
+const closeBig = () => {
+  BIG.open = false;
+  $("#big").hidden = true;
+  lastGlobe = 0;
+};
+$$(".expand").forEach((b) => b.addEventListener("click", (e) => (e.stopPropagation(), openBig(b.dataset.p))));
+$("#bigClose").addEventListener("click", closeBig);
+addEventListener("keydown", (e) => e.key === "Escape" && BIG.open && closeBig());
+const changed = (keepCustom) => {
+  const p = S.edit;
+  if (!keepCustom) S.custom[p] = copy(S.st[p]);
+  syncControls();
+};
+$("#s_d").addEventListener("input", (e) => ((S.st[S.edit].d = +e.target.value), changed()));
+$("#s_A").addEventListener("input", (e) => ((S.st[S.edit].A = +e.target.value), changed()));
+$("#s_P").addEventListener("input", (e) => {
+  S.st[S.edit].P = +logP(+e.target.value).toPrecision(4);
+  if (S.edit === "mars" && S.exp) endExperiment(true);
+  changed();
+});
+$("#ozTog").addEventListener("change", (e) => ((S.st[S.edit].ozone = e.target.checked), changed()));
+$("#ozLock").addEventListener("click", (e) => openWhy("ozone", e.currentTarget));
+$("#baseSel").addEventListener("change", (e) => {
+  const st = S.st[S.edit],
+    v = +e.target.value;
+  st.base = v;
+  // in an Earth-like mix, the baseline sets the CO2 share (nitrogen makes up the difference)
+  if (st.mix.CO2 < 1) {
+    const c = v / 1e4;
+    st.mix.N2 = +(st.mix.N2 + st.mix.CO2 - c).toFixed(4);
+    st.mix.CO2 = c;
+  }
+  changed();
+});
+$("#presetSeg").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  const p = S.edit;
+  if (p === "mars" && S.exp) endExperiment(true);
+  S.bad[p] = null;
+  if (b.dataset.k === "custom") S.st[p] = copy(S.custom[p]);
+  else {
+    S.st[p] = copy(AL.PRESET[b.dataset.k]);
+    S.st[p].ozone = p === "earth" ? S.st[p].ozone : false; // Mars's ozone stays locked off
+  }
+  changed(true);
+});
+
+/* ---------- the gas mix: one stacked bar, three draggable boundaries, always 100 % ---------- */
+const buildMix = () => {
+  const p = S.edit,
+    mix = S.bad[p] || S.st[p].mix;
+  const bar = $("#mixBar");
+  let html = "",
+    cum = 0;
+  AL.GASES.forEach((g) => {
+    const v = mix[g];
+    html += `<div class="segm" data-g="${g}" style="width:${Math.max(0, v)}%;background:${AL.GAS[g].col}" title="${AL.GAS[g].name} ${v}%">${v >= 7 ? AL.GAS[g].f + " " + (+v.toFixed(2)) + "%" : v >= 3 ? AL.GAS[g].f : ""}</div>`;
+  });
+  AL.GASES.slice(0, 3).forEach((g, i) => {
+    cum += Math.max(0, mix[g]);
+    html += `<div class="hnd" data-i="${i}" tabindex="0" role="slider" aria-label="Boundary between ${AL.GAS[g].name} and ${AL.GAS[AL.GASES[i + 1]].name}" style="left:${cum}%"></div>`;
+  });
+  if (bar._h !== html) (bar.innerHTML = html), (bar._h = html);
+  const inp = $("#mixIn");
+  if (!inp.children.length)
+    inp.innerHTML = AL.GASES.map((g) => `<label><span><i style="background:${AL.GAS[g].col}"></i>${AL.GAS[g].f} %</span><input type="number" min="0" max="100" step="0.01" data-g="${g}" /></label>`).join("");
+  AL.GASES.forEach((g) => {
+    const el = $(`#mixIn input[data-g="${g}"]`);
+    if (document.activeElement !== el) el.value = +(+mix[g]).toFixed(3);
+  });
+  const sum = AL.GASES.reduce((a, g) => a + (+mix[g] || 0), 0);
+  $("#v_mix").textContent = `sum ${sum.toFixed(2)}%`;
+  $("#mixErr").hidden = !S.bad[p];
+  if (S.bad[p]) $("#mixErr").textContent = `These add up to ${sum.toFixed(2)}%, not 100%. ${AL.BODY[p].name} is waiting: fix the numbers (or drag the bar) to run it again.`;
+  $$("#mixIn input").forEach((el) => el.classList.toggle("bad", !!S.bad[p]));
+};
+{
+  const bar = $("#mixBar");
+  let drag = null,
+    moved = false;
+  const pct = (e) => {
+    const r = bar.getBoundingClientRect();
+    return clamp(((e.clientX - r.left) / r.width) * 100, 0, 100);
+  };
+  const moveBoundary = (i, at) => {
+    const p = S.edit;
+    const mix = S.bad[p] ? (S.bad[p] = null, S.st[p].mix) : S.st[p].mix;
+    const G = AL.GASES;
+    let lo = 0;
+    for (let k = 0; k < i; k++) lo += mix[G[k]];
+    const hi = lo + mix[G[i]] + mix[G[i + 1]];
+    const b = clamp(at, lo, hi);
+    mix[G[i]] = +(b - lo).toFixed(3);
+    mix[G[i + 1]] = +(hi - b).toFixed(3);
+    // keep the sum exactly 100 after rounding
+    const s = G.reduce((a, g) => a + mix[g], 0);
+    mix[G[i + 1]] = +(mix[G[i + 1]] + 100 - s).toFixed(3);
+    if (p === "mars" && S.exp) endExperiment(true);
+    changed();
+  };
+  bar.addEventListener("pointerdown", (e) => {
+    const h = e.target.closest(".hnd");
+    moved = false;
+    if (!h) return;
+    drag = +h.dataset.i;
+    bar.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  bar.addEventListener("pointermove", (e) => {
+    if (drag == null) return;
+    moved = true;
+    moveBoundary(drag, pct(e));
+  });
+  bar.addEventListener("pointerup", () => (drag = null));
+  bar.addEventListener("click", (e) => {
+    const s = e.target.closest(".segm");
+    if (s && !moved && s.dataset.g === "CO2") openWhy("co2", s);
+  });
+  bar.addEventListener("keydown", (e) => {
+    const h = e.target.closest(".hnd");
+    if (!h) return;
+    const i = +h.dataset.i,
+      mix = S.st[S.edit].mix;
+    let at = 0;
+    for (let k = 0; k <= i; k++) at += mix[AL.GASES[k]];
+    const st = e.shiftKey ? 1 : 0.1;
+    if (e.key === "ArrowLeft") moveBoundary(i, at - st), e.preventDefault();
+    if (e.key === "ArrowRight") moveBoundary(i, at + st), e.preventDefault();
+  });
+  $("#mixIn").addEventListener("input", (e) => {
+    const el = e.target.closest("input");
+    if (!el) return;
+    const p = S.edit;
+    const draft = copy(S.bad[p] || S.st[p].mix);
+    draft[el.dataset.g] = el.value === "" ? 0 : +el.value;
+    const ok = AL.GASES.every((g) => draft[g] >= 0 && draft[g] <= 100);
+    const sum = AL.GASES.reduce((a, g) => a + draft[g], 0);
+    if (ok && Math.abs(sum - 100) < 0.005) {
+      S.bad[p] = null;
+      S.st[p].mix = draft;
+      if (p === "mars" && S.exp) endExperiment(true);
+      changed();
+    } else {
+      // an invalid mix blocks this planet's run, with the error shown inline
+      S.bad[p] = draft;
+      buildMix();
+    }
+  });
+}
+
+/* ---------- the experiment reality cannot run ---------- */
+const startExperiment = () => {
+  S.exp = copy(S.st.mars);
+  S.st.mars.P = 101.325;
+  $("#expBtn").classList.add("on");
+  $("#expBtn").textContent = "Back to real Mars";
+  $("#expNote").innerHTML = "Mars now has Earth's surface pressure and still its own 95% CO₂ mix. Compare its greenhouse with Earth's. <b>Pressure beats percentage.</b>";
+  if (S.edit === "mars") syncControls();
+};
+const endExperiment = (keep) => {
+  if (!keep && S.exp) S.st.mars = S.exp;
+  S.exp = null;
+  $("#expBtn").classList.remove("on");
+  $("#expBtn").textContent = "Mars's air at Earth's pressure";
+  $("#expNote").textContent = "The experiment reality cannot run: keep Mars's 95% CO₂, give it as much air as Earth.";
+  if (S.edit === "mars") syncControls();
+};
+$("#expBtn").addEventListener("click", () => (S.exp ? endExperiment(false) : startExperiment()));
+
+/* ---------- clock controls, CSV ---------- */
+$("#speedSeg").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  S.speed = +b.dataset.s;
+  $$("#speedSeg button").forEach((x) => x.classList.toggle("on", x === b));
+});
+$("#pauseBtn").addEventListener("click", () => {
+  S.paused = !S.paused;
+  $("#pauseBtn").textContent = S.paused ? "▶ Resume" : "❚❚ Pause";
+});
+$("#csvBtn").addEventListener("click", () => {
+  const head = ["# AtmosLab run", ...PLANETS.map((p) => `# ${AL.BODY[p].name}: d=${S.st[p].d} AU, albedo=${S.st[p].A}, P=${S.st[p].P} kPa, N2=${S.st[p].mix.N2}%, O2=${S.st[p].mix.O2}%, CO2=${S.st[p].mix.CO2}%, Ar=${S.st[p].mix.Ar}%, ozone=${S.st[p].ozone ? "on" : "off"}`), "sim_hours,earth_local_h,earth_T_K,mars_local_h,mars_T_K"];
+  const rows = S.rec.map((r) => r.map((v, i) => (i % 2 === 0 && i ? v.toFixed(2) : v.toFixed(3))).join(","));
+  const blob = new Blob([head.concat(rows).join("\n")], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "atmoslab-run.csv";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => (URL.revokeObjectURL(a.href), a.remove()), 500);
+});
+
+/* ---------- learning-outcome pop-ups (explain the idea, never repeat the number) ---------- */
+const WHY = {
+  dist: ["Distance and albedo set the starting point", "Sunlight spreads out over a sphere, so it weakens with the square of the distance: twice as far gets a quarter of the light. Albedo is the share of that light bounced straight back to space, which never warms anything. Together they fix how warm a planet would be with no greenhouse at all; the gases can only add warming on top of that."],
+  co2: ["Pressure beats percentage", "Mars's air is almost all carbon dioxide, yet it barely warms the planet. What traps heat is how much gas lies overhead, not what share of it is CO₂, and Mars has less than 1% as much air as Earth. Thin air also absorbs over narrower wavelength bands, so each molecule does less. Press \"Mars's air at Earth's pressure\" to give Mars the same mix with Earth's amount of air: the greenhouse jumps."],
+  gh: ["Earth's greenhouse is mostly water", "Most of Earth's natural greenhouse effect comes from water vapour and clouds, roughly three quarters. Carbon dioxide gives about a fifth and other trace gases the rest. CO₂ still matters a great deal, because it warms the air enough to hold more water vapour, which then traps more heat. A dry planet like Mars has only its CO₂ to rely on."],
+  swing: ["Same day length, different swings", "Earth and Mars spin at almost the same rate, so both get nights of about the same length. What differs is what holds the day's heat. Earth's thick air, moist soil and oceans soak it up and give it back through the night; Mars's thin air holds almost nothing, so its ground cools fast after sunset. The atmosphere is the difference."],
+  uv: ["Weaker sunlight, harsher UV", "Mars is farther from the Sun, so less ultraviolet light reaches it. But nothing stops what does arrive: there is no ozone layer to absorb UVB and UVC, and too little air to scatter much. On Earth, ozone removes all UVC and most UVB. Dust in Mars's air absorbs some UV, which is why rovers like Curiosity measure lower peaks than a clear-sky model."],
+  profile: ["Why Mars has no stratosphere", "A stratosphere forms where something high up absorbs sunlight and warms the air there. On Earth that is ozone soaking up ultraviolet light, which makes the temperature rise again above about 20 km. Mars has almost no ozone, so its temperature keeps falling with height and then levels off: there is no warm lid on its weather."],
+  ozone: ["Why Mars's ozone is locked off", "Real Mars has almost no ozone: its air holds very little oxygen, and ultraviolet light breaks molecules apart faster than an ozone layer could build up. The switch stays off so Mars stays Mars. Earth's ozone switch shows what the layer does to UV and to the temperature high up."],
+};
+const openWhy = (k, el) => {
+  const [t, x] = WHY[k];
+  const pop = $("#pop");
+  $("#popT").textContent = t;
+  $("#popX").textContent = x;
+  pop.hidden = false;
+  const r = el.getBoundingClientRect();
+  const w = pop.offsetWidth,
+    h = pop.offsetHeight;
+  let left = clamp(r.left + r.width / 2 - w / 2, 12, innerWidth - w - 12),
+    top = r.bottom + 8;
+  if (top + h > innerHeight - 8) top = Math.max(8, r.top - h - 8);
+  pop.style.left = left + "px";
+  pop.style.top = top + "px";
+};
+document.addEventListener("click", (e) => {
+  const w = e.target.closest(".why");
+  if (w) return openWhy(w.dataset.why, w);
+  if (!e.target.closest("#pop") && !e.target.closest(".segm") && !e.target.closest("#gDay") && !e.target.closest("#ozLock")) $("#pop").hidden = true;
+});
+$("#popClose").addEventListener("click", () => ($("#pop").hidden = true));
+addEventListener("keydown", (e) => e.key === "Escape" && ($("#pop").hidden = true));
+
+/* ---------- the model, with live numbers ---------- */
+const eqs = () => {
+  const p = S.edit,
+    st = S.st[p],
+    d = derived(p),
+    x = AL.normMix(st.mix);
+  const nm = AL.BODY[p].name;
+  $("#eqEq").innerHTML = [
+    `<div>${nm}: S = S₀ / d² = 1361 / ${st.d.toFixed(3)}² = ${AL.S(st.d).toFixed(1)} W/m²</div>`,
+    `<div>S_abs = S × (1 − A) / 4 = ${AL.S(st.d).toFixed(1)} × ${(1 - st.A).toFixed(3)} / 4 = ${AL.Sabs(st.d, st.A).toFixed(1)} W/m²</div>`,
+    `<div>T_eff = (S_abs / σ)^¼ = (${AL.Sabs(st.d, st.A).toFixed(1)} / 5.670e−8)^¼ = ${d.Teff.toFixed(1)} K</div>`,
+  ].join("");
+  $("#eqGh").innerHTML = [
+    `<div>CO₂: ΔT = k × ln(1 + pCO₂ / p_ref) × (P / 101.325 kPa)^β</div>`,
+    `<div>= ${AL.K.toFixed(2)} × ln(1 + ${d.gh.pCO2.toPrecision(3)} / ${AL.PREF.toFixed(4)}) × (${(st.P / 101.325).toPrecision(3)})^${AL.BETA.toFixed(3)} = ${d.gh.co2.toFixed(2)} K</div>`,
+    `<div>water vapour, clouds and trace (oceans only): ${AL.W_EARTH.toFixed(1)} K × fade(P) = ${(d.gh.water + d.gh.trace).toFixed(2)} K</div>`,
+    `<div>T_surface = T_eff + ΔT = ${d.Teff.toFixed(1)} + ${d.gh.total.toFixed(2)} = ${d.Ts.toFixed(1)} K</div>`,
+    `<div class="note">k, p_ref and β are fitted: near Earth they match ΔT = 0.8 × 5.35 × ln(C / 420 ppm) (λ = 0.8 K per W/m², 20% of Earth's greenhouse from CO₂), and real Mars's 0.606 kPa of CO₂ gives 5.5 K. Water vapour fades out toward water's triple-point pressure (0.611 kPa). Only CO₂ and water warm here: N₂, O₂ and Ar add nothing.</div>`,
+  ].join("");
+  $("#eqDay").innerHTML = [
+    `<div>C_eff × dT/dt = S_abs(t) − εσT⁴ + G, ε = 1</div>`,
+    `<div>S_abs(t) = π × S_abs × max(0, cos(hour angle)) (a point on the equator)</div>`,
+    `<div>G = σT_s⁴ − S_abs = ${d.G.toFixed(1)} W/m² · C_eff = ${(d.C / 1000).toFixed(1)} kJ/(m² K)</div>`,
+    `<div class="note">C_eff = ground + 0.6% of the air column's heat capacity (+ moist soil on Earth), fitted so Earth swings 12.5 °C and Mars 65 K. Days: Earth 24 h, Mars 24.6 h.</div>`,
+  ].join("");
+  const U = AL.UV;
+  $("#eqUv").innerHTML = [
+    `<div>UV_surface = UV_top × exp(−k_O₃ × O₃ − k_scatter × P), O₃ = ${st.ozone ? "300 DU" : "0 (no ozone)"}</div>`,
+    ...["A", "B", "C"].map((b) => `<div>UV${b}: ${(U.top[b] / (st.d * st.d)).toFixed(1)} × exp(−${(st.ozone ? U.kO3[b] * U.O3 : 0).toFixed(2)} − ${(U.ks[b] * st.P).toFixed(3)}) = ${d.uv[b] < 0.01 ? d.uv[b].toExponential(1) : d.uv[b].toFixed(2)} W/m²</div>`),
+    `<div>UV index = 40 × (0.0004 × UVA + 0.15 × UVB + 1.0 × UVC) = ${d.uv.index.toFixed(1)}</div>`,
+    `<div class="note">Fitted to Mars's modelled surface UV (UVA 40, UVB 8, UVC 3 W/m²; Curiosity measured ~20 W/m² peaks under dust) and Earth's clear-sky noon.</div>`,
+  ].join("");
+  $("#eqProf").innerHTML = [
+    `<div>T(z) = T_surface − L × z, L = ${AL.BODY[p].lapse} K/km${p === "mars" ? " (varies with dust)" : " to 11 km"}</div>`,
+    `<div>P(z) = P_surface × (T(z) / T_surface)^(gM / RL), g = ${AL.BODY[p].g} m/s², M = ${(AL.molar(st.mix) * 1000).toFixed(2)} g/mol</div>`,
+    `<div>scale height H = RT / (gM) = ${d.H.toFixed(1)} km</div>`,
+    `<div class="note">${p === "earth" ? "Above 11 km: isothermal to 20 km, then ozone warming (+1 K/km to 32 km, +2.8 K/km to 47 km), as in the US Standard Atmosphere." : "No ozone, so no stratosphere: the temperature falls and then levels off near 140 K."}</div>`,
+  ].join("");
+};
+
+/* ---------- checks against the validation targets ---------- */
+const checks = () => {
+  const E = AL.PRESET.earth,
+    Ma = AL.PRESET.mars;
+  const m2 = Object.assign(copy(Ma), { P: 101.325 });
+  const rows = [
+    ["Earth, greenhouse off (≈255 K)", AL.Teff(E.d, E.A).toFixed(1) + " K"],
+    ["Mars, greenhouse off (≈210 K)", AL.Teff(Ma.d, Ma.A).toFixed(1) + " K"],
+    ["Earth, full model (≈288 K)", AL.surfaceT(E, "earth").toFixed(1) + " K"],
+    ["Mars, full model (≈210 K measured mean)", AL.surfaceT(Ma, "mars").toFixed(1) + " K"],
+    ["Real Mars greenhouse", AL.greenhouse(Ma, "mars").total.toFixed(1) + " K"],
+    ["Mars's 95% CO₂ at Earth's pressure", AL.greenhouse(m2, "mars").total.toFixed(1) + " K"],
+    ["Earth at 11 km (216.65 K, tropopause)", AL.Tz(E, "earth", 11).toFixed(2) + " K"],
+    ["Scale heights (8.5 / 11.1 km)", AL.scaleHeight(E, "earth").toFixed(1) + " / " + AL.scaleHeight(Ma, "mars").toFixed(1) + " km"],
+  ];
+  $("#checks").innerHTML = `<div class="chk">${rows.map((r) => `<span>${r[0]}</span><b>${r[1]}</b>`).join("")}</div><p class="note">Mars's full model sits 5 K above 210 K because its 5–6 K greenhouse is added to a 210 K equilibrium; measured mean surface temperatures are about 210 K.</p>`;
+};
+
+syncControls();
+checks();
+requestAnimationFrame(tick);
+addEventListener("resize", drawAll);
+
+/* ================= ATMOSLAB: THE PLANETS, RENDERED =================
+   Each globe is drawn pixel by pixel: a real surface (Earth's oceans and land, Mars's rust plains and dark
+   regions), tinted by the temperature the model computes at that spot, with ice and frost where it is cold
+   enough, Earth's clouds, day and night, and an atmosphere glow whose thickness follows the surface pressure. */
+const PL = (() => {
+  const P = {};
+  // ---- small value-noise helpers ----
+  const mkNoise = (seed) => {
+    let a = seed >>> 0 || 1;
+    const R = () => {
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    const perm = new Uint16Array(512),
+      val = new Float32Array(256);
+    for (let i = 0; i < 256; i++) (perm[i] = i), (val[i] = R() * 2 - 1);
+    for (let i = 255; i > 0; i--) {
+      const j = Math.floor(R() * (i + 1));
+      [perm[i], perm[j]] = [perm[j], perm[i]];
+    }
+    for (let i = 0; i < 256; i++) perm[i + 256] = perm[i];
+    const v3 = (x, y, z) => val[perm[(perm[(perm[x & 255] + y) & 255] + z) & 255]];
+    const n3 = (x, y, z) => {
+      const xi = Math.floor(x),
+        yi = Math.floor(y),
+        zi = Math.floor(z);
+      const fx = x - xi,
+        fy = y - yi,
+        fz = z - zi;
+      const u = fx * fx * (3 - 2 * fx),
+        v = fy * fy * (3 - 2 * fy),
+        w = fz * fz * (3 - 2 * fz);
+      const L = (a, b, t) => a + (b - a) * t;
+      return L(
+        L(L(v3(xi, yi, zi), v3(xi + 1, yi, zi), u), L(v3(xi, yi + 1, zi), v3(xi + 1, yi + 1, zi), u), v),
+        L(L(v3(xi, yi, zi + 1), v3(xi + 1, yi, zi + 1), u), L(v3(xi, yi + 1, zi + 1), v3(xi + 1, yi + 1, zi + 1), u), v),
+        w
+      );
+    };
+    return (x, y, z, o = 5) => {
+      let s = 0,
+        a2 = 0.5,
+        f = 1;
+      for (let i = 0; i < o; i++) {
+        s += a2 * n3(x * f, y * f, z * f);
+        f *= 2.02;
+        a2 *= 0.5;
+      }
+      return s;
+    };
+  };
+  const sst = (a, b, x) => {
+    const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+    return t * t * (3 - 2 * t);
+  };
+  const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+
+  // ---- surface maps (equirectangular): colour, "ocean" mask, and cloud cover ----
+  const TW = 512,
+    TH = 256;
+  const tex = {};
+  P.texture = (body) => {
+    if (tex[body]) return tex[body];
+    const nz = mkNoise(body === "earth" ? 11 : 23),
+      nz2 = mkNoise(body === "earth" ? 41 : 57);
+    const col = new Float32Array(TW * TH * 3),
+      sea = new Float32Array(TW * TH),
+      cloud = new Float32Array(TW * TH),
+      elev = new Float32Array(TW * TH);
+    for (let j = 0; j < TH; j++)
+      for (let i = 0; i < TW; i++) {
+        const lon = (i / TW) * Math.PI * 2,
+          lat = Math.PI / 2 - ((j + 0.5) / TH) * Math.PI;
+        const x = Math.cos(lat) * Math.cos(lon),
+          y = Math.sin(lat),
+          z = Math.cos(lat) * Math.sin(lon);
+        const k = j * TW + i;
+        let c;
+        if (body === "earth") {
+          const e = nz(x * 1.6 + 3, y * 1.6, z * 1.6, 6) + 0.18 * nz2(x * 5, y * 5, z * 5, 3) - 0.04;
+          elev[k] = e;
+          if (e < 0) {
+            sea[k] = 1;
+            const deep = sst(0, -0.35, e);
+            c = mix([0.12, 0.36, 0.55], [0.04, 0.13, 0.33], deep);
+          } else {
+            const dry = sst(0.15, 0.65, 1 - Math.abs(y) * 1.4 + nz2(x * 3, y * 3, z * 3, 3) * 0.6);
+            c = mix([0.2, 0.42, 0.18], [0.66, 0.56, 0.36], dry * (0.7 - Math.abs(y) * 0.3));
+            c = mix(c, [0.48, 0.42, 0.36], sst(0.25, 0.5, e));
+          }
+          cloud[k] = sst(0.02, 0.32, nz2(x * 2.4 + 9, y * 4, z * 2.4, 5) + 0.12 * Math.cos(y * 6));
+        } else {
+          const e = nz(x * 1.5 + 5, y * 1.5, z * 1.5, 6);
+          elev[k] = e;
+          const dark = sst(0.0, 0.32, nz2(x * 2.2, y * 2.2 + 3, z * 2.2, 5));
+          c = mix([0.76, 0.44, 0.25], [0.86, 0.55, 0.34], sst(-0.2, 0.3, e));
+          c = mix(c, [0.38, 0.24, 0.18], dark * 0.65);
+          // craters: small dark rings
+          const cr = nz2(x * 14, y * 14, z * 14, 2);
+          c = mix(c, [0.5, 0.3, 0.2], sst(0.25, 0.4, cr) * 0.35);
+        }
+        col[k * 3] = c[0];
+        col[k * 3 + 1] = c[1];
+        col[k * 3 + 2] = c[2];
+      }
+    return (tex[body] = { col, sea, cloud, elev });
+  };
+
+  // ---- the temperature at a spot: the model's day curve for the local hour, cooler toward the poles ----
+  // (latitude falloff is an illustration: 40 K from equator to pole under Earth's air, 60 K on bare Mars)
+  const tempAt = (d, curve, hour, lat, body) => {
+    const n = curve.length;
+    const i = Math.min(n - 1, Math.max(0, Math.floor((hour / 24) * n)));
+    const Tday = curve[i][1];
+    const pole = (body === "earth" ? 40 : 60) * Math.pow(Math.sin(lat), 2);
+    return d.day.mean + (Tday - d.day.mean) * Math.cos(lat) - pole;
+  };
+
+  // ---- draw one globe into a canvas ----
+  P.draw = (cv, p, opt = {}) => {
+    const dpr = Math.min(1.25, window.devicePixelRatio || 1);
+    const r0 = cv.getBoundingClientRect();
+    const Wc = Math.max(10, Math.round(r0.width)),
+      Hc = Math.max(10, Math.round(r0.height));
+    if (cv.width !== Math.round(Wc * dpr) || cv.height !== Math.round(Hc * dpr)) {
+      cv.width = Math.round(Wc * dpr);
+      cv.height = Math.round(Hc * dpr);
+    }
+    const ctx = cv.getContext("2d");
+    const W = cv.width,
+      H = cv.height;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    const st = S.st[p],
+      d = derived(p),
+      T = P.texture(p);
+    const curve = d.day.curve;
+    const scaleH = opt.scale ? 30 * dpr : 0;
+    const th = 0.03 + 0.14 * AL.clamp(Math.log10(st.P / 0.05) / 4, 0, 1); // atmosphere thickness follows pressure
+    const R = Math.max(10, (Math.min(W, H - scaleH) / 2) * 0.92 / (1 + th));
+    const cx = W / 2,
+      cy = (H - scaleH) / 2;
+    const gas = hexRgb(AL.GAS[dominant(st.mix)].col).map((v) => v / 255);
+    const glowK = AL.clamp(Math.log10(st.P / 0.05) / 4, 0, 1);
+    const water = AL.BODY[p].water ? AL.clamp((AL.greenhouse(st, p).water + 1e-6) / (AL.W_EARTH * 0.75), 0, 1) : 0;
+    const hourNow = localHour(p);
+    const L = [-0.62, 0.22, 0.75];
+    const ln = Math.hypot(...L);
+    L[0] /= ln;
+    L[1] /= ln;
+    L[2] /= ln;
+    const sunLon = Math.atan2(L[0], L[2]);
+    const spin = (hourNow / 24) * Math.PI * 2;
+    const x0 = Math.max(0, Math.floor(cx - R * (1 + th))),
+      x1 = Math.min(W, Math.ceil(cx + R * (1 + th))),
+      y0 = Math.max(0, Math.floor(cy - R * (1 + th))),
+      y1 = Math.min(H, Math.ceil(cy + R * (1 + th)));
+    const iw = x1 - x0,
+      ih = y1 - y0;
+    const tint = opt.tint != null ? opt.tint : 0.3;
+    const tilt = (p === "earth" ? 23.4 : 25.2) * (Math.PI / 180) * 0.5;
+    const ct = Math.cos(tilt),
+      stt = Math.sin(tilt);
+    // per-pixel geometry and lighting never change for a given size: cache them
+    const gkey = [iw, ih, R.toFixed(2), th.toFixed(4), x0, y0, cx, cy, tilt].join("|");
+    let Gm = cv._geo;
+    if (!Gm || Gm.key !== gkey) {
+      const nIn = [],
+        nOut = [];
+      for (let py = y0; py < y1; py++)
+        for (let px = x0; px < x1; px++) {
+          const nx = (px + 0.5 - cx) / R,
+            ny = (cy - py - 0.5) / R;
+          const r2 = nx * nx + ny * ny;
+          const o = ((py - y0) * iw + (px - x0)) * 4;
+          if (r2 > 1) {
+            const rr = Math.sqrt(r2);
+            if (rr > 1 + th) continue;
+            const t = (rr - 1) / th;
+            const lit = Math.max(0, (nx * L[0] + ny * L[1]) / rr) * 0.8 + 0.25;
+            nOut.push(o, Math.pow(1 - t, 2.2) * lit);
+            continue;
+          }
+          const nz = Math.sqrt(1 - r2);
+          const ty = ny * ct + nz * stt,
+            tz = -ny * stt + nz * ct;
+          const lat = Math.asin(Math.max(-1, Math.min(1, ty)));
+          const lonS = Math.atan2(nx, tz);
+          let hour = 12 + ((lonS - sunLon) / (Math.PI * 2)) * 24;
+          hour = ((hour % 24) + 24) % 24;
+          const ndl = nx * L[0] + ny * L[1] + nz * L[2];
+          const day = Math.max(0, ndl);
+          const lit = 0.06 + Math.pow(day, 0.9);
+          const glint = Math.pow(Math.max(0, 2 * ndl * nz - L[2]), 30) * 0.5;
+          const night = 1 - sst(-0.05, 0.12, ndl);
+          const limbG = Math.pow(1 - nz, 2.5) * (0.3 + 0.7 * Math.max(0, ndl + 0.2));
+          const tv = Math.min(TH - 1.001, Math.max(0, (0.5 - lat / Math.PI) * TH - 0.5));
+          nIn.push(o, lonS / (Math.PI * 2), tv, hour / 24, Math.cos(lat), Math.pow(Math.sin(lat), 2), lit, glint, night, limbG);
+        }
+      Gm = cv._geo = { key: gkey, inn: Float32Array.from(nIn), out: Float32Array.from(nOut), img: ctx.createImageData(iw, ih) };
+    }
+    const img = Gm.img;
+    const D = img.data;
+    D.fill(0);
+    // temperature colours, looked up from a table (100–500 K)
+    if (!P.lut) {
+      P.lut = new Float32Array(401 * 3);
+      for (let t = 0; t <= 400; t++) {
+        const c = tempCol(100 + t);
+        P.lut[t * 3] = c[0] / 255;
+        P.lut[t * 3 + 1] = c[1] / 255;
+        P.lut[t * 3 + 2] = c[2] / 255;
+      }
+    }
+    const lut = P.lut;
+    const gr = gas[0] * 0.6 + 0.4,
+      gg2 = gas[1] * 0.6 + 0.4,
+      gb = gas[2] * 0.6 + 0.4;
+    const haloK = 0.25 + 0.75 * glowK,
+      limbK = 0.15 + 0.85 * glowK;
+    const out = Gm.out;
+    for (let q = 0; q < out.length; q += 2) {
+      const o = out[q];
+      D[o] = 255 * Math.min(1, gr);
+      D[o + 1] = 255 * Math.min(1, gg2);
+      D[o + 2] = 255 * Math.min(1, gb);
+      D[o + 3] = 255 * Math.min(1, out[q + 1] * haloK);
+    }
+    const n = curve.length,
+      mean = d.day.mean,
+      poleK = p === "earth" ? 40 : 60;
+    const sp = spin / (Math.PI * 2),
+      sp2 = (spin * 1.08) / (Math.PI * 2);
+    const isEarth = p === "earth";
+    const inn = Gm.inn;
+    for (let q = 0; q < inn.length; q += 10) {
+      const o = inn[q],
+        lonU = inn[q + 1],
+        tv = inn[q + 2];
+      let u = lonU - sp;
+      u -= Math.floor(u);
+      // bilinear sample of the surface map
+      const fu = u * TW - 0.5,
+        i0 = Math.floor(fu),
+        ax = fu - i0,
+        j0 = tv | 0,
+        ay = tv - j0;
+      const ia = (i0 + TW) % TW,
+        ib = (i0 + 1 + TW) % TW;
+      const k00 = j0 * TW + ia,
+        k10 = j0 * TW + ib,
+        k01 = (j0 + 1) * TW + ia,
+        k11 = (j0 + 1) * TW + ib;
+      const w00 = (1 - ax) * (1 - ay),
+        w10 = ax * (1 - ay),
+        w01 = (1 - ax) * ay,
+        w11 = ax * ay;
+      const C = T.col;
+      let r = C[k00 * 3] * w00 + C[k10 * 3] * w10 + C[k01 * 3] * w01 + C[k11 * 3] * w11,
+        g = C[k00 * 3 + 1] * w00 + C[k10 * 3 + 1] * w10 + C[k01 * 3 + 1] * w01 + C[k11 * 3 + 1] * w11,
+        b = C[k00 * 3 + 2] * w00 + C[k10 * 3 + 2] * w10 + C[k01 * 3 + 2] * w01 + C[k11 * 3 + 2] * w11;
+      const k = ay < 0.5 ? (ax < 0.5 ? k00 : k10) : ax < 0.5 ? k01 : k11;
+      // the local temperature: the model's day curve at this spot's hour, cooler toward the poles
+      const Tday = curve[Math.min(n - 1, (inn[q + 3] * n) | 0)][1];
+      const Tl = mean + (Tday - mean) * inn[q + 4] - poleK * inn[q + 5];
+      // ice: on a water world, oceans freeze and snow lies below 273 K; dry Mars has only its polar caps
+      // (water ice, shrinking when warm) and carbon-dioxide frost below about 150 K
+      const sl2 = inn[q + 5];
+      let ice = isEarth ? sst(273, 258, Tl + T.elev[k] * 12) : sst(0.84, 0.92, sl2) * sst(250, 225, Tl);
+      ice += sst(152, 142, Tl) * 0.9;
+      if (ice > 1) ice = 1;
+      r += (0.93 - r) * ice;
+      g += (0.95 - g) * ice;
+      b += (0.98 - b) * ice;
+      const li = Math.max(0, Math.min(400, Math.round(Tl - 100))) * 3;
+      const tr = lut[li],
+        tg = lut[li + 1],
+        tb = lut[li + 2];
+      const tk = tint * (1 - ice * 0.6);
+      r += (tr - r) * tk;
+      g += (tg - g) * tk;
+      b += (tb - b) * tk;
+      if (water > 0) {
+        let cu = lonU - sp2;
+        cu -= Math.floor(cu);
+        const cf = cu * TW,
+          c0 = Math.floor(cf),
+          cx2 = cf - c0;
+        const cl = (T.cloud[j0 * TW + (c0 % TW)] * (1 - cx2) + T.cloud[j0 * TW + ((c0 + 1) % TW)] * cx2) * 0.75 * water;
+        r += (0.97 - r) * cl;
+        g += (0.97 - g) * cl;
+        b += (0.98 - b) * cl;
+      }
+      const lit = inn[q + 6] + (T.sea[k] && ice < 0.5 ? inn[q + 7] : 0),
+        night = inn[q + 8] * 0.16;
+      r = r * lit + tr * night;
+      g = g * lit + tg * night;
+      b = b * lit + tb * night;
+      const lm = inn[q + 9] * limbK;
+      r = r * (1 - lm) + gr * lm;
+      g = g * (1 - lm) + gg2 * lm;
+      b = b * (1 - lm) + gb * lm;
+      D[o] = r > 1 ? 255 : r * 255;
+      D[o + 1] = g > 1 ? 255 : g * 255;
+      D[o + 2] = b > 1 ? 255 : b * 255;
+      D[o + 3] = 255;
+    }
+    ctx.putImageData(img, x0, y0);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const w = W / dpr,
+      h = H / dpr;
+    // the point the day-night graph follows, on the equator
+    const lam = sunLon + ((hourNow - 12) / 24) * Math.PI * 2;
+    const ex = Math.sin(lam),
+      ez = Math.cos(lam);
+    const eyv = -ez * stt; // equator point seen with the tilt
+    const ezv = ez * ct;
+    if (ezv > 0) {
+      ctx.fillStyle = "#fff";
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(cx / dpr + (ex * R) / dpr, cy / dpr - (eyv * R) / dpr, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    // the °C label, always beside the colour
+    ctx.font = "800 13px Roboto Mono, monospace";
+    ctx.textAlign = "center";
+    const lab = fC(d.Ts, 0) + " mean";
+    const tw = ctx.measureText(lab).width + 14;
+    const ly = (cy + R) / dpr - 6;
+    ctx.fillStyle = "rgba(10,7,6,0.82)";
+    ctx.beginPath();
+    ctx.roundRect(w / 2 - tw / 2, ly - 15, tw, 20, 6);
+    ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.fillText(lab, w / 2, ly);
+    // a temperature scale under the globe, so colour is never the only clue
+    if (opt.scale) {
+      const bw = Math.min(w - 20, 260),
+        bx = (w - bw) / 2,
+        by = h - 24;
+      const g = ctx.createLinearGradient(bx, 0, bx + bw, 0);
+      for (let s = 0; s <= 20; s++) {
+        const t = s / 20,
+          c = tempCol(150 + t * 250);
+        g.addColorStop(t, `rgb(${c[0]},${c[1]},${c[2]})`);
+      }
+      ctx.fillStyle = g;
+      ctx.fillRect(bx, by, bw, 7);
+      ctx.font = "9px Roboto Mono, monospace";
+      ctx.fillStyle = "rgba(255,255,255,0.75)";
+      for (const tc of [-100, -50, 0, 50, 100]) {
+        const x = bx + ((tc + 273.15 - 150) / 250) * bw;
+        ctx.fillRect(x, by + 7, 1, 3);
+        ctx.fillText(tc + "°", x, by + 19);
+      }
+      // where this planet sits on the scale
+      const mx = bx + AL.clamp((d.Ts - 150) / 250, 0, 1) * bw;
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.moveTo(mx, by - 1);
+      ctx.lineTo(mx - 5, by - 8);
+      ctx.lineTo(mx + 5, by - 8);
+      ctx.fill();
+    }
+  };
+  return P;
+})();
+// the globes in the cards, and the full-screen view
+const drawSphere = (p) => PL.draw($(`canvas.sphere[data-p="${p}"]`), p, { scale: true });
+
+    </script>
+    <script>
+      /* Universal Floating, Draggable & Resizable How-to-Use & Guide System */
+      (function initUniversalHelpFloatwin() {
+        var bar = document.getElementById("helpbar");
+        if (!bar) return;
+
+        // Ensure floatwin markup structure
+        if (!bar.classList.contains("floatwin")) {
+          bar.classList.add("floatwin");
+          bar.setAttribute("role", "dialog");
+          bar.setAttribute("aria-label", "Help Guide");
+
+          var head = document.createElement("div");
+          head.className = "fw-head";
+
+          var title = document.createElement("span");
+          title.className = "fw-title"; // drag grip only — the tab buttons already name the panel
+          head.appendChild(title);
+
+          var actions = document.createElement("div");
+          actions.className = "fw-head-actions";
+
+          var tabBtns = [];
+          var origPanels = bar.querySelectorAll(".tabpanel");
+          if (origPanels.length > 1) {
+            origPanels.forEach(function (p) {
+              var t = p.dataset.panel;
+              var b = document.createElement("button");
+              b.type = "button";
+              b.className = "fw-tab-btn";
+              b.dataset.tab = t;
+              b.textContent = t === "use" ? "How To Use" : (t === "learn" ? "What You'll Learn" : t);
+              actions.appendChild(b);
+              tabBtns.push(b);
+            });
+          }
+
+          var closeBtn = document.createElement("button");
+          closeBtn.type = "button";
+          closeBtn.className = "fw-close";
+          closeBtn.title = "Close Guide";
+          closeBtn.setAttribute("aria-label", "Close");
+          closeBtn.textContent = "✕";
+          actions.appendChild(closeBtn);
+          head.appendChild(actions);
+
+          var body = document.createElement("div");
+          body.className = "fw-body";
+          while (bar.firstChild) {
+            body.appendChild(bar.firstChild);
+          }
+
+          var grip = document.createElement("div");
+          grip.className = "fw-grip";
+          grip.title = "Drag to resize";
+
+          bar.appendChild(head);
+          bar.appendChild(body);
+          bar.appendChild(grip);
+
+          document.body.appendChild(bar);
+        }
+
+        var btns = document.querySelectorAll(".helpbtn");
+        var tabBtns = bar.querySelectorAll(".fw-tab-btn");
+        var closeBtn = bar.querySelector(".fw-close");
+        var headEl = bar.querySelector(".fw-head");
+        var gripEl = bar.querySelector(".fw-grip");
+        var topZ = 10000;
+        var posInit = false;
+        var userSized = false;
+
+        function toFront() {
+          bar.style.zIndex = ++topZ;
+        }
+
+        function closeAll() {
+          bar.classList.remove("show");
+          btns.forEach(function (b) { b.classList.remove("on"); });
+          tabBtns.forEach(function (b) { b.classList.remove("on"); });
+        }
+
+        function openTab(tab) {
+          toFront();
+          if (!posInit) {
+            var w = Math.min(440, window.innerWidth - 32);
+            bar.style.width = w + "px";
+            bar.style.top = "65px";
+            bar.style.left = Math.max(12, window.innerWidth - w - 24) + "px";
+            posInit = true;
+          }
+          bar.classList.add("show");
+          btns.forEach(function (b) {
+            b.classList.toggle("on", b.dataset.tab === tab);
+          });
+          tabBtns.forEach(function (b) {
+            b.classList.toggle("on", b.dataset.tab === tab);
+          });
+          var panels = bar.querySelectorAll(".tabpanel");
+          panels.forEach(function (p) {
+            p.classList.toggle("on", p.dataset.panel === tab);
+          });
+          fitHeight();
+        }
+
+        // The window is as tall as its text needs, capped so it never runs off the
+        // bottom of the screen. Once the user drags the resize grip, their size is kept.
+        function fitHeight() {
+          if (userSized) return;
+          bar.style.height = "auto";
+          var r = bar.getBoundingClientRect();
+          var maxH = window.innerHeight - r.top - 12;
+          if (r.height > maxH) bar.style.height = Math.max(200, maxH) + "px";
+        }
+
+        // Rotating a phone or resizing the window: keep the guide on screen and re-fit it.
+        window.addEventListener("resize", function () {
+          if (!bar.classList.contains("show")) return;
+          var w = Math.min(bar.offsetWidth, window.innerWidth - 16);
+          if (!userSized) w = Math.min(440, window.innerWidth - 32);
+          bar.style.width = w + "px";
+          var r = bar.getBoundingClientRect();
+          bar.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+          bar.style.top = Math.max(8, Math.min(window.innerHeight - 60, r.top)) + "px";
+          fitHeight();
+        });
+
+        btns.forEach(function (btn) {
+          var newBtn = btn.cloneNode(true);
+          btn.parentNode.replaceChild(newBtn, btn);
+          newBtn.addEventListener("click", function () {
+            var tab = newBtn.dataset.tab || "use";
+            if (bar.classList.contains("show") && newBtn.classList.contains("on")) {
+              closeAll();
+            } else {
+              openTab(tab);
+            }
+          });
+        });
+
+        // re-query cloned buttons
+        btns = document.querySelectorAll(".helpbtn");
+
+        tabBtns.forEach(function (tb) {
+          tb.addEventListener("click", function (e) {
+            e.stopPropagation();
+            openTab(tb.dataset.tab);
+          });
+        });
+
+        if (closeBtn) closeBtn.addEventListener("click", closeAll);
+        bar.addEventListener("pointerdown", toFront);
+
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && bar.classList.contains("show")) closeAll();
+        });
+
+        // Dragging by header
+        if (headEl) {
+          headEl.addEventListener("pointerdown", function (e) {
+            if (e.target.closest(".fw-head-actions")) return;
+            e.preventDefault();
+            toFront();
+            headEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var dx = e.clientX - r.left;
+            var dy = e.clientY - r.top;
+            bar.classList.add("dragging");
+            function onMove(ev) {
+              var nx = Math.max(8, Math.min(window.innerWidth - bar.offsetWidth - 8, ev.clientX - dx));
+              var ny = Math.max(8, Math.min(window.innerHeight - 40, ev.clientY - dy));
+              bar.style.left = nx + "px";
+              bar.style.top = ny + "px";
+            }
+            function onUp(ev) {
+              bar.classList.remove("dragging");
+              headEl.removeEventListener("pointermove", onMove);
+              headEl.removeEventListener("pointerup", onUp);
+              headEl.removeEventListener("pointercancel", onUp);
+            }
+            headEl.addEventListener("pointermove", onMove);
+            headEl.addEventListener("pointerup", onUp);
+            headEl.addEventListener("pointercancel", onUp);
+          });
+        }
+
+        // Resizing by grip
+        if (gripEl) {
+          gripEl.addEventListener("pointerdown", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toFront();
+            gripEl.setPointerCapture(e.pointerId);
+            var r = bar.getBoundingClientRect();
+            var startX = e.clientX;
+            var startY = e.clientY;
+            var startW = r.width;
+            var startH = r.height;
+            function onMove(ev) {
+              var nw = Math.max(280, Math.min(window.innerWidth - r.left - 8, startW + (ev.clientX - startX)));
+              var nh = Math.max(200, Math.min(window.innerHeight - r.top - 8, startH + (ev.clientY - startY)));
+              bar.style.width = nw + "px";
+              userSized = true;
+              bar.style.height = nh + "px";
+            }
+            function onUp(ev) {
+              gripEl.removeEventListener("pointermove", onMove);
+              gripEl.removeEventListener("pointerup", onUp);
+              gripEl.removeEventListener("pointercancel", onUp);
+            }
+            gripEl.addEventListener("pointermove", onMove);
+            gripEl.addEventListener("pointerup", onUp);
+            gripEl.addEventListener("pointercancel", onUp);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

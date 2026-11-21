@@ -1029,7 +1029,7 @@
           <ol>
             <li>Press <b>Start Pairing</b> — the remote searches for nearby Bluetooth devices.</li>
             <li>When the rover appears in the device list, tap it to send a pairing request.</li>
-            <li>Once <b>Connected</b>, the D-pad lights up. Press <b>Forward</b>, <b>Backward</b>, <b>Left</b>, <b>Right</b>, or <b>Stop</b> and watch the command travel across the signal link before the rover responds.</li>
+            <li>Once <b>Connected</b>, the D-pad lights up. Press <b>Forward</b>, <b>Backward</b>, <b>Left</b>, <b>Right</b>, or <b>Stop</b> and watch the command travel across the signal link before the rover responds. On a keyboard, hold the <b>arrow keys</b> (or <b>W A S D</b>) to drive and let go to stop; <b>Space</b> sends Stop.</li>
             <li>Each command keeps the rover moving that way until you send a new one — just like a real RC command, it doesn't stop on its own.</li>
             <li>Pick a colour and press <b>Add Drop Zone</b> to place a drop zone of that colour. Add as many as you need.</li>
             <li>Drive the rover into the <b>loading area</b>, pick a cargo colour and press <b>Load Object</b> — repeat to load as many parcels as you want. Loaded parcels leave the loading area until you reset.</li>
@@ -1876,6 +1876,39 @@
         });
         $("devRow").addEventListener("click", selectDevice);
         document.querySelectorAll(".dbtn").forEach((b) => b.addEventListener("click", () => sendCommand(b.dataset.c)));
+        // keyboard driving: hold an arrow key (or W A S D) to drive, let go to stop; Space sends Stop.
+        // Keys typed into a field or slider keep their normal job.
+        const KEY_CMD = { ArrowUp: "F", KeyW: "F", ArrowDown: "B", KeyS: "B", ArrowLeft: "L", KeyA: "L", ArrowRight: "R", KeyD: "R" };
+        const held = [];
+        const typing = (e) => e.target && e.target.closest && e.target.closest("input, textarea, select, [contenteditable]");
+        document.addEventListener("keydown", (e) => {
+          if (typing(e) || e.ctrlKey || e.metaKey || e.altKey) return;
+          if (e.code === "Space") {
+            if (e.target && e.target.closest && e.target.closest("button")) return; // Space still presses a focused button
+            e.preventDefault();
+            held.length = 0;
+            if (S.pairState === "connected") sendCommand("S");
+            return;
+          }
+          const c = KEY_CMD[e.code];
+          if (!c) return;
+          e.preventDefault(); // no page scrolling while driving
+          if (e.repeat || held.includes(e.code)) return;
+          held.push(e.code);
+          sendCommand(c);
+        });
+        document.addEventListener("keyup", (e) => {
+          const i = held.indexOf(e.code);
+          if (i < 0) return;
+          held.splice(i, 1);
+          if (S.pairState !== "connected") return;
+          // another drive key still held takes over; otherwise the rover stops
+          sendCommand(held.length ? KEY_CMD[held[held.length - 1]] : "S");
+        });
+        window.addEventListener("blur", () => {
+          if (held.length && S.pairState === "connected") sendCommand("S");
+          held.length = 0;
+        });
         $("loadBtn").addEventListener("click", loadObject);
         $("unloadBtn").addEventListener("click", unloadObject);
         $("resetBtn").addEventListener("click", resetAll);
